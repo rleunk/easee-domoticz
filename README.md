@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-## 🚀 Features
+## ✨ Features
 
 ✨ **Auto-Discovery** - Automatische detectie van alle Easee laadpalen  
 📊 **Realtime Monitoring** - Live power, energy en status updates  
@@ -18,7 +18,7 @@
 
 ## 📦 Installatie
 
-Zie [INSTALLATION.md](docs/INSTALLATION.md) voor stap-voor-stap instructies.
+Zie [docs/INSTALLATION.md](docs/INSTALLATION.md) voor stap-voor-stap instructies.
 
 ### Quick Start
 
@@ -30,16 +30,22 @@ Zie [INSTALLATION.md](docs/INSTALLATION.md) voor stap-voor-stap instructies.
 
 2. **Kopieer naar Domoticz plugins**
    ```bash
-   cp -r . /home/domoticz/userdata/plugins/Easee/
+   cp -r . /home/root/domoticz/plugins/Easee-Domoticz-plugin/
    ```
    (Pas het pad aan voor jouw Domoticz installatie)
 
-3. **Restart Domoticz**
+3. **Zet permissies**
+   ```bash
+   chmod +x /home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
+   chown -R root:root /home/root/domoticz/plugins/Easee-Domoticz-plugin/
+   ```
+
+4. **Restart Domoticz**
    ```bash
    sudo systemctl restart domoticz
    ```
 
-4. **Voeg plugin toe in Domoticz UI**
+5. **Voeg plugin toe in Domoticz UI**
    - Setup → Hardware
    - Type: "Easee AutoDiscovery Compact v9.0"
    - Username/Password: Jouw Easee credentials
@@ -47,12 +53,12 @@ Zie [INSTALLATION.md](docs/INSTALLATION.md) voor stap-voor-stap instructies.
 
 ## ⚙️ Configuratie
 
-Zie [CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare parameters.
+Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare parameters.
 
 ### Basis Settings
 
 | Parameter | Standaard | Omschrijving |
-|-----------|-----------|---------------|
+|-----------|-----------|--------------|
 | Username | - | Easee account username/telefoonnummer |
 | Password | - | Easee account wachtwoord |
 | Poll interval | 30 sec | Hoe vaak data wordt opgehaald |
@@ -71,9 +77,9 @@ Zie [CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare parameters.
 - **Beste laden** - Goedkoopste laadwindow (met Tibber)
 
 ### Per Laadpaal
-- **[ID] Laden** - Power meter
-- **[ID] Totaal & Sessie** - Samengevoegde energie info
-- **[ID] Status** - Charger status met emoji's
+- **[ID] Laden** - Power meter (Watt)
+- **[ID] Totaal & Sessie** - Samengevoegde energie info (kWh)
+- **[ID] Status** - Charger status met emoji indicators
 - **[ID] Kosten (Sessie/Dag)** - Samengevoegde kosteninfo (met Tibber)
 
 ## 🎨 Emoji Indicators
@@ -82,7 +88,7 @@ Zie [CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare parameters.
 - `⚡⚡` = Hoog vermogen (>7kW)
 - `⚡` = Medium vermogen (>3.5kW)
 - `🔌` = Laag vermogen (>50W)
-- `⏸️` = Standby
+- `⏸️` = Standby/niet laden
 
 ### Charger Status
 - `✅` = Online & Laden
@@ -90,23 +96,36 @@ Zie [CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare parameters.
 - `❌` = Offline
 
 ### Prijs Status (Tibber)
-- `🟢` = Goedkoop (untere 33%)
+- `🟢` = Goedkoop (onderste 33%)
 - `🟡` = Normaal (middel 33%)
 - `🔴` = Duur (bovenste 33%)
 
 ## 🔧 Troubleshooting
 
-Zie [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) voor veelvoorkomende problemen en oplossingen.
+Zie [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) voor veelvoorkomende problemen en oplossingen.
 
 ## 📝 Changelog
 
 Zie [CHANGELOG.md](CHANGELOG.md) voor volledige versiegeschiedenis.
+
+## 🆙 Updates
+
+**Van v8.x naar v9.0?**
+
+```bash
+cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+git pull origin main
+sudo systemctl restart domoticz
+```
+
+Geen data verlies - alle devices en laadgeschiedenis blijven behouden!
 
 ## 🤝 Support
 
 - **Issue tracker**: [GitHub Issues](https://github.com/rleunk/easee-domoticz/issues)
 - **Documentation**: [docs/](docs/)
 - **Domoticz Wiki**: [wiki.domoticz.com](https://wiki.domoticz.com/)
+- **Easee Developer**: [developer.easee.com](https://developer.easee.com/)
 
 ## 📄 Licentie
 
@@ -114,10 +133,12 @@ MIT License - zie [LICENSE](LICENSE) voor details.
 
 ## 🙏 Credits
 
-- Easee API: [developer.easee.com](https://developer.easee.com/)
-- Tibber API: [developer.tibber.com](https://developer.tibber.com/)
-- Domoticz: [www.domoticz.com](https://www.domoticz.com/)
+- **Easee API**: [developer.easee.com](https://developer.easee.com/)
+- **Tibber API**: [developer.tibber.com](https://developer.tibber.com/)
+- **Domoticz Platform**: [www.domoticz.com](https://www.domoticz.com/)
 
 ---
 
-**Versie 9.0** - Gemaakt door Rleunk met Copilot 🤖
+**Versie 9.0** - Gemaakt door Rleunk met GitHub Copilot 🤖
+
+**Status**: ✅ Production Ready
