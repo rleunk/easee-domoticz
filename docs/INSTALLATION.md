@@ -23,21 +23,21 @@ pip3 install requests
 
 ## Stap 2: Clone / Download Plugin
 
-### Via Git
+### Via Git (aanbevolen)
 ```bash
-cd /home/domoticz/userdata/plugins
-git clone https://github.com/rleunk/easee-domoticz.git Easee
+cd /home/root/domoticz/plugins
+git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 ```
 
 ### Of handmatig
 1. Download ZIP van GitHub
-2. Pak uit in `/home/domoticz/userdata/plugins/Easee/`
+2. Pak uit in `/home/root/domoticz/plugins/Easee-Domoticz-plugin/`
 
 ## Stap 3: Zet Permissies
 
 ```bash
-chmod +x /home/domoticz/userdata/plugins/Easee/plugin.py
-chown -R domoticz:domoticz /home/domoticz/userdata/plugins/Easee/
+chmod +x /home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
+chown -R root:root /home/root/domoticz/plugins/Easee-Domoticz-plugin/
 ```
 
 ## Stap 4: Restart Domoticz
@@ -80,7 +80,7 @@ Zie [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 ## Update Procedure
 
 ```bash
-cd /home/domoticz/userdata/plugins/Easee
+cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
 git pull origin main
 sudo systemctl restart domoticz
 ```
