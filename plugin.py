@@ -1,9 +1,9 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV900" name="Easee AutoDiscovery Compact v9.0" author="Rleunk & Copilot" version="9.0"
+<plugin key="EaseeCloudAutoDiscoveryV900" name="Easee AutoDiscovery Compact v9.0.1" author="Richard Leunk " version="9.0.1"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v9.0</h2><br/>
+        <h2>Easee AutoDiscovery Compact v9.0.1</h2><br/>
         <p>Complete Easee laadpaal integratie met compacte UI, intelligente emoji indicators en Tibber stroomtarief integratie.</p>
     </description>
     <params>
