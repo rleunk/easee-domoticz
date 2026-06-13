@@ -645,8 +645,8 @@ class BasePlugin:
             session_kwh = self.safe_float(st.get('last_session_kwh', 0.0), 0.0)
             laadduur = st.get('last_session_duration', '00:00')
             session_cost = self.safe_float(st.get('last_session_cost_total', 0.0), 0.0)
-            session_cost_energy = self.safe_float(st.get('session_cost_energy', 0.0), 0.0)
-            session_cost_tax = self.safe_float(st.get('session_cost_tax', 0.0), 0.0)
+            session_cost_energy = self.safe_float(st.get('last_session_cost_energy', 0.0), 0.0)
+            session_cost_tax = self.safe_float(st.get('last_session_cost_tax', 0.0), 0.0)
 
         st['prev_total_kwh'] = total_kwh
 
