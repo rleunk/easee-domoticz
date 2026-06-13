@@ -1,3 +1,31 @@
+# Easee Domoticz Plugin - v9.0.1 Release
+
+## 📦 Release Notes
+
+**Versie**: 9.0.1  
+**Status**: ✅ Production Ready  
+**Release Date**: 2026-06-13  
+**Ondersteuning**: Python 3.7+, Domoticz 2020.2+
+
+---
+
+## 🐛 Wat is nieuw in v9.0.1?
+
+### Bugfix: sessiekosten energie/belasting
+
+- Energie- en belastingkosten van laadsessie worden correct opgehaald wanneer er niet actief wordt geladen
+- Geen dataverlies bij update vanaf v9.0 — `easee_v9_0_state.json` blijft in gebruik
+
+**Update:**
+
+```bash
+cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+git pull origin main
+sudo systemctl restart domoticz
+```
+
+---
+
 # Easee Domoticz Plugin - v9.0 Production Release
 
 ## 📦 Release Notes
@@ -133,6 +161,7 @@ Voor productie deployment, zorg dat je dit hebt:
 
 | Versie | Datum | Status | Notes |
 |--------|-------|--------|-------|
+| **9.0.1** | 2026-06-13 | ✅ Production | Fix sessiekosten energie/belasting |
 | **9.0** | 2026-06-12 | ✅ Production | Compact UI, emoji indicators |
 | 8.0.2 | 2026-06-11 | 🔴 EOL | Stabiel maar niet compact |
 | 8.0.1 | 2026-06-10 | 🔴 EOL | Early release |

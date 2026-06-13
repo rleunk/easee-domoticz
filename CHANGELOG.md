@@ -2,10 +2,10 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
-## [9.0.1] - 2026-06-12
+## [9.0.1] - 2026-06-13
 
 ### 🐛 Bugfixes
-- Verbeterde afhandeling sessiekosten (energie/belasting) tonen na afloop van laden
+- Energie- en belastingkosten van laadsessie worden correct opgehaald wanneer er niet actief wordt geladen
 
 ## [9.0] - 2026-06-12
 

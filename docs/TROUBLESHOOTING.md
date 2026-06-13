@@ -93,7 +93,7 @@ sudo tail -f /home/domoticz/domoticz.log | grep "Discovery\|charger"
 #    Mode6 = "Debug"
 
 # 2. Controleer logs voor stack traces
-sudo tail -f /home/domoticz/domoticz.log | grep "Easee v9.0"
+sudo tail -f /home/domoticz/domoticz.log | grep "Easee v9.0.1"
 
 # 3. Controleer API response
 curl -H "Authorization: Bearer YOUR_TOKEN" \
@@ -174,7 +174,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 ### Enable Debug Logging
 
 1. Ga naar Setup → Hardware
-2. Klik op "Easee AutoDiscovery v9.0"
+2. Klik op "Easee AutoDiscovery v9.0.1"
 3. Zet Mode6 = "Debug"
 4. Klik Update
 
@@ -185,7 +185,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 sudo tail -f /home/domoticz/domoticz.log | grep "Easee"
 
 # Search specific error
-sudo grep "Easee v9.0.*error" /home/domoticz/domoticz.log
+sudo grep "Easee v9.0.1.*error" /home/domoticz/domoticz.log
 
 # Last 100 lines
 sudo tail -100 /home/domoticz/domoticz.log | grep "Easee"
@@ -240,7 +240,7 @@ Heb je nog steeds probleem? Open een issue:
 - 📧 **Easee Support**: https://easee.com/support
 
 Include:
-- Plugin versie (v9.0)
+- Plugin versie (v9.0.1)
 - Domoticz versie (`cat /home/domoticz/Version.txt`)
 - Relevante logs (met sensieve data verwijderd)
 - Stappen om te reproduceren
