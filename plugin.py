@@ -1,9 +1,9 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.2.1" author="Richard Leunk" version="10.2.1"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.2.3" author="Richard Leunk" version="10.2.3"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.2.1</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.2.3</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -100,14 +100,15 @@ class BasePlugin:
         self.equalizer_names = {}
         self.equalizer_source = 'none'
         self.equalizer_probes = {}
+        self.site_fuse_cache = {}
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.2.1] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.2.3] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.2.1] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.2.1] {msg}')
+            Domoticz.Debug(f'[Easee v10.2.3] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.2.3] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -519,6 +520,98 @@ class BasePlugin:
         except Exception as e:
             self.debug(f'GET {path} optioneel mislukt: {e}')
             return None
+
+    def kw_to_watts(self, value):
+        x = self.safe_float(value, 0.0)
+        if x <= 0:
+            return 0
+        if abs(x) < 100:
+            return int(round(x * 1000.0))
+        return int(round(x))
+    def format_amp(self, value):
+        x = self.safe_float(value, 0.0)
+        if x <= 0:
+            return None
+        if abs(x - round(x)) < 0.05:
+            return f'{int(round(x))} A'
+        return f'{x:.1f} A'
+    def format_kw(self, value):
+        x = self.safe_float(value, 0.0)
+        if x <= 0:
+            return None
+        if abs(x) >= 100:
+            x /= 1000.0
+        if abs(x - round(x)) < 0.05:
+            return f'{int(round(x))} kW'
+        return f'{x:.1f} kW'
+    def first_dict_value(self, data, keys):
+        if not isinstance(data, dict):
+            return None
+        for key in keys:
+            if data.get(key) is not None:
+                return data.get(key)
+        return None
+    def fetch_site_fuse_info(self, site_id):
+        if not site_id:
+            return {}
+        key = str(site_id)
+        if key in self.site_fuse_cache:
+            return self.site_fuse_cache[key]
+        info = {}
+        state = self.api_get_optional(f'/sites/{site_id}/state')
+        if isinstance(state, dict):
+            site = state.get('site') or {}
+            if isinstance(site, dict):
+                main_fuse = self.first_dict_value(site, ('ratedCurrent', 'mainFuseSize', 'mainFuse'))
+                fuse_limit = self.first_dict_value(site, ('fuse', 'mainFuseLimit', 'fuseLimit', 'mainFuseCurrentLimit'))
+                emobility = self.first_dict_value(site, ('maxAllocatedCurrent',))
+                if main_fuse is not None:
+                    info['main_fuse_a'] = self.safe_float(main_fuse, 0.0)
+                if fuse_limit is not None:
+                    info['main_fuse_limit_a'] = self.safe_float(fuse_limit, 0.0)
+                if emobility is not None:
+                    info['emobility_a'] = self.safe_float(emobility, 0.0)
+        detailed = self.api_get_optional(f'/sites/{site_id}?detailed=true')
+        if isinstance(detailed, dict):
+            if 'main_fuse_a' not in info:
+                main_fuse = self.first_dict_value(detailed, ('ratedCurrent', 'mainFuseSize', 'mainFuse'))
+                if main_fuse is not None:
+                    info['main_fuse_a'] = self.safe_float(main_fuse, 0.0)
+            if 'main_fuse_limit_a' not in info:
+                fuse_limit = self.first_dict_value(detailed, ('fuse', 'mainFuseLimit', 'fuseLimit', 'mainFuseCurrentLimit'))
+                if fuse_limit is not None:
+                    info['main_fuse_limit_a'] = self.safe_float(fuse_limit, 0.0)
+            if 'emobility_a' not in info:
+                emobility = self.first_dict_value(detailed, ('maxAllocatedCurrent',))
+                if emobility is not None:
+                    info['emobility_a'] = self.safe_float(emobility, 0.0)
+        self.site_fuse_cache[key] = info
+        return info
+    def parse_equalizer_observations(self, obs):
+        values = {}
+        if not isinstance(obs, dict):
+            return values
+        observations = obs.get('observations') or obs.get('data') or []
+        if not isinstance(observations, list):
+            return values
+        for item in observations:
+            if not isinstance(item, dict):
+                continue
+            obs_id = item.get('id')
+            obs_val = item.get('value')
+            if obs_id == 31:
+                values['currentL1'] = obs_val
+            elif obs_id == 32:
+                values['currentL2'] = obs_val
+            elif obs_id == 33:
+                values['currentL3'] = obs_val
+            elif obs_id == 40:
+                values['activePowerImport'] = obs_val
+            elif obs_id == 41:
+                values['activePowerExport'] = obs_val
+            elif obs_id == 44:
+                values['maxPowerImport'] = obs_val
+        return values
 
     # ---- Tibber API ----
     def tibber_query(self, query):
@@ -967,6 +1060,7 @@ class BasePlugin:
     def poll_all(self):
         self.latest_chargers = {}
         self.latest_equalizers = {}
+        self.site_fuse_cache = {}
         refreshed = self.safe_int(self.state.get('price_cache_refreshed', 0), 0)
         if self.tibber_enabled() and ((self.now_ts() - refreshed) > 900 or not (self.state.get('price_cache') or {})):
             self.refresh_tibber_prices()
@@ -1094,32 +1188,29 @@ class BasePlugin:
 
     def poll_equalizer(self, equalizer):
         eid = equalizer['id']
+        site_id = equalizer.get('siteId')
         values = {}
         for path in (f'/equalizers/{eid}', f'/equalizers/{eid}/state', f'/equalizers/{eid}/config'):
             data = self.api_get_optional(path)
             if isinstance(data, dict):
                 values.update(data)
+                if not site_id:
+                    site_id = data.get('siteId')
 
-        obs = self.api_get_optional(f'/state/{eid}/observations?ids=40,41,42,43,44')
-        if isinstance(obs, dict):
-            observations = obs.get('observations') or obs.get('data') or []
-            if isinstance(observations, list):
-                for item in observations:
-                    if not isinstance(item, dict):
-                        continue
-                    obs_id = item.get('id')
-                    obs_val = item.get('value')
-                    if obs_id == 40:
-                        values['activePowerImport'] = obs_val
-                    elif obs_id == 41:
-                        values['activePowerExport'] = obs_val
+        obs = self.api_get_optional(f'/state/{eid}/observations?ids=31,32,33,40,41,44')
+        values.update(self.parse_equalizer_observations(obs))
 
-        power_w = self.power_watts(
+        site_info = self.fetch_site_fuse_info(site_id)
+
+        power_w = self.kw_to_watts(
             values.get('currentPower')
             or values.get('power')
             or values.get('activePowerImport')
             or values.get('activePower')
         )
+        if power_w <= 0:
+            power_w = self.power_watts(values.get('currentPower') or values.get('power') or values.get('activePower'))
+
         online = values.get('isOnline')
         if online is None:
             online = True
@@ -1129,14 +1220,40 @@ class BasePlugin:
             or values.get('isLoadBalancingEnabled')
         )
         lb_active = self.truthy(load_bal) if load_bal is not None else False
-        max_alloc = self.safe_float(values.get('maxAllocatedCurrent') or values.get('allocatedCurrent'), 0.0)
+        max_alloc = self.safe_float(
+            values.get('maxAllocatedCurrent')
+            or values.get('allocatedCurrent')
+            or site_info.get('emobility_a'),
+            0.0,
+        )
+        main_fuse_a = self.safe_float(site_info.get('main_fuse_a'), 0.0)
+        main_fuse_limit_a = self.safe_float(site_info.get('main_fuse_limit_a'), 0.0)
+        max_power_import = self.safe_float(values.get('maxPowerImport'), 0.0)
 
-        power_emoji = self.power_emoji(power_w)
         status_emoji = '✅' if online else '❌'
+        lb_emoji = '⚖️' if lb_active else '⏸️'
         lb_text = 'Aan' if lb_active else 'Uit'
-        status_text = f'{status_emoji} {power_emoji} LB {lb_text}'
+        lines = [
+            f'{status_emoji} Equalizer online' if online else f'{status_emoji} Equalizer offline',
+            f'{lb_emoji} Load balancing: {lb_text}',
+        ]
         if max_alloc > 0:
-            status_text += f' | Max {max_alloc:.0f} A'
+            lines.append(f'🔌 eMobility limiet: {self.format_amp(max_alloc)}')
+        else:
+            lines.append('🔌 eMobility limiet: onbekend')
+        if main_fuse_a > 0:
+            lines.append(f'🏠 Hoofdzekering: {self.format_amp(main_fuse_a)}')
+        else:
+            lines.append('🏠 Hoofdzekering: onbekend')
+        if main_fuse_limit_a > 0:
+            lines.append(f'⚡ Hoofdzekering limiet: {self.format_amp(main_fuse_limit_a)}')
+        elif max_power_import > 0:
+            lines.append(f'⚡ Hoofdzekering limiet: {self.format_kw(max_power_import)}')
+        else:
+            lines.append('⚡ Hoofdzekering limiet: onbekend')
+        if power_w > 50:
+            lines.append(f'🔥 Huisvermogen: {int(power_w)} W')
+        status_text = '\n'.join(lines)
 
         self.update_equalizer_energy(eid, 'Vermogen', power_w, 0)
         self.update_equalizer_text(eid, 'Status', status_text)

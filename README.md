@@ -1,8 +1,8 @@
-# Easee Domoticz Plugin v10.2.1
+# Easee Domoticz Plugin v10.2.3
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.2.1-blue)
+![Version](https://img.shields.io/badge/version-10.2.3-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -50,7 +50,7 @@ Zie [docs/INSTALLATION.md](docs/INSTALLATION.md) voor stap-voor-stap instructies
 
 5. **Voeg plugin toe in Domoticz UI**
    - Setup → Hardware
-   - Type: "Easee AutoDiscovery Compact v10.2.1"
+   - Type: "Easee AutoDiscovery Compact v10.2.3"
    - Geef de hardware een naam, bijv. `Easee` (dit wordt het prefix op alle tegels)
    - Username/Password: Jouw Easee credentials
    - Create
@@ -84,9 +84,9 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare paramet
 - **Kosten & Samenvatting** - Dagelijkse kosten + emoji prijsindicator (met Tibber)
 - **Beste laden** - Goedkoopste laadwindow (met Tibber)
 
-### Per Equalizer (stap 1, indien gevonden)
-- **[Naam] - Status** - Online + load balancing status
-- **[Naam] - Vermogen** - Actueel vermogen gebouw/installatie (Watt)
+### Per Equalizer (indien gevonden)
+- **[Naam] - Status** — online, load balancing, eMobility limiet, hoofdzekering + limiet, huisvermogen
+- **[Naam] - Vermogen** — actueel vermogen (Watt)
 
 ### Per Laadpaal
 - **[Naam] - Laden** - Power meter (Watt)
@@ -161,6 +161,6 @@ MIT License - zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.2.1** - Gemaakt door Richard Leunk
+**Versie 10.2.3** - Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

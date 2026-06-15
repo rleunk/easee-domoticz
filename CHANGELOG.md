@@ -2,6 +2,20 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.2.3] - 2026-06-15
+
+### ✨ Equalizer tegel uitgebreid
+- **Hoofdzekering** (main fuse size) via `site.ratedCurrent` uit `/sites/{id}/state`
+- **Hoofdzekering limiet** via `site.fuse` of fallback `MaxPowerImport` (obs. 44, kW)
+- Emoji's terug op de Status-tegel (✅ ⚖️ 🔌 🏠 ⚡ 🔥)
+- Site fuse-info gecached per poll-cyclus
+
+## [10.2.2] - 2026-06-15
+
+### ✨ Equalizer tegel verduidelijkt
+- Status toont nu `eMobility limiet: 20 A` (zelfde als Easee Control)
+- Duidelijke regels: online, load balancing, limiet, optioneel huisvermogen
+
 ## [10.2.1] - 2026-06-15
 
 ### 🐛 Equalizer discovery fix

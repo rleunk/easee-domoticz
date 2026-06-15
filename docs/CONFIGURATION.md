@@ -89,6 +89,15 @@ De plugin zoekt de Equalizer via:
 
 Als geen Equalizer wordt gevonden, verschijnen geen extra tegels en toont Status `Geen EQ`.
 
+### Equalizer Status-tegel (v10.2.3+)
+
+| Regel | API-bron | Easee Control |
+|-------|----------|---------------|
+| Hoofdzekering | `site.ratedCurrent` | Main fuse size |
+| eMobility limiet | `maxAllocatedCurrent` | Max allocated current |
+| Hoofdzekering limiet | `site.fuse` of obs. 44 | Main fuse limit |
+| Huisvermogen | obs. 40 ActivePowerImport | — |
+
 ## Tibber Integration (Optioneel)
 
 ### Tibber Token (Mode7)
