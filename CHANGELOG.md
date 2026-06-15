@@ -2,6 +2,14 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.3.3] - 2026-06-15
+
+### 🐛 Hoofdzekering limiet — site.circuits + root-circuit detail
+- **`/sites/{id}/state` → `site.circuits[]`** wordt nu ook gelezen (naast `circuitStates`) — hier staat `circuit.fuse` vaak wél terwijl `circuitStates` het soms mist
+- **Root-circuit detail**: voor elk root-circuit extra GET `/sites/{id}/circuits/{id}` + `/settings`
+- **Selectie hersteld**: root `circuit.fuse` direct prefereren; hoogste waarde strikt onder `ratedCurrent` (23 A bij 25 A)
+- **Betere logging bij onbekend**: toont gevonden ruwe fuse-waarden, afgewezen kandidaten én API-keys (niet alleen probe-namen)
+
 ## [10.3.2] - 2026-06-15
 
 ### 🐛 Hoofdzekering limiet — circuit.fuse (23 A)
