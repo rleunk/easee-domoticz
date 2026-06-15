@@ -50,6 +50,23 @@
 **Omschrijving**: Verbositeit van logging  
 **Debug**: Extra gedetailleerde logs voor troubleshooting
 
+## Aangepaste laadpaalnamen (optioneel)
+
+### Naam laadpaal 1 (Mode2)
+**Type**: Text (Mode-veld)  
+**Default**: (empty)  
+**Omschrijving**: Eigen naam voor de eerste gevonden laadpaal  
+**Voorbeeld**: `Charge Lite Links`
+
+### Naam laadpaal 2 (Mode3)
+**Type**: Text (Mode-veld)  
+**Default**: (empty)  
+**Voorbeeld**: `Charge Lite Rechts`
+
+**Belangrijk:** Gebruik **geen** Address/Port/SerialPort voor namen — Domoticz behandelt Port als getal (standaard `0`) en SerialPort als USB-poort.
+
+Als Mode2/Mode3 leeg zijn, gebruikt de plugin de Easee-naam of `Laadpaal 1` / `Laadpaal 2`.
+
 ## Tibber Integration (Optioneel)
 
 ### Tibber Token (Mode7)
@@ -88,10 +105,10 @@ Devices krijgen automatisch deze namen:
 
 ### Per Laadpaal
 ```
-[PREFIX] - [CHARGER_ID] Laden
-[PREFIX] - [CHARGER_ID] Totaal & Sessie
-[PREFIX] - [CHARGER_ID] Status
-[PREFIX] - [CHARGER_ID] Kosten (Sessie/Dag) (Tibber)
+[PREFIX] - [NAAM] - Laden
+[PREFIX] - [NAAM] - Totaal & Sessie
+[PREFIX] - [NAAM] - Status
+[PREFIX] - [NAAM] - Kosten (Sessie/Dag) (Tibber)
 ```
 
 ## State Persistence

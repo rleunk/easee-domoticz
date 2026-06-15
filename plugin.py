@@ -1,9 +1,9 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.0.1" author="Richard Leunk" version="10.0.1"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.1.0" author="Richard Leunk" version="10.1.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.0.1</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.1.0</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators en Tibber stroomtarief integratie.</p>
     </description>
     <params>
@@ -19,6 +19,10 @@
                     <option label="Debug" value="Debug"/>
                 </options>
             </param>
+        </group>
+        <group label="Aangepaste laadpaalnamen (optioneel)">
+            <param field="Mode2" label="Naam laadpaal 1" width="220px" default=""/>
+            <param field="Mode3" label="Naam laadpaal 2" width="220px" default=""/>
         </group>
         <group label="Tibber (optioneel)">
             <param field="Mode7" label="Tibber Personal Access Token" width="360px" password="true" default=""/>
@@ -77,14 +81,15 @@ class BasePlugin:
         self.state = {'chargers': {}, 'price_cache': {}, 'currency': 'EUR'}
         self.chargers = []
         self.latest_chargers = {}
+        self.charger_names = {}
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.0.1] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.1.0] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.0.1] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.0.1] {msg}')
+            Domoticz.Debug(f'[Easee v10.1.0] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.1.0] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -138,8 +143,26 @@ class BasePlugin:
     def short_id(self, full_id):
         s = str(full_id).strip()
         return s[-8:] if len(s) > 8 else s
-    def charger_label(self, charger):
-        return self.short_id(charger['id'])
+    def custom_charger_name(self, index):
+        if index == 0:
+            return (Parameters.get('Mode2', '') or '').strip()
+        if index == 1:
+            return (Parameters.get('Mode3', '') or '').strip()
+        return ''
+    def charger_display_name(self, charger, index):
+        custom = self.custom_charger_name(index)
+        if custom:
+            return custom
+        api_name = str(charger.get('name') or '').strip()
+        cid = str(charger.get('id') or '').strip()
+        if api_name and api_name.lower() not in (cid.lower(), self.short_id(cid).lower()):
+            return api_name
+        return f'Laadpaal {index + 1}'
+    def charger_dev_name(self, display, label):
+        return self.pref(f'{display} - {label}')
+    def make_charger_device_id(self, cid, label_key):
+        raw = f'{cid}|{label_key}'.encode('utf-8', errors='ignore')
+        return 'EASEE_CHG_' + hashlib.sha1(raw).hexdigest()[:24].upper()
     def make_device_id(self, name):
         raw = self.norm(name).encode('utf-8', errors='ignore')
         return 'EASEE_' + hashlib.sha1(raw).hexdigest()[:28].upper()
@@ -238,6 +261,8 @@ class BasePlugin:
         return self.units_by_devid.get(str(devid))
     def resolve_unit(self, name):
         return self.find_unit(name) or self.find_unit_by_devid(self.make_device_id(name))
+    def resolve_charger_unit(self, cid, label_key):
+        return self.find_unit_by_devid(self.make_charger_device_id(cid, label_key))
     def next_free_unit(self):
         for unit in range(1, 256):
             if unit not in Devices:
@@ -248,15 +273,15 @@ class BasePlugin:
     # ---- images ----
     def image_root(self, name):
         n = name.lower()
-        if 'overzicht' in n:
+        if 'overzicht' in n or 'beste laden' in n:
             return 'EaseeOverview'
-        if 'kosten' in n or 'goedkoop' in n or '€' in n or 'sessie' in n:
+        if 'kosten' in n or 'goedkoop' in n or '€' in n:
             return 'EaseeCost'
-        if 'status' in n or 'online' in n or 'tijd' in n:
+        if 'status' in n:
             return 'EaseeStatus'
         if 'loadbal' in n:
             return 'EaseeLoadBal'
-        if 'laden' in n or 'totaal' in n or 'w' in n or 'kwh' in n or 'energy' in n:
+        if 'totaal & sessie' in n or ' laden' in n or 'totaal kwh' in n:
             return 'EaseePower'
         return 'EaseeCharger'
     def load_custom_images(self):
@@ -280,9 +305,9 @@ class BasePlugin:
                 pass
 
     # ---- create/update ----
-    def ensure_device_once(self, name, typename):
+    def ensure_device_once(self, name, typename, device_id=None):
         key = self.norm(name)
-        devid = self.make_device_id(key)
+        devid = device_id or self.make_device_id(key)
         unit = self.find_unit_by_devid(devid) or self.find_unit(key)
         if unit is not None:
             return unit
@@ -331,6 +356,18 @@ class BasePlugin:
         if u is not None:
             state = self.truthy(value)
             Devices[u].Update(nValue=1 if state else 0, sValue='Aan' if state else 'Uit')
+    def update_charger_text(self, cid, label_key, value):
+        u = self.resolve_charger_unit(cid, label_key)
+        if u is not None:
+            Devices[u].Update(nValue=0, sValue=str(value)[:4000])
+    def update_charger_custom(self, cid, label_key, value):
+        u = self.resolve_charger_unit(cid, label_key)
+        if u is not None:
+            Devices[u].Update(nValue=0, sValue=str(value))
+    def update_charger_energy(self, cid, label_key, power_w, total_wh):
+        u = self.resolve_charger_unit(cid, label_key)
+        if u is not None:
+            Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
 
     # ---- Easee API ----
     def login(self):
@@ -542,28 +579,33 @@ class BasePlugin:
             if self.tibber_enabled():
                 self.ensure_device_once(self.pref('Tibber prijs'),'Text')
     
-    def ensure_charger_devices(self, base):
+    def ensure_charger_devices(self, charger, index):
+        display = self.charger_display_name(charger, index)
+        cid = charger['id']
         devices = [
-            ('Energy','Laden'),
-            ('CustomkWh','Totaal & Sessie'),
-            ('Text','Status'),
+            ('Energy', 'Laden'),
+            ('CustomkWh', 'Totaal & Sessie'),
+            ('Text', 'Status'),
         ]
         if self.tibber_enabled():
-            devices.extend([
-                ('CustomEUR','Kosten (Sessie/Dag)'),
-            ])
-        for typ, label in devices:
-            self.ensure_device_once(f'{base} {label}', typ)
+            devices.append(('CustomEUR', 'Kosten (Sessie/Dag)'))
+        for typ, label_key in devices:
+            name = self.charger_dev_name(display, label_key)
+            devid = self.make_charger_device_id(cid, label_key)
+            self.ensure_device_once(name, typ, device_id=devid)
     
     def initial_sync(self):
         self.chargers = self.discover_entities()
+        self.charger_names = {}
         self.ensure_core_devices()
-        for c in self.chargers:
-            self.ensure_charger_devices(self.charger_label(c))
+        for i, c in enumerate(self.chargers):
+            self.charger_names[c['id']] = self.charger_display_name(c, i)
+            self.ensure_charger_devices(c, i)
         self.write_debug(True)
     
     def refresh_entity_cache_only(self):
         self.chargers = self.discover_entities()
+        self.charger_names = {c['id']: self.charger_display_name(c, i) for i, c in enumerate(self.chargers)}
         self.write_debug(False)
     
     def write_debug(self, created=False):
@@ -585,7 +627,6 @@ class BasePlugin:
     
     def poll_charger(self, charger):
         cid = charger['id']
-        base = self.charger_label(charger)
         values = {}
         session = {}
         try:
@@ -674,25 +715,22 @@ class BasePlugin:
         st['prev_total_kwh'] = total_kwh
 
         # UPDATE DEVICES
-        self.update_energy(f'{base} Laden', power_w, total_wh)
+        self.update_charger_energy(cid, 'Laden', power_w, total_wh)
         
-        # COMPACT: Totaal & Sessie merged
         totaal_sessie = f'{int(round(total_kwh))} kWh | Sessie: {int(round(session_kwh))} kWh'
-        self.update_custom(f'{base} Totaal & Sessie', totaal_sessie)
+        self.update_charger_custom(cid, 'Totaal & Sessie', totaal_sessie)
         
-        # COMPACT: Status with emoji
         power_emoji = self.power_emoji(power_w)
         status_emoji = self.status_emoji(online, session_active)
         status_text = f'{status_emoji} {power_emoji} {status_label} | ⏱️ {laadduur}'
-        self.update_text(f'{base} Status', status_text)
+        self.update_charger_text(cid, 'Status', status_text)
         
         if self.tibber_enabled():
-            # COMPACT: Kosten merged
             rate = session_cost / session_kwh if session_kwh > 0 else 0.0
             price_emoji = self.price_emoji(rate, self.state.get('price_cache', {}))
             day_cost = self.safe_float(st.get('day_cost_total', 0.0), 0.0)
             costs_text = f'{price_emoji} Sessie: €{self.euro_str(session_cost)} | Dag: €{self.euro_str(day_cost)}'
-            self.update_custom(f'{base} Kosten (Sessie/Dag)', costs_text)
+            self.update_charger_custom(cid, 'Kosten (Sessie/Dag)', costs_text)
         
         self.latest_chargers[cid] = {
             'power': power_w,

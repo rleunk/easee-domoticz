@@ -1,8 +1,8 @@
-# Easee Domoticz Plugin v10.0.1
+# Easee Domoticz Plugin v10.1.0
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.0.1-blue)
+![Version](https://img.shields.io/badge/version-10.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -11,6 +11,7 @@
 ✨ **Auto-Discovery** - Automatische detectie van alle Easee laadpalen  
 📊 **Realtime Monitoring** - Live power, energy en status updates  
 💬 **Leesbare status** - Laadstatus in Nederlands (Laden, Wacht op start, …)  
+🏷️ **Eigen namen** - Optionele namen per laadpaal via Mode2/Mode3  
 💰 **Cost Tracking** - Automatische berekening van laadkosten  
 💵 **Tibber Integration** - Stroomtarieven en goedkope laadwindows  
 🎨 **Compact UI** - Intelligente samengevoegde tegels met emoji indicators  
@@ -48,7 +49,7 @@ Zie [docs/INSTALLATION.md](docs/INSTALLATION.md) voor stap-voor-stap instructies
 
 5. **Voeg plugin toe in Domoticz UI**
    - Setup → Hardware
-   - Type: "Easee AutoDiscovery Compact v10.0.1"
+   - Type: "Easee AutoDiscovery Compact v10.1.0"
    - Username/Password: Jouw Easee credentials
    - Create
 
@@ -64,6 +65,8 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare paramet
 | Password | - | Easee account wachtwoord |
 | Poll interval | 30 sec | Hoe vaak data wordt opgehaald |
 | Device prefix | "Easee" | Prefix voor alle devices |
+| Naam laadpaal 1 (Mode2) | - | Optioneel, bijv. `Charge Lite Links` |
+| Naam laadpaal 2 (Mode3) | - | Optioneel, bijv. `Charge Lite Rechts` |
 | Site filter | - | Optioneel: filter op sitenaam |
 | Tibber token | - | Optioneel: Tibber API token voor prijzen |
 
@@ -78,10 +81,10 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare paramet
 - **Beste laden** - Goedkoopste laadwindow (met Tibber)
 
 ### Per Laadpaal
-- **[ID] Laden** - Power meter (Watt)
-- **[ID] Totaal & Sessie** - Samengevoegde energie info (kWh)
-- **[ID] Status** - Charger status met emoji indicators
-- **[ID] Kosten (Sessie/Dag)** - Samengevoegde kosteninfo (met Tibber)
+- **[Naam] - Laden** - Power meter (Watt)
+- **[Naam] - Totaal & Sessie** - Totaal en sessie kWh
+- **[Naam] - Status** - Laadstatus in Nederlands + emoji
+- **[Naam] - Kosten (Sessie/Dag)** - Kosten (met Tibber)
 
 ## 🎨 Emoji Indicators
 
@@ -121,7 +124,7 @@ Zie [CHANGELOG.md](CHANGELOG.md) voor volledige versiegeschiedenis.
 
 ## 🆙 Updates
 
-**Van v10.0.0 naar v10.0.1?**
+**Van v10.0.x naar v10.1.0?**
 
 ```bash
 cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
@@ -150,6 +153,6 @@ MIT License - zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.0.1** - Gemaakt door Richard Leunk
+**Versie 10.1.0** - Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

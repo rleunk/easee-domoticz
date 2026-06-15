@@ -2,6 +2,21 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.1.0] - 2026-06-15
+
+### ✨ Nieuw
+- **Optionele laadpaalnamen** via `Mode2` (laadpaal 1) en `Mode3` (laadpaal 2)
+- Device-namen bijv. `Easee - Charge Lite Links - Status`
+- **Stabiele device-IDs** op basis van charger-ID — namen wijzigen geeft geen dubbele tegels
+
+### 🐛 Fix t.o.v. v9.1.0
+- Geen `Port`/`SerialPort` meer (die gaven `0` en USB-poort UI in Domoticz)
+- Alleen tekst-Mode-velden voor namen
+
+### ⚠️ Upgrade vanaf v10.0.x
+- Nieuwe device-namen en IDs — oude tegels met ID-suffix (bijv. `AB12CD34 Status`) kun je handmatig verwijderen
+- State file (`easee_v9_0_state.json`) blijft behouden
+
 ## [10.0.1] - 2026-06-15
 
 ### ✨ Verbetering

@@ -1,3 +1,27 @@
+# Easee Domoticz Plugin - v10.1.0 Release
+
+## 📦 Release Notes
+
+**Versie**: 10.1.0  
+**Status**: ✅ Production Ready  
+**Release Date**: 2026-06-15  
+
+### Optionele laadpaalnamen
+- `Mode2` = Naam laadpaal 1 (tekstveld, geen Port/Address)
+- `Mode3` = Naam laadpaal 2
+- Stabiele device-IDs op charger-ID — geen dubbele tegels bij naamswijziging
+
+### Voorbeeld device-namen
+```
+Easee - Charge Lite Links - Status
+Easee - Charge Lite Rechts - Laden
+```
+
+### Upgrade
+Verwijder oude tegels met ID-suffix (v10.0.x) na upgrade indien gewenst.
+
+---
+
 # Easee Domoticz Plugin - v10.0.1 Release
 
 ## 📦 Release Notes
@@ -178,6 +202,7 @@ Voor productie deployment, zorg dat je dit hebt:
 
 | Versie | Datum | Status | Notes |
 |--------|-------|--------|-------|
+| **10.1.0** | 2026-06-15 | ✅ Production | Eigen laadpaalnamen Mode2/Mode3 |
 | **10.0.1** | 2026-06-15 | ✅ Production | Leesbare laadstatus |
 | **10.0.0** | 2026-06-15 | ✅ Production | Nieuwe start + sessiekosten bugfix |
 | **9.0** | 2026-06-12 | ⚠️ EOL | Zie v10.0.0 |
