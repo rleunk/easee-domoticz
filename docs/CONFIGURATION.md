@@ -50,26 +50,6 @@
 **Omschrijving**: Verbositeit van logging  
 **Debug**: Extra gedetailleerde logs voor troubleshooting
 
-## Aangepaste laadpaalnamen (optioneel)
-
-### Naam laadpaal 1 (Address)
-**Type**: Text  
-**Default**: (empty)  
-**Omschrijving**: Eigen naam voor de eerste gevonden laadpaal  
-**Voorbeeld**: `Charge Lite Links`
-
-### Naam laadpaal 2 (Port)
-**Type**: Text  
-**Default**: (empty)  
-**Voorbeeld**: `Charge Lite Rechts`
-
-### Naam laadpaal 3 (SerialPort)
-**Type**: Text  
-**Default**: (empty)  
-**Voorbeeld**: `Laadpaal Garage`
-
-Als je deze leeg laat, gebruikt de plugin de Easee-naam of `Laadpaal 1`, `Laadpaal 2`, enz.
-
 ## Tibber Integration (Optioneel)
 
 ### Tibber Token (Mode7)
@@ -108,15 +88,10 @@ Devices krijgen automatisch deze namen:
 
 ### Per Laadpaal
 ```
-[PREFIX] - [NAAM] - Vermogen
-[PREFIX] - [NAAM] - Energie
-[PREFIX] - [NAAM] - Status
-[PREFIX] - [NAAM] - Kosten (Tibber)
-```
-
-Voorbeeld status-tegel inhoud:
-```
-✅ Laden · 7,2 kW · 01:24
+[PREFIX] - [CHARGER_ID] Laden
+[PREFIX] - [CHARGER_ID] Totaal & Sessie
+[PREFIX] - [CHARGER_ID] Status
+[PREFIX] - [CHARGER_ID] Kosten (Sessie/Dag) (Tibber)
 ```
 
 ## State Persistence

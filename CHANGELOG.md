@@ -2,28 +2,18 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
-## [9.1.0] - 2026-06-13
+## [10.0.0] - 2026-06-15
 
-### ✨ Nieuw
-- **Leesbare laadstatus** — `chargerOpMode` cijfers worden Nederlandse tekst (bijv. `Laden`, `Wacht op start`)
-- **Betere tegelteksten** — status toont nu `Laden · 7,2 kW · 01:24` i.p.v. ruwe cijfers
-- **Optionele laadpaalnamen** — configureer namen voor laadpaal 1/2/3 in hardware-instellingen
-- **Slimmere iconen** — verbeterde koppeling tussen tegeltype en Easee-icon (fix: Energie-tegel kreeg ten onrechte kosten-icoon)
-
-### 🎨 UI verbeteringen
-- Laadpaal devices heten nu bijv. `Easee - Laadpaal 1 - Status` i.p.v. alleen een ID
-- Energie-tegel: `Totaal 1245 kWh · Sessie 18 kWh`
-- Kosten-tegel: `Sessie €2,45 · Vandaag €5,10`
-- Systeemstatus: `2/2 laders online`
-
-### ⚠️ Opmerking bij upgrade
-- Nieuwe device-namen kunnen extra tegels aanmaken naast oude v9.0-tegels
-- Verwijder oude Easee-tegels handmatig in Domoticz na upgrade, of verwijder en hermaak de hardware
-
-## [9.0.1] - 2026-06-13
+### 🚀 Nieuwe start
+- Schone release gebaseerd op stabiele v9.0 codebase
+- Nieuw versienummer als basis voor toekomstige updates
 
 ### 🐛 Bugfixes
-- Energie- en belastingkosten van laadsessie worden correct opgehaald wanneer er niet actief wordt geladen
+- Energie- en belastingkosten van laadsessie worden correct opgehaald wanneer er niet actief wordt geladen (`last_session_cost_energy` / `last_session_cost_tax`)
+
+### 📦 Overige
+- `easee_v9_0_state.json` blijft in gebruik — bestaande laadgeschiedenis blijft behouden
+- Zelfde device-namen en UI als v9.0
 
 ## [9.0] - 2026-06-12
 

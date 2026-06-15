@@ -1,10 +1,10 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV900" name="Easee AutoDiscovery Compact v9.1.0" author="Richard Leunk" version="9.1.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.0.0" author="Richard Leunk" version="10.0.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v9.1.0</h2><br/>
-        <p>Complete Easee laadpaal integratie met leesbare status, compacte UI, intelligente emoji indicators en Tibber stroomtarief integratie.</p>
+        <h2>Easee AutoDiscovery Compact v10.0.0</h2><br/>
+        <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators en Tibber stroomtarief integratie.</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
@@ -19,11 +19,6 @@
                     <option label="Debug" value="Debug"/>
                 </options>
             </param>
-        </group>
-        <group label="Aangepaste laadpaalnamen (optioneel)">
-            <param field="Address" label="Naam laadpaal 1" width="220px" default=""/>
-            <param field="Port" label="Naam laadpaal 2" width="220px" default=""/>
-            <param field="SerialPort" label="Naam laadpaal 3" width="220px" default=""/>
         </group>
         <group label="Tibber (optioneel)">
             <param field="Mode7" label="Tibber Personal Access Token" width="360px" password="true" default=""/>
@@ -48,18 +43,6 @@ TIBBER_GQL = 'https://api.tibber.com/v1-beta/gql'
 STATE_FILE = 'easee_v9_0_state.json'
 ULTRA_DEBUG = False
 
-OP_MODE_LABELS = {
-    0: 'Offline',
-    1: 'Geen auto',
-    2: 'Wacht op start',
-    3: 'Laden',
-    4: 'Voltooid',
-    5: 'Fout',
-    6: 'Klaar om te laden',
-    7: 'Wacht op autorisatie',
-    8: 'Bezig met afmelden',
-}
-
 DEVICE_TYPES = {
     'Text':      {'Type': 243, 'Subtype': 19},
     'Switch':    {'Type': 244, 'Subtype': 73, 'Switchtype': 0},
@@ -82,15 +65,14 @@ class BasePlugin:
         self.state = {'chargers': {}, 'price_cache': {}, 'currency': 'EUR'}
         self.chargers = []
         self.latest_chargers = {}
-        self.charger_names = {}
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v9.1.0] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.0.0] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v9.1.0] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v9.1.0] {msg}')
+            Domoticz.Debug(f'[Easee v10.0.0] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.0.0] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -144,26 +126,8 @@ class BasePlugin:
     def short_id(self, full_id):
         s = str(full_id).strip()
         return s[-8:] if len(s) > 8 else s
-    def custom_charger_names(self):
-        return [
-            (Parameters.get('Address', '') or '').strip(),
-            (Parameters.get('Port', '') or '').strip(),
-            (Parameters.get('SerialPort', '') or '').strip(),
-        ]
-    def charger_display_name(self, charger, index=0):
-        custom = self.custom_charger_names()
-        if index < len(custom) and custom[index]:
-            return custom[index]
-        api_name = str(charger.get('name') or '').strip()
-        cid = str(charger.get('id') or '').strip()
-        if api_name and api_name.lower() not in (cid.lower(), self.short_id(cid).lower()):
-            return api_name
-        return f'Laadpaal {index + 1}'
-    def charger_device_name(self, display_name, label):
-        return self.pref(f'{display_name} - {label}')
-    def make_charger_device_id(self, cid, label):
-        raw = f'{cid}|{label}'.encode('utf-8', errors='ignore')
-        return 'EASEE_CHG_' + hashlib.sha1(raw).hexdigest()[:24].upper()
+    def charger_label(self, charger):
+        return self.short_id(charger['id'])
     def make_device_id(self, name):
         raw = self.norm(name).encode('utf-8', errors='ignore')
         return 'EASEE_' + hashlib.sha1(raw).hexdigest()[:28].upper()
@@ -184,28 +148,6 @@ class BasePlugin:
         return bool(self.tibber_token())
 
     # ---- emoji & status helpers ----
-    def op_mode_label(self, value):
-        if value is None or value == '':
-            return 'Onbekend'
-        try:
-            return OP_MODE_LABELS.get(int(value), f'Modus {int(value)}')
-        except Exception:
-            text = str(value).strip()
-            return text if text else 'Onbekend'
-    def format_power_kw(self, power_w):
-        kw = self.safe_float(power_w, 0.0) / 1000.0
-        if kw >= 10:
-            return f'{kw:.1f}'
-        if kw >= 1:
-            return f'{kw:.2f}'
-        return f'{kw:.3f}'
-    def format_kwh(self, value):
-        kwh = self.safe_float(value, 0.0)
-        if kwh >= 100:
-            return f'{int(round(kwh))}'
-        if kwh >= 10:
-            return f'{kwh:.1f}'
-        return f'{kwh:.2f}'
     def power_emoji(self, power_w):
         """Emoji based on power level"""
         if power_w >= 7000:
@@ -217,15 +159,14 @@ class BasePlugin:
         else:
             return '⏸️'
 
-    def status_emoji(self, online, session_active, op_mode=None):
+    def status_emoji(self, online, session_active):
         """Emoji for charger status"""
-        if not online or op_mode == 0:
+        if not online:
             return '❌'
-        if op_mode == 5:
-            return '⚠️'
-        if session_active or op_mode == 3:
+        elif session_active:
             return '✅'
-        return '🔴'
+        else:
+            return '🔴'
 
     def price_emoji(self, price_total, cache):
         """Emoji for price level"""
@@ -285,26 +226,22 @@ class BasePlugin:
         return None
 
     # ---- images ----
-    def image_for_device(self, name, typename):
+    def image_root(self, name):
         n = name.lower()
-        if typename == 'Switch':
-            return 'EaseeLoadBal'
-        if typename == 'Energy':
-            return 'EaseePower'
-        if 'beste laden' in n:
+        if 'overzicht' in n:
             return 'EaseeOverview'
-        if 'kosten' in n:
+        if 'kosten' in n or 'goedkoop' in n or '€' in n or 'sessie' in n:
             return 'EaseeCost'
-        if 'status' in n:
+        if 'status' in n or 'online' in n or 'tijd' in n:
             return 'EaseeStatus'
-        if 'totaal & sessie' in n or 'totaal kwh' in n:
-            return 'EaseePower'
-        if 'laden' in n:
+        if 'loadbal' in n:
+            return 'EaseeLoadBal'
+        if 'laden' in n or 'totaal' in n or 'w' in n or 'kwh' in n or 'energy' in n:
             return 'EaseePower'
         return 'EaseeCharger'
     def load_custom_images(self):
         roots = ['EaseeCharger','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
-        candidates = ['Easee_v9_1_icons.zip','Easee_v9_0_icons.zip','Easee_v8_0_3_icons.zip','Easee_v8_0_2_icons.zip','Easee_v8_0_1_icons.zip','Easee_v8_icons.zip','Easee.zip']
+        candidates = ['Easee_v10_0_icons.zip','Easee_v9_0_icons.zip','Easee_v8_0_3_icons.zip','Easee_v8_0_2_icons.zip','Easee_v8_0_1_icons.zip','Easee_v8_icons.zip','Easee.zip']
         for fn in candidates:
             if not os.path.isfile(os.path.join(self.plugin_dir, fn)):
                 continue
@@ -323,9 +260,9 @@ class BasePlugin:
                 pass
 
     # ---- create/update ----
-    def ensure_device_once(self, name, typename, device_id=None):
+    def ensure_device_once(self, name, typename):
         key = self.norm(name)
-        devid = device_id or self.make_device_id(key)
+        devid = self.make_device_id(key)
         unit = self.find_unit_by_devid(devid) or self.find_unit(key)
         if unit is not None:
             return unit
@@ -343,7 +280,7 @@ class BasePlugin:
                 kwargs['Switchtype'] = spec['Switchtype']
             if 'Options' in spec:
                 kwargs['Options'] = spec['Options']
-        root = self.image_for_device(key, typename)
+        root = self.image_root(key)
         if root in self.image_ids:
             kwargs['Image'] = self.image_ids[root]
         try:
@@ -585,36 +522,28 @@ class BasePlugin:
             if self.tibber_enabled():
                 self.ensure_device_once(self.pref('Tibber prijs'),'Text')
     
-    def ensure_charger_devices(self, charger, index):
-        display = self.charger_display_name(charger, index)
-        cid = charger['id']
+    def ensure_charger_devices(self, base):
         devices = [
-            ('Energy','Vermogen'),
-            ('CustomkWh','Energie'),
+            ('Energy','Laden'),
+            ('CustomkWh','Totaal & Sessie'),
             ('Text','Status'),
         ]
         if self.tibber_enabled():
             devices.extend([
-                ('CustomEUR','Kosten'),
+                ('CustomEUR','Kosten (Sessie/Dag)'),
             ])
         for typ, label in devices:
-            name = self.charger_device_name(display, label)
-            devid = self.make_charger_device_id(cid, label)
-            self.ensure_device_once(name, typ, device_id=devid)
+            self.ensure_device_once(f'{base} {label}', typ)
     
     def initial_sync(self):
         self.chargers = self.discover_entities()
-        self.charger_names = {}
         self.ensure_core_devices()
-        for i, c in enumerate(self.chargers):
-            display = self.charger_display_name(c, i)
-            self.charger_names[c['id']] = display
-            self.ensure_charger_devices(c, i)
+        for c in self.chargers:
+            self.ensure_charger_devices(self.charger_label(c))
         self.write_debug(True)
     
     def refresh_entity_cache_only(self):
         self.chargers = self.discover_entities()
-        self.charger_names = {c['id']: self.charger_display_name(c, i) for i, c in enumerate(self.chargers)}
         self.write_debug(False)
     
     def write_debug(self, created=False):
@@ -636,7 +565,7 @@ class BasePlugin:
     
     def poll_charger(self, charger):
         cid = charger['id']
-        display = self.charger_names.get(cid) or self.charger_display_name(charger, 0)
+        base = self.charger_label(charger)
         values = {}
         session = {}
         try:
@@ -662,12 +591,9 @@ class BasePlugin:
         total_kwh = self.kwh_value(values.get('lifetimeEnergy'))
         total_wh = self.wh_from_kwh(total_kwh)
         online = values.get('isOnline')
-        op_mode = values.get('chargerOpMode')
-        status_label = self.op_mode_label(op_mode)
+        status = values.get('chargerOpMode') or ''
         session_status = session.get('status') or session.get('state') or ''
-        if session_status and not str(session_status).isdigit():
-            status_label = str(session_status)
-        session_active = bool(session) or power_w > 50 or self.safe_int(op_mode, -1) == 3
+        session_active = bool(session) or power_w > 50
 
         st = self.charger_state(cid)
         prev_total = st.get('prev_total_kwh')
@@ -725,21 +651,25 @@ class BasePlugin:
         st['prev_total_kwh'] = total_kwh
 
         # UPDATE DEVICES
-        self.update_energy(self.charger_device_name(display, 'Vermogen'), power_w, total_wh)
+        self.update_energy(f'{base} Laden', power_w, total_wh)
         
-        energie_text = f'Totaal {self.format_kwh(total_kwh)} kWh · Sessie {self.format_kwh(session_kwh)} kWh'
-        self.update_custom(self.charger_device_name(display, 'Energie'), energie_text)
+        # COMPACT: Totaal & Sessie merged
+        totaal_sessie = f'{int(round(total_kwh))} kWh | Sessie: {int(round(session_kwh))} kWh'
+        self.update_custom(f'{base} Totaal & Sessie', totaal_sessie)
         
-        status_emoji = self.status_emoji(online, session_active, self.safe_int(op_mode, None))
-        status_text = f'{status_emoji} {status_label} · {self.format_power_kw(power_w)} kW · {laadduur}'
-        self.update_text(self.charger_device_name(display, 'Status'), status_text)
+        # COMPACT: Status with emoji
+        power_emoji = self.power_emoji(power_w)
+        status_emoji = self.status_emoji(online, session_active)
+        status_text = f'{status_emoji} {power_emoji} {status or session_status or "Standby"} | ⏱️ {laadduur}'
+        self.update_text(f'{base} Status', status_text)
         
         if self.tibber_enabled():
+            # COMPACT: Kosten merged
             rate = session_cost / session_kwh if session_kwh > 0 else 0.0
             price_emoji = self.price_emoji(rate, self.state.get('price_cache', {}))
             day_cost = self.safe_float(st.get('day_cost_total', 0.0), 0.0)
-            costs_text = f'{price_emoji} Sessie €{self.euro_str(session_cost)} · Vandaag €{self.euro_str(day_cost)}'
-            self.update_custom(self.charger_device_name(display, 'Kosten'), costs_text)
+            costs_text = f'{price_emoji} Sessie: €{self.euro_str(session_cost)} | Dag: €{self.euro_str(day_cost)}'
+            self.update_custom(f'{base} Kosten (Sessie/Dag)', costs_text)
         
         self.latest_chargers[cid] = {
             'power': power_w,
@@ -758,31 +688,25 @@ class BasePlugin:
         any_online = any(bool(v.get('online')) for v in self.latest_chargers.values())
         
         self.update_energy(self.pref('Totaal Laden'), total_power, total_wh)
-        self.update_custom(self.pref('Totaal kWh'), self.format_kwh(total_kwh))
+        self.update_custom(self.pref('Totaal kWh'), int(round(total_kwh)))
         
         if self.tibber_enabled():
             total_day_cost = round(sum(v.get('day_cost', 0.0) for v in self.latest_chargers.values()), 2)
             total_day_energy = round(sum(v.get('day_energy_cost', 0.0) for v in self.latest_chargers.values()), 2)
             total_day_tax = round(sum(v.get('day_tax_cost', 0.0) for v in self.latest_chargers.values()), 2)
             
+            # COMPACT: Kosten & Samenvatting merged
             price_emoji = self.price_status_emoji()
             rate = (total_day_cost / total_kwh) if total_kwh > 0 else 0.0
             currency = self.current_tibber_price().get("currency","EUR")
-            kosten_samenvatting = (
-                f'{price_emoji} {currency} · Vandaag €{self.euro_str(total_day_cost)}\n'
-                f'Tarief €{self.euro_str(rate)}/kWh · Energie €{self.euro_str(total_day_energy)} · Belasting €{self.euro_str(total_day_tax)}'
-            )
+            kosten_samenvatting = f'{price_emoji} {currency}\nKosten: €{self.euro_str(total_day_cost)} | Tarief: €{self.euro_str(rate)}/kWh\nEnergy: €{self.euro_str(total_day_energy)} | Belasting: €{self.euro_str(total_day_tax)}'
             self.update_text(self.pref('Kosten & Samenvatting'), kosten_samenvatting)
             
-            self.update_text(self.pref('Beste laden'), f'🕒 {self.cheapest_window_text(3)}')
-            online_count = sum(1 for v in self.latest_chargers.values() if v.get('online'))
-            total_count = len(self.latest_chargers)
-            status_msg = f'{"✅" if any_online else "❌"} {online_count}/{total_count} laders online · Tibber actief'
+            self.update_text(self.pref('Beste laden'), self.cheapest_window_text(3))
+            status_msg = ('✅ Online' if any_online else '❌ Offline') + ' | Tibber actief'
             self.update_text(self.pref('Status'), status_msg)
         else:
-            online_count = sum(1 for v in self.latest_chargers.values() if v.get('online'))
-            total_count = len(self.latest_chargers)
-            self.update_text(self.pref('Status'), f'{"✅" if any_online else "❌"} {online_count}/{total_count} laders online')
+            self.update_text(self.pref('Status'), '✅ Online' if any_online else '❌ Offline')
         
         self.update_sw(self.pref('LoadBal'), False)
 

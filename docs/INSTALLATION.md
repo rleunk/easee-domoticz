@@ -54,7 +54,7 @@ sudo service domoticz restart
 
 1. Open Domoticz web interface (`http://localhost:8080`)
 2. Ga naar **Setup → Hardware**
-3. Selecteer type: **"Easee AutoDiscovery Compact v9.1.0"**
+3. Selecteer type: **"Easee AutoDiscovery Compact v10.0.0"**
 4. Vul in:
    - **Username**: Jouw Easee username/telefoonnummer
    - **Password**: Jouw Easee wachtwoord
@@ -68,9 +68,9 @@ sudo service domoticz restart
 Ga naar **Setup → Logs** en zoek naar Easee berichten:
 
 ```
-[Easee v9.1.0] Plugin gestart
-[Easee v9.1.0] Laadpaal X gevonden: naam
-[Easee v9.1.0] State geladen
+[Easee v10.0.0] Plugin gestart
+[Easee v10.0.0] Laadpaal X gevonden: naam
+[Easee v10.0.0] State geladen
 ```
 
 ## Problemen?

@@ -1,62 +1,30 @@
-# Easee Domoticz Plugin - v9.1.0 Release
+# Easee Domoticz Plugin - v10.0.0 Release
 
 ## 📦 Release Notes
 
-**Versie**: 9.1.0  
+**Versie**: 10.0.0  
 **Status**: ✅ Production Ready  
-**Release Date**: 2026-06-13  
+**Release Date**: 2026-06-15  
 **Ondersteuning**: Python 3.7+, Domoticz 2020.2+
 
 ---
 
-## ✨ Wat is nieuw in v9.1.0?
+## 🚀 Nieuwe start — v10.0.0
 
-### Leesbare laadstatus
-- `chargerOpMode` cijfers worden Nederlandse tekst: `Laden`, `Wacht op start`, `Geen auto`, enz.
-- Status-tegel toont: `✅ Laden · 7,2 kW · 01:24`
-
-### Betere tegels en iconen
-- Duidelijkere device-namen: `Easee - Laadpaal 1 - Status`
-- Optionele eigen namen per laadpaal in hardware-config
-- Verbeterde icon-koppeling (Energie-tegel krijgt niet meer per ongeluk kosten-icoon)
-
-### Upgrade-opmerking
-Na upgrade van v9.0.x kunnen nieuwe tegels naast oude verschijnen. Verwijder oude Easee-tegels handmatig in Domoticz.
-
-**Update:**
-```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
-git pull origin main
-sudo systemctl restart domoticz
-```
-
----
-
-# Easee Domoticz Plugin - v9.0.1 Release
-
-## 📦 Release Notes
-
-**Versie**: 9.0.1  
-**Status**: ✅ Production Ready  
-**Release Date**: 2026-06-13  
-**Ondersteuning**: Python 3.7+, Domoticz 2020.2+
-
----
-
-## 🐛 Wat is nieuw in v9.0.1?
+Schone release gebaseerd op de stabiele v9.0 codebase, met één belangrijke bugfix.
 
 ### Bugfix: sessiekosten energie/belasting
+- Energie- en belastingkosten worden correct opgehaald na afloop van een laadsessie
+- Geen dataverlies: `easee_v9_0_state.json` blijft in gebruik
 
-- Energie- en belastingkosten van laadsessie worden correct opgehaald wanneer er niet actief wordt geladen
-- Geen dataverlies bij update vanaf v9.0 — `easee_v9_0_state.json` blijft in gebruik
-
-**Update:**
-
+### Installatie / update
 ```bash
 cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
 git pull origin main
 sudo systemctl restart domoticz
 ```
+
+Hardware type in Domoticz: **"Easee AutoDiscovery Compact v10.0.0"**
 
 ---
 
@@ -195,9 +163,8 @@ Voor productie deployment, zorg dat je dit hebt:
 
 | Versie | Datum | Status | Notes |
 |--------|-------|--------|-------|
-| **9.1.0** | 2026-06-13 | ✅ Production | Leesbare status, betere tegels/iconen |
-| **9.0.1** | 2026-06-13 | ✅ Production | Fix sessiekosten energie/belasting |
-| **9.0** | 2026-06-12 | ✅ Production | Compact UI, emoji indicators |
+| **10.0.0** | 2026-06-15 | ✅ Production | Nieuwe start + sessiekosten bugfix |
+| **9.0** | 2026-06-12 | ⚠️ EOL | Zie v10.0.0 |
 | 8.0.2 | 2026-06-11 | 🔴 EOL | Stabiel maar niet compact |
 | 8.0.1 | 2026-06-10 | 🔴 EOL | Early release |
 
