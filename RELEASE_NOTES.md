@@ -1,3 +1,37 @@
+# Easee Domoticz Plugin - v9.1.0 Release
+
+## 📦 Release Notes
+
+**Versie**: 9.1.0  
+**Status**: ✅ Production Ready  
+**Release Date**: 2026-06-13  
+**Ondersteuning**: Python 3.7+, Domoticz 2020.2+
+
+---
+
+## ✨ Wat is nieuw in v9.1.0?
+
+### Leesbare laadstatus
+- `chargerOpMode` cijfers worden Nederlandse tekst: `Laden`, `Wacht op start`, `Geen auto`, enz.
+- Status-tegel toont: `✅ Laden · 7,2 kW · 01:24`
+
+### Betere tegels en iconen
+- Duidelijkere device-namen: `Easee - Laadpaal 1 - Status`
+- Optionele eigen namen per laadpaal in hardware-config
+- Verbeterde icon-koppeling (Energie-tegel krijgt niet meer per ongeluk kosten-icoon)
+
+### Upgrade-opmerking
+Na upgrade van v9.0.x kunnen nieuwe tegels naast oude verschijnen. Verwijder oude Easee-tegels handmatig in Domoticz.
+
+**Update:**
+```bash
+cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+git pull origin main
+sudo systemctl restart domoticz
+```
+
+---
+
 # Easee Domoticz Plugin - v9.0.1 Release
 
 ## 📦 Release Notes
@@ -161,6 +195,7 @@ Voor productie deployment, zorg dat je dit hebt:
 
 | Versie | Datum | Status | Notes |
 |--------|-------|--------|-------|
+| **9.1.0** | 2026-06-13 | ✅ Production | Leesbare status, betere tegels/iconen |
 | **9.0.1** | 2026-06-13 | ✅ Production | Fix sessiekosten energie/belasting |
 | **9.0** | 2026-06-12 | ✅ Production | Compact UI, emoji indicators |
 | 8.0.2 | 2026-06-11 | 🔴 EOL | Stabiel maar niet compact |
