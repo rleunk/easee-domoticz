@@ -2,6 +2,17 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.2.7] - 2026-06-15
+
+### 🐛 Hoofdzekering limiet 24 A — robuuste fuse-detectie
+- **Alle fuse-kandidaten** worden nu verzameld uit alle bronnen vóór selectie (niet meer stoppen bij eerste probe)
+- **siteStructure** (obs. 20): dubbel-gecodeerde JSON, alle `fuse`-keys (case-insensitive), ratedCurrent+fuse-paren
+- **Nieuwe bronnen**: `/sites/{id}/circuits/{circuitId}/settings`, root-circuit fuse, alle circuitStates
+- **Selectielogica**: root-circuit fuse → grootste waarde ≠ ratedCurrent → waarde onder hoofdzekering (24 vs 25)
+- **Startup-log** (1×, normaal): siteStructure keys + gevonden fuse-kandidaten
+- **Eerste poll-log** (1×): `Equalizer fuse: limit=24A src=...` voor support
+- **eMobility limiet**: `site.state.maxAllocatedCurrent` wint altijd boven equalizer-waarden
+
 ## [10.2.6] - 2026-06-15
 
 ### 🐛 Hoofdzekering limiet — aparte bron
