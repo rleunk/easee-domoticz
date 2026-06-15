@@ -2,6 +2,15 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.2.6] - 2026-06-15
+
+### 🐛 Hoofdzekering limiet — aparte bron
+- **Hoofdzekering** (25 A) en **Hoofdzekering limiet** (24 A) gebruiken nu strikt verschillende API-velden
+- Hoofdzekering: alleen `ratedCurrent` / `mainFuseSize`
+- Hoofdzekering limiet: alleen `circuit.fuse`, `site.fuse`, siteStructure — nooit `ratedCurrent`
+- Waarde gelijk aan hoofdzekering wordt overgeslagen; volgende probe gebruikt
+- **eMobility limiet**: `maxAllocatedCurrent` heeft altijd voorrang boven `maxCurrent`
+
 ## [10.2.5] - 2026-06-15
 
 ### 🐛 Hoofdzekering limiet — extra probes

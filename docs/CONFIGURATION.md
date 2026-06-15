@@ -89,7 +89,7 @@ De plugin zoekt de Equalizer via:
 
 Als geen Equalizer wordt gevonden, verschijnen geen extra tegels en toont Status `Geen EQ`.
 
-### Equalizer Status-tegel (v10.2.5+)
+### Equalizer Status-tegel (v10.2.6+)
 
 | Regel | API-bron | Easee Control |
 |-------|----------|---------------|
