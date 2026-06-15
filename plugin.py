@@ -1,9 +1,9 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.1.1" author="Richard Leunk" version="10.1.1"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.1.2" author="Richard Leunk" version="10.1.2"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.1.1</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.1.2</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators en Tibber stroomtarief integratie.</p>
     </description>
     <params>
@@ -94,11 +94,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.1.1] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.1.2] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.1.1] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.1.1] {msg}')
+            Domoticz.Debug(f'[Easee v10.1.2] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.1.2] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -107,6 +107,25 @@ class BasePlugin:
         return Parameters.get('Mode4', 'Easee').strip() or 'Easee'
     def pref(self, label):
         return f'{self.prefix()} - {label}'
+    def clean_label(self, name):
+        """Verwijder dubbele Easee/hardware prefix uit device-namen."""
+        name = self.norm(name)
+        if not name:
+            return name
+        prefixes = []
+        for p in (self.prefix(), 'Easee'):
+            p = str(p).strip()
+            if p and p.lower() not in [x.lower() for x in prefixes]:
+                prefixes.append(p)
+        changed = True
+        while changed:
+            changed = False
+            for p in prefixes:
+                token = f'{p} - '
+                if name.lower().startswith(token.lower()):
+                    name = name[len(token):].strip()
+                    changed = True
+        return name
     def safe_float(self, value, default=0.0):
         try:
             return float(value)
@@ -154,21 +173,21 @@ class BasePlugin:
         return s[-8:] if len(s) > 8 else s
     def custom_charger_name(self, index):
         if index == 0:
-            return (Parameters.get('Mode2', '') or '').strip()
+            return self.clean_label(Parameters.get('Mode2', '') or '')
         if index == 1:
-            return (Parameters.get('Mode3', '') or '').strip()
+            return self.clean_label(Parameters.get('Mode3', '') or '')
         return ''
     def charger_display_name(self, charger, index):
         custom = self.custom_charger_name(index)
         if custom:
             return custom
-        api_name = str(charger.get('name') or '').strip()
+        api_name = self.clean_label(str(charger.get('name') or '').strip())
         cid = str(charger.get('id') or '').strip()
         if api_name and api_name.lower() not in (cid.lower(), self.short_id(cid).lower()):
             return api_name
         return f'Laadpaal {index + 1}'
     def charger_dev_name(self, display, label):
-        return f'{display} - {label}'
+        return self.clean_label(f'{display} - {label}')
     def make_charger_device_id(self, cid, label_key):
         raw = f'{cid}|{label_key}'.encode('utf-8', errors='ignore')
         return 'EASEE_CHG_' + hashlib.sha1(raw).hexdigest()[:24].upper()
@@ -273,12 +292,29 @@ class BasePlugin:
     def resolve_charger_unit(self, cid, label_key):
         return self.find_unit_by_devid(self.make_charger_device_id(cid, label_key))
     def resolve_core_unit(self, label):
+        label = self.clean_label(label)
         devid = CORE_DEVICE_IDS.get(label)
         if devid:
             u = self.find_unit_by_devid(devid)
             if u is not None:
                 return u
-        return self.find_unit(label) or self.find_unit(self.pref(label))
+        return self.find_unit(label)
+    def sync_device_name(self, unit, name):
+        key = self.clean_label(name)
+        try:
+            current = self.norm(Devices[unit].Name)
+            if current == key:
+                return
+            try:
+                Devices[unit].Update(Name=key)
+                self.rebuild_index()
+                return
+            except Exception:
+                pass
+            Devices[unit].Name = key
+            self.rebuild_index()
+        except Exception as e:
+            self.debug(f'device rename failed unit {unit}: {e}')
     def next_free_unit(self):
         for unit in range(1, 256):
             if unit not in Devices:
@@ -321,11 +357,20 @@ class BasePlugin:
                 pass
 
     # ---- create/update ----
-    def ensure_device_once(self, name, typename, device_id=None):
-        key = self.norm(name)
+    def ensure_device_once(self, name, typename, device_id=None, legacy_names=None):
+        key = self.clean_label(name)
         devid = device_id or self.make_device_id(key)
-        unit = self.find_unit_by_devid(devid) or self.find_unit(key)
+        unit = self.find_unit_by_devid(devid) if device_id else None
+        if unit is None:
+            for legacy in (legacy_names or []):
+                legacy_key = self.clean_label(legacy)
+                unit = self.find_unit_by_devid(self.make_device_id(legacy_key)) or self.find_unit(legacy_key)
+                if unit is not None:
+                    break
+        if unit is None and not device_id:
+            unit = self.find_unit_by_devid(devid) or self.find_unit(key)
         if unit is not None:
+            self.sync_device_name(unit, key)
             return unit
         unit = self.next_free_unit()
         if unit is None:
@@ -356,19 +401,19 @@ class BasePlugin:
         self.rebuild_index()
         return self.resolve_unit(key)
     def update_core_text(self, label, value):
-        u = self.resolve_core_unit(label)
+        u = self.resolve_core_unit(self.clean_label(label))
         if u is not None:
             Devices[u].Update(nValue=0, sValue=str(value)[:4000])
     def update_core_custom(self, label, value):
-        u = self.resolve_core_unit(label)
+        u = self.resolve_core_unit(self.clean_label(label))
         if u is not None:
             Devices[u].Update(nValue=0, sValue=str(value))
     def update_core_energy(self, label, power_w, total_wh):
-        u = self.resolve_core_unit(label)
+        u = self.resolve_core_unit(self.clean_label(label))
         if u is not None:
             Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
     def update_core_sw(self, label, value):
-        u = self.resolve_core_unit(label)
+        u = self.resolve_core_unit(self.clean_label(label))
         if u is not None:
             state = self.truthy(value)
             Devices[u].Update(nValue=1 if state else 0, sValue='Aan' if state else 'Uit')
@@ -606,7 +651,8 @@ class BasePlugin:
             ])
         for label, typ in core:
             devid = CORE_DEVICE_IDS.get(label)
-            self.ensure_device_once(label, typ, device_id=devid)
+            legacy = [self.pref(label), f'Easee - {label}', f'Easee - Easee - {label}']
+            self.ensure_device_once(label, typ, device_id=devid, legacy_names=legacy)
         if ULTRA_DEBUG:
             self.ensure_device_once(self.pref('Debug'),'Text')
             self.ensure_device_once(self.pref('Counts'),'Text')
@@ -626,7 +672,13 @@ class BasePlugin:
         for typ, label_key in devices:
             name = self.charger_dev_name(display, label_key)
             devid = self.make_charger_device_id(cid, label_key)
-            self.ensure_device_once(name, typ, device_id=devid)
+            legacy = [
+                self.pref(f'{display} - {label_key}'),
+                f'Easee - {display} - {label_key}',
+                f'Easee - Easee - {display} - {label_key}',
+                f'{self.short_id(cid)} {label_key}',
+            ]
+            self.ensure_device_once(name, typ, device_id=devid, legacy_names=legacy)
     
     def initial_sync(self):
         self.chargers = self.discover_entities()

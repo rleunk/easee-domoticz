@@ -2,6 +2,13 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.1.2] - 2026-06-15
+
+### 🐛 Bugfix
+- Alle tegels: dubbele `Easee` prefix verwijderd (kern- én laadpaal-tegels)
+- Bestaande devices worden automatisch hernoemd bij upgrade
+- Mode2/Mode3 en Easee API-namen worden opgeschoond als ze al `Easee -` bevatten
+
 ## [10.1.1] - 2026-06-15
 
 ### 🐛 Bugfix
