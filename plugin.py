@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.3.3" author="Richard Leunk" version="10.3.3"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.3.4" author="Richard Leunk" version="10.3.4"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.3.3</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.3.4</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -108,11 +108,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.3.3] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.3.4] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.3.3] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.3.3] {msg}')
+            Domoticz.Debug(f'[Easee v10.3.4] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.3.4] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -616,6 +616,12 @@ class BasePlugin:
         )
     def emobility_keys(self):
         return ('maxAllocatedCurrent', 'maxCurrent', 'eMobilityLimit', 'emobilityLimit')
+    def offline_circuit_current_keys(self):
+        return ('offlineMaxCircuitCurrentP1', 'offlineMaxCircuitCurrentP2', 'offlineMaxCircuitCurrentP3')
+    def is_offline_circuit_current_key(self, key):
+        if not isinstance(key, str):
+            return False
+        return key in self.offline_circuit_current_keys()
     def main_fuse_keys(self):
         return ('ratedCurrent', 'mainFuseSize', 'mainFuse')
     def is_fuse_limit_key(self, key):
@@ -623,7 +629,8 @@ class BasePlugin:
             return False
         kl = key.lower()
         if kl in ('ratedcurrent', 'mainfuse', 'mainfusesize', 'fusegroup', 'fuseid',
-                  'maxallocatedcurrent', 'allocatedcurrent', 'maxcurrent', 'emobilitylimit'):
+                  'maxallocatedcurrent', 'allocatedcurrent', 'maxcurrent', 'emobilitylimit',
+                  'offlinemaxcircuitcurrentp1', 'offlinemaxcircuitcurrentp2', 'offlinemaxcircuitcurrentp3'):
             return False
         if kl in ('fuse', 'mainfuselimit', 'fuselimit', 'mainfusecurrentlimit',
                   'mainfuselimitcurrent', 'maxfuse', 'maxfusecurrent', 'fusecurrent',
@@ -828,7 +835,9 @@ class BasePlugin:
                 s += 30
             if 'mainpanel' in pl or '.site.' in pl or pl.startswith('site.'):
                 s += 28
-            if 'sitestructure' in pl:
+            if 'sitestructure.maxcontinuouscurrent' in pl:
+                s += 48
+            elif 'sitestructure' in pl:
                 s += 22
             if 'cloud-loadbalancing' in pl:
                 s += 18
@@ -836,7 +845,7 @@ class BasePlugin:
                 s += 15
             if 'circuit[' in pl:
                 s += 12
-            if 'settings' in pl:
+            if 'settings' in pl and 'offline' not in pl:
                 s += 8
             if main_fuse_a > 0 and val < main_fuse_a - 0.4:
                 s += 25
@@ -953,13 +962,11 @@ class BasePlugin:
                 self.add_fuse_candidate(
                     candidates, val, f'circuit[{circuit_id}].settings.{key}',
                     main_fuse_a=main_fuse_a, rejected=rejected)
-        for key in ('offlineMaxCircuitCurrentP1', 'offlineMaxCircuitCurrentP2', 'offlineMaxCircuitCurrentP3'):
+        for key in self.offline_circuit_current_keys():
             val = self.amp_value(settings.get(key))
-            if val > 0:
-                phase_vals.append(val)
-                self.add_fuse_candidate(
-                    candidates, val, f'circuit[{circuit_id}].settings.{key}',
-                    main_fuse_a=main_fuse_a, rejected=rejected)
+            if val > 0 and rejected is not None:
+                rejected.append(
+                    f'circuit[{circuit_id}].settings.{key}={int(round(val))}A (offline fallback)')
         if max_phase_vals:
             self.add_fuse_candidate(
                 candidates, min(max_phase_vals), f'circuit[{circuit_id}].settings.maxCircuitCurrentPhasesMin',
@@ -1065,6 +1072,9 @@ class BasePlugin:
             return root_fuse, root_source
         if root_fuse > 0 and root_source:
             self.add_fuse_candidate(candidates, root_fuse, root_source, main_fuse_a=main_fuse_a)
+        mcc_src = 'siteStructure.maxContinuousCurrent'
+        if mcc_src in candidates and self.is_valid_fuse_limit(candidates[mcc_src], main_fuse_a):
+            return candidates[mcc_src], mcc_src
         if not candidates:
             return 0.0, ''
         filtered = {
@@ -1114,6 +1124,13 @@ class BasePlugin:
         self.log(f'Equalizer siteStructure (site {key}): keys={key_text} | fuse kandidaten: {cand_text}')
         data = self.parse_site_structure_json(raw)
         if data:
+            mcc = self.amp_value(data.get('maxContinuousCurrent'))
+            rated = self.amp_value(data.get('ratedCurrent'))
+            if mcc > 0:
+                if rated > 0 and mcc < rated - 0.4:
+                    self.log(f'siteStructure maxContinuousCurrent (site {key}): {int(round(mcc))}A (hoofdzekering limiet kandidaat)')
+                else:
+                    self.log(f'siteStructure maxContinuousCurrent (site {key}): {int(round(mcc))}A')
             tree = self.collect_json_key_tree(data, 'siteStructure')
             if tree:
                 tree_text = ' | '.join(tree[:12])
@@ -1227,6 +1244,12 @@ class BasePlugin:
         data = self.parse_site_structure_json(raw)
         if not data:
             return 0.0, ''
+        mcc = self.amp_value(data.get('maxContinuousCurrent'))
+        if mcc > 0 and self.is_valid_fuse_limit(mcc, main_fuse_a):
+            if candidates is not None:
+                self.add_fuse_candidate(
+                    candidates, mcc, 'siteStructure.maxContinuousCurrent',
+                    main_fuse_a=main_fuse_a)
         if candidates is not None:
             self.collect_fuse_from_dict(data, 'siteStructure', candidates, main_fuse_a=main_fuse_a)
             self.scan_any_fuse_keys(data, 'siteStructure', candidates, main_fuse_a=main_fuse_a)

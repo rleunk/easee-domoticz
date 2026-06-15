@@ -2,6 +2,15 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.3.4] - 2026-06-15
+
+### 🐛 Hoofdzekering limiet — maxContinuousCurrent uit siteStructure
+- **`siteStructure.maxContinuousCurrent`** (obs. 20) wordt nu gebruikt als hoofdzekering limiet wanneer geldig (strikt onder `ratedCurrent`, bijv. 23 < 25)
+- **`offlineMaxCircuitCurrentP1/P2/P3`** uit circuit settings zijn **geen** hoofdzekering limiet meer — offline fallback, niet de instelling uit Easee Control
+- **Prioriteit**: root `circuit.fuse` → `siteStructure.maxContinuousCurrent` → overige geldige kandidaten onder `ratedCurrent`
+- **`maxAllocatedCurrent`** blijft eMobility limiet (niet hoofdzekering limiet)
+- **Logging**: siteStructure toont `maxContinuousCurrent` kandidaat; fuse-log `src=siteStructure.maxContinuousCurrent`
+
 ## [10.3.3] - 2026-06-15
 
 ### 🐛 Hoofdzekering limiet — site.circuits + root-circuit detail
