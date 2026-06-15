@@ -68,9 +68,9 @@ sudo service domoticz restart
 Ga naar **Setup → Logs** en zoek naar Easee berichten:
 
 ```
-[Easee v10.2.3] Plugin gestart
-[Easee v10.2.3] Laadpaal X gevonden: naam
-[Easee v10.2.3] State geladen
+[Easee v10.2.4] Plugin gestart
+[Easee v10.2.4] Laadpaal X gevonden: naam
+[Easee v10.2.4] State geladen
 ```
 
 ## Problemen?

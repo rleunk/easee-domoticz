@@ -2,6 +2,14 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.2.4] - 2026-06-15
+
+### 🐛 Hoofdzekering limiet fix
+- **Hoofdzekering limiet** toont nu alleen **Amperes** (geen kW-fallback meer op obs. 44 MaxPowerImport)
+- Uitgebreide bronnen: `site.fuse`, `circuit.fuse` (root/equalizer-circuit), `siteStructure` (obs. 20), `/accounts/products`
+- Bij ontbrekende amp-waarde: **onbekend** i.p.v. verkeerde kW
+- **eMobility limiet** preferert `site.maxAllocatedCurrent` boven equalizer-waarden
+
 ## [10.2.3] - 2026-06-15
 
 ### ✨ Equalizer tegel uitgebreid

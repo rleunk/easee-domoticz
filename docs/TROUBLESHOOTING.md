@@ -93,7 +93,7 @@ sudo tail -f /home/domoticz/domoticz.log | grep "Discovery\|charger"
 #    Mode6 = "Debug"
 
 # 2. Controleer logs voor stack traces
-sudo tail -f /home/domoticz/domoticz.log | grep "Easee v10.2.3"
+sudo tail -f /home/domoticz/domoticz.log | grep "Easee v10.2.4"
 
 # 3. Controleer API response
 curl -H "Authorization: Bearer YOUR_TOKEN" \
@@ -185,7 +185,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 sudo tail -f /home/domoticz/domoticz.log | grep "Easee"
 
 # Search specific error
-sudo grep "Easee v10.2.3.*error" /home/domoticz/domoticz.log
+sudo grep "Easee v10.2.4.*error" /home/domoticz/domoticz.log
 
 # Last 100 lines
 sudo tail -100 /home/domoticz/domoticz.log | grep "Easee"
