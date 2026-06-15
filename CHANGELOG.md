@@ -2,6 +2,13 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.1.1] - 2026-06-15
+
+### 🐛 Bugfix
+- Geen dubbele `Easee` meer in tegelnamen (Domoticz voegt hardwarenaam al toe)
+- Device-namen zijn nu kort: `Totaal Laden`, `Charge Lite Links - Status`
+- Tip: geef je hardware in Domoticz een naam zoals `Easee`
+
 ## [10.1.0] - 2026-06-15
 
 ### ✨ Nieuw

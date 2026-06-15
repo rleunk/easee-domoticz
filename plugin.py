@@ -1,9 +1,9 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.1.0" author="Richard Leunk" version="10.1.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.1.1" author="Richard Leunk" version="10.1.1"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.1.0</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.1.1</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators en Tibber stroomtarief integratie.</p>
     </description>
     <params>
@@ -11,7 +11,7 @@
         <param field="Password" label="Easee Password" width="260px" password="true" required="true"/>
         <group label="Weergave en polling">
             <param field="Mode1" label="Poll interval (sec)" width="80px" default="30"/>
-            <param field="Mode4" label="Naam prefix (kern-devices)" width="180px" default="Easee"/>
+            <param field="Mode4" label="Niet gebruikt (hardwarenaam telt)" width="180px" default="Easee"/>
             <param field="Mode5" label="Optionele site filter (tekst)" width="240px" default=""/>
             <param field="Mode6" label="Debug logging" width="100px">
                 <options>
@@ -67,6 +67,15 @@ DEVICE_TYPES = {
     'CustomEUR': {'Type': 243, 'Subtype': 31, 'Options': {'Custom': '1;€'}},
 }
 
+CORE_DEVICE_IDS = {
+    'Status': 'EASEE_CORE_STATUS',
+    'Totaal Laden': 'EASEE_CORE_ENERGY',
+    'Totaal kWh': 'EASEE_CORE_KWH',
+    'LoadBal': 'EASEE_CORE_LOADBAL',
+    'Kosten & Samenvatting': 'EASEE_CORE_COSTS',
+    'Beste laden': 'EASEE_CORE_BEST',
+}
+
 class BasePlugin:
     def __init__(self):
         self.session = None
@@ -85,11 +94,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.1.0] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.1.1] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.1.0] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.1.0] {msg}')
+            Domoticz.Debug(f'[Easee v10.1.1] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.1.1] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -159,7 +168,7 @@ class BasePlugin:
             return api_name
         return f'Laadpaal {index + 1}'
     def charger_dev_name(self, display, label):
-        return self.pref(f'{display} - {label}')
+        return f'{display} - {label}'
     def make_charger_device_id(self, cid, label_key):
         raw = f'{cid}|{label_key}'.encode('utf-8', errors='ignore')
         return 'EASEE_CHG_' + hashlib.sha1(raw).hexdigest()[:24].upper()
@@ -263,6 +272,13 @@ class BasePlugin:
         return self.find_unit(name) or self.find_unit_by_devid(self.make_device_id(name))
     def resolve_charger_unit(self, cid, label_key):
         return self.find_unit_by_devid(self.make_charger_device_id(cid, label_key))
+    def resolve_core_unit(self, label):
+        devid = CORE_DEVICE_IDS.get(label)
+        if devid:
+            u = self.find_unit_by_devid(devid)
+            if u is not None:
+                return u
+        return self.find_unit(label) or self.find_unit(self.pref(label))
     def next_free_unit(self):
         for unit in range(1, 256):
             if unit not in Devices:
@@ -339,6 +355,23 @@ class BasePlugin:
                 return None
         self.rebuild_index()
         return self.resolve_unit(key)
+    def update_core_text(self, label, value):
+        u = self.resolve_core_unit(label)
+        if u is not None:
+            Devices[u].Update(nValue=0, sValue=str(value)[:4000])
+    def update_core_custom(self, label, value):
+        u = self.resolve_core_unit(label)
+        if u is not None:
+            Devices[u].Update(nValue=0, sValue=str(value))
+    def update_core_energy(self, label, power_w, total_wh):
+        u = self.resolve_core_unit(label)
+        if u is not None:
+            Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
+    def update_core_sw(self, label, value):
+        u = self.resolve_core_unit(label)
+        if u is not None:
+            state = self.truthy(value)
+            Devices[u].Update(nValue=1 if state else 0, sValue='Aan' if state else 'Uit')
     def update_text(self, name, value):
         u = self.resolve_unit(name)
         if u is not None:
@@ -561,18 +594,19 @@ class BasePlugin:
     # ---- lifecycle sync ----
     def ensure_core_devices(self):
         core = [
-            (self.pref('Status'),'Text'),
-            (self.pref('Totaal Laden'),'Energy'),
-            (self.pref('Totaal kWh'),'CustomkWh'),
-            (self.pref('LoadBal'),'Switch')
+            ('Status', 'Text'),
+            ('Totaal Laden', 'Energy'),
+            ('Totaal kWh', 'CustomkWh'),
+            ('LoadBal', 'Switch'),
         ]
         if self.tibber_enabled():
             core.extend([
-                (self.pref('Kosten & Samenvatting'),'Text'),
-                (self.pref('Beste laden'),'Text')
+                ('Kosten & Samenvatting', 'Text'),
+                ('Beste laden', 'Text'),
             ])
-        for name, typ in core:
-            self.ensure_device_once(name, typ)
+        for label, typ in core:
+            devid = CORE_DEVICE_IDS.get(label)
+            self.ensure_device_once(label, typ, device_id=devid)
         if ULTRA_DEBUG:
             self.ensure_device_once(self.pref('Debug'),'Text')
             self.ensure_device_once(self.pref('Counts'),'Text')
@@ -748,28 +782,27 @@ class BasePlugin:
         total_wh = sum(v.get('wh', 0) for v in self.latest_chargers.values())
         any_online = any(bool(v.get('online')) for v in self.latest_chargers.values())
         
-        self.update_energy(self.pref('Totaal Laden'), total_power, total_wh)
-        self.update_custom(self.pref('Totaal kWh'), int(round(total_kwh)))
+        self.update_core_energy('Totaal Laden', total_power, total_wh)
+        self.update_core_custom('Totaal kWh', int(round(total_kwh)))
         
         if self.tibber_enabled():
             total_day_cost = round(sum(v.get('day_cost', 0.0) for v in self.latest_chargers.values()), 2)
             total_day_energy = round(sum(v.get('day_energy_cost', 0.0) for v in self.latest_chargers.values()), 2)
             total_day_tax = round(sum(v.get('day_tax_cost', 0.0) for v in self.latest_chargers.values()), 2)
             
-            # COMPACT: Kosten & Samenvatting merged
             price_emoji = self.price_status_emoji()
             rate = (total_day_cost / total_kwh) if total_kwh > 0 else 0.0
             currency = self.current_tibber_price().get("currency","EUR")
             kosten_samenvatting = f'{price_emoji} {currency}\nKosten: €{self.euro_str(total_day_cost)} | Tarief: €{self.euro_str(rate)}/kWh\nEnergy: €{self.euro_str(total_day_energy)} | Belasting: €{self.euro_str(total_day_tax)}'
-            self.update_text(self.pref('Kosten & Samenvatting'), kosten_samenvatting)
+            self.update_core_text('Kosten & Samenvatting', kosten_samenvatting)
             
-            self.update_text(self.pref('Beste laden'), self.cheapest_window_text(3))
+            self.update_core_text('Beste laden', self.cheapest_window_text(3))
             status_msg = ('✅ Online' if any_online else '❌ Offline') + ' | Tibber actief'
-            self.update_text(self.pref('Status'), status_msg)
+            self.update_core_text('Status', status_msg)
         else:
-            self.update_text(self.pref('Status'), '✅ Online' if any_online else '❌ Offline')
+            self.update_core_text('Status', '✅ Online' if any_online else '❌ Offline')
         
-        self.update_sw(self.pref('LoadBal'), False)
+        self.update_core_sw('LoadBal', False)
 
     def onStart(self):
         if requests is None:
@@ -807,7 +840,7 @@ class BasePlugin:
         self.last_poll = time.time()
         try:
             if not self.access_token and not self.login():
-                self.update_text(self.pref('Status'), 'Login mislukt')
+                self.update_core_text('Status', 'Login mislukt')
                 return
             if not self.sync_done:
                 self.rebuild_index()
@@ -821,7 +854,7 @@ class BasePlugin:
             self.save_state()
         except Exception as e:
             self.error(f'onHeartbeat fout: {e}')
-            self.update_text(self.pref('Status'), f'Fout: {e}')
+            self.update_core_text('Status', f'Fout: {e}')
 
 _plugin = BasePlugin()
 
