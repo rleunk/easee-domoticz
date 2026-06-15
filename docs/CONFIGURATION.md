@@ -89,16 +89,18 @@ De plugin zoekt de Equalizer via:
 
 Als geen Equalizer wordt gevonden, verschijnen geen extra tegels en toont Status `Geen EQ`.
 
-### Equalizer Status-tegel (v10.2.4+)
+### Equalizer Status-tegel (v10.2.5+)
 
 | Regel | API-bron | Easee Control |
 |-------|----------|---------------|
 | Hoofdzekering | `site.ratedCurrent` | Main fuse size |
-| eMobility limiet | `site.maxAllocatedCurrent` | Max allocated current |
-| Hoofdzekering limiet | `site.fuse`, `circuit.fuse`, `siteStructure.fuse` (obs. 20) | Main fuse limit |
+| eMobility limiet | `site.maxAllocatedCurrent` (site wint) | Max allocated current |
+| Hoofdzekering limiet | `siteStructure.fuse` (obs. 20), `circuit.fuse`, `site.fuse` | Main fuse limit |
 | Huisvermogen | obs. 40 ActivePowerImport | — |
 
-Obs. 44 (MaxPowerImport) is **kW** en wordt niet meer gebruikt voor hoofdzekering limiet.
+Zet **Debug logging** aan (Mode6) voor fuse-probe details in het Domoticz-log.
+
+Obs. 44 (MaxPowerImport) is **kW** en wordt niet gebruikt voor hoofdzekering limiet.
 
 ## Tibber Integration (Optioneel)
 

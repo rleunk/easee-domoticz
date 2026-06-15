@@ -1,9 +1,9 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.2.4" author="Richard Leunk" version="10.2.4"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.2.5" author="Richard Leunk" version="10.2.5"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.2.4</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.2.5</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -104,11 +104,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.2.4] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.2.5] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.2.4] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.2.4] {msg}')
+            Domoticz.Debug(f'[Easee v10.2.5] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.2.5] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -557,19 +557,66 @@ class BasePlugin:
             return 0.0
         return x
     def fuse_limit_keys(self):
-        return ('fuse', 'mainFuseLimit', 'fuseLimit', 'mainFuseCurrentLimit', 'mainFuseLimitCurrent')
+        return (
+            'fuse', 'mainFuseLimit', 'fuseLimit', 'mainFuseCurrentLimit',
+            'mainFuseLimitCurrent', 'maxFuse', 'maxFuseCurrent', 'fuseCurrent',
+            'mainFuseLimitAmps', 'mainFuseCurrentLimitAmps',
+        )
+    def emobility_keys(self):
+        return ('maxAllocatedCurrent', 'maxCurrent', 'eMobilityLimit', 'emobilityLimit')
     def main_fuse_keys(self):
         return ('ratedCurrent', 'mainFuseSize', 'mainFuse')
+    def is_fuse_limit_key(self, key):
+        if not isinstance(key, str):
+            return False
+        kl = key.lower()
+        if kl in ('ratedcurrent', 'mainfuse', 'mainfusesize', 'fusegroup', 'fuseid'):
+            return False
+        if kl in ('fuse', 'mainfuselimit', 'fuselimit', 'mainfusecurrentlimit',
+                  'mainfuselimitcurrent', 'maxfuse', 'maxfusecurrent', 'fusecurrent',
+                  'mainfuselimitamps', 'mainfusecurrentlimitamps'):
+            return True
+        return 'fuselimit' in kl or kl.endswith('fuse') or (kl.startswith('fuse') and 'rating' not in kl)
+    def is_emobility_key(self, key):
+        if not isinstance(key, str):
+            return False
+        kl = key.lower()
+        return kl in ('maxallocatedcurrent', 'maxcurrent', 'emobilitylimit', 'emobilitycurrent')
     def fuse_limit_from_dict(self, data):
         val = self.first_dict_value(data, self.fuse_limit_keys())
         return self.amp_value(val) if val is not None else 0.0
+    def emobility_from_dict(self, data):
+        val = self.first_dict_value(data, self.emobility_keys())
+        return self.amp_value(val) if val is not None else 0.0
+    def root_circuit_ids(self, circuits):
+        if not isinstance(circuits, list):
+            return set()
+        roots = set()
+        all_ids = set()
+        child_ids = set()
+        for circuit in circuits:
+            if not isinstance(circuit, dict):
+                continue
+            cid = circuit.get('id')
+            if cid is not None:
+                all_ids.add(str(cid))
+            parent = circuit.get('parentCircuitId')
+            if parent not in (None, 0, '0', ''):
+                child_ids.add(str(parent))
+            elif cid is not None:
+                roots.add(str(cid))
+        for cid in all_ids:
+            if cid not in child_ids:
+                roots.add(cid)
+        return roots
     def fuse_limit_from_circuits(self, circuits, circuit_id=None):
         if not isinstance(circuits, list):
-            return 0.0
+            return 0.0, ''
         preferred = None
         root = None
         fallback = None
         target_id = str(circuit_id) if circuit_id is not None else None
+        root_ids = self.root_circuit_ids(circuits)
         for circuit in circuits:
             if not isinstance(circuit, dict):
                 continue
@@ -577,16 +624,20 @@ class BasePlugin:
             if fuse_a <= 0:
                 continue
             cid = circuit.get('id')
-            if target_id and str(cid) == target_id:
-                preferred = fuse_a
-            if circuit.get('parentCircuitId') in (None, 0, '0', ''):
-                root = fuse_a
+            cid_s = str(cid) if cid is not None else ''
+            if target_id and cid_s == target_id:
+                preferred = (fuse_a, f'circuit[{cid}].fuse')
+            if cid_s in root_ids:
+                root = (fuse_a, f'circuit[{cid}].fuse(root)')
             if fallback is None:
-                fallback = fuse_a
-        return preferred or root or fallback or 0.0
+                fallback = (fuse_a, f'circuit[{cid}].fuse')
+        pick = preferred or root or fallback
+        if pick:
+            return pick[0], pick[1]
+        return 0.0, ''
     def fuse_limit_from_circuit_states(self, circuit_states, circuit_id=None):
         if not isinstance(circuit_states, list):
-            return 0.0
+            return 0.0, ''
         circuits = []
         for item in circuit_states:
             if not isinstance(item, dict):
@@ -594,7 +645,10 @@ class BasePlugin:
             circuit = item.get('circuit')
             if isinstance(circuit, dict):
                 circuits.append(circuit)
-        return self.fuse_limit_from_circuits(circuits, circuit_id=circuit_id)
+        fuse_a, path = self.fuse_limit_from_circuits(circuits, circuit_id=circuit_id)
+        if fuse_a > 0 and path:
+            return fuse_a, f'circuitStates.{path}'
+        return fuse_a, path
     def parse_site_structure_json(self, raw):
         if raw is None:
             return {}
@@ -610,27 +664,141 @@ class BasePlugin:
         if not isinstance(data, dict):
             return {}
         return data
-    def fuse_limit_from_site_structure(self, raw):
+    def deep_scan_amp_keys(self, obj, key_matcher, path=''):
+        found = []
+        if isinstance(obj, dict):
+            for key, val in obj.items():
+                p = f'{path}.{key}' if path else str(key)
+                if key_matcher(key):
+                    amps = self.amp_value(val)
+                    if amps > 0:
+                        found.append((p, amps))
+                if isinstance(val, (dict, list)):
+                    found.extend(self.deep_scan_amp_keys(val, key_matcher, p))
+        elif isinstance(obj, list):
+            for idx, item in enumerate(obj):
+                found.extend(self.deep_scan_amp_keys(item, key_matcher, f'{path}[{idx}]'))
+        return found
+    def pick_best_fuse_candidate(self, candidates, main_fuse_a=0.0):
+        if not candidates:
+            return 0.0, ''
+        def score(path):
+            pl = path.lower()
+            s = 0
+            if pl == 'fuse' or pl.endswith('.fuse'):
+                s += 50
+            if 'mainpanel' in pl or pl.startswith('site.') or '.site.' in pl:
+                s += 40
+            if 'panel' in pl and 'circuit' not in pl:
+                s += 30
+            if 'sitestructure' in pl or pl.startswith('site'):
+                s += 25
+            if 'circuit' in pl:
+                s += 10
+            if main_fuse_a > 0 and abs(candidates.get(path, 0) - main_fuse_a) < 0.5:
+                s -= 20
+            return s
+        ranked = sorted(candidates.items(), key=lambda kv: (-score(kv[0]), kv[0]))
+        path, val = ranked[0]
+        return val, path
+    def fuse_limit_from_deep_scan(self, obj, source_prefix='', main_fuse_a=0.0):
+        candidates = {}
+        for path, amps in self.deep_scan_amp_keys(obj, self.is_fuse_limit_key):
+            full = f'{source_prefix}.{path}' if source_prefix else path
+            candidates[full] = amps
+        if not candidates:
+            return 0.0, ''
+        val, path = self.pick_best_fuse_candidate(candidates, main_fuse_a=main_fuse_a)
+        return val, path
+    def collect_fuse_debug(self, obj, path=''):
+        found = []
+        if isinstance(obj, dict):
+            for key, val in obj.items():
+                p = f'{path}.{key}' if path else str(key)
+                kl = str(key).lower()
+                if self.is_fuse_limit_key(key) or self.is_emobility_key(key) or kl in ('ratedcurrent', 'maxallocatedcurrent'):
+                    if isinstance(val, (int, float)) and not isinstance(val, bool):
+                        found.append(f'{p}={val}')
+                    elif isinstance(val, str) and val.strip().isdigit():
+                        found.append(f'{p}={val.strip()}')
+                if isinstance(val, (dict, list)):
+                    found.extend(self.collect_fuse_debug(val, p))
+        elif isinstance(obj, list):
+            for idx, item in enumerate(obj[:8]):
+                found.extend(self.collect_fuse_debug(item, f'{path}[{idx}]'))
+        return found
+    def structure_top_keys(self, raw):
         data = self.parse_site_structure_json(raw)
         if not data:
-            return 0.0
+            return []
+        keys = list(data.keys())[:20]
+        for nest_key in ('site', 'panel', 'mainPanel', 'root', 'limits', 'loadBalancing'):
+            nested = data.get(nest_key)
+            if isinstance(nested, dict):
+                keys.append(f'{nest_key}:{{{",".join(list(nested.keys())[:12])}}}')
+        return keys
+    def fuse_limit_from_site_structure(self, raw, main_fuse_a=0.0):
+        data = self.parse_site_structure_json(raw)
+        if not data:
+            return 0.0, ''
         direct = self.fuse_limit_from_dict(data)
         if direct > 0:
-            return direct
-        for key in ('site', 'panel', 'root', 'mainPanel', 'mainFuse', 'main'):
+            return direct, 'siteStructure.fuse'
+        for key in ('site', 'panel', 'root', 'mainPanel', 'main', 'limits', 'loadBalancing', 'energy'):
             nested = data.get(key)
             if isinstance(nested, dict):
                 nested_val = self.fuse_limit_from_dict(nested)
                 if nested_val > 0:
-                    return nested_val
+                    return nested_val, f'siteStructure.{key}.fuse'
         circuits = data.get('circuits')
         if isinstance(circuits, list):
-            return self.fuse_limit_from_circuits(circuits)
+            fuse_a, path = self.fuse_limit_from_circuits(circuits)
+            if fuse_a > 0:
+                return fuse_a, f'siteStructure.{path}'
+        panels = data.get('panels')
+        if isinstance(panels, list):
+            fuse_a, path = self.fuse_limit_from_circuits(panels)
+            if fuse_a > 0:
+                return fuse_a, f'siteStructure.{path}'
+        fuse_a, path = self.fuse_limit_from_deep_scan(data, 'siteStructure', main_fuse_a=main_fuse_a)
+        if fuse_a > 0:
+            return fuse_a, path
+        return 0.0, ''
+    def emobility_from_site_structure(self, raw):
+        data = self.parse_site_structure_json(raw)
+        if not data:
+            return 0.0
+        direct = self.emobility_from_dict(data)
+        if direct > 0:
+            return direct
+        for key in ('site', 'panel', 'limits', 'loadBalancing', 'energy'):
+            nested = data.get(key)
+            if isinstance(nested, dict):
+                nested_val = self.emobility_from_dict(nested)
+                if nested_val > 0:
+                    return nested_val
+        for _, amps in self.deep_scan_amp_keys(data, self.is_emobility_key):
+            if amps > 0:
+                return amps
         return 0.0
-    def fuse_limit_from_products(self, site_id):
+    def fuse_limit_from_equalizer_values(self, values):
+        if not isinstance(values, dict):
+            return 0.0, ''
+        direct = self.fuse_limit_from_dict(values)
+        if direct > 0:
+            return direct, 'equalizer.fuse'
+        for key in ('config', 'state', 'settings', 'loadBalancing', 'limits'):
+            nested = values.get(key)
+            if isinstance(nested, dict):
+                nested_val = self.fuse_limit_from_dict(nested)
+                if nested_val > 0:
+                    return nested_val, f'equalizer.{key}.fuse'
+        fuse_a, path = self.fuse_limit_from_deep_scan(values, 'equalizer')
+        return fuse_a, path
+    def fuse_limit_from_products(self, site_id, circuit_id=None):
         products = self.api_get_optional('/accounts/products')
         if not isinstance(products, list):
-            return 0.0
+            return 0.0, ''
         target = str(site_id)
         for product in products:
             if not isinstance(product, dict):
@@ -640,27 +808,56 @@ class BasePlugin:
                 continue
             fuse_a = self.fuse_limit_from_dict(product)
             if fuse_a > 0:
-                return fuse_a
+                return fuse_a, 'accounts/products.fuse'
             circuits = product.get('circuits')
-            if isinstance(circuits, list):
-                fuse_a = self.fuse_limit_from_circuits(circuits)
-                if fuse_a > 0:
-                    return fuse_a
-        return 0.0
-    def fetch_site_fuse_info(self, site_id, circuit_id=None, site_structure=None):
+            fuse_a, path = self.fuse_limit_from_circuits(circuits, circuit_id=circuit_id)
+            if fuse_a > 0:
+                return fuse_a, f'accounts/products.{path}'
+            equalizers = product.get('equalizers')
+            if isinstance(equalizers, list):
+                for eq in equalizers:
+                    if isinstance(eq, dict):
+                        fuse_a = self.fuse_limit_from_dict(eq)
+                        if fuse_a > 0:
+                            return fuse_a, 'accounts/products.equalizer.fuse'
+        return 0.0, ''
+    def set_fuse_limit(self, info, fuse_a, source):
+        if fuse_a > 0 and info.get('main_fuse_limit_a', 0.0) <= 0:
+            info['main_fuse_limit_a'] = fuse_a
+            info['main_fuse_limit_source'] = source
+    def log_fuse_probe_debug(self, site_id, info, debug_hits, site_structure=None):
+        if Parameters.get('Mode6') != 'Debug':
+            return
+        parts = [
+            f'site={site_id}',
+            f"main={info.get('main_fuse_a', 0)}A",
+            f"limit={info.get('main_fuse_limit_a', 0)}A",
+            f"src={info.get('main_fuse_limit_source', '—')}",
+            f"emob={info.get('emobility_a', 0)}A",
+        ]
+        if debug_hits:
+            parts.append('hits=' + '; '.join(debug_hits[:24]))
+        if site_structure is not None:
+            keys = self.structure_top_keys(site_structure)
+            if keys:
+                parts.append('siteStructure keys=' + ', '.join(keys))
+        self.debug('Fuse probes: ' + ' | '.join(parts))
+    def fetch_site_fuse_info(self, site_id, circuit_id=None, site_structure=None, equalizer_values=None):
         if not site_id:
             return {}
         cache_key = f'{site_id}:{circuit_id or ""}'
         if cache_key in self.site_fuse_cache:
             return self.site_fuse_cache[cache_key]
-        info = {}
+        info = {'emobility_source': ''}
+        debug_hits = []
         state = self.api_get_optional(f'/sites/{site_id}/state')
         if isinstance(state, dict):
             site = state.get('site') or {}
             if isinstance(site, dict):
+                debug_hits.extend(self.collect_fuse_debug(site, 'site.state'))
                 main_fuse = self.first_dict_value(site, self.main_fuse_keys())
                 fuse_limit = self.first_dict_value(site, self.fuse_limit_keys())
-                emobility = self.first_dict_value(site, ('maxAllocatedCurrent',))
+                emobility = self.first_dict_value(site, self.emobility_keys())
                 if main_fuse is not None:
                     info['main_fuse_a'] = self.amp_value(main_fuse)
                 if fuse_limit is not None:
@@ -669,13 +866,23 @@ class BasePlugin:
                         info['main_fuse_limit_source'] = 'site.fuse'
                 if emobility is not None:
                     info['emobility_a'] = self.amp_value(emobility)
+                    info['emobility_source'] = 'site.maxAllocatedCurrent'
             if info.get('main_fuse_limit_a', 0.0) <= 0:
-                fuse_a = self.fuse_limit_from_circuit_states(state.get('circuitStates'), circuit_id=circuit_id)
-                if fuse_a > 0:
-                    info['main_fuse_limit_a'] = fuse_a
-                    info['main_fuse_limit_source'] = 'circuit.fuse'
+                fuse_a, src = self.fuse_limit_from_circuit_states(state.get('circuitStates'), circuit_id=circuit_id)
+                self.set_fuse_limit(info, fuse_a, src or 'circuitStates.circuit.fuse')
+            debug_hits.extend(self.collect_fuse_debug(state.get('circuitStates'), 'circuitStates'))
+        if site_structure is not None:
+            debug_hits.extend(self.collect_fuse_debug(self.parse_site_structure_json(site_structure), 'siteStructure'))
+            if info.get('main_fuse_limit_a', 0.0) <= 0:
+                fuse_a, src = self.fuse_limit_from_site_structure(site_structure, main_fuse_a=info.get('main_fuse_a', 0.0))
+                self.set_fuse_limit(info, fuse_a, src or 'siteStructure.fuse')
+            emob = self.emobility_from_site_structure(site_structure)
+            if emob > 0 and (info.get('emobility_a', 0.0) <= 0 or emob > info.get('emobility_a', 0.0)):
+                info['emobility_a'] = emob
+                info['emobility_source'] = 'siteStructure.maxAllocatedCurrent'
         detailed = self.api_get_optional(f'/sites/{site_id}?detailed=true')
         if isinstance(detailed, dict):
+            debug_hits.extend(self.collect_fuse_debug(detailed, 'site.detailed'))
             if info.get('main_fuse_a', 0.0) <= 0:
                 main_fuse = self.first_dict_value(detailed, self.main_fuse_keys())
                 if main_fuse is not None:
@@ -684,32 +891,28 @@ class BasePlugin:
                 fuse_limit = self.first_dict_value(detailed, self.fuse_limit_keys())
                 if fuse_limit is not None:
                     info['main_fuse_limit_a'] = self.amp_value(fuse_limit)
-                    info['main_fuse_limit_source'] = 'site.fuse'
+                    info['main_fuse_limit_source'] = 'site.detailed.fuse'
             if info.get('main_fuse_limit_a', 0.0) <= 0:
-                fuse_a = self.fuse_limit_from_circuits(detailed.get('circuits'), circuit_id=circuit_id)
-                if fuse_a > 0:
-                    info['main_fuse_limit_a'] = fuse_a
-                    info['main_fuse_limit_source'] = 'circuit.fuse'
+                fuse_a, src = self.fuse_limit_from_circuits(detailed.get('circuits'), circuit_id=circuit_id)
+                self.set_fuse_limit(info, fuse_a, src or 'site.detailed.circuit.fuse')
             if info.get('emobility_a', 0.0) <= 0:
-                emobility = self.first_dict_value(detailed, ('maxAllocatedCurrent',))
+                emobility = self.first_dict_value(detailed, self.emobility_keys())
                 if emobility is not None:
                     info['emobility_a'] = self.amp_value(emobility)
+                    info['emobility_source'] = 'site.detailed.maxAllocatedCurrent'
         if info.get('main_fuse_limit_a', 0.0) <= 0:
             circuits = self.api_get_optional(f'/sites/{site_id}/circuits')
-            fuse_a = self.fuse_limit_from_circuits(circuits, circuit_id=circuit_id)
-            if fuse_a > 0:
-                info['main_fuse_limit_a'] = fuse_a
-                info['main_fuse_limit_source'] = 'circuit.fuse'
+            debug_hits.extend(self.collect_fuse_debug(circuits, 'circuits'))
+            fuse_a, src = self.fuse_limit_from_circuits(circuits, circuit_id=circuit_id)
+            self.set_fuse_limit(info, fuse_a, src or 'circuits.fuse')
         if info.get('main_fuse_limit_a', 0.0) <= 0:
-            fuse_a = self.fuse_limit_from_products(site_id)
-            if fuse_a > 0:
-                info['main_fuse_limit_a'] = fuse_a
-                info['main_fuse_limit_source'] = 'accounts/products.fuse'
-        if info.get('main_fuse_limit_a', 0.0) <= 0 and site_structure is not None:
-            fuse_a = self.fuse_limit_from_site_structure(site_structure)
-            if fuse_a > 0:
-                info['main_fuse_limit_a'] = fuse_a
-                info['main_fuse_limit_source'] = 'siteStructure.fuse'
+            fuse_a, src = self.fuse_limit_from_products(site_id, circuit_id=circuit_id)
+            self.set_fuse_limit(info, fuse_a, src or 'accounts/products.fuse')
+        if equalizer_values and info.get('main_fuse_limit_a', 0.0) <= 0:
+            debug_hits.extend(self.collect_fuse_debug(equalizer_values, 'equalizer'))
+            fuse_a, src = self.fuse_limit_from_equalizer_values(equalizer_values)
+            self.set_fuse_limit(info, fuse_a, src or 'equalizer.fuse')
+        self.log_fuse_probe_debug(site_id, info, debug_hits, site_structure=site_structure)
         self.site_fuse_cache[cache_key] = info
         return info
     def parse_equalizer_observations(self, obs):
@@ -1331,6 +1534,7 @@ class BasePlugin:
             site_id,
             circuit_id=equalizer.get('circuitId'),
             site_structure=values.get('siteStructure'),
+            equalizer_values=values,
         )
 
         power_w = self.kw_to_watts(
@@ -1351,12 +1555,12 @@ class BasePlugin:
             or values.get('isLoadBalancingEnabled')
         )
         lb_active = self.truthy(load_bal) if load_bal is not None else False
-        max_alloc = self.safe_float(
-            site_info.get('emobility_a')
-            or values.get('maxAllocatedCurrent')
-            or values.get('allocatedCurrent'),
-            0.0,
-        )
+        max_alloc = self.safe_float(site_info.get('emobility_a'), 0.0)
+        if max_alloc <= 0:
+            max_alloc = self.safe_float(
+                values.get('maxAllocatedCurrent') or values.get('allocatedCurrent'),
+                0.0,
+            )
         main_fuse_a = self.safe_float(site_info.get('main_fuse_a'), 0.0)
         main_fuse_limit_a = self.safe_float(site_info.get('main_fuse_limit_a'), 0.0)
 

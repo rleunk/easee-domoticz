@@ -2,6 +2,15 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.2.5] - 2026-06-15
+
+### 🐛 Hoofdzekering limiet — extra probes
+- Diepere parse van **siteStructure** (obs. 20): recursieve scan op `fuse`, `mainFuseLimit`, `fuseLimit`, …
+- Root-circuit detectie verbeterd (`parentCircuitId` + child-graph)
+- Extra bronnen: equalizer state/config, `/sites/{id}/circuits`, `/accounts/products` (incl. nested equalizers)
+- **Debug logging** (Mode6=Debug): fuse-gerelateerde keys + siteStructure structuurkeys
+- **eMobility limiet**: site `maxAllocatedCurrent` wint altijd boven equalizer-waarde; ook uit siteStructure
+
 ## [10.2.4] - 2026-06-15
 
 ### 🐛 Hoofdzekering limiet fix
