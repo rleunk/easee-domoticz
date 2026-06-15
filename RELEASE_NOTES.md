@@ -1,3 +1,18 @@
+# Easee Domoticz Plugin - v10.0.1 Release
+
+## 📦 Release Notes
+
+**Versie**: 10.0.1  
+**Status**: ✅ Production Ready  
+**Release Date**: 2026-06-15  
+
+### Leesbare laadstatus
+- `chargerOpMode` cijfers worden Nederlandse tekst op de status-tegel
+- Voorbeeld: `✅ ⚡⚡ Laden | ⏱️ 01:24` i.p.v. `✅ ⚡⚡ 3 | ⏱️ 01:24`
+- Verder identiek aan v10.0.0
+
+---
+
 # Easee Domoticz Plugin - v10.0.0 Release
 
 ## 📦 Release Notes
@@ -163,6 +178,7 @@ Voor productie deployment, zorg dat je dit hebt:
 
 | Versie | Datum | Status | Notes |
 |--------|-------|--------|-------|
+| **10.0.1** | 2026-06-15 | ✅ Production | Leesbare laadstatus |
 | **10.0.0** | 2026-06-15 | ✅ Production | Nieuwe start + sessiekosten bugfix |
 | **9.0** | 2026-06-12 | ⚠️ EOL | Zie v10.0.0 |
 | 8.0.2 | 2026-06-11 | 🔴 EOL | Stabiel maar niet compact |

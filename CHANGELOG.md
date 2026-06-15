@@ -2,6 +2,15 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.0.1] - 2026-06-15
+
+### ✨ Verbetering
+- Laadstatus (`chargerOpMode`) wordt als Nederlandse tekst getoond i.p.v. cijfers
+  - Bijv. `Laden`, `Wacht op start`, `Geen auto` in plaats van `3`, `2`, `1`
+
+### 📦 Overige
+- Verder identiek aan v10.0.0 — zelfde devices, state file en UI
+
 ## [10.0.0] - 2026-06-15
 
 ### 🚀 Nieuwe start

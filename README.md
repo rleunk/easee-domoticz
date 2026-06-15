@@ -1,8 +1,8 @@
-# Easee Domoticz Plugin v10.0.0
+# Easee Domoticz Plugin v10.0.1
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.0.0-blue)
+![Version](https://img.shields.io/badge/version-10.0.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -10,6 +10,7 @@
 
 ✨ **Auto-Discovery** - Automatische detectie van alle Easee laadpalen  
 📊 **Realtime Monitoring** - Live power, energy en status updates  
+💬 **Leesbare status** - Laadstatus in Nederlands (Laden, Wacht op start, …)  
 💰 **Cost Tracking** - Automatische berekening van laadkosten  
 💵 **Tibber Integration** - Stroomtarieven en goedkope laadwindows  
 🎨 **Compact UI** - Intelligente samengevoegde tegels met emoji indicators  
@@ -47,7 +48,7 @@ Zie [docs/INSTALLATION.md](docs/INSTALLATION.md) voor stap-voor-stap instructies
 
 5. **Voeg plugin toe in Domoticz UI**
    - Setup → Hardware
-   - Type: "Easee AutoDiscovery Compact v10.0.0"
+   - Type: "Easee AutoDiscovery Compact v10.0.1"
    - Username/Password: Jouw Easee credentials
    - Create
 
@@ -84,7 +85,17 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare paramet
 
 ## 🎨 Emoji Indicators
 
-### Power Status
+### Charger Status (tekst op tegel)
+| Tekst | Betekenis |
+|-------|-----------|
+| Laden | Actief aan het laden |
+| Wacht op start | Auto aangesloten, wacht op start |
+| Geen auto | Geen auto aangesloten |
+| Voltooid | Laden afgerond/pauze |
+| Fout | Fout op de lader |
+| Offline | Lader offline |
+
+### Power Status (emoji)
 - `⚡⚡` = Hoog vermogen (>7kW)
 - `⚡` = Medium vermogen (>3.5kW)
 - `🔌` = Laag vermogen (>50W)
@@ -110,7 +121,7 @@ Zie [CHANGELOG.md](CHANGELOG.md) voor volledige versiegeschiedenis.
 
 ## 🆙 Updates
 
-**Van v9.x naar v10.0.0?**
+**Van v10.0.0 naar v10.0.1?**
 
 ```bash
 cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
@@ -139,6 +150,6 @@ MIT License - zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.0.0** - Gemaakt door Richard Leunk
+**Versie 10.0.1** - Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

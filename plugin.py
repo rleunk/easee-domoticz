@@ -1,9 +1,9 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.0.0" author="Richard Leunk" version="10.0.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.0.1" author="Richard Leunk" version="10.0.1"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.0.0</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.0.1</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators en Tibber stroomtarief integratie.</p>
     </description>
     <params>
@@ -43,6 +43,18 @@ TIBBER_GQL = 'https://api.tibber.com/v1-beta/gql'
 STATE_FILE = 'easee_v9_0_state.json'
 ULTRA_DEBUG = False
 
+OP_MODE_LABELS = {
+    0: 'Offline',
+    1: 'Geen auto',
+    2: 'Wacht op start',
+    3: 'Laden',
+    4: 'Voltooid',
+    5: 'Fout',
+    6: 'Klaar om te laden',
+    7: 'Wacht op autorisatie',
+    8: 'Bezig met afmelden',
+}
+
 DEVICE_TYPES = {
     'Text':      {'Type': 243, 'Subtype': 19},
     'Switch':    {'Type': 244, 'Subtype': 73, 'Switchtype': 0},
@@ -68,11 +80,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.0.0] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.0.1] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.0.0] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.0.0] {msg}')
+            Domoticz.Debug(f'[Easee v10.0.1] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.0.1] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -148,6 +160,14 @@ class BasePlugin:
         return bool(self.tibber_token())
 
     # ---- emoji & status helpers ----
+    def op_mode_label(self, value):
+        if value is None or value == '':
+            return 'Onbekend'
+        try:
+            return OP_MODE_LABELS.get(int(value), f'Modus {int(value)}')
+        except Exception:
+            text = str(value).strip()
+            return text if text else 'Onbekend'
     def power_emoji(self, power_w):
         """Emoji based on power level"""
         if power_w >= 7000:
@@ -591,8 +611,11 @@ class BasePlugin:
         total_kwh = self.kwh_value(values.get('lifetimeEnergy'))
         total_wh = self.wh_from_kwh(total_kwh)
         online = values.get('isOnline')
-        status = values.get('chargerOpMode') or ''
+        op_mode = values.get('chargerOpMode')
+        status_label = self.op_mode_label(op_mode)
         session_status = session.get('status') or session.get('state') or ''
+        if session_status and not str(session_status).strip().isdigit():
+            status_label = str(session_status)
         session_active = bool(session) or power_w > 50
 
         st = self.charger_state(cid)
@@ -660,7 +683,7 @@ class BasePlugin:
         # COMPACT: Status with emoji
         power_emoji = self.power_emoji(power_w)
         status_emoji = self.status_emoji(online, session_active)
-        status_text = f'{status_emoji} {power_emoji} {status or session_status or "Standby"} | ⏱️ {laadduur}'
+        status_text = f'{status_emoji} {power_emoji} {status_label} | ⏱️ {laadduur}'
         self.update_text(f'{base} Status', status_text)
         
         if self.tibber_enabled():
