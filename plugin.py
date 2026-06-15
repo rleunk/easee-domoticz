@@ -1,9 +1,9 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.2.7" author="Richard Leunk" version="10.2.7"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.2.9" author="Richard Leunk" version="10.2.9"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.2.7</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.2.9</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -37,7 +37,7 @@
 """
 
 import Domoticz
-import os, json, time, hashlib
+import os, json, time, hashlib, math
 from datetime import datetime
 try:
     import requests
@@ -103,14 +103,15 @@ class BasePlugin:
         self.site_fuse_cache = {}
         self.fuse_structure_logged = set()
         self.fuse_first_poll_logged = set()
+        self.site_structure_numerics_logged = set()
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.2.7] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.2.9] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.2.7] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.2.7] {msg}')
+            Domoticz.Debug(f'[Easee v10.2.9] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.2.9] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -537,6 +538,45 @@ class BasePlugin:
         if abs(x - round(x)) < 0.05:
             return f'{int(round(x))} A'
         return f'{x:.1f} A'
+    def current_from_power_3phase(self, power_w):
+        """Bereken lijnstroom (A) uit actief vermogen op 3×230 V."""
+        p = self.safe_float(power_w, 0.0)
+        if p <= 0:
+            return 0.0
+        return p / (math.sqrt(3.0) * 230.0)
+    def amps_balanced_3phase_from_power(self, power_w, voltage=230):
+        """Max import vermogen (W) → lijnstroom (A) bij evenwichtige 3-fase (17200 W → 24,9 A)."""
+        p = self.safe_float(power_w, 0.0)
+        if p <= 0:
+            return 0.0
+        return p / (3.0 * voltage)
+    def phase_currents_from_values(self, values):
+        phases = []
+        for key in ('currentL1', 'currentL2', 'currentL3'):
+            val = self.safe_float(values.get(key), 0.0)
+            if val > 0:
+                phases.append(val)
+            else:
+                phases.append(None)
+        if not any(p is not None and p > 0 for p in phases):
+            return None, None, None, 0.0
+        nums = [p for p in phases if p is not None and p > 0]
+        load_a = max(nums) if nums else 0.0
+        return phases[0], phases[1], phases[2], load_a
+    def actual_current_line(self, values, power_w):
+        l1, l2, l3, load_a = self.phase_currents_from_values(values)
+        if load_a > 0:
+            parts = []
+            for val in (l1, l2, l3):
+                if val is not None and val > 0:
+                    parts.append(f'{val:.1f}')
+                else:
+                    parts.append('—')
+            return f'📊 L1/L2/L3: {" / ".join(parts)} A', load_a
+        calc_a = self.current_from_power_3phase(power_w)
+        if calc_a > 0:
+            return f'📊 Actuele stroom: {calc_a:.1f} A (3-fase)', calc_a
+        return None, 0.0
     def format_kw(self, value):
         x = self.safe_float(value, 0.0)
         if x <= 0:
@@ -769,16 +809,44 @@ class BasePlugin:
         self.collect_fuse_from_dict(settings, f'circuit[{circuit_id}].settings', candidates, main_fuse_a=main_fuse_a)
         self.scan_any_fuse_keys(settings, f'circuit[{circuit_id}].settings', candidates, main_fuse_a=main_fuse_a)
         phase_vals = []
+        max_phase_vals = []
         for key in ('maxCircuitCurrentP1', 'maxCircuitCurrentP2', 'maxCircuitCurrentP3'):
+            val = self.amp_value(settings.get(key))
+            if val > 0:
+                phase_vals.append(val)
+                max_phase_vals.append(val)
+                self.add_fuse_candidate(
+                    candidates, val, f'circuit[{circuit_id}].settings.{key}',
+                    main_fuse_a=main_fuse_a)
+        for key in ('offlineMaxCircuitCurrentP1', 'offlineMaxCircuitCurrentP2', 'offlineMaxCircuitCurrentP3'):
             val = self.amp_value(settings.get(key))
             if val > 0:
                 phase_vals.append(val)
                 self.add_fuse_candidate(
                     candidates, val, f'circuit[{circuit_id}].settings.{key}',
                     main_fuse_a=main_fuse_a)
-        if phase_vals:
+        if max_phase_vals:
             self.add_fuse_candidate(
-                candidates, min(phase_vals), f'circuit[{circuit_id}].settings.maxCircuitCurrent',
+                candidates, min(max_phase_vals), f'circuit[{circuit_id}].settings.maxCircuitCurrentPhasesMin',
+                main_fuse_a=main_fuse_a)
+        elif phase_vals:
+            self.add_fuse_candidate(
+                candidates, min(phase_vals), f'circuit[{circuit_id}].settings.circuitCurrentMin',
+                main_fuse_a=main_fuse_a)
+    def collect_fuse_from_equalizer_circuit(self, site_id, circuit_id, candidates, main_fuse_a=0.0):
+        if not site_id or circuit_id is None:
+            return
+        circuit = self.api_get_optional(f'/sites/{site_id}/circuits/{circuit_id}')
+        if not isinstance(circuit, dict):
+            return
+        self.collect_fuse_from_dict(
+            circuit, f'equalizerCircuit[{circuit_id}]', candidates, main_fuse_a=main_fuse_a)
+        self.scan_any_fuse_keys(
+            circuit, f'equalizerCircuit[{circuit_id}]', candidates, main_fuse_a=main_fuse_a)
+        fuse_a = self.fuse_limit_from_dict(circuit)
+        if fuse_a > 0:
+            self.add_fuse_candidate(
+                candidates, fuse_a, f'equalizerCircuit[{circuit_id}].fuse',
                 main_fuse_a=main_fuse_a)
     def root_circuit_fuse(self, circuits, main_fuse_a=0.0):
         if not isinstance(circuits, list):
@@ -837,6 +905,46 @@ class BasePlugin:
         cand_text = ', '.join(cand_parts) if cand_parts else 'geen'
         key_text = ', '.join(keys[:14]) if keys else 'leeg'
         self.log(f'Equalizer siteStructure (site {key}): keys={key_text} | fuse kandidaten: {cand_text}')
+        self.log_site_structure_numerics_once(site_id, raw)
+    def collect_numeric_values(self, obj, path='', depth=0, max_depth=12):
+        found = []
+        if depth > max_depth:
+            return found
+        if isinstance(obj, dict):
+            for key, val in obj.items():
+                p = f'{path}.{key}' if path else str(key)
+                if isinstance(val, bool):
+                    continue
+                if isinstance(val, (int, float)):
+                    found.append(f'{p}={val}')
+                elif isinstance(val, str) and val.strip():
+                    s = val.strip()
+                    if s.replace('.', '', 1).replace('-', '', 1).isdigit():
+                        found.append(f'{p}={s}')
+                elif isinstance(val, (dict, list)):
+                    found.extend(self.collect_numeric_values(val, p, depth + 1, max_depth))
+        elif isinstance(obj, list):
+            for idx, item in enumerate(obj[:24]):
+                found.extend(self.collect_numeric_values(item, f'{path}[{idx}]', depth + 1, max_depth))
+        return found
+    def log_site_structure_numerics_once(self, site_id, raw):
+        if Parameters.get('Mode6') != 'Debug':
+            return
+        key = str(site_id or 'unknown')
+        if key in self.site_structure_numerics_logged:
+            return
+        self.site_structure_numerics_logged.add(key)
+        data = self.parse_site_structure_json(raw)
+        if not data:
+            return
+        numerics = self.collect_numeric_values(data, 'siteStructure')
+        if not numerics:
+            self.debug(f'siteStructure numerics (site {key}): geen numerieke waarden')
+            return
+        chunk_size = 40
+        for i in range(0, len(numerics), chunk_size):
+            chunk = numerics[i:i + chunk_size]
+            self.debug(f'siteStructure numerics (site {key}) [{i // chunk_size + 1}]: ' + '; '.join(chunk))
     def log_equalizer_fuse_once(self, eid, limit_a, source):
         key = str(eid or '')
         if not key or key in self.fuse_first_poll_logged:
@@ -998,20 +1106,32 @@ class BasePlugin:
             return
         existing = info.get('emobility_a', 0.0)
         existing_src = str(info.get('emobility_source', ''))
-        prefer_new = 'maxAllocatedCurrent' in str(source)
+        src_text = str(source)
+        if 'site.state.maxAllocatedCurrent' in src_text:
+            info['emobility_a'] = amps
+            info['emobility_source'] = source
+            return
+        if 'site.state.maxAllocatedCurrent' in existing_src:
+            return
+        prefer_new = 'maxAllocatedCurrent' in src_text
         prefer_existing = 'maxAllocatedCurrent' in existing_src
+        site_new = src_text.startswith('site.') or 'site.state' in src_text
+        site_existing = existing_src.startswith('site.') or 'site.state' in existing_src
         if prefer_new and prefer_existing:
-            if 'site.' in str(source) or 'site.state' in str(source):
+            if site_new:
                 info['emobility_a'] = amps
                 info['emobility_source'] = source
-            elif 'site.' not in existing_src and 'site.state' not in existing_src:
+            elif not site_existing:
                 info['emobility_a'] = max(existing, amps)
                 info['emobility_source'] = source
             return
-        if prefer_new:
+        if prefer_new and site_new:
             info['emobility_a'] = amps
             info['emobility_source'] = source
-        elif prefer_existing:
+        elif prefer_new:
+            info['emobility_a'] = amps
+            info['emobility_source'] = source
+        elif prefer_existing and site_existing:
             return
         elif existing <= 0 or amps > existing:
             info['emobility_a'] = amps
@@ -1153,6 +1273,9 @@ class BasePlugin:
         self.collect_fuse_from_circuit_settings(
             site_id, circuit_id, candidates, main_fuse_a=info.get('main_fuse_a', 0.0))
 
+        self.collect_fuse_from_equalizer_circuit(
+            site_id, circuit_id, candidates, main_fuse_a=info.get('main_fuse_a', 0.0))
+
         fuse_a, src = self.fuse_limit_from_products(
             site_id, circuit_id=circuit_id, main_fuse_a=info.get('main_fuse_a', 0.0))
         if fuse_a > 0:
@@ -1182,6 +1305,16 @@ class BasePlugin:
         if limit_a > 0:
             info['main_fuse_limit_a'] = limit_a
             info['main_fuse_limit_source'] = limit_src
+
+        if info.get('main_fuse_limit_a', 0.0) <= 0 and equalizer_values:
+            mpi = equalizer_values.get('maxPowerImport')
+            if mpi is not None:
+                power_w = self.kw_to_watts(mpi)
+                if power_w > 0:
+                    limit_a = round(self.amps_balanced_3phase_from_power(power_w))
+                    if limit_a > 0:
+                        info['main_fuse_limit_a'] = float(limit_a)
+                        info['main_fuse_limit_source'] = 'maxPowerImport-3fase'
 
         self.log_fuse_probe_debug(site_id, info, debug_hits, candidates=candidates, site_structure=site_structure)
         self.site_fuse_cache[cache_key] = info
@@ -1828,9 +1961,13 @@ class BasePlugin:
         lb_active = self.truthy(load_bal) if load_bal is not None else False
         max_alloc = self.safe_float(site_info.get('emobility_a'), 0.0)
         emob_src = str(site_info.get('emobility_source', ''))
-        if 'maxAllocatedCurrent' not in emob_src or 'site.' not in emob_src:
+        site_emob_authoritative = (
+            'site.state.maxAllocatedCurrent' in emob_src
+            or emob_src.startswith('site.')
+        )
+        if max_alloc <= 0 or not site_emob_authoritative:
             eq_mac = self.safe_float(values.get('maxAllocatedCurrent'), 0.0)
-            if eq_mac > 0:
+            if eq_mac > 0 and not site_emob_authoritative:
                 max_alloc = eq_mac if max_alloc <= 0 else max(max_alloc, eq_mac)
             elif max_alloc <= 0:
                 max_alloc = self.safe_float(values.get('allocatedCurrent'), 0.0)
@@ -1856,10 +1993,16 @@ class BasePlugin:
         else:
             lines.append('🏠 Hoofdzekering: onbekend')
         if main_fuse_limit_a > 0:
-            lines.append(f'⚡ Hoofdzekering limiet: {self.format_amp(main_fuse_limit_a)}')
+            limit_line = f'⚡ Hoofdzekering limiet: {self.format_amp(main_fuse_limit_a)}'
+            if limit_src == 'maxPowerImport-3fase':
+                limit_line += ' (uit max vermogen)'
+            lines.append(limit_line)
         else:
             lines.append('⚡ Hoofdzekering limiet: onbekend')
-        if power_w > 50:
+        current_line, _load_a = self.actual_current_line(values, power_w)
+        if current_line:
+            lines.append(current_line)
+        if power_w > 0:
             lines.append(f'🔥 Huisvermogen: {int(power_w)} W')
         status_text = '\n'.join(lines)
 

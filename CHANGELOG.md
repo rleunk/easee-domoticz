@@ -2,6 +2,29 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.2.9] - 2026-06-15
+
+- **Hoofdzekering limiet fallback**: obs. 44 MaxPowerImport (kW) → A via 3×230 V als Easee geen fuse-waarde geeft
+
+## [10.2.8] - 2026-06-15
+
+### ✨ Actuele stroom vs limiet — duidelijk onderscheid
+- **📊 Actuele stroom** berekend uit huisvermogen op 3×230 V: `I = P / (√3 × 230)`
+- **📊 L1/L2/L3** uit equalizer observations 31/32/33 (voorkeur boven berekening)
+- **⚡ Hoofdzekering limiet** blijft ingestelde max (bijv. 24 A) — niet verwarren met actueel verbruik
+
+### 🐛 Hoofdzekering limiet — extra probes
+- Volledige **siteStructure** numerieke dump in debug-log (1× per site)
+- **offlineMaxCircuitCurrentP1/P2/P3** uit circuit settings
+- **min(maxCircuitCurrentP1/P2/P3)** als fuse-kandidaat
+- **Equalizer circuitId**: direct `/sites/{id}/circuits/{circuitId}` voor fuse
+
+### 🐛 eMobility limiet
+- **`site.state.maxAllocatedCurrent`** heeft absolute voorrang (21 A i.p.v. equalizer 20 A)
+
+### 📋 Equalizer Status-tegel (volgorde)
+- Online → Load balancing → eMobility limiet → Hoofdzekering → Hoofdzekering limiet → Actuele stroom → Huisvermogen
+
 ## [10.2.7] - 2026-06-15
 
 ### 🐛 Hoofdzekering limiet 24 A — robuuste fuse-detectie

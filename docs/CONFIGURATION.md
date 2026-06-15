@@ -89,16 +89,19 @@ De plugin zoekt de Equalizer via:
 
 Als geen Equalizer wordt gevonden, verschijnen geen extra tegels en toont Status `Geen EQ`.
 
-### Equalizer Status-tegel (v10.2.6+)
+### Equalizer Status-tegel (v10.2.8+)
 
-| Regel | API-bron | Easee Control |
-|-------|----------|---------------|
-| Hoofdzekering | `site.ratedCurrent` | Main fuse size |
-| eMobility limiet | `site.maxAllocatedCurrent` (site wint) | Max allocated current |
-| Hoofdzekering limiet | `siteStructure.fuse` (obs. 20), `circuit.fuse`, `site.fuse` | Main fuse limit |
-| Huisvermogen | obs. 40 ActivePowerImport | — |
+| Regel | API-bron | Betekenis |
+|-------|----------|-----------|
+| Hoofdzekering | `site.ratedCurrent` | Zekering in meterkast (bijv. 25 A) |
+| eMobility limiet | `site.state.maxAllocatedCurrent` | Max voor laadpaal (site wint) |
+| Hoofdzekering limiet | circuit settings, siteStructure, equalizer-circuit | Ingestelde max in Easee (bijv. 24 A) |
+| Actuele stroom | obs. 31–33 L1/L2/L3, of berekend uit vermogen | Echt verbruik nu (~2 A bij 802 W) |
+| Huisvermogen | obs. 40 ActivePowerImport | Watt |
 
-Zet **Debug logging** aan (Mode6) voor fuse-probe details in het Domoticz-log.
+**Limiet ≠ actueel verbruik:** 24 A is een ingestelde grens; 802 W is ~2 A werkelijk gebruik (3-fase).
+
+Zet **Debug logging** aan (Mode6) voor fuse-probe details en siteStructure numerics in het Domoticz-log.
 
 Obs. 44 (MaxPowerImport) is **kW** en wordt niet gebruikt voor hoofdzekering limiet.
 
