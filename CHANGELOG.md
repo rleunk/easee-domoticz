@@ -2,9 +2,61 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.3.2] - 2026-06-15
+
+### 🐛 Hoofdzekering limiet — circuit.fuse (23 A)
+- **Hoofdzekering limiet** uit Easee API-veld **`circuit.fuse`** (root-circuit in `/sites/{id}/state` → `circuitStates`, `/circuits`, siteStructure obs. 20)
+- Kandidaten **strikt onder** `ratedCurrent` (25 A): 23 A wint, 25 A wordt uitgesloten
+- **Geen** MaxPowerImport-fallback meer als limiet (blijft aparte regel Max import)
+- **1× Domoticz-log**: volledige siteStructure key-structuur (truncated) + amp-range 15–30 A
+- Bij **onbekend**: log welke API-probes zijn uitgevoerd
+- Extra probes: `/sites/{id}`, `/cloud-loadbalancing/.../surplus-energy`
+
+### 📋 Equalizer Status-tegel (ongewijzigde volgorde)
+- Online → Load balancing → eMobility → Hoofdzekering → Hoofdzekering limiet → Max import → L1/L2/L3 → Huisvermogen
+
+## [10.3.1] - 2026-06-15
+
+### 🐛 Plugin laadfout (Domoticz)
+- **Zip-structuur hersteld**: release-zip gebruikt weer map `easee-domoticz-v10.3.1-build/` (zoals v10.2.9) — v10.3.0 zip had platte structuur waardoor `plugin.py` bij verkeerd uitpakken niet in de plugin-map stond → `ModuleNotFoundError: No module named 'plugin'`
+- **`# -*- coding: utf-8 -*-`** toegevoegd voor betrouwbare UTF-8 op Linux/Domoticz
+- Logregel startup: `!=` i.p.v. Unicode `≠` (ASCII-veilig)
+
+### ℹ️ Verder identiek aan v10.3.0
+- MaxPowerImport niet meer als hoofdzekering limiet
+- Aparte regel Max import, L1/L2/L3 fix, fuse-zoektocht
+
+## [10.3.0] - 2026-06-15
+
+### ⚠️ Bekend probleem
+- Release-zip had **verkeerde mapstructuur** (bestanden in zip-root i.p.v. `-build/` submap). Gebruik **v10.3.1** of kopieer `plugin.py` handmatig uit de build-map.
+
+
+### 🐛 Hoofdzekering limiet — geen MaxPowerImport meer als limiet
+- **MaxPowerImport (obs. 44) verwijderd** als fallback voor hoofdzekering limiet — gaf altijd ~25 A (zekeringgrootte), niet de ingestelde limiet (bijv. 22 A)
+- **Nieuwe aparte regel**: `📈 Max import: 17.2 kW (~25 A)` — informatief, niet gelabeld als limiet
+- Bij ontbrekend fuse-veld: **onbekend** i.p.v. verkeerde 25 A
+
+### 🔍 Agressievere fuse-limiet zoektocht
+- Diepe scan siteStructure (obs. 20) op fuse, fuseLimit, mainFuseLimit, limit, maxCurrent, importLimit, …
+- `/sites/{id}/state` — alle site-keys + recursieve limit-scan
+- **Nieuwe endpoints**: `/cloud-loadbalancing/equalizer/{id}/config` (+ varianten)
+- Circuit settings, equalizer-circuit, accounts/products (ongewijzigd maar uitgebreid)
+- **1× Domoticz-log** (normaal, geen debug): alle numerieke waarden **15–30 A** in siteStructure — helpt het echte limiet-veld te vinden
+
+### 📊 L1/L2/L3 weergave
+- Alle drie fasen altijd zichtbaar als observations 31/32/33 aanwezig zijn
+- Ontbrekende fase: `—`, nul stroom: `0.0`
+
+### 📋 Equalizer Status-tegel (volgorde)
+- Online → Load balancing → eMobility limiet → Hoofdzekering → Hoofdzekering limiet → **Max import** (optioneel) → L1/L2/L3 → Huisvermogen
+
+### ℹ️ eMobility
+- `site.state.maxAllocatedCurrent` blijft voorrang
+
 ## [10.2.9] - 2026-06-15
 
-- **Hoofdzekering limiet fallback**: obs. 44 MaxPowerImport (kW) → A via 3×230 V als Easee geen fuse-waarde geeft
+- **Hoofdzekering limiet fallback**: obs. 44 MaxPowerImport (kW) → A via 3×230 V als Easee geen fuse-waarde geeft *(vervangen in 10.3.0)*
 
 ## [10.2.8] - 2026-06-15
 

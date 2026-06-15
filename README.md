@@ -1,8 +1,8 @@
-# Easee Domoticz Plugin v10.2.8
+# Easee Domoticz Plugin v10.3.2
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.2.8-blue)
+![Version](https://img.shields.io/badge/version-10.3.2-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 

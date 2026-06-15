@@ -89,21 +89,26 @@ De plugin zoekt de Equalizer via:
 
 Als geen Equalizer wordt gevonden, verschijnen geen extra tegels en toont Status `Geen EQ`.
 
-### Equalizer Status-tegel (v10.2.8+)
+### Equalizer Status-tegel (v10.3.0+)
 
 | Regel | API-bron | Betekenis |
 |-------|----------|-----------|
 | Hoofdzekering | `site.ratedCurrent` | Zekering in meterkast (bijv. 25 A) |
 | eMobility limiet | `site.state.maxAllocatedCurrent` | Max voor laadpaal (site wint) |
-| Hoofdzekering limiet | circuit settings, siteStructure, equalizer-circuit | Ingestelde max in Easee (bijv. 24 A) |
-| Actuele stroom | obs. 31–33 L1/L2/L3, of berekend uit vermogen | Echt verbruik nu (~2 A bij 802 W) |
+| Hoofdzekering limiet | fuse/limit API-velden (siteStructure, site.state, circuits, cloud-loadbalancing) | **Ingestelde limiet** in Easee Control (bijv. 22 A) — **nooit** MaxPowerImport |
+| Max import | obs. 44 MaxPowerImport | Informatief: max vermogen aansluiting (bijv. 17,2 kW ≈ 25 A) — **verandert niet** bij limiet 22→24 A |
+| L1/L2/L3 | obs. 31–33 | Fase-stromen; ontbrekend = `—`, nul = `0.0` |
+| Actuele stroom | fallback berekend uit vermogen | Alleen als geen fase-observations |
 | Huisvermogen | obs. 40 ActivePowerImport | Watt |
 
-**Limiet ≠ actueel verbruik:** 24 A is een ingestelde grens; 802 W is ~2 A werkelijk gebruik (3-fase).
+**Drie verschillende begrippen:**
+- **Hoofdzekering (25 A)** = fysieke zekeringgrootte
+- **Hoofdzekering limiet (22 A)** = wat jij instelt (gele lijn in Easee Energy)
+- **Max import (17,2 kW)** = technisch max vermogen — **niet** hetzelfde als limiet
 
-Zet **Debug logging** aan (Mode6) voor fuse-probe details en siteStructure numerics in het Domoticz-log.
+Als limiet **onbekend** is, controleer het Domoticz-log op `siteStructure amp-range 15-30` (1× per site, geen debug nodig). Wijzig je limiet in Easee en vergelijk welke waarde verandert.
 
-Obs. 44 (MaxPowerImport) is **kW** en wordt niet gebruikt voor hoofdzekering limiet.
+Zet **Debug logging** aan (Mode6) voor uitgebreide fuse-probe details.
 
 ## Tibber Integration (Optioneel)
 
