@@ -1,9 +1,9 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.1.2" author="Richard Leunk" version="10.1.2"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.1.3" author="Richard Leunk" version="10.1.3"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.1.2</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.1.3</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators en Tibber stroomtarief integratie.</p>
     </description>
     <params>
@@ -94,11 +94,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.1.2] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.1.3] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.1.2] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.1.2] {msg}')
+            Domoticz.Debug(f'[Easee v10.1.3] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.1.3] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -305,12 +305,6 @@ class BasePlugin:
             current = self.norm(Devices[unit].Name)
             if current == key:
                 return
-            try:
-                Devices[unit].Update(Name=key)
-                self.rebuild_index()
-                return
-            except Exception:
-                pass
             Devices[unit].Name = key
             self.rebuild_index()
         except Exception as e:

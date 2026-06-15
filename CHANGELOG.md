@@ -2,6 +2,11 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.1.3] - 2026-06-15
+
+### 🐛 Bugfix
+- Geen `CDevice_update`-fouten meer bij hernoemen van tegels (`Update(Name=...)` vervangen door directe naamtoewijzing)
+
 ## [10.1.2] - 2026-06-15
 
 ### 🐛 Bugfix
