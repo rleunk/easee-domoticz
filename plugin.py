@@ -1,10 +1,10 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.1.3" author="Richard Leunk" version="10.1.3"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.2.0" author="Richard Leunk" version="10.2.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.1.3</h2><br/>
-        <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators en Tibber stroomtarief integratie.</p>
+        <h2>Easee AutoDiscovery Compact v10.2.0</h2><br/>
+        <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
@@ -23,6 +23,9 @@
         <group label="Aangepaste laadpaalnamen (optioneel)">
             <param field="Mode2" label="Naam laadpaal 1" width="220px" default=""/>
             <param field="Mode3" label="Naam laadpaal 2" width="220px" default=""/>
+        </group>
+        <group label="Equalizer (optioneel, stap 1)">
+            <param field="Address" label="Naam Equalizer" width="220px" default=""/>
         </group>
         <group label="Tibber (optioneel)">
             <param field="Mode7" label="Tibber Personal Access Token" width="360px" password="true" default=""/>
@@ -89,16 +92,20 @@ class BasePlugin:
         self.image_ids = {}
         self.state = {'chargers': {}, 'price_cache': {}, 'currency': 'EUR'}
         self.chargers = []
+        self.equalizers = []
         self.latest_chargers = {}
+        self.latest_equalizers = {}
         self.charger_names = {}
+        self.equalizer_names = {}
+        self.equalizer_source = 'none'
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.1.3] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.2.0] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.1.3] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.1.3] {msg}')
+            Domoticz.Debug(f'[Easee v10.2.0] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.2.0] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -188,9 +195,25 @@ class BasePlugin:
         return f'Laadpaal {index + 1}'
     def charger_dev_name(self, display, label):
         return self.clean_label(f'{display} - {label}')
+    def custom_equalizer_name(self):
+        return self.clean_label(Parameters.get('Address', '') or '')
+    def equalizer_display_name(self, equalizer, index):
+        custom = self.custom_equalizer_name()
+        if custom and index == 0:
+            return custom
+        api_name = self.clean_label(str(equalizer.get('name') or '').strip())
+        eid = str(equalizer.get('id') or '').strip()
+        if api_name and api_name.lower() not in (eid.lower(), self.short_id(eid).lower(), 'circuit', 'equalizer'):
+            return api_name
+        return 'Equalizer' if index == 0 else f'Equalizer {index + 1}'
+    def equalizer_dev_name(self, display, label):
+        return self.clean_label(f'{display} - {label}')
     def make_charger_device_id(self, cid, label_key):
         raw = f'{cid}|{label_key}'.encode('utf-8', errors='ignore')
         return 'EASEE_CHG_' + hashlib.sha1(raw).hexdigest()[:24].upper()
+    def make_equalizer_device_id(self, eid, label_key):
+        raw = f'{eid}|{label_key}'.encode('utf-8', errors='ignore')
+        return 'EASEE_EQ_' + hashlib.sha1(raw).hexdigest()[:24].upper()
     def make_device_id(self, name):
         raw = self.norm(name).encode('utf-8', errors='ignore')
         return 'EASEE_' + hashlib.sha1(raw).hexdigest()[:28].upper()
@@ -291,6 +314,8 @@ class BasePlugin:
         return self.find_unit(name) or self.find_unit_by_devid(self.make_device_id(name))
     def resolve_charger_unit(self, cid, label_key):
         return self.find_unit_by_devid(self.make_charger_device_id(cid, label_key))
+    def resolve_equalizer_unit(self, eid, label_key):
+        return self.find_unit_by_devid(self.make_equalizer_device_id(eid, label_key))
     def resolve_core_unit(self, label):
         label = self.clean_label(label)
         devid = CORE_DEVICE_IDS.get(label)
@@ -327,11 +352,13 @@ class BasePlugin:
             return 'EaseeStatus'
         if 'loadbal' in n:
             return 'EaseeLoadBal'
+        if 'equalizer' in n or 'meterkast' in n:
+            return 'EaseeEqualizer'
         if 'totaal & sessie' in n or ' laden' in n or 'totaal kwh' in n:
             return 'EaseePower'
         return 'EaseeCharger'
     def load_custom_images(self):
-        roots = ['EaseeCharger','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
+        roots = ['EaseeCharger','EaseeEqualizer','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
         candidates = ['Easee_v10_0_icons.zip','Easee_v9_0_icons.zip','Easee_v8_0_3_icons.zip','Easee_v8_0_2_icons.zip','Easee_v8_0_1_icons.zip','Easee_v8_icons.zip','Easee.zip']
         for fn in candidates:
             if not os.path.isfile(os.path.join(self.plugin_dir, fn)):
@@ -438,6 +465,14 @@ class BasePlugin:
             Devices[u].Update(nValue=0, sValue=str(value))
     def update_charger_energy(self, cid, label_key, power_w, total_wh):
         u = self.resolve_charger_unit(cid, label_key)
+        if u is not None:
+            Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
+    def update_equalizer_text(self, eid, label_key, value):
+        u = self.resolve_equalizer_unit(eid, label_key)
+        if u is not None:
+            Devices[u].Update(nValue=0, sValue=str(value)[:4000])
+    def update_equalizer_energy(self, eid, label_key, power_w, total_wh=0):
+        u = self.resolve_equalizer_unit(eid, label_key)
         if u is not None:
             Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
 
@@ -612,7 +647,139 @@ class BasePlugin:
         return f'{secs // 3600:02d}:{(secs % 3600) // 60:02d}'
 
     # ---- discovery ----
-    def discover_entities(self):
+    def _equalizer_matches_filter(self, name, site_name):
+        flt = Parameters.get('Mode5', '').strip().lower()
+        if not flt:
+            return True
+        return flt in str(name).lower() or flt in str(site_name).lower()
+
+    def _append_equalizer(self, equalizers, seen, eq):
+        eid = str(eq.get('id') or '').strip()
+        if not eid or eid in seen:
+            return
+        if not self._equalizer_matches_filter(eq.get('name', ''), eq.get('siteName', '')):
+            return
+        equalizers.append(eq)
+        seen.add(eid)
+
+    def _scan_equalizers_in_object(self, obj, found, site_name=''):
+        if isinstance(obj, dict):
+            marker = ' '.join([
+                str(obj.get('name', '')),
+                str(obj.get('type', '')),
+                str(obj.get('role', '')),
+                str(obj.get('deviceType', '')),
+                str(obj.get('category', '')),
+                str(obj.get('meterType', '')),
+            ]).lower()
+            eid = obj.get('id') or obj.get('equalizerId') or obj.get('serialNumber')
+            is_meter = (
+                obj.get('deviceType') in ['HAN', 'P1', 'Equalizer']
+                or str(obj.get('role', '')).lower() in ['meter', 'han', 'equalizer']
+                or any(x in marker for x in ['equalizer', 'meter', 'han', 'p1', 'energy'])
+            )
+            site = str(obj.get('siteName') or obj.get('locationName') or obj.get('siteId') or site_name or '')
+            if eid and is_meter:
+                found[str(eid).strip()] = {
+                    'id': str(eid).strip(),
+                    'name': str(obj.get('name') or obj.get('serialNumber') or obj.get('id') or 'Equalizer'),
+                    'siteName': site,
+                    'circuitId': obj.get('circuitId'),
+                    'circuitName': obj.get('circuitName') or obj.get('name'),
+                    'source': 'sites-scan',
+                }
+            for value in obj.values():
+                self._scan_equalizers_in_object(value, found, site_name=site or site_name)
+        elif isinstance(obj, list):
+            for item in obj:
+                self._scan_equalizers_in_object(item, found, site_name=site_name)
+
+    def discover_equalizers(self):
+        equalizers = []
+        seen = set()
+        sources = []
+
+        try:
+            sites = self.api_get('/sites') or []
+            if isinstance(sites, list):
+                for site in sites:
+                    if not isinstance(site, dict):
+                        continue
+                    site_id = site.get('id')
+                    site_name = str(site.get('name') or site.get('siteName') or site_id or 'Site')
+                    if not self._equalizer_matches_filter(site_name, site_name):
+                        continue
+                    circuits = []
+                    if site_id:
+                        try:
+                            circuits = self.api_get(f'/sites/{site_id}/circuits') or []
+                        except Exception as ce:
+                            self.debug(f'Circuits voor site {site_id} niet opgehaald: {ce}')
+                    if isinstance(circuits, list):
+                        for circuit in circuits:
+                            if not isinstance(circuit, dict):
+                                continue
+                            eq_id = circuit.get('equalizerId') or circuit.get('equalizer') or circuit.get('equalizer_id')
+                            if not eq_id:
+                                continue
+                            before = len(equalizers)
+                            self._append_equalizer(equalizers, seen, {
+                                'id': str(eq_id).strip(),
+                                'name': str(circuit.get('name') or circuit.get('id') or 'Equalizer'),
+                                'siteId': site_id,
+                                'siteName': site_name,
+                                'circuitId': circuit.get('id'),
+                                'circuitName': str(circuit.get('name') or circuit.get('id') or 'Circuit'),
+                                'source': 'sites-circuits',
+                            })
+                            if len(equalizers) > before:
+                                sources.append('sites-circuits')
+        except Exception as e:
+            self.debug(f'Equalizer discovery via sites/circuits mislukt: {e}')
+
+        try:
+            list_data = self.api_get('/equalizers') or []
+            if isinstance(list_data, list):
+                for item in list_data:
+                    if not isinstance(item, dict):
+                        continue
+                    eq_id = item.get('id') or item.get('equalizerId') or item.get('serialNumber')
+                    if not eq_id:
+                        continue
+                    before = len(equalizers)
+                    self._append_equalizer(equalizers, seen, {
+                        'id': str(eq_id).strip(),
+                        'name': str(item.get('name') or item.get('serialNumber') or eq_id),
+                        'siteId': item.get('siteId'),
+                        'siteName': str(item.get('siteName') or item.get('locationName') or item.get('siteId') or ''),
+                        'circuitId': item.get('circuitId'),
+                        'circuitName': str(item.get('circuitName') or ''),
+                        'source': 'equalizers-list',
+                    })
+                    if len(equalizers) > before:
+                        sources.append('equalizers-list')
+        except Exception as e:
+            self.debug(f'Equalizer discovery via /equalizers mislukt: {e}')
+
+        if not equalizers:
+            try:
+                sites = self.api_get('/sites') or []
+                found = {}
+                self._scan_equalizers_in_object(sites, found)
+                for eq in found.values():
+                    before = len(equalizers)
+                    self._append_equalizer(equalizers, seen, eq)
+                    if len(equalizers) > before:
+                        sources.append('sites-scan')
+            except Exception as e:
+                self.debug(f'Equalizer discovery via sites-scan mislukt: {e}')
+
+        self.equalizer_source = sources[0] if sources else 'none'
+        equalizers = sorted({e['id']: e for e in equalizers}.values(), key=lambda x: x['id'])
+        self.debug(f'Equalizer discovery: {len(equalizers)} gevonden via {self.equalizer_source or "geen"}')
+        return equalizers
+
+    def discover_chargers(self):
         chargers = []
         flt = Parameters.get('Mode5', '').strip().lower()
         try:
@@ -629,6 +796,11 @@ class BasePlugin:
         except Exception as e:
             self.error(f'Discovery chargers mislukt: {e}')
         return sorted({c['id']: c for c in chargers}.values(), key=lambda x: x['id'])
+
+    def discover_entities(self):
+        self.chargers = self.discover_chargers()
+        self.equalizers = self.discover_equalizers()
+        return self.chargers, self.equalizers
 
     # ---- lifecycle sync ----
     def ensure_core_devices(self):
@@ -673,37 +845,77 @@ class BasePlugin:
                 f'{self.short_id(cid)} {label_key}',
             ]
             self.ensure_device_once(name, typ, device_id=devid, legacy_names=legacy)
-    
+
+    def ensure_equalizer_devices(self, equalizer, index):
+        display = self.equalizer_display_name(equalizer, index)
+        eid = equalizer['id']
+        devices = [
+            ('Text', 'Status'),
+            ('Energy', 'Vermogen'),
+        ]
+        for typ, label_key in devices:
+            name = self.equalizer_dev_name(display, label_key)
+            devid = self.make_equalizer_device_id(eid, label_key)
+            legacy = [
+                self.pref(f'{display} - {label_key}'),
+                f'Easee - {display} - {label_key}',
+                f'Easee - Easee - {display} - {label_key}',
+            ]
+            self.ensure_device_once(name, typ, device_id=devid, legacy_names=legacy)
+
     def initial_sync(self):
-        self.chargers = self.discover_entities()
+        self.discover_entities()
         self.charger_names = {}
+        self.equalizer_names = {}
         self.ensure_core_devices()
         for i, c in enumerate(self.chargers):
             self.charger_names[c['id']] = self.charger_display_name(c, i)
             self.ensure_charger_devices(c, i)
+        for i, eq in enumerate(self.equalizers):
+            self.equalizer_names[eq['id']] = self.equalizer_display_name(eq, i)
+            self.ensure_equalizer_devices(eq, i)
+        if self.equalizers:
+            self.log(f'Equalizer gevonden: {len(self.equalizers)} via {self.equalizer_source}')
+        else:
+            self.log('Geen Equalizer gevonden (stap 1 discovery)')
         self.write_debug(True)
-    
+
     def refresh_entity_cache_only(self):
-        self.chargers = self.discover_entities()
+        old_eq_ids = {e['id'] for e in self.equalizers}
+        self.discover_entities()
         self.charger_names = {c['id']: self.charger_display_name(c, i) for i, c in enumerate(self.chargers)}
+        self.equalizer_names = {e['id']: self.equalizer_display_name(e, i) for i, e in enumerate(self.equalizers)}
+        for i, eq in enumerate(self.equalizers):
+            if eq['id'] not in old_eq_ids:
+                self.ensure_equalizer_devices(eq, i)
         self.write_debug(False)
     
     def write_debug(self, created=False):
         if ULTRA_DEBUG:
-            dbg = {'charger_ids':[c['id'] for c in self.chargers], 'device_count':len(Devices), 'created_cycle':created, 'tibber_enabled': self.tibber_enabled()}
+            dbg = {
+                'charger_ids': [c['id'] for c in self.chargers],
+                'equalizer_ids': [e['id'] for e in self.equalizers],
+                'equalizer_source': self.equalizer_source,
+                'device_count': len(Devices),
+                'created_cycle': created,
+                'tibber_enabled': self.tibber_enabled(),
+            }
             self.update_text(self.pref('Debug'), json.dumps(dbg, ensure_ascii=False)[:4000])
-            self.update_text(self.pref('Counts'), f'chargers={len(self.chargers)}, devices={len(Devices)}')
+            self.update_text(self.pref('Counts'), f'chargers={len(self.chargers)}, equalizers={len(self.equalizers)}, devices={len(Devices)}')
             if self.tibber_enabled():
                 self.update_text(self.pref('Tibber prijs'), json.dumps(self.current_tibber_price(), ensure_ascii=False)[:4000])
 
     # ---- polling ----
     def poll_all(self):
         self.latest_chargers = {}
+        self.latest_equalizers = {}
         refreshed = self.safe_int(self.state.get('price_cache_refreshed', 0), 0)
         if self.tibber_enabled() and ((self.now_ts() - refreshed) > 900 or not (self.state.get('price_cache') or {})):
             self.refresh_tibber_prices()
         for c in self.chargers:
             self.poll_charger(c)
+        for eq in self.equalizers:
+            self.poll_equalizer(eq)
     
     def poll_charger(self, charger):
         cid = charger['id']
@@ -822,33 +1034,82 @@ class BasePlugin:
             'online': online,
         }
 
+    def poll_equalizer(self, equalizer):
+        eid = equalizer['id']
+        values = {}
+        try:
+            data = self.api_get(f'/equalizers/{eid}') or {}
+            if isinstance(data, dict):
+                values.update(data)
+        except Exception as e:
+            self.error(f'Equalizer {eid} ophalen mislukt: {e}')
+
+        power_w = self.power_watts(
+            values.get('currentPower')
+            or values.get('power')
+            or values.get('activePowerImport')
+            or values.get('activePower')
+        )
+        online = values.get('isOnline')
+        if online is None:
+            online = True
+        load_bal = (
+            values.get('loadBalancingActive')
+            or values.get('loadBalancing')
+            or values.get('isLoadBalancingEnabled')
+        )
+        lb_active = self.truthy(load_bal) if load_bal is not None else False
+        max_alloc = self.safe_float(values.get('maxAllocatedCurrent') or values.get('allocatedCurrent'), 0.0)
+
+        power_emoji = self.power_emoji(power_w)
+        status_emoji = '✅' if online else '❌'
+        lb_text = 'Aan' if lb_active else 'Uit'
+        status_text = f'{status_emoji} {power_emoji} LB {lb_text}'
+        if max_alloc > 0:
+            status_text += f' | Max {max_alloc:.0f} A'
+
+        self.update_equalizer_energy(eid, 'Vermogen', power_w, 0)
+        self.update_equalizer_text(eid, 'Status', status_text)
+
+        self.latest_equalizers[eid] = {
+            'power': power_w,
+            'online': online,
+            'loadbal': lb_active,
+        }
+
     def update_combined(self):
         total_power = sum(v.get('power', 0) for v in self.latest_chargers.values())
         total_kwh = round(sum(v.get('kwh', 0.0) for v in self.latest_chargers.values()), 3)
         total_wh = sum(v.get('wh', 0) for v in self.latest_chargers.values())
         any_online = any(bool(v.get('online')) for v in self.latest_chargers.values())
-        
+        any_lb = any(bool(v.get('loadbal')) for v in self.latest_equalizers.values())
+        eq_count = len(self.equalizers)
+
         self.update_core_energy('Totaal Laden', total_power, total_wh)
         self.update_core_custom('Totaal kWh', int(round(total_kwh)))
-        
+
         if self.tibber_enabled():
             total_day_cost = round(sum(v.get('day_cost', 0.0) for v in self.latest_chargers.values()), 2)
             total_day_energy = round(sum(v.get('day_energy_cost', 0.0) for v in self.latest_chargers.values()), 2)
             total_day_tax = round(sum(v.get('day_tax_cost', 0.0) for v in self.latest_chargers.values()), 2)
-            
+
             price_emoji = self.price_status_emoji()
             rate = (total_day_cost / total_kwh) if total_kwh > 0 else 0.0
             currency = self.current_tibber_price().get("currency","EUR")
             kosten_samenvatting = f'{price_emoji} {currency}\nKosten: €{self.euro_str(total_day_cost)} | Tarief: €{self.euro_str(rate)}/kWh\nEnergy: €{self.euro_str(total_day_energy)} | Belasting: €{self.euro_str(total_day_tax)}'
             self.update_core_text('Kosten & Samenvatting', kosten_samenvatting)
-            
+
             self.update_core_text('Beste laden', self.cheapest_window_text(3))
-            status_msg = ('✅ Online' if any_online else '❌ Offline') + ' | Tibber actief'
+            eq_part = f' | EQ: {eq_count}' if eq_count else ' | Geen EQ'
+            lb_part = ' | LB actief' if any_lb else ''
+            status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part + ' | Tibber actief'
             self.update_core_text('Status', status_msg)
         else:
-            self.update_core_text('Status', '✅ Online' if any_online else '❌ Offline')
-        
-        self.update_core_sw('LoadBal', False)
+            eq_part = f' | EQ: {eq_count}' if eq_count else ' | Geen EQ'
+            lb_part = ' | LB actief' if any_lb else ''
+            self.update_core_text('Status', ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part)
+
+        self.update_core_sw('LoadBal', any_lb)
 
     def onStart(self):
         if requests is None:

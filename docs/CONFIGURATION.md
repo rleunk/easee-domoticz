@@ -67,6 +67,22 @@
 
 Als Mode2/Mode3 leeg zijn, gebruikt de plugin de Easee-naam of `Laadpaal 1` / `Laadpaal 2`.
 
+## Equalizer (optioneel, stap 1)
+
+### Naam Equalizer (Address)
+**Type**: Text (Address-veld)  
+**Default**: (empty)  
+**Voorbeeld**: `Meterkast`
+
+**Belangrijk:** Gebruik **Address** alleen voor de Equalizer-naam — niet voor laadpalen (die gebruiken Mode2/Mode3).
+
+De plugin zoekt de Equalizer via:
+1. `/sites/{id}/circuits` → `equalizerId`
+2. `/equalizers` lijst
+3. Recursieve scan in sites-data (HAN/P1 meters)
+
+Als geen Equalizer wordt gevonden, verschijnen geen extra tegels en toont Status `Geen EQ`.
+
 ## Tibber Integration (Optioneel)
 
 ### Tibber Token (Mode7)
@@ -101,6 +117,12 @@ Devices krijgen automatisch deze namen:
 [PREFIX] - LoadBal
 [PREFIX] - Kosten & Samenvatting (Tibber)
 [PREFIX] - Beste laden (Tibber)
+```
+
+### Per Equalizer (indien gevonden)
+```
+[PREFIX] - [NAAM] - Status
+[PREFIX] - [NAAM] - Vermogen
 ```
 
 ### Per Laadpaal

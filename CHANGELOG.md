@@ -2,6 +2,19 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.2.0] - 2026-06-15
+
+### ✨ Equalizer stap 1
+- **Auto-discovery** via `/sites/.../circuits`, `/equalizers` en sites-scan (HAN/P1)
+- **2 nieuwe tegels** per Equalizer: `Status` en `Vermogen`
+- **Optionele naam** via hardwareveld `Naam Equalizer` (Address)
+- **LoadBal** schakelaar toont nu echte load-balancing status (niet meer altijd Uit)
+- Status-tegel toont equalizer-aantal (`EQ: 1` of `Geen EQ`)
+
+### Volgende stappen (nog niet in deze versie)
+- Fase-stromen (L1/L2/L3)
+- Observations API voor gedetailleerde meterdata
+
 ## [10.1.3] - 2026-06-15
 
 ### 🐛 Bugfix
