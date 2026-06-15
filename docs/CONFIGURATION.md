@@ -74,12 +74,18 @@ Als Mode2/Mode3 leeg zijn, gebruikt de plugin de Easee-naam of `Laadpaal 1` / `L
 **Default**: (empty)  
 **Voorbeeld**: `Meterkast`
 
-**Belangrijk:** Gebruik **Address** alleen voor de Equalizer-naam — niet voor laadpalen (die gebruiken Mode2/Mode3).
+### Equalizer ID handmatig (IP)
+**Type**: Text (IP-veld)  
+**Default**: (empty)  
+**Gebruik**: Alleen als auto-discovery niets vindt. Vul de Equalizer ID/serienummer in uit de Easee app.
 
 De plugin zoekt de Equalizer via:
-1. `/sites/{id}/circuits` → `equalizerId`
-2. `/equalizers` lijst
-3. Recursieve scan in sites-data (HAN/P1 meters)
+1. `/accounts/products` → `equalizers` (primair, zoals Home Assistant/pyeasee)
+2. `/sites/{id}?detailed=true` → `equalizers`
+3. `/sites` → ingebouwde `equalizers`
+4. `/sites/{id}/circuits` → `equalizerId`
+5. `/equalizers` lijst
+6. Handmatige ID (IP-veld)
 
 Als geen Equalizer wordt gevonden, verschijnen geen extra tegels en toont Status `Geen EQ`.
 

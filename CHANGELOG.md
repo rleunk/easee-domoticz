@@ -2,6 +2,14 @@
 
 Alle opmerkelijke veranderingen in dit project worden gedocumenteerd in dit bestand.
 
+## [10.2.1] - 2026-06-15
+
+### 🐛 Equalizer discovery fix
+- Nieuwe routes: `/accounts/products`, `/sites/{id}?detailed=true`, `site.equalizers`
+- Handmatige fallback via **Equalizer ID** (IP-veld in hardware)
+- Polling via `/equalizers/{id}/state` + `/config` + observations
+- Betere debug-logging met probe-samenvatting
+
 ## [10.2.0] - 2026-06-15
 
 ### ✨ Equalizer stap 1

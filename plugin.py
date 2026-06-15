@@ -1,9 +1,9 @@
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.2.0" author="Richard Leunk" version="10.2.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.2.1" author="Richard Leunk" version="10.2.1"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.2.0</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.2.1</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -26,6 +26,7 @@
         </group>
         <group label="Equalizer (optioneel, stap 1)">
             <param field="Address" label="Naam Equalizer" width="220px" default=""/>
+            <param field="IP" label="Equalizer ID (handmatig, optioneel)" width="260px" default=""/>
         </group>
         <group label="Tibber (optioneel)">
             <param field="Mode7" label="Tibber Personal Access Token" width="360px" password="true" default=""/>
@@ -98,14 +99,15 @@ class BasePlugin:
         self.charger_names = {}
         self.equalizer_names = {}
         self.equalizer_source = 'none'
+        self.equalizer_probes = {}
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.2.0] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.2.1] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.2.0] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.2.0] {msg}')
+            Domoticz.Debug(f'[Easee v10.2.1] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.2.1] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -197,6 +199,8 @@ class BasePlugin:
         return self.clean_label(f'{display} - {label}')
     def custom_equalizer_name(self):
         return self.clean_label(Parameters.get('Address', '') or '')
+    def manual_equalizer_id(self):
+        return str(Parameters.get('IP', '') or '').strip()
     def equalizer_display_name(self, equalizer, index):
         custom = self.custom_equalizer_name()
         if custom and index == 0:
@@ -509,6 +513,12 @@ class BasePlugin:
                 return self.api_get(path, False)
         r.raise_for_status()
         return r.json() if r.text else None
+    def api_get_optional(self, path):
+        try:
+            return self.api_get(path)
+        except Exception as e:
+            self.debug(f'GET {path} optioneel mislukt: {e}')
+            return None
 
     # ---- Tibber API ----
     def tibber_query(self, query):
@@ -653,14 +663,15 @@ class BasePlugin:
             return True
         return flt in str(name).lower() or flt in str(site_name).lower()
 
-    def _append_equalizer(self, equalizers, seen, eq):
+    def _append_equalizer(self, equalizers, seen, eq, ignore_filter=False):
         eid = str(eq.get('id') or '').strip()
         if not eid or eid in seen:
-            return
-        if not self._equalizer_matches_filter(eq.get('name', ''), eq.get('siteName', '')):
-            return
+            return False
+        if not ignore_filter and not self._equalizer_matches_filter(eq.get('name', ''), eq.get('siteName', '')):
+            return False
         equalizers.append(eq)
         seen.add(eid)
+        return True
 
     def _scan_equalizers_in_object(self, obj, found, site_name=''):
         if isinstance(obj, dict):
@@ -694,36 +705,85 @@ class BasePlugin:
             for item in obj:
                 self._scan_equalizers_in_object(item, found, site_name=site_name)
 
+    def _ingest_equalizer_items(self, equalizers, seen, items, source, site_name='', site_id=None, ignore_filter=False):
+        added = 0
+        if not isinstance(items, list):
+            return added
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            eq_id = item.get('id') or item.get('equalizerId') or item.get('serialNumber')
+            if not eq_id:
+                continue
+            eq = {
+                'id': str(eq_id).strip(),
+                'name': str(item.get('name') or item.get('serialNumber') or eq_id),
+                'siteId': site_id if site_id is not None else item.get('siteId'),
+                'siteName': str(site_name or item.get('siteName') or item.get('locationName') or ''),
+                'circuitId': item.get('circuitId'),
+                'circuitName': str(item.get('circuitName') or item.get('name') or ''),
+                'source': source,
+            }
+            if self._append_equalizer(equalizers, seen, eq, ignore_filter=ignore_filter):
+                added += 1
+        return added
+
     def discover_equalizers(self):
         equalizers = []
         seen = set()
         sources = []
+        probes = {}
 
-        try:
-            sites = self.api_get('/sites') or []
-            if isinstance(sites, list):
-                for site in sites:
-                    if not isinstance(site, dict):
-                        continue
-                    site_id = site.get('id')
-                    site_name = str(site.get('name') or site.get('siteName') or site_id or 'Site')
-                    if not self._equalizer_matches_filter(site_name, site_name):
-                        continue
-                    circuits = []
-                    if site_id:
-                        try:
-                            circuits = self.api_get(f'/sites/{site_id}/circuits') or []
-                        except Exception as ce:
-                            self.debug(f'Circuits voor site {site_id} niet opgehaald: {ce}')
+        products = self.api_get_optional('/accounts/products')
+        if isinstance(products, list):
+            probes['accounts_products'] = len(products)
+            for product in products:
+                if not isinstance(product, dict):
+                    continue
+                site_id = product.get('id')
+                site_name = str(product.get('name') or product.get('siteName') or site_id or 'Site')
+                added = self._ingest_equalizer_items(
+                    equalizers, seen, product.get('equalizers'), 'accounts-products',
+                    site_name=site_name, site_id=site_id,
+                )
+                if added:
+                    sources.append('accounts-products')
+        else:
+            probes['accounts_products'] = 'leeg of niet beschikbaar'
+
+        sites = self.api_get_optional('/sites')
+        if isinstance(sites, list):
+            probes['sites'] = len(sites)
+            for site in sites:
+                if not isinstance(site, dict):
+                    continue
+                site_id = site.get('id')
+                site_name = str(site.get('name') or site.get('siteName') or site_id or 'Site')
+                added = self._ingest_equalizer_items(
+                    equalizers, seen, site.get('equalizers'), 'sites-list',
+                    site_name=site_name, site_id=site_id,
+                )
+                if added:
+                    sources.append('sites-list')
+                if site_id:
+                    detailed = self.api_get_optional(f'/sites/{site_id}?detailed=true')
+                    if isinstance(detailed, dict):
+                        added = self._ingest_equalizer_items(
+                            equalizers, seen, detailed.get('equalizers'), 'sites-detailed',
+                            site_name=site_name, site_id=site_id,
+                        )
+                        if added:
+                            sources.append('sites-detailed')
+                    circuits = self.api_get_optional(f'/sites/{site_id}/circuits')
                     if isinstance(circuits, list):
+                        probes[f'circuits_{site_id}'] = len(circuits)
                         for circuit in circuits:
                             if not isinstance(circuit, dict):
                                 continue
                             eq_id = circuit.get('equalizerId') or circuit.get('equalizer') or circuit.get('equalizer_id')
                             if not eq_id:
                                 continue
-                            before = len(equalizers)
-                            self._append_equalizer(equalizers, seen, {
+                            eq = {
                                 'id': str(eq_id).strip(),
                                 'name': str(circuit.get('name') or circuit.get('id') or 'Equalizer'),
                                 'siteId': site_id,
@@ -731,52 +791,44 @@ class BasePlugin:
                                 'circuitId': circuit.get('id'),
                                 'circuitName': str(circuit.get('name') or circuit.get('id') or 'Circuit'),
                                 'source': 'sites-circuits',
-                            })
-                            if len(equalizers) > before:
+                            }
+                            if self._append_equalizer(equalizers, seen, eq):
                                 sources.append('sites-circuits')
-        except Exception as e:
-            self.debug(f'Equalizer discovery via sites/circuits mislukt: {e}')
+        else:
+            probes['sites'] = 'leeg of niet beschikbaar'
 
-        try:
-            list_data = self.api_get('/equalizers') or []
-            if isinstance(list_data, list):
-                for item in list_data:
-                    if not isinstance(item, dict):
-                        continue
-                    eq_id = item.get('id') or item.get('equalizerId') or item.get('serialNumber')
-                    if not eq_id:
-                        continue
-                    before = len(equalizers)
-                    self._append_equalizer(equalizers, seen, {
-                        'id': str(eq_id).strip(),
-                        'name': str(item.get('name') or item.get('serialNumber') or eq_id),
-                        'siteId': item.get('siteId'),
-                        'siteName': str(item.get('siteName') or item.get('locationName') or item.get('siteId') or ''),
-                        'circuitId': item.get('circuitId'),
-                        'circuitName': str(item.get('circuitName') or ''),
-                        'source': 'equalizers-list',
-                    })
-                    if len(equalizers) > before:
-                        sources.append('equalizers-list')
-        except Exception as e:
-            self.debug(f'Equalizer discovery via /equalizers mislukt: {e}')
+        list_data = self.api_get_optional('/equalizers')
+        if isinstance(list_data, list):
+            probes['equalizers_list'] = len(list_data)
+            added = self._ingest_equalizer_items(equalizers, seen, list_data, 'equalizers-list')
+            if added:
+                sources.append('equalizers-list')
+        else:
+            probes['equalizers_list'] = 'leeg of niet beschikbaar'
 
-        if not equalizers:
-            try:
-                sites = self.api_get('/sites') or []
-                found = {}
-                self._scan_equalizers_in_object(sites, found)
-                for eq in found.values():
-                    before = len(equalizers)
-                    self._append_equalizer(equalizers, seen, eq)
-                    if len(equalizers) > before:
-                        sources.append('sites-scan')
-            except Exception as e:
-                self.debug(f'Equalizer discovery via sites-scan mislukt: {e}')
+        if not equalizers and isinstance(sites, list):
+            found = {}
+            self._scan_equalizers_in_object(sites, found)
+            for eq in found.values():
+                if self._append_equalizer(equalizers, seen, eq):
+                    sources.append('sites-scan')
 
-        self.equalizer_source = sources[0] if sources else 'none'
+        manual_id = self.manual_equalizer_id()
+        if manual_id and manual_id not in seen:
+            eq = {
+                'id': manual_id,
+                'name': self.custom_equalizer_name() or 'Equalizer',
+                'siteName': '',
+                'source': 'manual-id',
+            }
+            if self._append_equalizer(equalizers, seen, eq, ignore_filter=True):
+                sources.append('manual-id')
+
+        self.equalizer_probes = probes
+        self.equalizer_source = ','.join(dict.fromkeys(sources)) if sources else 'none'
         equalizers = sorted({e['id']: e for e in equalizers}.values(), key=lambda x: x['id'])
-        self.debug(f'Equalizer discovery: {len(equalizers)} gevonden via {self.equalizer_source or "geen"}')
+        self.debug(f'Equalizer probes: {probes}')
+        self.debug(f'Equalizer discovery: {len(equalizers)} via {self.equalizer_source}')
         return equalizers
 
     def discover_chargers(self):
@@ -878,6 +930,12 @@ class BasePlugin:
             self.log(f'Equalizer gevonden: {len(self.equalizers)} via {self.equalizer_source}')
         else:
             self.log('Geen Equalizer gevonden (stap 1 discovery)')
+            if Parameters.get('Mode6') == 'Debug':
+                self.log(f'Equalizer probes: {json.dumps(self.equalizer_probes, ensure_ascii=False)}')
+            elif self.manual_equalizer_id():
+                self.log('Tip: controleer handmatige Equalizer ID in hardware (IP-veld)')
+            else:
+                self.log('Tip: zet Debug aan of vul Equalizer ID handmatig in (IP-veld)')
         self.write_debug(True)
 
     def refresh_entity_cache_only(self):
@@ -1037,12 +1095,24 @@ class BasePlugin:
     def poll_equalizer(self, equalizer):
         eid = equalizer['id']
         values = {}
-        try:
-            data = self.api_get(f'/equalizers/{eid}') or {}
+        for path in (f'/equalizers/{eid}', f'/equalizers/{eid}/state', f'/equalizers/{eid}/config'):
+            data = self.api_get_optional(path)
             if isinstance(data, dict):
                 values.update(data)
-        except Exception as e:
-            self.error(f'Equalizer {eid} ophalen mislukt: {e}')
+
+        obs = self.api_get_optional(f'/state/{eid}/observations?ids=40,41,42,43,44')
+        if isinstance(obs, dict):
+            observations = obs.get('observations') or obs.get('data') or []
+            if isinstance(observations, list):
+                for item in observations:
+                    if not isinstance(item, dict):
+                        continue
+                    obs_id = item.get('id')
+                    obs_val = item.get('value')
+                    if obs_id == 40:
+                        values['activePowerImport'] = obs_val
+                    elif obs_id == 41:
+                        values['activePowerExport'] = obs_val
 
         power_w = self.power_watts(
             values.get('currentPower')
