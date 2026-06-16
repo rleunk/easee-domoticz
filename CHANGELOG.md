@@ -4,6 +4,16 @@ Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [10.5.5] — 2026-06-16
+
+### Opgelost
+- **Custom icon zip laden** — `Easee_icons.zip` bevatte een UTF-8 BOM in `icons.txt`, waardoor Domoticz PNG-bestanden niet kon vinden (`Icon File: …48_Off.png is not present`). Icon generator schrijft nu UTF-8 zonder BOM; zip opnieuw gegenereerd.
+
+### Aanbevolen upgrade
+- `git pull` (haalt `Easee_icons.zip` op) en herstart het hardware-item of Domoticz.
+
+---
+
 ## [10.5.4] — 2026-06-16
 
 ### Toegevoegd

@@ -112,7 +112,9 @@ foreach ($set in $IconSets) {
     Save-Png (New-EaseeIcon 48 $set.Color $set.Kind $false) (Join-Path $TempDir "${base}48_On.png")
     Save-Png (New-EaseeIcon 48 $set.Color $set.Kind $true) (Join-Path $TempDir "${base}48_Off.png")
 }
-Set-Content -Path (Join-Path $TempDir 'icons.txt') -Value ($Lines -join "`n") -Encoding UTF8
+$iconsPath = Join-Path $TempDir 'icons.txt'
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText($iconsPath, ($Lines -join "`n") + "`n", $utf8NoBom)
 
 if (Test-Path $OutZip) { Remove-Item $OutZip -Force }
 Add-Type -AssemblyName System.IO.Compression.FileSystem

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz Plugin v10.5.4" author="Richard Leunk" version="10.5.4"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz Plugin v10.5.5" author="Richard Leunk" version="10.5.5"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
@@ -108,11 +108,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.5.4] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.5.5] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.5.4] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.5.4] {msg}')
+            Domoticz.Debug(f'[Easee v10.5.5] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.5.5] {msg}')
 
     # ---- helpers ----
     def norm(self, value):

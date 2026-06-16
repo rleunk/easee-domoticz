@@ -129,7 +129,7 @@ def build_zip(out_path):
         entries[f'{base}.png'] = _icon_png(16, rgb, kind)
         entries[f'{base}48_On.png'] = _icon_png(48, rgb, kind, dim=False)
         entries[f'{base}48_Off.png'] = _icon_png(48, rgb, kind, dim=True)
-    entries['icons.txt'] = ('\n'.join(lines) + '\n').encode('utf-8')
+    entries['icons.txt'] = ('\n'.join(lines) + '\n').encode('utf-8')  # no BOM
     with zipfile.ZipFile(out_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
         zf.writestr('icons.txt', entries['icons.txt'])
         for name, data in entries.items():
