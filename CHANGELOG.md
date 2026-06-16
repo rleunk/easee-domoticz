@@ -10,7 +10,7 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ### Gewijzigd
 - **Easee_icons_v2.zip** — Charge-silhouet onderkant: afgerond schildpunt met zichtbare zwarte vleugels (geen scherpe V-inkeping); subtiele kabelaansluiting onderaan; LED-strip iets groter (~2px × ~15px bij 48px, ~80% opacity).
-- **scripts/generate_icons.py / .ps1** — shield-tip cirkelgeometrie, panel stopt hoger (y=35), grotere socket-hint.
+- **scripts/generate_icons.py / .ps1** — ellips-onderpunt, bredere wing-taper (16–32 bij y=39), verfijnde LED-geometrie (~2×16px).
 - **docs/icon-preview-v2.png** — bijgewerkt.
 
 ### Aanbevolen upgrade

@@ -105,27 +105,35 @@ def _charger_geom(size, ox=0, oy=0, scale=1.0):
         'outer_x0t': int(10 * s + ox_s),
         'outer_x1t': int(38 * s + ox_s),
         'outer_yt': int(12 * s + oy_s),
-        'outer_x0m': int(14 * s + ox_s),
-        'outer_x1m': int(34 * s + ox_s),
-        'outer_ym': int(37 * s + oy_s),
+        'outer_x0m': int(16 * s + ox_s),
+        'outer_x1m': int(32 * s + ox_s),
+        'outer_ym': int(39 * s + oy_s),
         'tip_cx': 24 * s + ox_s,
-        'tip_cy': 40 * s + oy_s,
-        'tip_r': max(1.5, 5 * s),
+        'tip_cy': 41.5 * s + oy_s,
+        'tip_rx': 4.5 * s,
+        'tip_ry': 2.8 * s,
+        'tip_y0': int(37 * s + oy_s),
         'cap_r': max(1, int(3.5 * s)),
         'panel_x0t': int(15 * s + ox_s),
         'panel_x1t': int(33 * s + ox_s),
         'panel_yt': int(14 * s + oy_s),
         'panel_x0b': int(19 * s + ox_s),
         'panel_x1b': int(29 * s + ox_s),
-        'panel_yb': int(35 * s + oy_s),
+        'panel_yb': int(36 * s + oy_s),
         'socket_cx': 24 * s + ox_s,
-        'socket_cy': 42 * s + oy_s,
+        'socket_cy': 41 * s + oy_s,
         'socket_r': max(1, 2 * s),
         'cx': int(24 * s + ox_s),
         's': s,
         'ox_s': ox_s,
         'oy_s': oy_s,
     }
+
+
+def _charger_bottom_tip(x, y, g):
+    if y < g['tip_y0']:
+        return False
+    return _inside_ellipse(x, y, g['tip_cx'], g['tip_cy'], g['tip_rx'], g['tip_ry'])
 
 
 def _charger_shield(x, y, g):
@@ -137,11 +145,7 @@ def _charger_shield(x, y, g):
         g['outer_x0t'], g['outer_x1t'], g['outer_yt'],
         g['outer_x0m'], g['outer_x1m'], g['outer_ym'],
     )
-    tip = (
-        y >= g['outer_ym']
-        and y <= g['tip_cy'] + g['tip_r']
-        and _inside_circle(x, y, g['tip_cx'], g['tip_cy'], g['tip_r'])
-    )
+    tip = _charger_bottom_tip(x, y, g)
     return cap or body or tip
 
 
@@ -158,19 +162,18 @@ def _charger_socket(x, y, g):
 
 
 def _charger_led_line(x, y, size, g):
-    """Vertical LED strip (~2px wide, ~15px tall at 48px)."""
+    """Vertical LED strip (~2px × ~16px at 48px)."""
     cx = g['cx']
     s = g['s']
     oy_s = g['oy_s']
+    led_w = max(1, int(round(1.25 * s))) if size <= 16 else max(1, int(round(1.75 * s)))
+    led_x0 = cx - int(led_w // 2)
+    led_x1 = cx + int((led_w - 1) // 2)
     if size <= 16:
         y0, y1 = int(14 * s + oy_s), int(22 * s + oy_s)
-        return y0 <= y <= y1 and abs(x - cx) <= max(0, int(0.5 * s))
-    y0, y1 = int(17 * s + oy_s), int(31 * s + oy_s)
-    if not (y0 <= y <= y1):
-        return False
-    if abs(x - cx) <= max(0, int(round(0.5 * s))):
-        return True
-    return size >= 32 and abs(x - cx) == 1 and (y - y0) >= 1 and (y1 - y) >= 1
+    else:
+        y0, y1 = int(17 * s + oy_s), int(32 * s + oy_s)
+    return y0 <= y <= y1 and led_x0 <= x <= led_x1
 
 
 def _charger_led_outline(x, y, size, g):
@@ -180,10 +183,13 @@ def _charger_led_outline(x, y, size, g):
     cx = g['cx']
     s = g['s']
     oy_s = g['oy_s']
-    y0, y1 = int(17 * s + oy_s), int(31 * s + oy_s)
+    led_w = max(1, int(round(1.75 * s)))
+    led_x0 = cx - int(led_w // 2)
+    led_x1 = cx + int((led_w - 1) // 2)
+    y0, y1 = int(17 * s + oy_s), int(32 * s + oy_s)
     if not (y0 <= y <= y1):
         return False
-    return abs(x - cx) == 2 and _charger_panel(x, y, g)
+    return x in (led_x0 - 1, led_x1 + 1) and _charger_panel(x, y, g)
 
 
 def _charger_led_dot(x, y, size, g):
@@ -289,7 +295,7 @@ def _draw_charger_icon(x, y, size, accent, dim, kind='', ox=0, oy=0, scale=1.0):
     panel = PANEL_OFF if dim else PANEL_ON
     body_alpha = 200 if dim else 255
     led = _led_strip_color(accent, dim, kind)
-    led_alpha = 170 if dim else LED_ON_ALPHA
+    led_alpha = LED_OFF_ALPHA if dim else LED_ON_ALPHA
 
     if not _charger_shield(x, y, g):
         return None
