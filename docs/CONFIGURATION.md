@@ -26,13 +26,9 @@
 - 60 sec = lager CPU gebruik
 - 10 sec = realtime updates (meer CPU)
 
-### Device Prefix (Mode4)
-**Type**: Text  
-**Default**: Easee  
-**Omschrijving**: Prefix voor alle aangemaakt devices  
-**Voorbeeld**: 
-- Easee → "Easee - Status", "Easee - Totaal Laden"
-- EV → "EV - Status", "EV - Totaal Laden"
+### Device Prefix (hardwarenaam)
+
+De **hardwarenaam** die je in Domoticz invult (bijv. `Easee`) wordt automatisch als prefix op alle tegels gezet. Je hoeft hiervoor geen apart veld in te vullen.
 
 ### Site Filter (Mode5)
 **Type**: Text  
@@ -63,9 +59,15 @@
 **Default**: (empty)  
 **Voorbeeld**: `Charge Lite Rechts`
 
+### Extra laadpaalnamen (Mode4)
+**Type**: Text (Mode-veld)  
+**Default**: (empty)  
+**Omschrijving**: Komma-gescheiden namen vanaf de **derde** laadpaal  
+**Voorbeeld**: `Carport, Werf` → lader 3 = Carport, lader 4 = Werf
+
 **Belangrijk:** Gebruik **geen** Address/Port/SerialPort voor namen — Domoticz behandelt Port als getal (standaard `0`) en SerialPort als USB-poort.
 
-Als Mode2/Mode3 leeg zijn, gebruikt de plugin de Easee-naam of `Laadpaal 1` / `Laadpaal 2`.
+Als Mode2/Mode3/Mode4 leeg zijn, gebruikt de plugin de Easee-appnaam of `Laadpaal 1` / `Laadpaal 2` / …
 
 ## Equalizer (optioneel, stap 1)
 

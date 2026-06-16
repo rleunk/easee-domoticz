@@ -4,6 +4,21 @@ Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [10.5.0] — 2026-06
+
+### Toegevoegd
+- **Mode4** — Extra laadpaalnamen (komma-gescheiden) voor lader 3 en verder, bijv. `Carport, Werf`.
+- Documentatie: ondersteunde scenario's (1/2/N laders, met/zonder Equalizer, met/zonder Tibber) en public release checklist in README.
+- Auto-detectie van **nieuwe laadpalen** tijdens polling (zelfde patroon als Equalizer).
+
+### Gewijzigd
+- Mode4 is herbestemd van ongebruikt prefix-veld naar extra laadpaalnamen; hardwarenaam in Domoticz blijft het prefix op tegels.
+
+### Aanbevolen upgrade
+- Upgrade vanaf v10.4.0: vervang alleen `plugin.py` en herstart het hardware-item. State en devices blijven behouden.
+
+---
+
 ## [10.4.0] — 2026-06
 
 ### Opgelost

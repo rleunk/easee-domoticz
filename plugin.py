@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.4.0" author="Richard Leunk" version="10.4.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.5.0" author="Richard Leunk" version="10.5.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.4.0</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.5.0</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -12,7 +12,6 @@
         <param field="Password" label="Easee Password" width="260px" password="true" required="true"/>
         <group label="Weergave en polling">
             <param field="Mode1" label="Poll interval (sec)" width="80px" default="30"/>
-            <param field="Mode4" label="Niet gebruikt (hardwarenaam telt)" width="180px" default="Easee"/>
             <param field="Mode5" label="Optionele site filter (tekst)" width="240px" default=""/>
             <param field="Mode6" label="Debug logging" width="100px">
                 <options>
@@ -24,6 +23,7 @@
         <group label="Aangepaste laadpaalnamen (optioneel)">
             <param field="Mode2" label="Naam laadpaal 1" width="220px" default=""/>
             <param field="Mode3" label="Naam laadpaal 2" width="220px" default=""/>
+            <param field="Mode4" label="Extra laadpaalnamen (komma-gescheiden, vanaf lader 3)" width="360px" default=""/>
         </group>
         <group label="Equalizer (optioneel, stap 1)">
             <param field="Address" label="Naam Equalizer" width="220px" default=""/>
@@ -108,17 +108,22 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.4.0] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.5.0] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.4.0] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.4.0] {msg}')
+            Domoticz.Debug(f'[Easee v10.5.0] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.5.0] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
         return ' '.join(str(value).strip().split())
     def prefix(self):
-        return Parameters.get('Mode4', 'Easee').strip() or 'Easee'
+        return 'Easee'
+    def extra_charger_names(self):
+        raw = (Parameters.get('Mode4', '') or '').strip()
+        if not raw or raw.lower() == 'easee':
+            return []
+        return [self.clean_label(part.strip()) for part in raw.split(',') if part.strip()]
     def pref(self, label):
         return f'{self.prefix()} - {label}'
     def clean_label(self, name):
@@ -190,6 +195,10 @@ class BasePlugin:
             return self.clean_label(Parameters.get('Mode2', '') or '')
         if index == 1:
             return self.clean_label(Parameters.get('Mode3', '') or '')
+        extras = self.extra_charger_names()
+        extra_index = index - 2
+        if 0 <= extra_index < len(extras):
+            return extras[extra_index]
         return ''
     def charger_display_name(self, charger, index):
         custom = self.custom_charger_name(index)
@@ -2124,9 +2133,13 @@ class BasePlugin:
 
     def refresh_entity_cache_only(self):
         old_eq_ids = {e['id'] for e in self.equalizers}
+        old_charger_ids = {c['id'] for c in self.chargers}
         self.discover_entities()
         self.charger_names = {c['id']: self.charger_display_name(c, i) for i, c in enumerate(self.chargers)}
         self.equalizer_names = {e['id']: self.equalizer_display_name(e, i) for i, e in enumerate(self.equalizers)}
+        for i, c in enumerate(self.chargers):
+            if c['id'] not in old_charger_ids:
+                self.ensure_charger_devices(c, i)
         for i, eq in enumerate(self.equalizers):
             if eq['id'] not in old_eq_ids:
                 self.ensure_equalizer_devices(eq, i)

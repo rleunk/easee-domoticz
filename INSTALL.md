@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee AutoDiscovery Compact v10.4.0
+# Installatiehandleiding — Easee AutoDiscovery Compact v10.5.0
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,7 +8,7 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee AutoDiscovery Compact v10.4.0 |
+| Plugin | Easee AutoDiscovery Compact v10.5.0 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` |
@@ -101,7 +101,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee AutoDiscovery Compact v10.4.0**
+4. Selecteer **Easee AutoDiscovery Compact v10.5.0**
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
 7. Klik **Add**
@@ -204,12 +204,27 @@ Activeer daarna het plugin in Domoticz (zie Methode 1, stap 5).
 
 ### Optioneel — laadpaalnamen
 
+| Scenario | Velden | Voorbeeld |
+|----------|--------|-----------|
+| **1 laadpaal** | Mode2 (optioneel) | `Garage` |
+| **2 laadpalen** | Mode2 + Mode3 (optioneel) | `Garage`, `Voordeur` |
+| **3+ laadpalen** | Mode2 + Mode3 + Mode4 | Mode4: `Carport, Werf` |
+
 | Veld | Wat invullen | Voorbeeld |
 |------|--------------|-----------|
 | Naam laadpaal 1 (Mode2) | Eigen naam eerste lader | `Garage` |
 | Naam laadpaal 2 (Mode3) | Eigen naam tweede lader | `Voordeur` |
+| Extra laadpaalnamen (Mode4) | Komma-gescheiden, vanaf lader 3 | `Carport, Werf` |
 
-Laat leeg om de hardware-naam uit Easee te gebruiken.
+Laat leeg om de naam uit de Easee-app te gebruiken. De **hardwarenaam** in Domoticz (bijv. `Easee`) is het prefix op alle tegels.
+
+### Geen Equalizer
+
+De plugin werkt volledig zonder Equalizer. Er verschijnen dan geen meterkast-tegels; Status toont `Geen EQ`. Load balancing en fuse-limieten zijn niet zichtbaar in Domoticz.
+
+### Geen Tibber
+
+Zonder Tibber-token werken laadpalen en Equalizer normaal. Je mist alleen de kosten- en tarief-tegels (**Kosten & Samenvatting**, **Beste laden**, per-lader **Kosten (Sessie/Dag)**).
 
 ### Optioneel — Equalizer
 
@@ -223,8 +238,6 @@ Laat leeg om de hardware-naam uit Easee te gebruiken.
 | Veld | Wat invullen |
 |------|--------------|
 | Tibber Personal Access Token (Mode7) | Token van [developer.tibber.com](https://developer.tibber.com/settings/access-token) |
-
-Zonder Tibber-token werken laadpalen en Equalizer normaal, maar zonder kosten- en tarief-tiles.
 
 ---
 
@@ -245,6 +258,10 @@ sudo systemctl restart domoticz
 3. Start het hardware-item weer
 
 > State-bestand (`easee_v9_0_state.json`) en bestaande devices blijven behouden bij upgrade.
+
+### Specifiek: v10.4.0 → v10.5.0
+
+Geen schone installatie nodig. Vervang `plugin.py` of doe `git pull`, herstart. Nieuwe laadpalen worden automatisch gedetecteerd. Mode4 is nu het veld voor extra laadpaalnamen (vanaf lader 3) — als je daar nog `Easee` stond (oud, ongebruikt veld), mag dat leeg.
 
 ### Specifiek: v10.3.4 → v10.4.0
 
