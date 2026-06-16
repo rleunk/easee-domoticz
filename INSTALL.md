@@ -141,7 +141,7 @@ Gebruik dit als je geen git op de server wilt instellen.
 
 ### Stap 1: Zip downloaden
 
-Download `easee-domoticz-v10.4.0-github.zip` van GitHub (of maak hem lokaal op je PC).
+Download `easee-domoticz-github.zip` van GitHub (of maak hem lokaal op je PC).
 
 ### Stap 2: Uploaden naar de server
 
