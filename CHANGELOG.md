@@ -4,6 +4,16 @@ Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [10.5.2] — 2026-06-16
+
+### Gewijzigd
+- **Pluginweergavenaam** — In Domoticz Hardware staat het type nu **Easee Domoticz Plugin** (was *Easee AutoDiscovery Compact*). Plugin-key (`EaseeCloudAutoDiscoveryV1000`) is ongewijzigd; bestaande installaties blijven werken.
+
+### Aanbevolen upgrade
+- Upgrade vanaf v10.5.1: vervang alleen `plugin.py` en herstart het hardware-item.
+
+---
+
 ## [10.5.1] — 2026-06-16
 
 ### Opgelost

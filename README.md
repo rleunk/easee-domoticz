@@ -1,8 +1,8 @@
-# Easee Domoticz Plugin v10.5.0
+# Easee Domoticz Plugin v10.5.2
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators, Equalizer/meterkast ondersteuning en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.5.0-blue)
+![Version](https://img.shields.io/badge/version-10.5.2-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -60,7 +60,7 @@ sudo systemctl restart domoticz
 Daarna in Domoticz:
 
 1. **Setup → Hardware**
-2. Type: **"Easee AutoDiscovery Compact v10.5.0"**
+2. Type: **"Easee Domoticz Plugin"**
 3. Geef de hardware een naam, bijv. `Easee` (prefix op alle tegels)
 4. Username/Password: jouw Easee-inloggegevens
 5. **Create**
@@ -166,7 +166,7 @@ sudo systemctl restart domoticz
 - [ ] Repo public maken (of public fork aanmaken)
 - [ ] README: ondersteunde scenario's (1/2/N laders, met/zonder EQ, met/zonder Tibber) — ✅ in deze versie
 - [ ] Issues op GitHub inschakelen voor bugreports
-- [ ] Versienummer + CHANGELOG bij elke release — ✅ v10.5.0
+- [ ] Versienummer + CHANGELOG bij elke release — ✅ v10.5.2
 - [ ] Optioneel: screenshot hardwarepagina toevoegen (TODO — velden staan hierboven in tabel)
 
 ## 🤖 AI Development
@@ -200,6 +200,6 @@ MIT License — zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.5.0** — Gemaakt door Richard Leunk
+**Versie 10.5.2** — Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

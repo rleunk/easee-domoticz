@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee AutoDiscovery Compact v10.5.0
+# Installatiehandleiding — Easee Domoticz Plugin v10.5.2
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,7 +8,7 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee AutoDiscovery Compact v10.5.0 |
+| Plugin | Easee Domoticz Plugin |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` |
@@ -101,7 +101,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee AutoDiscovery Compact v10.5.0**
+4. Selecteer **Easee Domoticz Plugin**
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
 7. Klik **Add**
