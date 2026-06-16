@@ -6,6 +6,18 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.5.13] — 2026-06-16
+
+### Gewijzigd
+- **Easee_icons_v2.zip** — Charge-silhouet verfijnd naar Easee Charge Lite: twee-toon zwarte vleugels + grijs middenpaneel, dunnere subtielere LED-strip (~1px), betere schild-taper, statusdot boven strip, kabelaansluiting onderaan.
+- **scripts/generate_icons.py / .ps1** — nieuwe shield/panel-geometrie en zachtere LED-opaciteit (~70%).
+- **docs/icon-preview-v2.png** — bijgewerkt.
+
+### Aanbevolen upgrade
+- `git pull` in de pluginmap en herstart het hardware-item. Als iconen niet veranderen: upload `Easee_icons_v2.zip` opnieuw via **Instellingen → Meer opties → Aangepaste pictogrammen**.
+
+---
+
 ## [10.5.12] — 2026-06-16
 
 ### Gewijzigd

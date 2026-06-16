@@ -67,11 +67,12 @@ function Get-BlendColor([Drawing.Color]$From, [Drawing.Color]$To, [double]$Amoun
 
 function Get-LedStripColor([Drawing.Color]$Accent, [bool]$Dim, [string]$Kind) {
     $gray = [Drawing.Color]::FromArgb(255, 102, 102, 102)
+    $panel = [Drawing.Color]::FromArgb(255, 118, 120, 124)
     if ($Dim) {
-        if ($Kind -eq 'charger') { return [Drawing.Color]::FromArgb(200, 102, 102, 102) }
+        if ($Kind -eq 'charger') { return [Drawing.Color]::FromArgb(140, 102, 102, 102) }
         return Get-BlendColor (Get-AccentColor $Accent $true) $gray 0.35
     }
-    return $Accent
+    return Get-BlendColor $Accent $panel 0.12
 }
 
 function Get-StatusDotColor([Drawing.Color]$Accent, [bool]$Dim) {
@@ -80,27 +81,75 @@ function Get-StatusDotColor([Drawing.Color]$Accent, [bool]$Dim) {
     return $Accent
 }
 
-function Test-ChargerBody([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
+function Get-ChargerGeom([int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
     $s = ($Size / 48.0) * $Scale
     $oxs = $Ox * $s; $oys = $Oy * $s
-    $topY0 = [int](6 * $s + $oys); $topY1 = [int](13 * $s + $oys)
-    $x0t = [int](13 * $s + $oxs); $x1t = [int](35 * $s + $oxs)
-    $bodyYb = [int](41 * $s + $oys)
-    $x0b = [int](19 * $s + $oxs); $x1b = [int](29 * $s + $oxs)
-    (Test-Rect $x $y $x0t $topY0 $x1t $topY1) -or (Test-Trapezoid $x $y $x0t $x1t $topY1 $x0b $x1b $bodyYb)
+    @{
+        CapY0 = [int](5 * $s + $oys); CapY1 = [int](12 * $s + $oys)
+        OuterX0t = [int](10 * $s + $oxs); OuterX1t = [int](38 * $s + $oxs)
+        OuterYt = [int](12 * $s + $oys)
+        OuterX0b = [int](21 * $s + $oxs); OuterX1b = [int](27 * $s + $oxs)
+        OuterYb = [int](42 * $s + $oys)
+        CapR = [math]::Max(1, [int](3.5 * $s))
+        PanelX0t = [int](15 * $s + $oxs); PanelX1t = [int](33 * $s + $oxs)
+        PanelYt = [int](14 * $s + $oys)
+        PanelX0b = [int](20 * $s + $oxs); PanelX1b = [int](28 * $s + $oxs)
+        PanelYb = [int](38 * $s + $oys)
+        SocketCy = [int](41.5 * $s + $oys)
+        SocketR = [math]::Max(1, [int](1.6 * $s))
+        Cx = [int](24 * $s + $oxs)
+        S = $s; Oxs = $oxs; Oys = $oys
+    }
 }
 
-function Test-ChargerLed([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
-    $s = ($Size / 48.0) * $Scale
-    $oxs = $Ox * $s; $oys = $Oy * $s
-    $cx = [int](24 * $s + $oxs)
+function Test-ChargerShield([int]$x, [int]$y, [hashtable]$G) {
+    $cap = Test-RoundedRect $x $y $G.OuterX0t $G.CapY0 $G.OuterX1t $G.CapY1 $G.CapR
+    $body = Test-Trapezoid $x $y $G.OuterX0t $G.OuterX1t $G.OuterYt $G.OuterX0b $G.OuterX1b $G.OuterYb
+    $cap -or $body
+}
+
+function Test-ChargerPanel([int]$x, [int]$y, [hashtable]$G) {
+    Test-Trapezoid $x $y $G.PanelX0t $G.PanelX1t $G.PanelYt $G.PanelX0b $G.PanelX1b $G.PanelYb
+}
+
+function Test-ChargerSocket([int]$x, [int]$y, [hashtable]$G) {
+    Test-Circle $x $y $G.Cx $G.SocketCy $G.SocketR
+}
+
+function Test-ChargerLedLine([int]$x, [int]$y, [int]$Size, [hashtable]$G) {
+    $cx = $G.Cx; $s = $G.S; $oys = $G.Oys
     if ($Size -le 16) {
-        $y0 = [int](8 * $s + $oys); $y1 = [int](38 * $s + $oys)
-        if (($y -ge $y0) -and ($y -le $y1) -and ([math]::Abs($x - $cx) -le [math]::Max(0, [int](0.6 * $s)))) { return $true }
-        $cy = [int](22 * $s + $oys); $r = [math]::Max(1, [int](1.8 * $s))
-        return (Test-Circle $x $y $cx $cy $r)
+        $y0 = [int](14 * $s + $oys); $y1 = [int](22 * $s + $oys)
+        return ($y -ge $y0) -and ($y -le $y1) -and ([math]::Abs($x - $cx) -le [math]::Max(0, [int](0.5 * $s)))
     }
-    Test-Rect $x $y ([int](22 * $s + $oxs)) ([int](7 * $s + $oys)) ([int](26 * $s + $oxs)) ([int](40 * $s + $oys))
+    $half = if ($Size -ge 48) { 0 } else { [math]::Max(0, [int][math]::Round(0.5 * $s)) }
+    $y0 = [int](18 * $s + $oys); $y1 = [int](30 * $s + $oys)
+    return ($y -ge $y0) -and ($y -le $y1) -and ([math]::Abs($x - $cx) -le $half)
+}
+
+function Test-ChargerLedOutline([int]$x, [int]$y, [int]$Size, [hashtable]$G) {
+    if ($Size -lt 32) { return $false }
+    $cx = $G.Cx; $s = $G.S; $oys = $G.Oys
+    $y0 = [int](18 * $s + $oys); $y1 = [int](30 * $s + $oys)
+    if (-not (($y -ge $y0) -and ($y -le $y1))) { return $false }
+    if ([math]::Abs($x - $cx) -ne 1) { return $false }
+    Test-ChargerPanel $x $y $G
+}
+
+function Test-ChargerLedDot([int]$x, [int]$y, [int]$Size, [hashtable]$G) {
+    $cx = $G.Cx; $s = $G.S; $oys = $G.Oys
+    $cy = [int](16.5 * $s + $oys)
+    $r = if ($Size -gt 16) { [math]::Max(1, [int](1.1 * $s)) } else { [math]::Max(1, [int](0.9 * $s)) }
+    Test-Circle $x $y $cx $cy $r
+}
+
+function Test-ChargerMarkings([int]$x, [int]$y, [int]$Size, [hashtable]$G) {
+    if ($Size -le 16) { return $false }
+    $s = $G.S; $oys = $G.Oys; $oxs = $G.Oxs
+    $y0 = [int](30 * $s + $oys); $y1 = [int](31 * $s + $oys)
+    if (-not (($y -ge $y0) -and ($y -le $y1))) { return $false }
+    (([int](21 * $s + $oxs) -le $x) -and ($x -le [int](22 * $s + $oxs))) -or
+    (([int](26 * $s + $oxs) -le $x) -and ($x -le [int](27 * $s + $oxs)))
 }
 
 function Test-EqualizerPuck([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
@@ -137,13 +186,33 @@ function Test-EuroBadge([int]$x, [int]$y, [int]$Size) {
 }
 
 function Get-ChargerPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim, [string]$Kind, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
-    $body = if ($Dim) { [Drawing.Color]::FromArgb(200, 72, 74, 78) } else { [Drawing.Color]::FromArgb(255, 42, 44, 48) }
+    $G = Get-ChargerGeom $Size -Ox $Ox -Oy $Oy -Scale $Scale
+    $wing = if ($Dim) { [Drawing.Color]::FromArgb(200, 52, 54, 58) } else { [Drawing.Color]::FromArgb(255, 18, 18, 20) }
+    $panel = if ($Dim) { [Drawing.Color]::FromArgb(200, 86, 88, 92) } else { [Drawing.Color]::FromArgb(255, 118, 120, 124) }
     $led = Get-LedStripColor $Bright $Dim $Kind
-    if (Test-ChargerBody $x $y $Size -Ox $Ox -Oy $Oy -Scale $Scale) {
-        if (Test-ChargerLed $x $y $Size -Ox $Ox -Oy $Oy -Scale $Scale) { return $led }
-        return $body
+    $ledAlpha = if ($Dim) { 140 } else { 178 }
+    $outline = [Drawing.Color]::FromArgb(255, 38, 40, 44)
+
+    if (-not (Test-ChargerShield $x $y $G)) { return $null }
+
+    if ((Test-ChargerLedLine $x $y $Size $G) -or (Test-ChargerLedDot $x $y $Size $G)) {
+        return [Drawing.Color]::FromArgb($ledAlpha, $led.R, $led.G, $led.B)
     }
-    return $null
+
+    if (Test-ChargerLedOutline $x $y $Size $G) { return $outline }
+
+    if (Test-ChargerPanel $x $y $G) {
+        if (Test-ChargerMarkings $x $y $Size $G) {
+            return Get-BlendColor $panel $wing 0.35
+        }
+        return $panel
+    }
+
+    if (Test-ChargerSocket $x $y $G) {
+        return Get-BlendColor $wing ([Drawing.Color]::FromArgb(255, 0, 0, 0)) 0.25
+    }
+
+    return $wing
 }
 
 function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim) {

@@ -18,12 +18,16 @@ ICON_SETS = [
     ('EaseeOverview', (0, 150, 136), 'overview'),    # #009688 teal — overview
 ]
 
-# Silhouette colors (Easee Charge hardware look)
-BODY_ON = (42, 44, 48)
-BODY_OFF = (72, 74, 78)
+# Silhouette colors (Easee Charge Lite — two-tone faceted front)
+WING_ON = (18, 18, 20)          # matte black outer wings
+WING_OFF = (52, 54, 58)
+PANEL_ON = (118, 120, 124)       # lighter grey center trapezoid
+PANEL_OFF = (86, 88, 92)
 PUCK_ON = (235, 237, 240)
 PUCK_OFF = (160, 163, 168)
 LED_DIM_GRAY = (102, 102, 102)  # #666 — charger off / dim blend target
+LED_ON_ALPHA = 178              # ~70% — subtler status strip
+LED_OUTLINE = (38, 40, 44)
 
 
 def _chunk(tag, data):
@@ -84,35 +88,108 @@ def _scale(size, *vals):
     return tuple(int(v * s) for v in vals)
 
 
-def _charger_body(x, y, size, ox=0, oy=0, scale=1.0):
+def _charger_geom(size, ox=0, oy=0, scale=1.0):
+    """Shield taper + inset grey panel (48px design coords)."""
     s = size / 48.0 * scale
     ox_s, oy_s = ox * s, oy * s
-    top_y0, top_y1 = int(6 * s + oy_s), int(13 * s + oy_s)
-    x0t, x1t = int(13 * s + ox_s), int(35 * s + ox_s)
-    body_yb = int(41 * s + oy_s)
-    x0b, x1b = int(19 * s + ox_s), int(29 * s + ox_s)
-    cap = _inside_rect(x, y, x0t, top_y0, x1t, top_y1)
-    body = _inside_trapezoid(x, y, x0t, x1t, top_y1, x0b, x1b, body_yb)
+    return {
+        'cap_y0': int(5 * s + oy_s),
+        'cap_y1': int(12 * s + oy_s),
+        'outer_x0t': int(10 * s + ox_s),
+        'outer_x1t': int(38 * s + ox_s),
+        'outer_yt': int(12 * s + oy_s),
+        'outer_x0b': int(21 * s + ox_s),
+        'outer_x1b': int(27 * s + ox_s),
+        'outer_yb': int(42 * s + oy_s),
+        'cap_r': max(1, int(3.5 * s)),
+        'panel_x0t': int(15 * s + ox_s),
+        'panel_x1t': int(33 * s + ox_s),
+        'panel_yt': int(14 * s + oy_s),
+        'panel_x0b': int(20 * s + ox_s),
+        'panel_x1b': int(28 * s + ox_s),
+        'panel_yb': int(38 * s + oy_s),
+        'socket_cy': int(41.5 * s + oy_s),
+        'socket_r': max(1, int(1.6 * s)),
+        'cx': int(24 * s + ox_s),
+        's': s,
+        'ox_s': ox_s,
+        'oy_s': oy_s,
+    }
+
+
+def _charger_shield(x, y, g):
+    cap = _inside_rounded_rect(
+        x, y, g['outer_x0t'], g['cap_y0'], g['outer_x1t'], g['cap_y1'], g['cap_r'],
+    )
+    body = _inside_trapezoid(
+        x, y,
+        g['outer_x0t'], g['outer_x1t'], g['outer_yt'],
+        g['outer_x0b'], g['outer_x1b'], g['outer_yb'],
+    )
     return cap or body
 
 
-def _charger_led(x, y, size, ox=0, oy=0, scale=1.0):
-    """Vertical LED strip on charger face (48px) or thin line/dot (16px)."""
-    s = size / 48.0 * scale
-    ox_s, oy_s = ox * s, oy * s
-    cx = int(24 * s + ox_s)
-    if size <= 16:
-        y0, y1 = int(8 * s + oy_s), int(38 * s + oy_s)
-        if y0 <= y <= y1 and abs(x - cx) <= max(0, int(0.6 * s)):
-            return True
-        cy = int(22 * s + oy_s)
-        r = max(1, int(1.8 * s))
-        return _inside_circle(x, y, cx, cy, r)
-    return _inside_rect(
+def _charger_panel(x, y, g):
+    return _inside_trapezoid(
         x, y,
-        int(22 * s + ox_s), int(7 * s + oy_s),
-        int(26 * s + ox_s), int(40 * s + oy_s),
+        g['panel_x0t'], g['panel_x1t'], g['panel_yt'],
+        g['panel_x0b'], g['panel_x1b'], g['panel_yb'],
     )
+
+
+def _charger_socket(x, y, g):
+    return _inside_circle(x, y, g['cx'], g['socket_cy'], g['socket_r'])
+
+
+def _charger_led_line(x, y, size, g):
+    """Thin vertical LED (1px at 48px), ~1/4 panel height."""
+    cx = g['cx']
+    s = g['s']
+    oy_s = g['oy_s']
+    if size <= 16:
+        y0, y1 = int(14 * s + oy_s), int(22 * s + oy_s)
+        return y0 <= y <= y1 and abs(x - cx) <= max(0, int(0.5 * s))
+    half = 0 if size >= 48 else max(0, int(round(0.5 * s)))
+    y0, y1 = int(18 * s + oy_s), int(30 * s + oy_s)
+    return y0 <= y <= y1 and abs(x - cx) <= half
+
+
+def _charger_led_outline(x, y, size, g):
+    """Dark 1px flanking outline for LED strip (48px only)."""
+    if size < 32:
+        return False
+    cx = g['cx']
+    s = g['s']
+    oy_s = g['oy_s']
+    y0, y1 = int(18 * s + oy_s), int(30 * s + oy_s)
+    if not (y0 <= y <= y1):
+        return False
+    return abs(x - cx) == 1 and _charger_panel(x, y, g)
+
+
+def _charger_led_dot(x, y, size, g):
+    """Small status dot above LED strip."""
+    cx = g['cx']
+    s = g['s']
+    oy_s = g['oy_s']
+    cy = int(16.5 * s + oy_s)
+    r = max(1, int(1.1 * s)) if size > 16 else max(1, int(0.9 * s))
+    return _inside_circle(x, y, cx, cy, r)
+
+
+def _charger_markings(x, y, size, g):
+    """Optional tiny dashes below LED strip (48px only)."""
+    if size <= 16:
+        return False
+    s = g['s']
+    oy_s = g['oy_s']
+    ox_s = g['ox_s']
+    y0, y1 = int(30 * s + oy_s), int(31 * s + oy_s)
+    if not (y0 <= y <= y1):
+        return False
+    left = int(21 * s + ox_s) <= x <= int(22 * s + ox_s)
+    right = int(26 * s + ox_s) <= x <= int(27 * s + ox_s)
+    return left or right
 
 
 def _equalizer_puck(x, y, size, ox=0, oy=0, scale=1.0):
@@ -177,7 +254,7 @@ def _led_strip_color(accent, dim, kind=''):
         if kind == 'charger':
             return LED_DIM_GRAY
         return _blend_toward(accent, LED_DIM_GRAY, 0.35)
-    return accent
+    return _blend_toward(accent, PANEL_ON, 0.12)
 
 
 def _status_dot_color(accent, dim):
@@ -188,14 +265,34 @@ def _status_dot_color(accent, dim):
 
 
 def _draw_charger_icon(x, y, size, accent, dim, kind='', ox=0, oy=0, scale=1.0):
-    body = BODY_OFF if dim else BODY_ON
-    alpha = 200 if dim else 255
+    g = _charger_geom(size, ox=ox, oy=oy, scale=scale)
+    wing = WING_OFF if dim else WING_ON
+    panel = PANEL_OFF if dim else PANEL_ON
+    body_alpha = 200 if dim else 255
     led = _led_strip_color(accent, dim, kind)
-    if _charger_body(x, y, size, ox=ox, oy=oy, scale=scale):
-        if _charger_led(x, y, size, ox=ox, oy=oy, scale=scale):
-            return (led[0], led[1], led[2], alpha)
-        return (body[0], body[1], body[2], alpha)
-    return None
+    led_alpha = 140 if dim else LED_ON_ALPHA
+
+    if not _charger_shield(x, y, g):
+        return None
+
+    if _charger_panel(x, y, g):
+        if _charger_led_line(x, y, size, g):
+            if _charger_led_outline(x, y, size, g):
+                return (LED_OUTLINE[0], LED_OUTLINE[1], LED_OUTLINE[2], body_alpha)
+            return (led[0], led[1], led[2], led_alpha)
+        if _charger_led_dot(x, y, size, g):
+            dot = _blend_toward(panel, wing, 0.45)
+            return (dot[0], dot[1], dot[2], body_alpha)
+        if _charger_markings(x, y, size, g):
+            mark = _blend_toward(panel, wing, 0.35)
+            return (mark[0], mark[1], mark[2], body_alpha)
+        return (panel[0], panel[1], panel[2], body_alpha)
+
+    if _charger_socket(x, y, g):
+        sock = _blend_toward(wing, (0, 0, 0), 0.25)
+        return (sock[0], sock[1], sock[2], body_alpha)
+
+    return (wing[0], wing[1], wing[2], body_alpha)
 
 
 def _draw_symbol_v2(kind, x, y, size, accent, dim):
