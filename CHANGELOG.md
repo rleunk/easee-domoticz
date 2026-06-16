@@ -4,6 +4,16 @@ Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [10.5.3] — 2026-06-16
+
+### Opgelost
+- **Laatste sessiekosten na laden** — na afloop van een laadsessie blijft de kosten-tegel de sessiekosten tonen als **Laatste sessie: €X.XX | Dag: €Y.YY** in plaats van **Sessie: €0.00**. Sessie-einde wordt nu na de laatste kostenberekening opgeslagen, zodat de volledige sessiekosten bewaard blijven.
+
+### Aanbevolen upgrade
+- Upgrade vanaf v10.5.2: vervang alleen `plugin.py` en herstart het hardware-item.
+
+---
+
 ## [10.5.2] — 2026-06-16
 
 ### Gewijzigd

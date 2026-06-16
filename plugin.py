@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz Plugin" author="Richard Leunk" version="10.5.2"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz Plugin" author="Richard Leunk" version="10.5.3"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
@@ -108,11 +108,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.5.2] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.5.3] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.5.2] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.5.2] {msg}')
+            Domoticz.Debug(f'[Easee v10.5.3] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.5.3] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -503,7 +503,8 @@ class BasePlugin:
         tibber_rate = self.safe_float(self.current_tibber_price().get('total'), 0.0)
         rate = session_cost / session_kwh if session_kwh > 0 else tibber_rate
         price_emoji = self.price_emoji(rate, self.state.get('price_cache', {}))
-        text = f'{price_emoji} Sessie: €{self.euro_str(session_cost)} | Dag: €{self.euro_str(day_cost)}'
+        session_label = 'Sessie' if session_active else 'Laatste sessie'
+        text = f'{price_emoji} {session_label}: €{self.euro_str(session_cost)} | Dag: €{self.euro_str(day_cost)}'
         try:
             is_text = int(Devices[u].SubType) == DEVICE_TYPES['Text']['Subtype']
         except Exception:
@@ -511,8 +512,7 @@ class BasePlugin:
         if is_text:
             Devices[u].Update(nValue=0, sValue=text[:4000])
         else:
-            val = session_cost if session_active else day_cost
-            Devices[u].Update(nValue=0, sValue=self.euro_str(val))
+            Devices[u].Update(nValue=0, sValue=self.euro_str(session_cost))
     def update_charger_energy(self, cid, label_key, power_w, total_wh):
         u = self.resolve_charger_unit(cid, label_key)
         if u is not None:
@@ -2235,19 +2235,8 @@ class BasePlugin:
             st['session_cost_total'] = 0.0
             st['session_cost_energy'] = 0.0
             st['session_cost_tax'] = 0.0
-        elif (not session_active) and st.get('session_active'):
-            if api_session_kwh is not None:
-                st['last_session_kwh'] = api_session_kwh
-            elif st.get('session_start_kwh') is not None:
-                st['last_session_kwh'] = max(0.0, float(total_kwh) - float(st.get('session_start_kwh')))
-            st['last_session_cost_total'] = self.safe_float(st.get('session_cost_total', 0.0), 0.0)
-            st['last_session_cost_energy'] = self.safe_float(st.get('session_cost_energy', 0.0), 0.0)
-            st['last_session_cost_tax'] = self.safe_float(st.get('session_cost_tax', 0.0), 0.0)
-            st['last_session_duration'] = self.compute_duration_text(st.get('session_start_ts'))
-            st['session_active'] = False
-            st['session_start_ts'] = None
-            st['session_start_kwh'] = None
-            st['prev_session_kwh'] = None
+
+        ending_session = (not session_active) and st.get('session_active')
 
         delta_kwh = 0.0
         if session_active and api_session_kwh is not None:
@@ -2275,6 +2264,20 @@ class BasePlugin:
                 st['session_cost_total'] = round(self.safe_float(st.get('session_cost_total', 0.0), 0.0) + add_total, 4)
                 st['session_cost_energy'] = round(self.safe_float(st.get('session_cost_energy', 0.0), 0.0) + add_energy, 4)
                 st['session_cost_tax'] = round(self.safe_float(st.get('session_cost_tax', 0.0), 0.0) + add_tax, 4)
+
+        if ending_session:
+            if api_session_kwh is not None:
+                st['last_session_kwh'] = api_session_kwh
+            elif st.get('session_start_kwh') is not None:
+                st['last_session_kwh'] = max(0.0, float(total_kwh) - float(st.get('session_start_kwh')))
+            st['last_session_cost_total'] = self.safe_float(st.get('session_cost_total', 0.0), 0.0)
+            st['last_session_cost_energy'] = self.safe_float(st.get('session_cost_energy', 0.0), 0.0)
+            st['last_session_cost_tax'] = self.safe_float(st.get('session_cost_tax', 0.0), 0.0)
+            st['last_session_duration'] = self.compute_duration_text(st.get('session_start_ts'))
+            st['session_active'] = False
+            st['session_start_ts'] = None
+            st['session_start_kwh'] = None
+            st['prev_session_kwh'] = None
 
         if st.get('session_active'):
             if api_session_kwh is not None:
