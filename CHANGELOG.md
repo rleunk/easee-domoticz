@@ -6,6 +6,19 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.5.16] — 2026-06-16
+
+### Gewijzigd
+- **Easee_icons_v2.zip** — Equalizer-puck vergroot op tegel: squircle-marge 10→7 px (28→34 px breed, ~21% groter), hoekradius 8→9, binnenste cirkel 12→13 px; LoadBal-puck niet meer verkleind (scale 0.82→1.0).
+- **plugin.py** — Equalizer-tegels krijgen via `DeviceID` (`EASEE_EQ_*`) het juiste pictogram: Status→`EaseeEqualizer`, Vermogen→`EaseePower`; core LoadBal→`EaseeLoadBal`; equalizer-naamheuristiek vóór generieke status-regel.
+- **scripts/generate_icons.py / .ps1** — equalizer-geometrie en LoadBal-schaal bijgewerkt.
+- **docs/icon-preview-v2.png** — bijgewerkt.
+
+### Aanbevolen upgrade
+- `git pull` in de pluginmap en herstart het hardware-item. **Upload `Easee_icons_v2.zip` opnieuw** via **Instellingen → Meer opties → Aangepaste pictogrammen** — Domoticz cached iconen.
+
+---
+
 ## [10.5.15] — 2026-06-16
 
 ### Gewijzigd

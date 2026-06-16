@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.5.15" author="Richard Leunk" version="10.5.15"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.5.16" author="Richard Leunk" version="10.5.16"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.5.15</h2><br/>
+        <h2>Easee Domoticz plugin v10.5.16</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -109,11 +109,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.5.15] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.5.16] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.5.15] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.5.15] {msg}')
+            Domoticz.Debug(f'[Easee v10.5.16] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.5.16] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -376,8 +376,40 @@ class BasePlugin:
         return None
 
     # ---- images ----
-    def image_root(self, name):
-        n = name.lower()
+    def image_root(self, name, device_id=None):
+        n = self.norm(name).lower()
+        devid = str(device_id or '').upper()
+
+        if devid == CORE_DEVICE_IDS.get('LoadBal', ''):
+            return 'EaseeLoadBal'
+        if devid.startswith('EASEE_EQ_'):
+            label = n.split(' - ')[-1].strip() if ' - ' in n else n
+            if label in ('vermogen', 'huisvermogen', 'power'):
+                return 'EaseePower'
+            if label in ('status',):
+                return 'EaseeEqualizer'
+            if 'load bal' in label or 'loadbal' in label or 'load balancing' in label:
+                return 'EaseeLoadBal'
+            if 'l1' in label or 'l2' in label or 'l3' in label or 'fase' in label:
+                return 'EaseePower'
+            if 'hoofd' in label or 'zekering' in label or 'huis' in label:
+                return 'EaseeEqualizer'
+            if 'overzicht' in label or 'overview' in label:
+                return 'EaseeOverview'
+            return 'EaseeEqualizer'
+
+        is_eq = 'equalizer' in n or 'meterkast' in n
+        if is_eq:
+            if 'vermogen' in n or 'huisvermogen' in n:
+                return 'EaseePower'
+            if 'load bal' in n or 'loadbal' in n or 'load balancing' in n:
+                return 'EaseeLoadBal'
+            if 'l1' in n or 'l2' in n or 'l3' in n or 'fase' in n:
+                return 'EaseePower'
+            if 'overzicht' in n or 'overview' in n:
+                return 'EaseeOverview'
+            return 'EaseeEqualizer'
+
         if 'overzicht' in n or 'beste laden' in n:
             return 'EaseeOverview'
         if 'kosten' in n or 'goedkoop' in n or '€' in n:
@@ -386,8 +418,6 @@ class BasePlugin:
             return 'EaseeStatus'
         if 'loadbal' in n:
             return 'EaseeLoadBal'
-        if 'equalizer' in n or 'meterkast' in n:
-            return 'EaseeEqualizer'
         if 'totaal & sessie' in n or ' laden' in n or 'totaal kwh' in n:
             return 'EaseePower'
         return 'EaseeCharger'
@@ -487,7 +517,7 @@ class BasePlugin:
         updated = 0
         for unit, dev in Devices.items():
             try:
-                root = self.image_root(self.norm(dev.Name))
+                root = self.image_root(self.norm(dev.Name), getattr(dev, 'DeviceID', ''))
                 img_id = self.image_ids.get(root)
                 if not img_id or getattr(dev, 'Image', 0) == img_id:
                     continue
@@ -528,7 +558,7 @@ class BasePlugin:
                 kwargs['Switchtype'] = spec['Switchtype']
             if 'Options' in spec:
                 kwargs['Options'] = spec['Options']
-        root = self.image_root(key)
+        root = self.image_root(key, devid)
         if root in self.image_ids:
             kwargs['Image'] = self.image_ids[root]
         try:

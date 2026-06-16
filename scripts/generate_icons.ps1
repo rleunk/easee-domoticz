@@ -175,11 +175,11 @@ function Get-EqualizerGeom([int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double
     $s = ($Size / 48.0) * $Scale
     $oxs = $Ox * $s; $oys = $Oy * $s
     @{
-        OuterX0 = [int](10 * $s + $oxs); OuterY0 = [int](10 * $s + $oys)
-        OuterX1 = [int](38 * $s + $oxs); OuterY1 = [int](38 * $s + $oys)
-        OuterR = [math]::Max(2, [int](8 * $s))
+        OuterX0 = [int](7 * $s + $oxs); OuterY0 = [int](7 * $s + $oys)
+        OuterX1 = [int](41 * $s + $oxs); OuterY1 = [int](41 * $s + $oys)
+        OuterR = [math]::Max(2, [int](9 * $s))
         InnerCx = 24 * $s + $oxs; InnerCy = 23 * $s + $oys
-        InnerR = [math]::Max(3, 12 * $s)
+        InnerR = [math]::Max(3, 13 * $s)
         LedCx = 24 * $s + $oxs; LedCy = 33.5 * $s + $oys
         LedR = [math]::Max(1, 2.0 * $s)
         S = $s; Oxs = $oxs; Oys = $oys
@@ -350,7 +350,7 @@ function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing
             }
         }
         'loadbal' {
-            $px = Get-EqualizerPixel $x $y $Size $Bright $Dim -Scale 0.82
+            $px = Get-EqualizerPixel $x $y $Size $Bright $Dim
             if ($null -ne $px) { return $px }
             if (Test-ArrowLR $x $y $Size) { return $accent }
         }

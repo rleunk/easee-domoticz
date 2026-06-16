@@ -221,11 +221,11 @@ def _equalizer_geom(size, ox=0, oy=0, scale=1.0):
     s = size / 48.0 * scale
     ox_s, oy_s = ox * s, oy * s
     return {
-        'outer_x0': int(10 * s + ox_s), 'outer_y0': int(10 * s + oy_s),
-        'outer_x1': int(38 * s + ox_s), 'outer_y1': int(38 * s + oy_s),
-        'outer_r': max(2, int(8 * s)),
+        'outer_x0': int(7 * s + ox_s), 'outer_y0': int(7 * s + oy_s),
+        'outer_x1': int(41 * s + ox_s), 'outer_y1': int(41 * s + oy_s),
+        'outer_r': max(2, int(9 * s)),
         'inner_cx': 24 * s + ox_s, 'inner_cy': 23 * s + oy_s,
-        'inner_r': max(3, 12 * s),
+        'inner_r': max(3, 13 * s),
         'led_cx': 24 * s + ox_s, 'led_cy': 33.5 * s + oy_s,
         'led_r': max(1, 2.0 * s),
         's': s, 'ox_s': ox_s, 'oy_s': oy_s,
@@ -449,7 +449,7 @@ def _draw_symbol_v2(kind, x, y, size, accent, dim):
         return (0, 0, 0, 0)
 
     if kind == 'loadbal':
-        px = _draw_equalizer_icon(x, y, size, bright, dim, scale=0.82)
+        px = _draw_equalizer_icon(x, y, size, bright, dim)
         if px:
             return px
         if _draw_arrow_lr(x, y, size):
