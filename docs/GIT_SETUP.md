@@ -1,0 +1,152 @@
+# Git-authenticatie op de Domoticz-server (Debian)
+
+GitHub accepteert sinds augustus 2021 **geen wachtwoord meer** bij HTTPS-clones. Als je een foutmelding krijgt zoals *"Password authentication is not supported"*, gebruik dan één van de onderstaande opties.
+
+> **Aanbevolen voor een Domoticz-server:** Optie A (SSH). Eenmalig instellen, daarna werken `git clone` en `git pull` zonder wachtwoord.
+
+---
+
+## Optie A — SSH (aanbevolen)
+
+### Stap 1: SSH-sleutel aanmaken op de server
+
+Log in op je Domoticz-server en voer uit:
+
+```bash
+ssh-keygen -t ed25519 -C "domoticz-easee-plugin" -f ~/.ssh/id_ed25519_github -N ""
+```
+
+Dit maakt een sleutelpaar aan zonder wachtwoord (geschikt voor een thuisserver).
+
+### Stap 2: Publieke sleutel tonen
+
+```bash
+cat ~/.ssh/id_ed25519_github.pub
+```
+
+Kopieer de volledige regel (begint met `ssh-ed25519 ...`).
+
+### Stap 3: Sleutel toevoegen aan GitHub
+
+1. Ga naar [GitHub → Settings → SSH and GPG keys](https://github.com/settings/keys)
+2. Klik **New SSH key**
+3. Titel: bijv. `Domoticz server`
+4. Plak de publieke sleutel
+5. Klik **Add SSH key**
+
+### Stap 4: SSH-configureren (optioneel maar handig)
+
+```bash
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+cat >> ~/.ssh/config << 'EOF'
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_github
+    IdentitiesOnly yes
+EOF
+chmod 600 ~/.ssh/config
+```
+
+### Stap 5: Verbinding testen
+
+```bash
+ssh -T git@github.com
+```
+
+Verwachte melding: *"Hi rleunk! You've successfully authenticated..."*
+
+### Stap 6: Repository clonen
+
+```bash
+cd /home/root/domoticz/plugins
+git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
+```
+
+> De mapnaam `Easee-Domoticz-plugin` is belangrijk: Domoticz verwacht `plugin.py` direct in die map.
+
+### Updates ophalen
+
+```bash
+cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+git pull
+sudo systemctl restart domoticz
+```
+
+---
+
+## Optie B — HTTPS met Personal Access Token (PAT)
+
+Gebruik dit als je geen SSH wilt instellen.
+
+### Stap 1: PAT aanmaken op GitHub
+
+1. Ga naar [GitHub → Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)
+2. Klik **Generate new token** (classic)
+3. Geef een naam, bijv. `domoticz-server`
+4. Vink **repo** aan (voor private repositories)
+5. Genereer en **kopieer het token** — je ziet het maar één keer!
+
+> Bewaar het token veilig. Deel het nooit in chat, e-mail of documentatie.
+
+### Stap 2: Repository clonen
+
+```bash
+cd /home/root/domoticz/plugins
+git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
+```
+
+Wanneer Git om inloggegevens vraagt:
+
+| Veld | Waarde |
+|------|--------|
+| Username | `rleunk` |
+| Password | je **PAT** (niet je GitHub-wachtwoord) |
+
+### Stap 3: Credentials opslaan (optioneel)
+
+Zodat je niet bij elke `git pull` opnieuw het token hoeft in te voeren:
+
+```bash
+git config --global credential.helper store
+cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+git pull
+# Voer eenmalig username + PAT in; daarna wordt het opgeslagen in ~/.git-credentials
+```
+
+> **Let op:** het token staat dan als platte tekst op de server. SSH is veiliger voor een vaste server.
+
+### Updates ophalen
+
+```bash
+cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+git pull
+sudo systemctl restart domoticz
+```
+
+---
+
+## Veelvoorkomende fouten
+
+| Foutmelding | Oorzaak | Oplossing |
+|-------------|---------|-----------|
+| `Password authentication is not supported` | HTTPS met GitHub-wachtwoord | Gebruik PAT (Optie B) of SSH (Optie A) |
+| `Permission denied (publickey)` | SSH-sleutel niet op GitHub | Voeg publieke sleutel toe (Optie A, stap 3) |
+| `Repository not found` | Geen toegang tot private repo | Controleer SSH-sleutel of PAT met `repo`-scope |
+| `fatal: not a git repository` | Verkeerde map | `cd` naar `/home/root/domoticz/plugins/Easee-Domoticz-plugin` |
+
+---
+
+## Mapstructuur na clone
+
+```
+/home/root/domoticz/plugins/Easee-Domoticz-plugin/
+├── plugin.py          ← Domoticz laadt dit bestand
+├── README.md
+├── INSTALL.md
+├── install.sh
+└── docs/
+```
+
+Domoticz heeft alleen `plugin.py` nodig om te draaien. De overige bestanden zijn documentatie en hulpscripts.

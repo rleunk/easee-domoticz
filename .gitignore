@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Plugin runtime state (created on Domoticz server)
+easee_v9_0_state.json
+*.state.json
+
+# Secrets and local config
+.env
+.env.*
+*.pem
+id_rsa
+id_ed25519
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+
+# Archives (keep source zip outside repo)
+*.zip
+
+# Logs
+*.log

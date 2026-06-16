@@ -1,0 +1,60 @@
+# Changelog
+
+Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
+
+Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
+
+## [10.4.0] — 2026-06
+
+### Opgelost
+- **Kosten & Samenvatting** toont nu het actuele Tibber-tarief (zelfde bron als **Beste laden**).
+- Per-lader **Kosten (Sessie/Dag)** toont weer echte sessie- en dagkosten tijdens het laden.
+
+### Aanbevolen upgrade
+- Upgrade vanaf v10.3.4: vervang alleen `plugin.py` en herstart het hardware-item. State en devices blijven behouden.
+
+---
+
+## [10.3.4] — 2026
+
+### Verbeterd
+- Stabiliteit van kostenberekening en sessie-tracking.
+- Verfijningen aan Equalizer-weergave en fuse/limiet-detectie.
+
+---
+
+## [10.3.0] — 2026
+
+### Toegevoegd
+- Verdere Equalizer-ondersteuning: load balancing, hoofdzekering en eMobility-limieten in status-tiles.
+- Verbeterde auto-discovery van Equalizer via meerdere Easee API-paden.
+
+### Verbeterd
+- Compactere device-namen en emoji-indicatoren in statusweergave.
+
+---
+
+## [10.2.0] — 2026
+
+### Toegevoegd
+- Equalizer (meterkast) discovery — stap 1: detectie, status en vermogen.
+- Optionele handmatige Equalizer ID via hardwareveld **IP**.
+- Aangepaste Equalizer-naam via veld **Address**.
+
+### Verbeterd
+- Site-filter (Mode5) en debug-logging voor troubleshooting.
+
+---
+
+## [10.1.0] — 2026
+
+### Toegevoegd
+- Eerste stabiele **AutoDiscovery Compact**-release.
+- Automatische detectie van Easee-laadpalen.
+- Tibber-integratie: actueel stroomtarief, goedkoopste laadvenster en kosten per sessie/dag.
+- Aangepaste laadpaalnamen via **Mode2** en **Mode3**.
+- Kern-tiles: Status, Totaal Laden, Totaal kWh, LoadBal, Kosten & Samenvatting, Beste laden.
+
+### Vereisten
+- Domoticz met Python 3 en `python3-requests`.
+- Easee-account (gebruikersnaam + wachtwoord).
