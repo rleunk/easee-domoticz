@@ -1,8 +1,8 @@
-# Easee Domoticz plugin v10.5.10
+# Easee Domoticz plugin v10.5.18
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators, Equalizer/meterkast ondersteuning en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.5.10-blue)
+![Version](https://img.shields.io/badge/version-10.5.18-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -60,7 +60,7 @@ sudo systemctl restart domoticz
 Daarna in Domoticz:
 
 1. **Setup → Hardware**
-2. Type: **"Easee Domoticz plugin v10.5.10"**
+2. Type: **"Easee Domoticz plugin v10.5.18"**
 3. Geef de hardware een naam, bijv. `Easee` (prefix op alle tegels)
 4. Username/Password: jouw Easee-inloggegevens
 5. **Create**
@@ -143,15 +143,27 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare paramet
 
 ## 🎨 Custom iconen
 
-De plugin levert acht Easee-tegeliconen via `Easee_icons_v2.zip` (v2, Easee Charge/Equalizer silhouetten) in de pluginmap; valt terug op `Easee_icons.zip`.
+De plugin levert acht Easee-tegeliconen via **`Easee_icons_v2.zip`** (P-max productfoto laadpaal + Equalizer-max puck) in de pluginmap.
 
-- **`Easee_icons_v2.zip`** — aanbevolen, meegeleverd in de pluginmap (v2 hardware-stijl)
-- **`Easee_icons.zip`** — legacy fallback
-- **8 icon sets:** EaseeCharger (groen), EaseePower (geel), EaseeStatus (blauw), EaseeCost (oranje), EaseeEqualizer (paars), EaseeOverview (teal), EaseeLoadBal, EaseeAlert
-- **LED-strip kleur op lader-iconen:** groen=online, geel=laden, blauw=status, oranje=kosten, rood=fout, teal=overzicht (Equalizer: statusdot onderaan)
+- **`Easee_icons_v2.zip`** — enige iconenarchief, meegeleverd in de pluginmap
+- **8 icon sets:** EaseeCharger (groen), EaseePower (geel), EaseeStatus (blauw), EaseeCost (oranje), EaseeEqualizer (blauw), EaseeOverview (teal), EaseeLoadBal (teal), EaseeAlert (rood)
+- **LED-strip kleur** op P-max laadpaal-foto (of LED-dot op Equalizer-puck) volgt de **tegelfunctie** — zie tabel hieronder
+- **Functie-badge** rechtsonder op icoon (W, i, €, !, Σ, E, L) — subtiele extra hint; EaseeCharger heeft geen badge
 - Automatisch geladen bij pluginstart; toegepast op **bestaande** tegels na herstart van het hardware-item
 - Mislukt automatisch laden? Upload de zip **eenmalig** via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
-- Verwacht logregel: `Custom icons geladen: 8 sets` of `Custom icons uit Domoticz (handmatig geüpload)`
+- Verwacht logregel: `Custom icons geladen: 8 sets (Easee_icons_v2.zip)` of `Custom icons uit Domoticz (handmatig geüpload)`
+- Preview: [`docs/icon-preview-v2.png`](docs/icon-preview-v2.png) · regeneratie: `.\scripts\generate_photo_icon_variants.ps1`
+
+| Iconenset | LED-kleur | Badge | Tegelfunctie |
+|-----------|-----------|-------|--------------|
+| EaseeCharger | Groen `#2EA043` | — | Standaard laadpaal |
+| EaseePower | Geel `#FFC107` | W | Vermogen W/kW |
+| EaseeStatus | Blauw `#2196F3` | i | Core status |
+| EaseeCost | Oranje `#FF9800` | € | Kosten / tarief |
+| EaseeAlert | Rood `#E53935` | ! | Fout / waarschuwing |
+| EaseeOverview | Teal `#009688` | Σ | Overzicht |
+| EaseeEqualizer | Blauw `#2196F3` | E | EQ / charger status |
+| EaseeLoadBal | Teal `#00BCD4` | L | Load balancing |
 
 Zie [INSTALL.md — Custom iconen handmatig uploaden](INSTALL.md#custom-iconen-handmatig-uploaden) voor details.
 
@@ -221,6 +233,6 @@ MIT License — zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.5.10** — Gemaakt door Richard Leunk
+**Versie 10.5.18** — Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

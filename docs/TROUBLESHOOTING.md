@@ -64,10 +64,10 @@ sudo journalctl -u domoticz -f | grep Easee
 **Symptoom**: Tegels tonen standaard Domoticz-iconen
 
 **Oplossing**:
-1. Controleer of `Easee_icons.zip` in de pluginmap staat
+1. Controleer of `Easee_icons_v2.zip` in de pluginmap staat
 2. Herstart het hardware-item
 3. Als automatisch laden mislukt: upload eenmalig via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
-   - Pad: `/home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons.zip`
+   - Pad: `/home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip`
 
 Zie [INSTALL.md — Custom iconen](../INSTALL.md#custom-iconen-handmatig-uploaden).
 
@@ -106,7 +106,7 @@ Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 
 ```bash
 # Real-time
-sudo journalctl -u domoticz -f | grep "Easee v10.5.10"
+sudo journalctl -u domoticz -f | grep "Easee v10.5.18"
 
 # Laatste 100 regels
 sudo journalctl -u domoticz -n 200 | grep Easee
@@ -131,4 +131,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Domoticz Forum**: https://www.domoticz.com/forum/
 
-Bij een issue: pluginversie (**v10.5.10**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).
+Bij een issue: pluginversie (**v10.5.18**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).

@@ -1,4 +1,4 @@
-# Generate Easee_icons_v2.zip (Domoticz custom icon format — Easee hardware silhouettes)
+# Vector Equalizer drawing helpers (dot-sourced; do not run standalone for production icons).
 
 $ErrorActionPreference = 'Stop'
 
@@ -6,14 +6,10 @@ Add-Type -AssemblyName System.Drawing
 
 $OutZip = Join-Path (Split-Path $PSScriptRoot -Parent) 'Easee_icons_v2.zip'
 $PreviewPath = Join-Path (Split-Path $PSScriptRoot -Parent) 'docs\icon-preview-v2.png'
-$TempDir = Join-Path $env:TEMP "easee-icons-v2-$([guid]::NewGuid().ToString('N'))"
-New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
-$docsDir = Split-Path $PreviewPath -Parent
-if (-not (Test-Path $docsDir)) { New-Item -ItemType Directory -Path $docsDir -Force | Out-Null }
 
 $IconSets = @(
     @{ Name = 'EaseeCharger';   Color = [Drawing.Color]::FromArgb(255, 46, 160, 67);  Kind = 'charger' }
-    @{ Name = 'EaseeEqualizer'; Color = [Drawing.Color]::FromArgb(255, 142, 68, 173); Kind = 'equalizer' }
+    @{ Name = 'EaseeEqualizer'; Color = [Drawing.Color]::FromArgb(255, 33, 150, 243); Kind = 'equalizer' }
     @{ Name = 'EaseePower';     Color = [Drawing.Color]::FromArgb(255, 255, 193, 7);  Kind = 'power' }
     @{ Name = 'EaseeStatus';    Color = [Drawing.Color]::FromArgb(255, 33, 150, 243); Kind = 'status' }
     @{ Name = 'EaseeAlert';     Color = [Drawing.Color]::FromArgb(255, 229, 57, 53);  Kind = 'alert' }
@@ -171,15 +167,52 @@ function Test-ChargerMarkings([int]$x, [int]$y, [int]$Size, [hashtable]$G) {
     (([int](26 * $s + $oxs) -le $x) -and ($x -le [int](27 * $s + $oxs)))
 }
 
-function Get-EqualizerGeom([int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
+function Get-EqualizerMaxMargin([int]$Size) {
+    # Match P-max photo margins: 1 px @48, 0 px @16
+    if ($Size -le 16) { return 0 }
+    return 1
+}
+
+function Get-EqualizerMaxScaleFactor([int]$Size) {
+    $margin = Get-EqualizerMaxMargin $Size
+    $center = $Size / 2.0
+    $baseHalf = 14.0
+    return ($center - $margin) / $baseHalf
+}
+
+function Map-EqualizerCoord48([double]$Coord48, [int]$Size, [double]$EffF) {
+    $cx = $Size / 2.0
+    return $cx + ($Coord48 - 24.0) * $EffF
+}
+
+function Get-EqualizerGeom([int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0, [bool]$MaxFill = $false) {
+    if ($MaxFill) {
+        $effF = (Get-EqualizerMaxScaleFactor $Size) * $Scale
+        $oxs = $Ox * ($Size / 48.0); $oys = $Oy * ($Size / 48.0)
+        $s = $effF * ($Size / 48.0)
+        return @{
+            OuterX0 = [int][math]::Round((Map-EqualizerCoord48 10.0 $Size $effF) + $oxs)
+            OuterY0 = [int][math]::Round((Map-EqualizerCoord48 10.0 $Size $effF) + $oys)
+            OuterX1 = [int][math]::Round((Map-EqualizerCoord48 38.0 $Size $effF) + $oxs)
+            OuterY1 = [int][math]::Round((Map-EqualizerCoord48 38.0 $Size $effF) + $oys)
+            OuterR = [math]::Max(2, [int][math]::Round(8.0 * $effF))
+            InnerCx = (Map-EqualizerCoord48 24.0 $Size $effF) + $oxs
+            InnerCy = (Map-EqualizerCoord48 23.0 $Size $effF) + $oys
+            InnerR = [math]::Max(3, 12.0 * $effF)
+            LedCx = (Map-EqualizerCoord48 24.0 $Size $effF) + $oxs
+            LedCy = (Map-EqualizerCoord48 33.5 $Size $effF) + $oys
+            LedR = [math]::Max(1, 2.0 * $effF)
+            S = $s; Oxs = $oxs; Oys = $oys
+        }
+    }
     $s = ($Size / 48.0) * $Scale
     $oxs = $Ox * $s; $oys = $Oy * $s
-    @{
-        OuterX0 = [int](7 * $s + $oxs); OuterY0 = [int](7 * $s + $oys)
-        OuterX1 = [int](41 * $s + $oxs); OuterY1 = [int](41 * $s + $oys)
-        OuterR = [math]::Max(2, [int](9 * $s))
+    return @{
+        OuterX0 = [int](10 * $s + $oxs); OuterY0 = [int](10 * $s + $oys)
+        OuterX1 = [int](38 * $s + $oxs); OuterY1 = [int](38 * $s + $oys)
+        OuterR = [math]::Max(2, [int](8 * $s))
         InnerCx = 24 * $s + $oxs; InnerCy = 23 * $s + $oys
-        InnerR = [math]::Max(3, 13 * $s)
+        InnerR = [math]::Max(3, 12 * $s)
         LedCx = 24 * $s + $oxs; LedCy = 33.5 * $s + $oys
         LedR = [math]::Max(1, 2.0 * $s)
         S = $s; Oxs = $oxs; Oys = $oys
@@ -245,8 +278,8 @@ function Get-EqualizerInnerColor([bool]$Dim) {
     return [Drawing.Color]::FromArgb(255, 252, 253, 255)
 }
 
-function Get-EqualizerPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
-    $G = Get-EqualizerGeom $Size -Ox $Ox -Oy $Oy -Scale $Scale
+function Get-EqualizerPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0, [bool]$MaxFill = $false) {
+    $G = Get-EqualizerGeom $Size -Ox $Ox -Oy $Oy -Scale $Scale -MaxFill $MaxFill
     if (-not (Test-EqualizerOuter $x $y $G)) { return $null }
     if (Test-EqualizerLed $x $y $G) { return (Get-StatusDotColor $Bright $Dim) }
     if (Test-EqualizerLogoE $x $y $Size $G) {
@@ -306,7 +339,7 @@ function Get-ChargerPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, 
     return $wing
 }
 
-function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim) {
+function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim, [bool]$EqualizerMaxFill = $false) {
     $accent = Get-AccentColor $Bright $Dim
     $green = Get-AccentColor ([Drawing.Color]::FromArgb(255, 46, 160, 67)) $Dim
     $red = Get-AccentColor ([Drawing.Color]::FromArgb(255, 229, 57, 53)) $Dim
@@ -340,7 +373,7 @@ function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing
             if (Test-Circle $x $y $cx $cy ([math]::Max(1.5, $Size * 0.07))) { return $red }
         }
         'equalizer' {
-            $px = Get-EqualizerPixel $x $y $Size $Bright $Dim
+            $px = Get-EqualizerPixel $x $y $Size $Bright $Dim -MaxFill $EqualizerMaxFill
             if ($null -ne $px) { return $px }
         }
         'overview' {
@@ -350,7 +383,7 @@ function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing
             }
         }
         'loadbal' {
-            $px = Get-EqualizerPixel $x $y $Size $Bright $Dim
+            $px = Get-EqualizerPixel $x $y $Size $Bright $Dim -Scale 0.82 -MaxFill $EqualizerMaxFill
             if ($null -ne $px) { return $px }
             if (Test-ArrowLR $x $y $Size) { return $accent }
         }
@@ -358,14 +391,14 @@ function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing
     return $null
 }
 
-function New-EaseeIconV2([int]$Size, [Drawing.Color]$Color, [string]$Kind, [bool]$Dim) {
+function New-EaseeIconV2([int]$Size, [Drawing.Color]$Color, [string]$Kind, [bool]$Dim, [bool]$EqualizerMaxFill = $false) {
     $bmp = New-Object System.Drawing.Bitmap $Size, $Size
     $g = [Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $g.Clear([Drawing.Color]::Transparent)
     for ($y = 0; $y -lt $Size; $y++) {
         for ($x = 0; $x -lt $Size; $x++) {
-            $px = Get-SymbolPixelV2 $Kind $x $y $Size $Color $Dim
+            $px = Get-SymbolPixelV2 $Kind $x $y $Size $Color $Dim $EqualizerMaxFill
             if ($null -ne $px) { $bmp.SetPixel($x, $y, $px) }
         }
     }
@@ -379,6 +412,11 @@ function Save-Png([Drawing.Bitmap]$Bmp, [string]$Path) {
 }
 
 $Lines = New-Object System.Collections.Generic.List[string]
+if ($MyInvocation.InvocationName -ne '.' -and -not $global:EaseeIconsDotSourceOnly) {
+$TempDir = Join-Path $env:TEMP "easee-icons-v2-$([guid]::NewGuid().ToString('N'))"
+New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
+$docsDir = Split-Path $PreviewPath -Parent
+if (-not (Test-Path $docsDir)) { New-Item -ItemType Directory -Path $docsDir -Force | Out-Null }
 foreach ($set in $IconSets) {
     $name = $set.Name
     $desc = $name -replace '^Easee', 'Easee '
@@ -417,3 +455,4 @@ $preview.Dispose()
 
 Write-Output "Created $OutZip with $($IconSets.Count) icon sets"
 Write-Output "Created $PreviewPath"
+}

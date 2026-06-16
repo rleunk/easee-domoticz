@@ -143,7 +143,7 @@ sudo systemctl restart domoticz
 ```
 /home/root/domoticz/plugins/Easee-Domoticz-plugin/
 ├── plugin.py          ← Domoticz laadt dit bestand
-├── Easee_icons.zip    ← custom iconen (automatisch geladen)
+├── Easee_icons_v2.zip    ← custom iconen (automatisch geladen)
 ├── README.md
 ├── INSTALL.md
 ├── install.sh

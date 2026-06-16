@@ -6,6 +6,23 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.5.18] — 2026-06-16
+
+### Gewijzigd
+- **Easee_icons_v2.zip** — definitieve iconenset: P-max productfoto laadpaal met per-functie LED-stripkleuren, Equalizer-max puck (max tegelvulling), subtiele functie-badges (W, i, €, !, Σ, E, L).
+- **plugin.py** — laadt alleen nog `Easee_icons_v2.zip` (geen v1-fallback); versie v10.5.18.
+- **scripts/generate_photo_icon_variants.ps1** — canonieke iconengenerator; `generate_icon_variants.ps1`, `generate_photo_equalizer_variants.ps1` en `generate_icons.py` verwijderd.
+- **Documentatie** — README, INSTALL, icon-secties bijgewerkt; experimentele variant-mappen en `Easee_icons.zip` verwijderd.
+
+### Verwijderd
+- `Easee_icons.zip` (legacy v1)
+- Experimentele icon-varianten (A–U, EQ-A–F) en dubbele preview-zips uit de repo
+
+### Aanbevolen upgrade
+- `git pull` in de pluginmap en herstart het hardware-item. **Upload `Easee_icons_v2.zip` opnieuw** via **Instellingen → Meer opties → Aangepaste pictogrammen** — Domoticz cached iconen.
+
+---
+
 ## [10.5.17] — 2026-06-16
 
 ### Gewijzigd

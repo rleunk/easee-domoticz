@@ -51,9 +51,9 @@ if [[ ! -f "$PLUGIN_DIR/plugin.py" ]]; then
     exit 1
 fi
 
-if [[ ! -f "$PLUGIN_DIR/Easee_icons.zip" ]]; then
-    echo "WARNING: Easee_icons.zip not found in $PLUGIN_DIR"
-    echo "         Custom icons will not load. Run: git -C \"$PLUGIN_DIR\" checkout HEAD -- Easee_icons.zip"
+if [[ ! -f "$PLUGIN_DIR/Easee_icons_v2.zip" ]]; then
+    echo "WARNING: Easee_icons_v2.zip not found in $PLUGIN_DIR"
+    echo "         Custom icons will not load. Run: git -C \"$PLUGIN_DIR\" checkout HEAD -- Easee_icons_v2.zip"
 fi
 
 echo "==> Plugin installed at $PLUGIN_DIR/plugin.py"
