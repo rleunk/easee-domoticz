@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.3.4" author="Richard Leunk" version="10.3.4"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.4.0" author="Richard Leunk" version="10.4.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.3.4</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.4.0</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -108,11 +108,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.3.4] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.4.0] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.3.4] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.3.4] {msg}')
+            Domoticz.Debug(f'[Easee v10.4.0] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.4.0] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -472,6 +472,23 @@ class BasePlugin:
         u = self.resolve_charger_unit(cid, label_key)
         if u is not None:
             Devices[u].Update(nValue=0, sValue=str(value))
+    def update_charger_costs(self, cid, session_cost, day_cost, session_kwh, session_active):
+        u = self.resolve_charger_unit(cid, 'Kosten (Sessie/Dag)')
+        if u is None:
+            return
+        tibber_rate = self.safe_float(self.current_tibber_price().get('total'), 0.0)
+        rate = session_cost / session_kwh if session_kwh > 0 else tibber_rate
+        price_emoji = self.price_emoji(rate, self.state.get('price_cache', {}))
+        text = f'{price_emoji} Sessie: €{self.euro_str(session_cost)} | Dag: €{self.euro_str(day_cost)}'
+        try:
+            is_text = int(Devices[u].SubType) == DEVICE_TYPES['Text']['Subtype']
+        except Exception:
+            is_text = False
+        if is_text:
+            Devices[u].Update(nValue=0, sValue=text[:4000])
+        else:
+            val = session_cost if session_active else day_cost
+            Devices[u].Update(nValue=0, sValue=self.euro_str(val))
     def update_charger_energy(self, cid, label_key, power_w, total_wh):
         u = self.resolve_charger_unit(cid, label_key)
         if u is not None:
@@ -2052,7 +2069,7 @@ class BasePlugin:
             ('Text', 'Status'),
         ]
         if self.tibber_enabled():
-            devices.append(('CustomEUR', 'Kosten (Sessie/Dag)'))
+            devices.append(('Text', 'Kosten (Sessie/Dag)'))
         for typ, label_key in devices:
             name = self.charger_dev_name(display, label_key)
             devid = self.make_charger_device_id(cid, label_key)
@@ -2244,11 +2261,8 @@ class BasePlugin:
         self.update_charger_text(cid, 'Status', status_text)
         
         if self.tibber_enabled():
-            rate = session_cost / session_kwh if session_kwh > 0 else 0.0
-            price_emoji = self.price_emoji(rate, self.state.get('price_cache', {}))
             day_cost = self.safe_float(st.get('day_cost_total', 0.0), 0.0)
-            costs_text = f'{price_emoji} Sessie: €{self.euro_str(session_cost)} | Dag: €{self.euro_str(day_cost)}'
-            self.update_charger_custom(cid, 'Kosten (Sessie/Dag)', costs_text)
+            self.update_charger_costs(cid, session_cost, day_cost, session_kwh, bool(st.get('session_active')))
         
         self.latest_chargers[cid] = {
             'power': power_w,
@@ -2388,7 +2402,7 @@ class BasePlugin:
             total_day_tax = round(sum(v.get('day_tax_cost', 0.0) for v in self.latest_chargers.values()), 2)
 
             price_emoji = self.price_status_emoji()
-            rate = (total_day_cost / total_kwh) if total_kwh > 0 else 0.0
+            rate = self.safe_float(self.current_tibber_price().get('total'), 0.0)
             currency = self.current_tibber_price().get("currency","EUR")
             kosten_samenvatting = f'{price_emoji} {currency}\nKosten: €{self.euro_str(total_day_cost)} | Tarief: €{self.euro_str(rate)}/kWh\nEnergy: €{self.euro_str(total_day_energy)} | Belasting: €{self.euro_str(total_day_tax)}'
             self.update_core_text('Kosten & Samenvatting', kosten_samenvatting)
