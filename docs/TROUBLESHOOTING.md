@@ -4,243 +4,131 @@
 
 ### Plugin laadt niet
 
-**Symptoom**: "Easee" type niet beschikbaar in Hardware menu
+**Symptoom**: *Easee Domoticz plugin* type niet beschikbaar in Hardware menu
 
 **Oorzaken**:
-- ❌ Plugin directory verkeerd geplaatst
-- ❌ Python requests library niet geïnstalleerd
-- ❌ Permissie problemen
-- ❌ Domoticz niet gerestart
+- Plugin directory verkeerd geplaatst
+- Python `requests` library niet geïnstalleerd
+- Permissieproblemen
+- Domoticz niet herstart
 
 **Oplossing**:
+
 ```bash
 # 1. Check locatie
-ls -la /home/domoticz/userdata/plugins/Easee/
+ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
 
 # 2. Install requests
-sudo apt-get install python3-requests
+sudo apt install -y python3-requests
 
-# 3. Fix permissions
-chown -R domoticz:domoticz /home/domoticz/userdata/plugins/Easee/
-
-# 4. Restart
+# 3. Restart
 sudo systemctl restart domoticz
 
-# 5. Check logs
-sudo tail -f /home/domoticz/domoticz.log | grep Easee
+# 4. Check logs
+sudo journalctl -u domoticz -f | grep Easee
 ```
 
 ### Login mislukt
 
-**Symptoom**: "Login mislukt, HTTP 401" in logs
+**Symptoom**: *Login mislukt, HTTP 401* in logs
 
 **Oorzaken**:
-- ❌ Verkeerd username/wachtwoord
-- ❌ Easee account vergrendeld
-- ❌ API rate limit bereikt
+- Verkeerd username/wachtwoord
+- Easee account vergrendeld
+- API rate limit bereikt
 
 **Oplossing**:
-```bash
-# 1. Controleer credentials in Domoticz UI
-# 2. Test direct
-curl -X POST https://api.easee.com/api/accounts/login \
-  -H "Content-Type: application/json" \
-  -d '{"userName":"test@example.com","password":"pass"}'
-
-# 3. Controleer Easee account status
-#    Login op https://easee.com
-
-# 4. Wait 5-10 minutes en retry (rate limit)
-```
+1. Controleer credentials in Domoticz (**Setup → Hardware**)
+2. Test of je kunt inloggen in de Easee-app
+3. Zet **Debug logging** (Mode6) aan voor meer details
+4. Wacht 5–10 minuten en probeer opnieuw (rate limit)
 
 ### Geen devices gemaakt
 
 **Symptoom**: Hardware actief maar geen devices verschijnen
 
 **Oorzaken**:
-- ❌ Geen laadpalen aan account gekoppeld
-- ❌ Site filter elimineert alle palen
-- ❌ Initiële sync nog aan het lopen
+- Geen laadpalen aan account gekoppeld
+- Site filter (Mode5) elimineert alle palen
+- Initiële sync nog bezig
 
 **Oplossing**:
-```bash
-# 1. Check Easee app/website
-#    - Zeker dat palen zichtbaar zijn?
-#    - Palen correct gekoppeld?
+1. Controleer Easee-app — palen zichtbaar en gekoppeld?
+2. Verwijder site filter (Mode5) tijdelijk
+3. Wacht 1–2 minuten na eerste start
+4. Bekijk log: `sudo journalctl -u domoticz -f | grep -i "charger\|Discovery"`
+5. Refresh Domoticz UI (F5)
 
-# 2. Verwijder site filter (Mode5)
+### Custom iconen ontbreken
 
-# 3. Controleer logs
-sudo tail -f /home/domoticz/domoticz.log | grep "Discovery\|charger"
-
-# 4. Wacht 1-2 minuten voor initiële sync
-
-# 5. Refresh Domoticz UI (F5)
-```
-
-### Verkeerde waarden
-
-**Symptoom**: Devices tonen rare getallen, niet-realistisch vermogen
-
-**Oorzaken**:
-- ❌ Easee API teruggave onverwacht format
-- ❌ Data conversie fout
-- ❌ Verbindingsprobleem
+**Symptoom**: Tegels tonen standaard Domoticz-iconen
 
 **Oplossing**:
-```bash
-# 1. Enable Debug modus
-#    Mode6 = "Debug"
+1. Controleer of `Easee_icons.zip` in de pluginmap staat
+2. Herstart het hardware-item
+3. Als automatisch laden mislukt: upload eenmalig via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
+   - Pad: `/home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons.zip`
 
-# 2. Controleer logs voor stack traces
-sudo tail -f /home/domoticz/domoticz.log | grep "Easee v10.2.6"
+Zie [INSTALL.md — Custom iconen](../INSTALL.md#custom-iconen-handmatig-uploaden).
 
-# 3. Controleer API response
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-  https://api.easee.com/api/chargers
+### Geen Equalizer gevonden
 
-# 4. Report issue op GitHub met logs
-```
+1. Zet **Debug logging** op *Debug* (Mode6)
+2. Herstart het hardware-item en bekijk het log
+3. Vul handmatig **Equalizer ID** in bij het IP-veld
+4. Controleer of de Equalizer zichtbaar is in de Easee-app
 
-## Performance Issues
+Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 
-### Hoog CPU gebruik
+### Tibber / kosten-tegels
 
-**Symptoom**: Domoticz neemt veel CPU in
-
-**Oplossing**:
-```bash
-# 1. Verhoog poll interval
-#    Mode1 van 30 naar 60-120 seconden
-
-# 2. Disable Debug modus
-#    Mode6 = "Normal"
-
-# 3. Monitor
-top -p $(pidof domoticz)
-```
-
-### Slow/Laggy Domoticz
-
-**Symptoom**: UI traag, pages laden langzaam
+**Symptoom**: Geen kosten- of tarief-tegels, of *0 €*
 
 **Oplossing**:
-```bash
-# 1. Check disk space
-df -h /home/domoticz/
+- Zonder Tibber-token: kosten-tegels worden niet aangemaakt (verwacht)
+- Met Tibber: controleer token op [developer.tibber.com](https://developer.tibber.com/settings/access-token)
+- Kosten-tile toont *0 €* na upgrade: verwijder **Kosten (Sessie/Dag)**-tile en herstart hardware-item
 
-# 2. Cleanup old logs
-# rm /home/domoticz/domoticz.log.* (keep 1-2)
+### Devices dubbel na herstart
 
-# 3. Verify database
-# cd /home/domoticz && sqlite3 domoticz.db "VACUUM;"
-
-# 4. Increase poll interval
-```
-
-## Tibber Issues
-
-### Tibber token werkt niet
-
-**Symptoom**: "Tibber query http 401" of prijs data verschijnt niet
-
-**Oplossing**:
-```bash
-# 1. Controleer token
-#    - Nog geldig?
-#    - Goede scope (read)?
-
-# 2. Test direct
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{"query":"{ viewer { homes { id } } }"}' \
-  https://api.tibber.com/v1-beta/gql
-
-# 3. Token regenerate op https://developer.tibber.com
-
-# 4. Update in Domoticz (Mode7)
-```
-
-### Tibber disabled
-
-**Symptoom**: "Tibber actief" staat altijd uit
-
-**Oplossing**:
-- Zet token in Mode7
-- Restart plugin (via hardware)
-- Wacht 1-2 poll cycles
+1. Stop het hardware-item
+2. Verwijder dubbele devices handmatig
+3. Start het hardware-item opnieuw
 
 ## Debug Mode
 
-### Enable Debug Logging
+1. Ga naar **Setup → Hardware**
+2. Klik op je Easee hardware-item
+3. Zet **Debug logging** (Mode6) op *Debug*
+4. Klik **Update**
 
-1. Ga naar Setup → Hardware
-2. Klik op "Easee AutoDiscovery v10.1.0"
-3. Zet Mode6 = "Debug"
-4. Klik Update
-
-### Bekijk Logs
+### Logs bekijken
 
 ```bash
-# Real-time logs
-sudo tail -f /home/domoticz/domoticz.log | grep "Easee"
+# Real-time
+sudo journalctl -u domoticz -f | grep "Easee v10.5.8"
 
-# Search specific error
-sudo grep "Easee v10.2.6.*error" /home/domoticz/domoticz.log
-
-# Last 100 lines
-sudo tail -100 /home/domoticz/domoticz.log | grep "Easee"
+# Laatste 100 regels
+sudo journalctl -u domoticz -n 200 | grep Easee
 ```
 
-## Advanced Debugging
+## Performance
 
-### Test API Manually
+- Verhoog poll interval (Mode1) naar 60–120 sec bij hoog CPU-gebruik
+- Zet Debug logging op *Normal* als je niet troubleshoott
 
-```bash
-# 1. Get access token
-TOKEN=$(curl -s -X POST https://api.easee.com/api/accounts/login \
-  -H "Content-Type: application/json" \
-  -d '{"userName":"user@example.com","password":"pass"}' \
-  | python3 -c "import sys, json; print(json.load(sys.stdin)['accessToken'])")
-
-# 2. Get chargers
-curl -H "Authorization: Bearer $TOKEN" \
-  https://api.easee.com/api/chargers | python3 -m json.tool
-
-# 3. Get charger state
-curl -H "Authorization: Bearer $TOKEN" \
-  https://api.easee.com/api/chargers/CHARGER_ID/state | python3 -m json.tool
-```
-
-### Reset State
-
-Wil je alles reset?
+## Reset state
 
 ```bash
-# 1. Stop Domoticz
 sudo systemctl stop domoticz
-
-# 2. Verwijder state file
-rm /home/domoticz/userdata/plugins/Easee/easee_v9_0_state.json
-
-# 3. Optioneel: verwijder devices en start opnieuw
-# In Domoticz UI: Hardware → Edit → Delete
-
-# 4. Start opnieuw
+rm /home/root/domoticz/plugins/Easee-Domoticz-plugin/easee_v9_0_state.json
 sudo systemctl start domoticz
-
-# 5. Re-add hardware
 ```
 
-## Contacteer Support
+## Support
 
-Heb je nog steeds probleem? Open een issue:
+- **GitHub Issues**: https://github.com/rleunk/easee-domoticz/issues
+- **Installatie**: [INSTALL.md](../INSTALL.md)
+- **Domoticz Forum**: https://www.domoticz.com/forum/
 
-- 🐛 **GitHub Issues**: https://github.com/rleunk/easee-domoticz/issues
-- 💬 **Domoticz Forum**: https://www.domoticz.com/forum/
-- 📧 **Easee Support**: https://easee.com/support
-
-Include:
-- Plugin versie (v10.1.0)
-- Domoticz versie (`cat /home/domoticz/Version.txt`)
-- Relevante logs (met sensieve data verwijderd)
-- Stappen om te reproduceren
+Bij een issue: pluginversie (**v10.5.8**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).

@@ -1,31 +1,30 @@
-# Easee Domoticz Plugin - v10.3.2 Release
+# Easee Domoticz plugin — v10.5.8
 
-## 📦 Release Notes
-
-**Versie**: 10.3.2  
+**Versie**: 10.5.8  
 **Status**: ✅ Production Ready  
-**Release Date**: 2026-06-15
+**Release date**: 2026-06-16
 
-### Hoofdfix: Hoofdzekering limiet (23 A)
+## Samenvatting
 
-De ingestelde **Main fuse limit** in Easee Control komt uit API-veld **`circuit.fuse`** op het root-circuit — niet uit MaxPowerImport (17,2 kW ≈ 25 A zekeringgrootte).
+Cosmetische release: pluginweergavenaam is nu **Easee Domoticz plugin** (kleine *p* in *plugin*) met versienummer in het type en in de hardwarebeschrijving. Documentatie gesynchroniseerd; `externallink` wijst naar de GitHub-repo.
 
-### Installatie (Domoticz)
+## Gewijzigd
 
-1. Download `easee-domoticz-v10.3.2.zip`
-2. Pak uit in Downloads
-3. Kopieer **alle inhoud** van map `easee-domoticz-v10.3.2-build/` naar je plugin-map (bijv. `domoticz/plugins/Easee-Domoticz-plugin/`)
-4. Herstart Domoticz (Setup → Herstart systeem, of `sudo systemctl restart domoticz`)
+- **Type in Hardware** — `Easee Domoticz plugin v10.5.8`
+- **Beschrijving** — `<h2>Easee Domoticz plugin v10.5.8</h2>` bij product-URL
+- **externallink** — https://github.com/rleunk/easee-domoticz
+- **Documentatie** — README, INSTALL, CHANGELOG en docs/ bijgewerkt
 
-### Verwachte Equalizer-tegel
+## Installatie / upgrade
 
+```bash
+cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+git pull
+sudo systemctl restart domoticz
 ```
-✅ Equalizer online
-⚖️ Load balancing: Aan
-🔌 eMobility limiet: 21 A
-🏠 Hoofdzekering: 25 A
-⚡ Hoofdzekering limiet: 23 A
-📈 Max import: 17.2 kW (~25 A)
-📊 L1/L2/L3: — / 4.0 / — A
-🔥 Huisvermogen: 802 W
-```
+
+Of volg **[INSTALL.md](INSTALL.md)** voor eerste installatie.
+
+**Iconen ontbreken na upgrade?** Upload `Easee_icons.zip` eenmalig via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**.
+
+Zie [CHANGELOG.md](CHANGELOG.md) voor de volledige versiegeschiedenis.

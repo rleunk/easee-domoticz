@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Easee AutoDiscovery Compact — install/update script for Domoticz (Debian)
+# Easee Domoticz plugin — install/update script for Domoticz (Debian)
 # Usage:
 #   ./install.sh              # clone or pull, then restart Domoticz
 #   ./install.sh --no-restart   # skip Domoticz restart
