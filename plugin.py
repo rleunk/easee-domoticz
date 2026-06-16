@@ -50,6 +50,7 @@ LOGIN_URL = BASE_URL + '/accounts/login'
 REFRESH_URL = BASE_URL + '/accounts/refresh_token'
 TIBBER_GQL = 'https://api.tibber.com/v1-beta/gql'
 STATE_FILE = 'easee_v9_0_state.json'
+PLUGIN_KEY = 'EaseeCloudAutoDiscoveryV1000'
 ULTRA_DEBUG = False
 
 OP_MODE_LABELS = {
@@ -390,42 +391,60 @@ class BasePlugin:
         if 'totaal & sessie' in n or ' laden' in n or 'totaal kwh' in n:
             return 'EaseePower'
         return 'EaseeCharger'
+    def icon_base(self, root):
+        return f'{PLUGIN_KEY}{root}'
     def load_custom_images(self):
         roots = ['EaseeCharger','EaseeEqualizer','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
+        bases = [self.icon_base(r) for r in roots]
         candidates = ['Easee_icons.zip','Easee_v10_5_icons.zip','Easee_v10_0_icons.zip','Easee_v9_0_icons.zip','Easee_v8_0_3_icons.zip','Easee_v8_0_2_icons.zip','Easee_v8_0_1_icons.zip','Easee_v8_icons.zip','Easee.zip']
         loaded_zip = None
         load_errors = []
+        found_zips = []
         for fn in candidates:
             path = os.path.join(self.plugin_dir, fn)
             if not os.path.isfile(path):
                 continue
+            found_zips.append(fn)
             try:
-                if any(r not in Images for r in roots):
+                if any(b not in Images for b in bases):
+                    self.log(f'Custom icons laden uit {fn} (map: {self.plugin_dir})')
                     try:
-                        Domoticz.Image(fn).Create()
+                        Domoticz.Image(Filename=fn).Create()
                     except Exception as e:
-                        load_errors.append(f'{fn}: {e}')
-                        self.debug(f'custom image zip load failed ({fn}): {e}')
+                        msg = f'{fn}: Create() mislukt: {e}'
+                        load_errors.append(msg)
+                        self.error(msg)
                         continue
-                for r in roots:
-                    if r in Images:
-                        self.image_ids[r] = Images[r].ID
+                for r, base in zip(roots, bases):
+                    if base in Images:
+                        self.image_ids[r] = Images[base].ID
+                    else:
+                        self.debug(f'icon base ontbreekt in Images na laden: {base}')
                 if self.image_ids:
                     loaded_zip = fn
                     break
+                missing = [b for b in bases if b not in Images]
+                if missing:
+                    load_errors.append(f'{fn}: icons niet in Images ({", ".join(missing[:3])}{"..." if len(missing) > 3 else ""})')
             except Exception as e:
-                load_errors.append(f'{fn}: {e}')
-                self.debug(f'custom images error ({fn}): {e}')
+                msg = f'{fn}: {e}'
+                load_errors.append(msg)
+                self.error(msg)
         if self.image_ids:
             self.log(f'Custom icons geladen: {len(self.image_ids)} sets' + (f' ({loaded_zip})' if loaded_zip else ''))
+        elif found_zips:
+            self.log('Waarschuwing: custom icon zip gevonden maar laden mislukt — standaard Domoticz iconen worden gebruikt')
+            self.log(f'Icon zip zoekpad: {self.plugin_dir}')
+            for fn in found_zips:
+                self.log(f'  {fn}: aanwezig')
+            if load_errors:
+                self.log('Icon zip laden mislukt: ' + '; '.join(load_errors))
         else:
             self.log('Waarschuwing: geen custom icon zip gevonden — standaard Domoticz iconen worden gebruikt')
             self.log(f'Icon zip zoekpad: {self.plugin_dir}')
             for fn in candidates:
                 path = os.path.join(self.plugin_dir, fn)
                 self.log(f'  {fn}: {"aanwezig" if os.path.isfile(path) else "ontbreekt"}')
-            if load_errors:
-                self.log('Icon zip laden mislukt: ' + '; '.join(load_errors))
 
     def apply_images_to_devices(self):
         if not self.image_ids:

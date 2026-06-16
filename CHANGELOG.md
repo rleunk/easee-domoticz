@@ -6,8 +6,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [10.5.6] — 2026-06-16
 
+### Opgelost
+- **Custom icon zip laden** — Domoticz registreert iconen onder de `Base`-waarde uit `icons.txt` (`EaseeCloudAutoDiscoveryV1000EaseeCharger`), niet onder de korte naam (`EaseeCharger`). De plugin zocht op de verkeerde sleutel in `Images`, waardoor `Create()` wel kon slagen maar `image_ids` leeg bleef en ten onrechte "geen custom icon zip gevonden" verscheen.
+
 ### Gewijzigd
-- **Icon zip diagnostiek** — bij ontbrekende custom iconen logt de plugin nu `plugin_dir` en per kandidaat of het zip-bestand aanwezig is of ontbreekt; bij laadfouten verschijnt de foutmelding in het normale log (niet alleen debug).
+- **Icon zip diagnostiek** — onderscheid tussen zip ontbreekt vs. zip aanwezig maar laden mislukt; logt `plugin_dir`, poging tot laden, en `Create()`-fouten op normaal logniveau.
 
 ### Aanbevolen upgrade
 - `git pull` in de pluginmap (controleer daarna `ls -la Easee_icons.zip`) en herstart het hardware-item of Domoticz.
