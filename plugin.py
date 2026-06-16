@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.5.0" author="Richard Leunk" version="10.5.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee AutoDiscovery Compact v10.5.1" author="Richard Leunk" version="10.5.1"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
-        <h2>Easee AutoDiscovery Compact v10.5.0</h2><br/>
+        <h2>Easee AutoDiscovery Compact v10.5.1</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -108,11 +108,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.5.0] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.5.1] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.5.0] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.5.0] {msg}')
+            Domoticz.Debug(f'[Easee v10.5.1] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.5.1] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -187,6 +187,21 @@ class BasePlugin:
             return int(round(float(value) * 1000.0))
         except Exception:
             return 0
+    def poll_interval_sec(self):
+        return max(10, self.safe_int(Parameters.get('Mode1', '30'), 30))
+    def session_energy_kwh(self, values, session):
+        for source in (values, session if isinstance(session, dict) else {}):
+            if not isinstance(source, dict):
+                continue
+            val = source.get('sessionEnergy')
+            if val is not None:
+                return self.kwh_value(val)
+        return None
+    def power_integrated_kwh(self, power_w):
+        if power_w <= 50:
+            return 0.0
+        interval = float(self.poll_interval_sec())
+        return round((float(power_w) / 1000.0) * (interval / 3600.0), 6)
     def short_id(self, full_id):
         s = str(full_id).strip()
         return s[-8:] if len(s) > 8 else s
@@ -1820,6 +1835,7 @@ class BasePlugin:
         store = self.state.setdefault('chargers', {})
         st = store.setdefault(cid, {
             'prev_total_kwh': None,
+            'prev_session_kwh': None,
             'session_active': False,
             'session_start_ts': None,
             'session_start_kwh': None,
@@ -2206,22 +2222,23 @@ class BasePlugin:
         if session_status and not str(session_status).strip().isdigit():
             status_label = str(session_status)
         session_active = bool(session) or power_w > 50
+        api_session_kwh = self.session_energy_kwh(values, session)
 
         st = self.charger_state(cid)
         prev_total = st.get('prev_total_kwh')
-        delta_kwh = 0.0
-        if prev_total is not None:
-            delta_kwh = max(0.0, float(total_kwh) - float(prev_total))
 
         if session_active and not st.get('session_active'):
             st['session_active'] = True
             st['session_start_ts'] = self.now_ts()
             st['session_start_kwh'] = total_kwh
+            st['prev_session_kwh'] = api_session_kwh if api_session_kwh is not None else None
             st['session_cost_total'] = 0.0
             st['session_cost_energy'] = 0.0
             st['session_cost_tax'] = 0.0
         elif (not session_active) and st.get('session_active'):
-            if st.get('session_start_kwh') is not None:
+            if api_session_kwh is not None:
+                st['last_session_kwh'] = api_session_kwh
+            elif st.get('session_start_kwh') is not None:
                 st['last_session_kwh'] = max(0.0, float(total_kwh) - float(st.get('session_start_kwh')))
             st['last_session_cost_total'] = self.safe_float(st.get('session_cost_total', 0.0), 0.0)
             st['last_session_cost_energy'] = self.safe_float(st.get('session_cost_energy', 0.0), 0.0)
@@ -2230,6 +2247,18 @@ class BasePlugin:
             st['session_active'] = False
             st['session_start_ts'] = None
             st['session_start_kwh'] = None
+            st['prev_session_kwh'] = None
+
+        delta_kwh = 0.0
+        if session_active and api_session_kwh is not None:
+            prev_session = st.get('prev_session_kwh')
+            if prev_session is not None:
+                delta_kwh = max(0.0, float(api_session_kwh) - float(prev_session))
+            st['prev_session_kwh'] = api_session_kwh
+        elif prev_total is not None:
+            delta_kwh = max(0.0, float(total_kwh) - float(prev_total))
+        if delta_kwh <= 0 and session_active and power_w > 50 and api_session_kwh is None:
+            delta_kwh = self.power_integrated_kwh(power_w)
 
         if self.tibber_enabled() and delta_kwh > 0:
             price = self.current_tibber_price()
@@ -2247,8 +2276,13 @@ class BasePlugin:
                 st['session_cost_energy'] = round(self.safe_float(st.get('session_cost_energy', 0.0), 0.0) + add_energy, 4)
                 st['session_cost_tax'] = round(self.safe_float(st.get('session_cost_tax', 0.0), 0.0) + add_tax, 4)
 
-        if st.get('session_active') and st.get('session_start_kwh') is not None:
-            session_kwh = max(0.0, float(total_kwh) - float(st.get('session_start_kwh')))
+        if st.get('session_active'):
+            if api_session_kwh is not None:
+                session_kwh = api_session_kwh
+            elif st.get('session_start_kwh') is not None:
+                session_kwh = max(0.0, float(total_kwh) - float(st.get('session_start_kwh')))
+            else:
+                session_kwh = 0.0
             laadduur = self.compute_duration_text(st.get('session_start_ts'))
             session_cost = self.safe_float(st.get('session_cost_total', 0.0), 0.0)
             session_cost_energy = self.safe_float(st.get('session_cost_energy', 0.0), 0.0)

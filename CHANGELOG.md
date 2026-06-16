@@ -4,6 +4,16 @@ Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [10.5.1] — 2026-06-16
+
+### Opgelost
+- **Kosten tijdens laden na schone installatie** — sessie- en dagkosten bleven €0,00 omdat alleen `lifetimeEnergy`-delta's werden gebruikt; die waarde verandert tijdens een actieve sessie vaak niet in de state-API. Kosten en sessie-kWh gebruiken nu `sessionEnergy` (state/ongoing session) met fallback op vermogensintegratie.
+
+### Aanbevolen upgrade
+- Upgrade vanaf v10.5.0: vervang alleen `plugin.py` en herstart het hardware-item.
+
+---
+
 ## [10.5.0] — 2026-06
 
 ### Toegevoegd
