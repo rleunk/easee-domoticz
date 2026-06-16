@@ -149,7 +149,7 @@ function Get-ChargerPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, 
 function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim) {
     $puck = if ($Dim) { [Drawing.Color]::FromArgb(200, 160, 163, 168) } else { [Drawing.Color]::FromArgb(255, 235, 237, 240) }
     $accent = Get-AccentColor $Bright $Dim
-    $green = Get-AccentColor ([Drawing.Color]::FromArgb(255, 46, 204, 64)) $Dim
+    $green = Get-AccentColor ([Drawing.Color]::FromArgb(255, 46, 160, 67)) $Dim
     $red = Get-AccentColor ([Drawing.Color]::FromArgb(255, 229, 57, 53)) $Dim
 
     switch ($Kind) {
