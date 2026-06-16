@@ -4,15 +4,26 @@ Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [10.5.9] — 2026-06-16
+
+### Gewijzigd
+- **Documentatie** — `RELEASE_NOTES.md` verwijderd; release-informatie staat alleen nog in `CHANGELOG.md`.
+- **Custom icon zip** — `load_custom_images()` zoekt alleen nog `Easee_icons.zip` (verouderde fallback-bestandsnamen verwijderd).
+
+### Aanbevolen upgrade
+- `git pull` in de pluginmap en herstart het hardware-item of Domoticz.
+
+---
 ## [10.5.8] — 2026-06-16
 
 ### Gewijzigd
 - **Pluginweergavenaam** — Type en beschrijving tonen nu **Easee Domoticz plugin v10.5.8** (kleine *p* in *plugin*); versienummer in `<h2>` bij product-URL.
 - **externallink** — wijst naar [github.com/rleunk/easee-domoticz](https://github.com/rleunk/easee-domoticz).
-- **Documentatie** — README, INSTALL, CHANGELOG, RELEASE_NOTES en docs/ gesynchroniseerd; verouderde *Easee AutoDiscovery Compact*-verwijzingen verwijderd.
+- **Documentatie** — README, INSTALL, CHANGELOG en docs/ gesynchroniseerd; verouderde *Easee AutoDiscovery Compact*-verwijzingen verwijderd.
 
 ### Aanbevolen upgrade
 - `git pull` in de pluginmap en herstart het hardware-item of Domoticz.
+- Als iconen na upgrade nog ontbreken: upload `Easee_icons.zip` eenmalig via **Instellingen → Meer opties → Aangepaste pictogrammen**.
 
 ---
 

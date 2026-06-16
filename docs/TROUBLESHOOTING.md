@@ -106,7 +106,7 @@ Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 
 ```bash
 # Real-time
-sudo journalctl -u domoticz -f | grep "Easee v10.5.8"
+sudo journalctl -u domoticz -f | grep "Easee v10.5.9"
 
 # Laatste 100 regels
 sudo journalctl -u domoticz -n 200 | grep Easee
@@ -131,4 +131,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Domoticz Forum**: https://www.domoticz.com/forum/
 
-Bij een issue: pluginversie (**v10.5.8**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).
+Bij een issue: pluginversie (**v10.5.9**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).

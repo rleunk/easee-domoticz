@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.5.8" author="Richard Leunk" version="10.5.8"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.5.9" author="Richard Leunk" version="10.5.9"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.5.8</h2><br/>
+        <h2>Easee Domoticz plugin v10.5.9</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -109,11 +109,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.5.8] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.5.9] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.5.8] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.5.8] {msg}')
+            Domoticz.Debug(f'[Easee v10.5.9] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.5.9] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -423,7 +423,7 @@ class BasePlugin:
 
     def load_custom_images(self):
         roots = ['EaseeCharger','EaseeEqualizer','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
-        candidates = ['Easee_icons.zip','Easee_v10_5_icons.zip','Easee_v10_0_icons.zip','Easee_v9_0_icons.zip','Easee_v8_0_3_icons.zip','Easee_v8_0_2_icons.zip','Easee_v8_0_1_icons.zip','Easee_v8_icons.zip','Easee.zip']
+        candidates = ['Easee_icons.zip']
         loaded_zip = None
         load_errors = []
         found_zips = []
