@@ -48,6 +48,11 @@ function Test-Trapezoid([int]$x, [int]$y, [double]$x0t, [double]$x1t, [double]$y
     return ($x -ge $left) -and ($x -le $right)
 }
 
+function Test-Ellipse([int]$x, [int]$y, [double]$cx, [double]$cy, [double]$rx, [double]$ry) {
+    if ($rx -le 0 -or $ry -le 0) { return $false }
+    (($x - $cx) * ($x - $cx)) / ($rx * $rx) + (($y - $cy) * ($y - $cy)) / ($ry * $ry) -le 1.0
+}
+
 function Get-AccentColor([Drawing.Color]$Color, [bool]$Dim) {
     if ($Dim) {
         return [Drawing.Color]::FromArgb(200,
@@ -88,24 +93,33 @@ function Get-ChargerGeom([int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$
         CapY0 = [int](5 * $s + $oys); CapY1 = [int](12 * $s + $oys)
         OuterX0t = [int](10 * $s + $oxs); OuterX1t = [int](38 * $s + $oxs)
         OuterYt = [int](12 * $s + $oys)
-        OuterX0b = [int](21 * $s + $oxs); OuterX1b = [int](27 * $s + $oxs)
-        OuterYb = [int](42 * $s + $oys)
+        OuterX0m = [int](16 * $s + $oxs); OuterX1m = [int](32 * $s + $oxs)
+        OuterYm = [int](39 * $s + $oys)
+        TipCx = 24 * $s + $oxs; TipCy = 41.5 * $s + $oys
+        TipRx = 4.5 * $s; TipRy = 2.8 * $s
+        TipY0 = [int](37 * $s + $oys)
         CapR = [math]::Max(1, [int](3.5 * $s))
         PanelX0t = [int](15 * $s + $oxs); PanelX1t = [int](33 * $s + $oxs)
         PanelYt = [int](14 * $s + $oys)
-        PanelX0b = [int](20 * $s + $oxs); PanelX1b = [int](28 * $s + $oxs)
-        PanelYb = [int](38 * $s + $oys)
-        SocketCy = [int](41.5 * $s + $oys)
-        SocketR = [math]::Max(1, [int](1.6 * $s))
+        PanelX0b = [int](19 * $s + $oxs); PanelX1b = [int](29 * $s + $oxs)
+        PanelYb = [int](36 * $s + $oys)
+        SocketCx = 24 * $s + $oxs; SocketCy = 41 * $s + $oys
+        SocketR = [math]::Max(1, 2 * $s)
         Cx = [int](24 * $s + $oxs)
         S = $s; Oxs = $oxs; Oys = $oys
     }
 }
 
+function Test-ChargerBottomTip([int]$x, [int]$y, [hashtable]$G) {
+    if ($y -lt $G.TipY0) { return $false }
+    Test-Ellipse $x $y $G.TipCx $G.TipCy $G.TipRx $G.TipRy
+}
+
 function Test-ChargerShield([int]$x, [int]$y, [hashtable]$G) {
     $cap = Test-RoundedRect $x $y $G.OuterX0t $G.CapY0 $G.OuterX1t $G.CapY1 $G.CapR
-    $body = Test-Trapezoid $x $y $G.OuterX0t $G.OuterX1t $G.OuterYt $G.OuterX0b $G.OuterX1b $G.OuterYb
-    $cap -or $body
+    $body = Test-Trapezoid $x $y $G.OuterX0t $G.OuterX1t $G.OuterYt $G.OuterX0m $G.OuterX1m $G.OuterYm
+    $tip = Test-ChargerBottomTip $x $y $G
+    $cap -or $body -or $tip
 }
 
 function Test-ChargerPanel([int]$x, [int]$y, [hashtable]$G) {
@@ -113,26 +127,31 @@ function Test-ChargerPanel([int]$x, [int]$y, [hashtable]$G) {
 }
 
 function Test-ChargerSocket([int]$x, [int]$y, [hashtable]$G) {
-    Test-Circle $x $y $G.Cx $G.SocketCy $G.SocketR
+    Test-Circle $x $y $G.SocketCx $G.SocketCy $G.SocketR
 }
 
 function Test-ChargerLedLine([int]$x, [int]$y, [int]$Size, [hashtable]$G) {
     $cx = $G.Cx; $s = $G.S; $oys = $G.Oys
+    $ledW = if ($Size -le 16) { [math]::Max(1, [int][math]::Round(1.25 * $s)) } else { [math]::Max(1, [int][math]::Round(1.75 * $s)) }
+    $ledX0 = $cx - [int][math]::Floor($ledW / 2.0)
+    $ledX1 = $cx + [int][math]::Floor(($ledW - 1) / 2.0)
     if ($Size -le 16) {
         $y0 = [int](14 * $s + $oys); $y1 = [int](22 * $s + $oys)
-        return ($y -ge $y0) -and ($y -le $y1) -and ([math]::Abs($x - $cx) -le [math]::Max(0, [int](0.5 * $s)))
+    } else {
+        $y0 = [int](17 * $s + $oys); $y1 = [int](32 * $s + $oys)
     }
-    $half = if ($Size -ge 48) { 0 } else { [math]::Max(0, [int][math]::Round(0.5 * $s)) }
-    $y0 = [int](18 * $s + $oys); $y1 = [int](30 * $s + $oys)
-    return ($y -ge $y0) -and ($y -le $y1) -and ([math]::Abs($x - $cx) -le $half)
+    return ($y -ge $y0) -and ($y -le $y1) -and ($x -ge $ledX0) -and ($x -le $ledX1)
 }
 
 function Test-ChargerLedOutline([int]$x, [int]$y, [int]$Size, [hashtable]$G) {
     if ($Size -lt 32) { return $false }
     $cx = $G.Cx; $s = $G.S; $oys = $G.Oys
-    $y0 = [int](18 * $s + $oys); $y1 = [int](30 * $s + $oys)
+    $ledW = [math]::Max(1, [int][math]::Round(1.75 * $s))
+    $ledX0 = $cx - [int][math]::Floor($ledW / 2.0)
+    $ledX1 = $cx + [int][math]::Floor(($ledW - 1) / 2.0)
+    $y0 = [int](17 * $s + $oys); $y1 = [int](32 * $s + $oys)
     if (-not (($y -ge $y0) -and ($y -le $y1))) { return $false }
-    if ([math]::Abs($x - $cx) -ne 1) { return $false }
+    if (($x -ne ($ledX0 - 1)) -and ($x -ne ($ledX1 + 1))) { return $false }
     Test-ChargerPanel $x $y $G
 }
 
@@ -190,7 +209,7 @@ function Get-ChargerPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, 
     $wing = if ($Dim) { [Drawing.Color]::FromArgb(200, 52, 54, 58) } else { [Drawing.Color]::FromArgb(255, 18, 18, 20) }
     $panel = if ($Dim) { [Drawing.Color]::FromArgb(200, 86, 88, 92) } else { [Drawing.Color]::FromArgb(255, 118, 120, 124) }
     $led = Get-LedStripColor $Bright $Dim $Kind
-    $ledAlpha = if ($Dim) { 140 } else { 178 }
+    $ledAlpha = if ($Dim) { 170 } else { 204 }
     $outline = [Drawing.Color]::FromArgb(255, 38, 40, 44)
 
     if (-not (Test-ChargerShield $x $y $G)) { return $null }
@@ -209,7 +228,7 @@ function Get-ChargerPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, 
     }
 
     if (Test-ChargerSocket $x $y $G) {
-        return Get-BlendColor $wing ([Drawing.Color]::FromArgb(255, 0, 0, 0)) 0.25
+        return Get-BlendColor $wing ([Drawing.Color]::FromArgb(255, 0, 0, 0)) 0.45
     }
 
     return $wing

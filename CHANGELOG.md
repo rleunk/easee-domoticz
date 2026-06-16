@@ -6,6 +6,18 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.5.14] — 2026-06-16
+
+### Gewijzigd
+- **Easee_icons_v2.zip** — Charge-silhouet onderkant: afgerond schildpunt met zichtbare zwarte vleugels (geen scherpe V-inkeping); subtiele kabelaansluiting onderaan; LED-strip iets groter (~2px × ~15px bij 48px, ~80% opacity).
+- **scripts/generate_icons.py / .ps1** — shield-tip cirkelgeometrie, panel stopt hoger (y=35), grotere socket-hint.
+- **docs/icon-preview-v2.png** — bijgewerkt.
+
+### Aanbevolen upgrade
+- `git pull` in de pluginmap en herstart het hardware-item. **Upload `Easee_icons_v2.zip` opnieuw** via **Instellingen → Meer opties → Aangepaste pictogrammen** — Domoticz cached iconen.
+
+---
+
 ## [10.5.13] — 2026-06-16
 
 ### Gewijzigd
