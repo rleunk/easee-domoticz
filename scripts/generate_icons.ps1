@@ -1,5 +1,7 @@
 # Generate Easee_icons_v2.zip (Domoticz custom icon format — Easee hardware silhouettes)
+
 $ErrorActionPreference = 'Stop'
+
 Add-Type -AssemblyName System.Drawing
 
 $OutZip = Join-Path (Split-Path $PSScriptRoot -Parent) 'Easee_icons_v2.zip'
@@ -10,7 +12,7 @@ $docsDir = Split-Path $PreviewPath -Parent
 if (-not (Test-Path $docsDir)) { New-Item -ItemType Directory -Path $docsDir -Force | Out-Null }
 
 $IconSets = @(
-    @{ Name = 'EaseeCharger';   Color = [Drawing.Color]::FromArgb(255, 46, 204, 64);  Kind = 'charger' }
+    @{ Name = 'EaseeCharger';   Color = [Drawing.Color]::FromArgb(255, 46, 160, 67);  Kind = 'charger' }
     @{ Name = 'EaseeEqualizer'; Color = [Drawing.Color]::FromArgb(255, 142, 68, 173); Kind = 'equalizer' }
     @{ Name = 'EaseePower';     Color = [Drawing.Color]::FromArgb(255, 255, 193, 7);  Kind = 'power' }
     @{ Name = 'EaseeStatus';    Color = [Drawing.Color]::FromArgb(255, 33, 150, 243); Kind = 'status' }
@@ -23,9 +25,11 @@ $IconSets = @(
 function Test-Circle([int]$x, [int]$y, [double]$cx, [double]$cy, [double]$r) {
     (($x - $cx) * ($x - $cx) + ($y - $cy) * ($y - $cy)) -le ($r * $r)
 }
+
 function Test-Rect([int]$x, [int]$y, [double]$x0, [double]$y0, [double]$x1, [double]$y1) {
     ($x -ge $x0) -and ($x -le $x1) -and ($y -ge $y0) -and ($y -le $y1)
 }
+
 function Test-RoundedRect([int]$x, [int]$y, [double]$x0, [double]$y0, [double]$x1, [double]$y1, [double]$r) {
     if (-not (Test-Rect $x $y $x0 $y0 $x1 $y1)) { return $false }
     if (($x -le ($x0 + $r)) -and ($y -le ($y0 + $r))) { return (Test-Circle $x $y ($x0 + $r) ($y0 + $r) $r) }
@@ -34,6 +38,7 @@ function Test-RoundedRect([int]$x, [int]$y, [double]$x0, [double]$y0, [double]$x
     if (($x -ge ($x1 - $r)) -and ($y -ge ($y1 - $r))) { return (Test-Circle $x $y ($x1 - $r) ($y1 - $r) $r) }
     return $true
 }
+
 function Test-Trapezoid([int]$x, [int]$y, [double]$x0t, [double]$x1t, [double]$yt, [double]$x0b, [double]$x1b, [double]$yb) {
     if ($y -lt $yt -or $y -gt $yb) { return $false }
     if ($yb -eq $yt) { return (Test-Rect $x $y $x0t $yt $x1t $yt) }
@@ -53,11 +58,26 @@ function Get-AccentColor([Drawing.Color]$Color, [bool]$Dim) {
     return $Color
 }
 
-function Blend-Toward([Drawing.Color]$Color, [Drawing.Color]$Target, [double]$Amount) {
-    return [Drawing.Color]::FromArgb($Color.A,
-        [int]($Color.R + ($Target.R - $Color.R) * $Amount),
-        [int]($Color.G + ($Target.G - $Color.G) * $Amount),
-        [int]($Color.B + ($Target.B - $Color.B) * $Amount))
+function Get-BlendColor([Drawing.Color]$From, [Drawing.Color]$To, [double]$Amount) {
+    [Drawing.Color]::FromArgb($From.A,
+        [int]($From.R + ($To.R - $From.R) * $Amount),
+        [int]($From.G + ($To.G - $From.G) * $Amount),
+        [int]($From.B + ($To.B - $From.B) * $Amount))
+}
+
+function Get-LedStripColor([Drawing.Color]$Accent, [bool]$Dim, [string]$Kind) {
+    $gray = [Drawing.Color]::FromArgb(255, 102, 102, 102)
+    if ($Dim) {
+        if ($Kind -eq 'charger') { return [Drawing.Color]::FromArgb(200, 102, 102, 102) }
+        return Get-BlendColor (Get-AccentColor $Accent $true) $gray 0.35
+    }
+    return $Accent
+}
+
+function Get-StatusDotColor([Drawing.Color]$Accent, [bool]$Dim) {
+    $gray = [Drawing.Color]::FromArgb(255, 102, 102, 102)
+    if ($Dim) { return Get-BlendColor (Get-AccentColor $Accent $true) $gray 0.55 }
+    return $Accent
 }
 
 function Test-ChargerBody([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
@@ -77,11 +97,10 @@ function Test-ChargerLed([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]
     if ($Size -le 16) {
         $y0 = [int](8 * $s + $oys); $y1 = [int](38 * $s + $oys)
         if (($y -ge $y0) -and ($y -le $y1) -and ([math]::Abs($x - $cx) -le [math]::Max(0, [int](0.6 * $s)))) { return $true }
-        $cy = [int](22 * $s + $oys)
-        $r = [math]::Max(1, [int](1.8 * $s))
+        $cy = [int](22 * $s + $oys); $r = [math]::Max(1, [int](1.8 * $s))
         return (Test-Circle $x $y $cx $cy $r)
     }
-    return (Test-Rect $x $y ([int](22 * $s + $oxs)) ([int](7 * $s + $oys)) ([int](26 * $s + $oxs)) ([int](40 * $s + $oys)))
+    Test-Rect $x $y ([int](22 * $s + $oxs)) ([int](7 * $s + $oys)) ([int](26 * $s + $oxs)) ([int](40 * $s + $oys))
 }
 
 function Test-EqualizerPuck([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
@@ -90,12 +109,14 @@ function Test-EqualizerPuck([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [doub
     $r = [math]::Max(2, [int](8 * $s))
     Test-RoundedRect $x $y ([int](10 * $s + $oxs)) ([int](10 * $s + $oys)) ([int](38 * $s + $oxs)) ([int](38 * $s + $oys)) $r
 }
+
 function Test-EqualizerLed([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
     $s = ($Size / 48.0) * $Scale
     $cx = [int](24 * $s + $Ox * $s); $cy = [int](40 * $s + $Oy * $s)
     $r = [math]::Max(1, [int](2.5 * $s))
     Test-Circle $x $y $cx $cy $r
 }
+
 function Test-ArrowLR([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]$Oy = 0) {
     $s = $Size / 48.0
     $oxs = $Ox * $s; $oys = $Oy * $s
@@ -106,6 +127,7 @@ function Test-ArrowLR([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]$Oy
         (Test-Trapezoid $x $y ([int](32 * $s + $oxs)) ([int](36 * $s + $oxs)) ($cy - [int](4 * $s)) ([int](36 * $s + $oxs)) ([int](40 * $s + $oxs)) ($cy + [int](4 * $s)))
     $left -or $right
 }
+
 function Test-EuroBadge([int]$x, [int]$y, [int]$Size) {
     $s = $Size / 48.0
     $cx = [int](36 * $s); $cy = [int](36 * $s); $r = [int](7 * $s)
@@ -114,26 +136,7 @@ function Test-EuroBadge([int]$x, [int]$y, [int]$Size) {
     $ring -or $bar
 }
 
-$LedDimGray = [Drawing.Color]::FromArgb(255, 102, 102, 102)
-
-function Get-LedStripColor([Drawing.Color]$Accent, [bool]$Dim, [string]$Kind = '') {
-    if ($Dim) {
-        if ($Kind -eq 'charger') { return [Drawing.Color]::FromArgb(200, $LedDimGray.R, $LedDimGray.G, $LedDimGray.B) }
-        $c = Blend-Toward $Accent $LedDimGray 0.35
-        return [Drawing.Color]::FromArgb(200, $c.R, $c.G, $c.B)
-    }
-    return [Drawing.Color]::FromArgb(255, $Accent.R, $Accent.G, $Accent.B)
-}
-
-function Get-StatusDotColor([Drawing.Color]$Accent, [bool]$Dim) {
-    if ($Dim) {
-        $c = Blend-Toward $Accent $LedDimGray 0.55
-        return [Drawing.Color]::FromArgb(200, $c.R, $c.G, $c.B)
-    }
-    return [Drawing.Color]::FromArgb(255, $Accent.R, $Accent.G, $Accent.B)
-}
-
-function Get-ChargerIconPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim, [string]$Kind = '', [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
+function Get-ChargerPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim, [string]$Kind, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
     $body = if ($Dim) { [Drawing.Color]::FromArgb(200, 72, 74, 78) } else { [Drawing.Color]::FromArgb(255, 42, 44, 48) }
     $led = Get-LedStripColor $Bright $Dim $Kind
     if (Test-ChargerBody $x $y $Size -Ox $Ox -Oy $Oy -Scale $Scale) {
@@ -144,39 +147,38 @@ function Get-ChargerIconPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Brig
 }
 
 function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim) {
-    $accent = Get-AccentColor $Bright $Dim
     $puck = if ($Dim) { [Drawing.Color]::FromArgb(200, 160, 163, 168) } else { [Drawing.Color]::FromArgb(255, 235, 237, 240) }
-    $info = Get-AccentColor ([Drawing.Color]::FromArgb(255, 46, 204, 64)) $Dim
+    $accent = Get-AccentColor $Bright $Dim
+    $green = Get-AccentColor ([Drawing.Color]::FromArgb(255, 46, 204, 64)) $Dim
+    $red = Get-AccentColor ([Drawing.Color]::FromArgb(255, 229, 57, 53)) $Dim
 
     switch ($Kind) {
         'charger' {
-            $px = Get-ChargerIconPixel $x $y $Size $Bright $Dim 'charger'
+            $px = Get-ChargerPixel $x $y $Size $Bright $Dim 'charger'
             if ($null -ne $px) { return $px }
         }
         'power' {
-            $px = Get-ChargerIconPixel $x $y $Size $Bright $Dim 'power'
+            $px = Get-ChargerPixel $x $y $Size $Bright $Dim 'power'
             if ($null -ne $px) { return $px }
         }
         'status' {
-            $px = Get-ChargerIconPixel $x $y $Size $Bright $Dim 'status'
+            $px = Get-ChargerPixel $x $y $Size $Bright $Dim 'status'
             if ($null -ne $px) { return $px }
             $cx = $Size * 0.78; $cy = $Size * 0.22
             $r = [math]::Max(1.5, $Size * 0.08); $ringR = $r + [math]::Max(1, $Size * 0.04)
-            if ((Test-Circle $x $y $cx $cy $ringR) -and -not (Test-Circle $x $y $cx $cy ($r - 0.5))) { return $info }
-            if (Test-Circle $x $y $cx $cy $r) { return $info }
+            if ((Test-Circle $x $y $cx $cy $ringR) -and -not (Test-Circle $x $y $cx $cy ($r - 0.5))) { return $green }
+            if (Test-Circle $x $y $cx $cy $r) { return $green }
         }
         'cost' {
             if (Test-EuroBadge $x $y $Size) { return $accent }
-            $px = Get-ChargerIconPixel $x $y $Size $Bright $Dim 'cost'
+            $px = Get-ChargerPixel $x $y $Size $Bright $Dim 'cost'
             if ($null -ne $px) { return $px }
         }
         'alert' {
-            $px = Get-ChargerIconPixel $x $y $Size $Bright $Dim 'alert'
+            $px = Get-ChargerPixel $x $y $Size $Bright $Dim 'alert'
             if ($null -ne $px) { return $px }
             $cx = $Size * 0.78; $cy = $Size * 0.18
-            if (Test-Circle $x $y $cx $cy ([math]::Max(1.5, $Size * 0.07))) {
-                return Get-LedStripColor ([Drawing.Color]::FromArgb(255, 229, 57, 53)) $Dim 'alert'
-            }
+            if (Test-Circle $x $y $cx $cy ([math]::Max(1.5, $Size * 0.07))) { return $red }
         }
         'equalizer' {
             if (Test-EqualizerPuck $x $y $Size) { return $puck }
@@ -184,7 +186,7 @@ function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing
         }
         'overview' {
             foreach ($ox in @(-7, 7)) {
-                $px = Get-ChargerIconPixel $x $y $Size $Bright $Dim 'overview' -Ox $ox -Scale 0.72
+                $px = Get-ChargerPixel $x $y $Size $Bright $Dim 'overview' -Ox $ox -Scale 0.72
                 if ($null -ne $px) { return $px }
             }
         }

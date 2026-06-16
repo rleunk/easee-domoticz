@@ -8,7 +8,7 @@ import zipfile
 import zlib
 
 ICON_SETS = [
-    ('EaseeCharger', (46, 204, 64), 'charger'),      # #2ECC40 green — online/ready
+    ('EaseeCharger', (46, 160, 67), 'charger'),      # green — charger
     ('EaseeEqualizer', (142, 68, 173), 'equalizer'),
     ('EaseePower', (255, 193, 7), 'power'),          # #FFC107 amber — charging
     ('EaseeStatus', (33, 150, 243), 'status'),       # #2196F3 blue — status/info
@@ -219,7 +219,7 @@ def _draw_symbol_v2(kind, x, y, size, accent, dim):
         cx, cy = size * 0.78, size * 0.22
         r = max(1.5, size * 0.08)
         ring_r = r + max(1, size * 0.04)
-        info = _accent_rgb((46, 204, 64), dim)
+        info = _accent_rgb((46, 160, 67), dim)
         if _inside_circle(x, y, cx, cy, ring_r) and not _inside_circle(x, y, cx, cy, r - 0.5):
             return (info[0], info[1], info[2], alpha)
         if _inside_circle(x, y, cx, cy, r):
