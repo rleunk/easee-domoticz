@@ -6,6 +6,16 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.5.17] — 2026-06-16
+
+### Gewijzigd
+- **plugin.py** — Laadpaal Status-tegels (`EASEE_CHG_*`, label `Status`) gebruiken nu het Equalizer-pictogram (`EaseeEqualizer`) i.p.v. het blauwe status-pictogram; geldt voor beide laadpalen (bijv. Garage, Voordeur). Core Status (`EASEE_CORE_STATUS`) blijft `EaseeStatus`.
+
+### Aanbevolen upgrade
+- `git pull` in de pluginmap en herstart het hardware-item. Geen icon zip opnieuw uploaden nodig.
+
+---
+
 ## [10.5.16] — 2026-06-16
 
 ### Gewijzigd
