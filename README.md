@@ -148,6 +148,7 @@ De plugin levert acht Easee-tegeliconen via `Easee_icons_v2.zip` (v2, Easee Char
 - **`Easee_icons_v2.zip`** — aanbevolen, meegeleverd in de pluginmap (v2 hardware-stijl)
 - **`Easee_icons.zip`** — legacy fallback
 - **8 icon sets:** EaseeCharger (groen), EaseePower (geel), EaseeStatus (blauw), EaseeCost (oranje), EaseeEqualizer (paars), EaseeOverview (teal), EaseeLoadBal, EaseeAlert
+- **LED-strip kleur op lader-iconen:** groen=online, geel=laden, blauw=status, oranje=kosten, rood=fout, teal=overzicht (Equalizer: statusdot onderaan)
 - Automatisch geladen bij pluginstart; toegepast op **bestaande** tegels na herstart van het hardware-item
 - Mislukt automatisch laden? Upload de zip **eenmalig** via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
 - Verwacht logregel: `Custom icons geladen: 8 sets` of `Custom icons uit Domoticz (handmatig geüpload)`

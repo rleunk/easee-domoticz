@@ -6,6 +6,19 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.5.12] — 2026-06-16
+
+### Gewijzigd
+- **Easee_icons_v2.zip** — verticale LED-strip op het Charge-silhouet toont nu statuskleur (groen=online, geel=laden, blauw=status, oranje=kosten, rood=fout, teal=overzicht); Off-varianten met gedimde strip en lichter lichaam.
+- **Equalizer-iconen** — witte squircle puck met gekleurde statusdot onderaan (zelfde kleurlogica).
+- **scripts/generate_icons.py / .ps1** — gekleurde LED-strip tekenlogica; preview toont On/Off rijen.
+- **docs/icon-preview-v2.png** — bijgewerkt met kleurvarianten.
+
+### Aanbevolen upgrade
+- `git pull` in de pluginmap en herstart het hardware-item; controleer logregel `Custom icons geladen: 8 sets (Easee_icons_v2.zip)`.
+
+---
+
 ## [10.5.11] — 2026-06-16
 
 ### Toegevoegd

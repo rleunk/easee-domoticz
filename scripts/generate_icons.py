@@ -8,23 +8,22 @@ import zipfile
 import zlib
 
 ICON_SETS = [
-    ('EaseeCharger', (46, 160, 67), 'charger'),
+    ('EaseeCharger', (46, 204, 64), 'charger'),      # #2ECC40 green — online/ready
     ('EaseeEqualizer', (142, 68, 173), 'equalizer'),
-    ('EaseePower', (255, 193, 7), 'power'),
-    ('EaseeStatus', (33, 150, 243), 'status'),
-    ('EaseeAlert', (229, 57, 53), 'alert'),
+    ('EaseePower', (255, 193, 7), 'power'),          # #FFC107 amber — charging
+    ('EaseeStatus', (33, 150, 243), 'status'),       # #2196F3 blue — status/info
+    ('EaseeAlert', (229, 57, 53), 'alert'),          # #E53935 red — error
     ('EaseeLoadBal', (0, 188, 212), 'loadbal'),
-    ('EaseeCost', (255, 152, 0), 'cost'),
-    ('EaseeOverview', (0, 150, 136), 'overview'),
+    ('EaseeCost', (255, 152, 0), 'cost'),            # #FF9800 orange — cost
+    ('EaseeOverview', (0, 150, 136), 'overview'),    # #009688 teal — overview
 ]
 
-# Silhouette colors (Easee hardware look)
+# Silhouette colors (Easee Charge hardware look)
 BODY_ON = (42, 44, 48)
 BODY_OFF = (72, 74, 78)
 PUCK_ON = (235, 237, 240)
 PUCK_OFF = (160, 163, 168)
-STRIP_ON = (58, 62, 66)
-STRIP_OFF = (95, 98, 102)
+LED_DIM_GRAY = (102, 102, 102)  # #666 — charger off / dim blend target
 
 
 def _chunk(tag, data):
@@ -97,9 +96,18 @@ def _charger_body(x, y, size, ox=0, oy=0, scale=1.0):
     return cap or body
 
 
-def _charger_strip(x, y, size, ox=0, oy=0, scale=1.0):
+def _charger_led(x, y, size, ox=0, oy=0, scale=1.0):
+    """Vertical LED strip on charger face (48px) or thin line/dot (16px)."""
     s = size / 48.0 * scale
     ox_s, oy_s = ox * s, oy * s
+    cx = int(24 * s + ox_s)
+    if size <= 16:
+        y0, y1 = int(8 * s + oy_s), int(38 * s + oy_s)
+        if y0 <= y <= y1 and abs(x - cx) <= max(0, int(0.6 * s)):
+            return True
+        cy = int(22 * s + oy_s)
+        r = max(1, int(1.8 * s))
+        return _inside_circle(x, y, cx, cy, r)
     return _inside_rect(
         x, y,
         int(22 * s + ox_s), int(7 * s + oy_s),
@@ -163,73 +171,90 @@ def _accent_rgb(rgb, dim):
     return rgb
 
 
-def _pixel(rgba):
-    return rgba if rgba[3] else (0, 0, 0, 0)
+def _led_strip_color(accent, dim, kind=''):
+    """Status color on charger LED strip; gray or dim accent when off."""
+    if dim:
+        if kind == 'charger':
+            return LED_DIM_GRAY
+        return _blend_toward(accent, LED_DIM_GRAY, 0.35)
+    return accent
+
+
+def _status_dot_color(accent, dim):
+    """Bottom status dot on equalizer puck icons."""
+    if dim:
+        return _blend_toward(accent, LED_DIM_GRAY, 0.55)
+    return accent
+
+
+def _draw_charger_icon(x, y, size, accent, dim, kind='', ox=0, oy=0, scale=1.0):
+    body = BODY_OFF if dim else BODY_ON
+    alpha = 200 if dim else 255
+    led = _led_strip_color(accent, dim, kind)
+    if _charger_body(x, y, size, ox=ox, oy=oy, scale=scale):
+        if _charger_led(x, y, size, ox=ox, oy=oy, scale=scale):
+            return (led[0], led[1], led[2], alpha)
+        return (body[0], body[1], body[2], alpha)
+    return None
 
 
 def _draw_symbol_v2(kind, x, y, size, accent, dim):
+    bright = accent
     accent = _accent_rgb(accent, dim)
-    body = BODY_OFF if dim else BODY_ON
     puck = PUCK_OFF if dim else PUCK_ON
-    strip = STRIP_OFF if dim else STRIP_ON
     alpha = 200 if dim else 255
 
     if kind == 'charger':
-        if _charger_body(x, y, size):
-            if _charger_strip(x, y, size):
-                return (strip[0], strip[1], strip[2], alpha)
-            return (body[0], body[1], body[2], alpha)
-        if _equalizer_led(x, y, size) and not dim:
+        px = _draw_charger_icon(x, y, size, bright, dim, kind='charger')
+        return px if px else (0, 0, 0, 0)
+
+    if kind == 'power':
+        px = _draw_charger_icon(x, y, size, bright, dim, kind='power')
+        return px if px else (0, 0, 0, 0)
+
+    if kind == 'status':
+        px = _draw_charger_icon(x, y, size, bright, dim, kind='status')
+        if px:
+            return px
+        cx, cy = size * 0.78, size * 0.22
+        r = max(1.5, size * 0.08)
+        ring_r = r + max(1, size * 0.04)
+        info = _accent_rgb((46, 204, 64), dim)
+        if _inside_circle(x, y, cx, cy, ring_r) and not _inside_circle(x, y, cx, cy, r - 0.5):
+            return (info[0], info[1], info[2], alpha)
+        if _inside_circle(x, y, cx, cy, r):
+            return (info[0], info[1], info[2], alpha)
+        return (0, 0, 0, 0)
+
+    if kind == 'cost':
+        if _draw_euro_badge(x, y, size):
             return (accent[0], accent[1], accent[2], alpha)
+        px = _draw_charger_icon(x, y, size, bright, dim, kind='cost')
+        return px if px else (0, 0, 0, 0)
+
+    if kind == 'alert':
+        px = _draw_charger_icon(x, y, size, bright, dim, kind='alert')
+        if px:
+            return px
+        cx, cy = size * 0.78, size * 0.18
+        if _inside_circle(x, y, cx, cy, max(1.5, size * 0.07)):
+            c = _led_strip_color((229, 57, 53), dim, 'alert')
+            return (c[0], c[1], c[2], alpha)
         return (0, 0, 0, 0)
 
     if kind == 'equalizer':
         if _equalizer_puck(x, y, size):
             return (puck[0], puck[1], puck[2], alpha)
         if _equalizer_led(x, y, size):
-            c = _blend_toward(accent, (180, 180, 185), 0.35) if dim else accent
+            c = _status_dot_color(bright, dim)
             return (c[0], c[1], c[2], alpha)
-        return (0, 0, 0, 0)
-
-    if kind == 'power':
-        if _charger_body(x, y, size):
-            if _charger_strip(x, y, size):
-                glow = _blend_toward(accent, (46, 160, 67), 0.35) if not dim else strip
-                return (glow[0], glow[1], glow[2], alpha)
-            return (body[0], body[1], body[2], alpha)
-        return (0, 0, 0, 0)
-
-    if kind == 'status':
-        if _charger_body(x, y, size):
-            if _charger_strip(x, y, size):
-                return (strip[0], strip[1], strip[2], alpha)
-            return (body[0], body[1], body[2], alpha)
-        cx, cy = size * 0.78, size * 0.22
-        r = max(1.5, size * 0.08)
-        ring_r = r + max(1, size * 0.04)
-        if _inside_circle(x, y, cx, cy, ring_r) and not _inside_circle(x, y, cx, cy, r - 0.5):
-            c = _accent_rgb((46, 160, 67), dim)
-            return (c[0], c[1], c[2], alpha)
-        if _inside_circle(x, y, cx, cy, r):
-            c = _accent_rgb((46, 160, 67), dim)
-            return (c[0], c[1], c[2], alpha)
-        return (0, 0, 0, 0)
-
-    if kind == 'cost':
-        if _draw_euro_badge(x, y, size):
-            return (accent[0], accent[1], accent[2], alpha)
-        if _charger_body(x, y, size):
-            if _charger_strip(x, y, size):
-                return (strip[0], strip[1], strip[2], alpha)
-            return (body[0], body[1], body[2], alpha)
         return (0, 0, 0, 0)
 
     if kind == 'overview':
         for ox in (-7, 7):
-            if _charger_body(x, y, size, ox=ox, scale=0.72):
-                if _charger_strip(x, y, size, ox=ox, scale=0.72):
-                    return (strip[0], strip[1], strip[2], alpha)
-                return (body[0], body[1], body[2], alpha)
+            px = _draw_charger_icon(x, y, size, bright, dim, kind='overview', ox=ox, scale=0.72)
+            if px:
+                return px
         return (0, 0, 0, 0)
 
     if kind == 'loadbal':
@@ -238,19 +263,7 @@ def _draw_symbol_v2(kind, x, y, size, accent, dim):
         if _draw_arrow_lr(x, y, size):
             return (accent[0], accent[1], accent[2], alpha)
         if _equalizer_led(x, y, size, scale=0.82):
-            c = _blend_toward(accent, (180, 180, 185), 0.35) if dim else accent
-            return (c[0], c[1], c[2], alpha)
-        return (0, 0, 0, 0)
-
-    if kind == 'alert':
-        if _charger_body(x, y, size):
-            if _charger_strip(x, y, size):
-                c = _accent_rgb((229, 57, 53), dim)
-                return (c[0], c[1], c[2], alpha)
-            return (body[0], body[1], body[2], alpha)
-        cx, cy = size * 0.78, size * 0.18
-        if _inside_circle(x, y, cx, cy, max(1.5, size * 0.07)):
-            c = _accent_rgb((229, 57, 53), dim)
+            c = _status_dot_color(bright, dim)
             return (c[0], c[1], c[2], alpha)
         return (0, 0, 0, 0)
 
@@ -283,23 +296,31 @@ def build_zip(out_path):
 
 
 def build_preview(out_path):
-    """Save a row of 48px on-state icons for review."""
+    """Save on/off rows of 48px icons showing LED strip color coding."""
     icon_w = 48
     pad = 8
+    row_h = icon_w + pad
     total_w = len(ICON_SETS) * icon_w + (len(ICON_SETS) + 1) * pad
-    total_h = icon_w + 2 * pad
+    total_h = 2 * row_h + pad
 
     def draw(x, y):
-        if y < pad or y >= pad + icon_w:
-            return (32, 34, 38, 255)
+        bg = (32, 34, 38, 255)
+        if y < pad:
+            return bg
+        row = (y - pad) // row_h
+        if row > 1:
+            return bg
+        local_y = (y - pad) - row * row_h
+        if local_y >= icon_w:
+            return bg
         idx = (x - pad) // (icon_w + pad)
         if idx < 0 or idx >= len(ICON_SETS):
-            return (32, 34, 38, 255)
+            return bg
         local_x = x - pad - idx * (icon_w + pad)
         if local_x >= icon_w:
-            return (32, 34, 38, 255)
+            return bg
         _, rgb, kind = ICON_SETS[idx]
-        return _draw_symbol_v2(kind, local_x, y - pad, icon_w, rgb, dim=False)
+        return _draw_symbol_v2(kind, local_x, local_y, icon_w, rgb, dim=(row == 1))
 
     rows = []
     for y in range(total_h):
