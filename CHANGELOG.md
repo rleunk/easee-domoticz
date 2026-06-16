@@ -6,6 +6,8 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+### Gewijzigd
+- **README.md** — nieuwe sectie *Custom iconen*; icon-uitleg uit Features en Updates samengevoegd.
 
 ## [10.5.10] — 2026-06-16
 
