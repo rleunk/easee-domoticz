@@ -16,7 +16,7 @@
 ⚡ **Hoofdzekering limiet** — Correcte weergave via `maxContinuousCurrent` en `circuit.fuse` (API)  
 💰 **Cost Tracking** — Sessie- en dagkosten per laadpaal (v10.4 fix)  
 💵 **Tibber Integration** — Actueel stroomtarief, goedkope laadwindows en kostenoverzicht (v10.4 fix)  
-🎨 **Custom iconen** — Easee-tegeliconen uit `Easee_icons.zip`; zie [Custom iconen](#-custom-iconen)  
+🎨 **Custom iconen** — Easee-tegeliconen uit `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen)  
 🔐 **Secure** — Veilige token opslag en session management  
 🔄 **State Persistence** — Behoudt laadsessie gegevens over restarts  
 📦 **Git installatie** — Eenvoudige updates via `git pull` op je Domoticz-server  
@@ -143,9 +143,10 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare paramet
 
 ## 🎨 Custom iconen
 
-De plugin levert acht Easee-tegeliconen via `Easee_icons.zip` in de pluginmap.
+De plugin levert acht Easee-tegeliconen via `Easee_icons_v2.zip` (v2, Easee Charge/Equalizer silhouetten) in de pluginmap; valt terug op `Easee_icons.zip`.
 
-- **`Easee_icons.zip`** — meegeleverd in de pluginmap
+- **`Easee_icons_v2.zip`** — aanbevolen, meegeleverd in de pluginmap (v2 hardware-stijl)
+- **`Easee_icons.zip`** — legacy fallback
 - **8 icon sets:** EaseeCharger (groen), EaseePower (geel), EaseeStatus (blauw), EaseeCost (oranje), EaseeEqualizer (paars), EaseeOverview (teal), EaseeLoadBal, EaseeAlert
 - Automatisch geladen bij pluginstart; toegepast op **bestaande** tegels na herstart van het hardware-item
 - Mislukt automatisch laden? Upload de zip **eenmalig** via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**

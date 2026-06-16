@@ -6,8 +6,20 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.5.11] — 2026-06-16
+
+### Toegevoegd
+- **Easee_icons_v2.zip** — nieuwe Domoticz-tegeliconen gebaseerd op Easee Charge (donker tap-toon silhouet) en Equalizer (witte squircle puck); 16×16 en 48×48 On/Off varianten.
+- **docs/icon-preview-v2.png** — preview van alle acht v2-iconen.
+
 ### Gewijzigd
-- **README.md** — nieuwe sectie *Custom iconen*; icon-uitleg uit Features en Updates samengevoegd.
+- **load_custom_images()** — probeert eerst `Easee_icons_v2.zip`, daarna `Easee_icons.zip` als fallback.
+- **scripts/generate_icons.py / .ps1** — v2-tekenstijl (charger, equalizer, power, status, cost, overview, loadbal, alert).
+
+### Aanbevolen upgrade
+- `git pull` in de pluginmap en herstart het hardware-item; controleer logregel `Custom icons geladen: 8 sets (Easee_icons_v2.zip)`.
+
+---
 
 ## [10.5.10] — 2026-06-16
 

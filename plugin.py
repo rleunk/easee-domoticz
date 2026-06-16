@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.5.10" author="Richard Leunk" version="10.5.10"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.5.11" author="Richard Leunk" version="10.5.11"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
@@ -423,7 +423,7 @@ class BasePlugin:
 
     def load_custom_images(self):
         roots = ['EaseeCharger','EaseeEqualizer','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
-        candidates = ['Easee_icons.zip']
+        candidates = ['Easee_icons_v2.zip', 'Easee_icons.zip']
         loaded_zip = None
         load_errors = []
         found_zips = []
