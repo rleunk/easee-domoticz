@@ -1,8 +1,8 @@
-# Easee Domoticz plugin v10.5.9
+# Easee Domoticz plugin v10.5.10
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators, Equalizer/meterkast ondersteuning en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.5.9-blue)
+![Version](https://img.shields.io/badge/version-10.5.10-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -60,7 +60,7 @@ sudo systemctl restart domoticz
 Daarna in Domoticz:
 
 1. **Setup → Hardware**
-2. Type: **"Easee Domoticz plugin v10.5.9"**
+2. Type: **"Easee Domoticz plugin v10.5.10"**
 3. Geef de hardware een naam, bijv. `Easee` (prefix op alle tegels)
 4. Username/Password: jouw Easee-inloggegevens
 5. **Create**
@@ -175,14 +175,9 @@ Na een upgrade worden custom iconen automatisch op **bestaande** tegels gezet zo
 
 **Van v10.4.0 naar v10.5.0?** Vervang `plugin.py` of doe `git pull` — state (`easee_v9_0_state.json`) en bestaande devices blijven behouden. Nieuwe laadpalen worden automatisch gedetecteerd.
 
-## 🚀 Public release checklist
+## 🚀 Release
 
-- [ ] Repo public maken (of public fork aanmaken)
-- [ ] README: ondersteunde scenario's (1/2/N laders, met/zonder EQ, met/zonder Tibber) — ✅ in deze versie
-- [x] Issues op GitHub inschakelen voor bugreports — ✅ issue templates (NL)
-- [ ] Versienummer + CHANGELOG bij elke release — ✅ v10.5.9
-- [ ] Optioneel: screenshot hardwarepagina toevoegen (TODO — velden staan hierboven in tabel)
-
+Deze plugin staat op [GitHub](https://github.com/rleunk/easee-domoticz) als **openbare** repository. Bugreports en featurevoorstellen via [Issues](https://github.com/rleunk/easee-domoticz/issues) (Nederlandse templates).
 ## 🤖 AI Development
 
 Deze plugin is in meerdere stappen ontwikkeld met behulp van AI-tools, onder begeleiding en review van de auteur:
@@ -214,6 +209,6 @@ MIT License — zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.5.9** — Gemaakt door Richard Leunk
+**Versie 10.5.10** — Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

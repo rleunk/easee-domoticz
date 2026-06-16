@@ -8,8 +8,8 @@ body:
     id: plugin-version
     attributes:
       label: Plugin versie
-      description: "Bijv. v10.5.9 — te vinden in Domoticz → Setup → Hardware"
-      placeholder: v10.5.9
+      description: "Bijv. v10.5.10 — te vinden in Domoticz → Setup → Hardware"
+      placeholder: v10.5.10
     validations:
       required: true
 

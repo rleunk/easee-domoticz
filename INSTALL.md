@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee Domoticz plugin v10.5.9
+# Installatiehandleiding — Easee Domoticz plugin v10.5.10
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,12 +8,12 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee Domoticz plugin v10.5.9 |
+| Plugin | Easee Domoticz plugin v10.5.10 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` |
 | Custom iconen | `Easee_icons.zip` (automatisch geladen bij pluginstart; zie [handmatige upload](#custom-iconen-handmatig-uploaden) als dat mislukt) |
-| GitHub-repo | https://github.com/rleunk/easee-domoticz (privé) |
+| GitHub-repo | https://github.com/rleunk/easee-domoticz |
 
 ---
 
@@ -103,7 +103,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee Domoticz plugin v10.5.9**
+4. Selecteer **Easee Domoticz plugin v10.5.10**
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
 7. Klik **Add**
@@ -143,16 +143,18 @@ Gebruik dit als je geen git op de server wilt instellen.
 
 ### Stap 1: Zip downloaden
 
-Download `easee-domoticz-github.zip` van GitHub (of maak hem lokaal op je PC).
+Op GitHub: **Code** → **Download ZIP**. GitHub levert een archief met een naam als `easee-domoticz-main.zip`. Pak lokaal uit; je vindt `plugin.py` en `Easee_icons.zip` in de map `easee-domoticz-main/` (of vergelijkbaar).
 
 ### Stap 2: Uploaden naar de server
 
-Via SCP, SFTP of WinSCP:
+Via SCP, SFTP of WinSCP kopieer **beide** bestanden:
 
 ```
-Lokaal:  plugin.py
-Server:  /home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
+Lokaal:  plugin.py              → Server: .../Easee-Domoticz-plugin/plugin.py
+Lokaal:  Easee_icons.zip        → Server: .../Easee-Domoticz-plugin/Easee_icons.zip
 ```
+
+Als iconen na start niet verschijnen, upload `Easee_icons.zip` eenmalig handmatig — zie [Custom iconen handmatig uploaden](#custom-iconen-handmatig-uploaden).
 
 ### Stap 3: Map aanmaken (indien nodig)
 
@@ -166,7 +168,8 @@ Zorg dat de structuur **plat** is:
 
 ```
 Easee-Domoticz-plugin/
-└── plugin.py       ← direct hier, geen submap eronder
+├── plugin.py       ← direct hier, geen submap eronder
+└── Easee_icons.zip ← custom tegeliconen (zelfde map)
 ```
 
 **Fout** (submap te diep):
@@ -318,7 +321,7 @@ Na een succesvolle upload herkent de plugin de iconen als *Custom icons uit Domo
 |----------|-----------|
 | Password not supported | Gebruik PAT of SSH — zie [docs/GIT_SETUP.md](docs/GIT_SETUP.md) |
 | Permission denied (publickey) | SSH-sleutel toevoegen aan GitHub |
-| Repository not found | Controleer toegang tot private repo |
+| Repository not found | Controleer repo-URL, SSH-sleutel of PAT (zie [docs/GIT_SETUP.md](docs/GIT_SETUP.md)) |
 
 ### Plugin verschijnt niet in hardwarelijst
 

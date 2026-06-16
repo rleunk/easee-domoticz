@@ -85,7 +85,7 @@ Gebruik dit als je geen SSH wilt instellen.
 1. Ga naar [GitHub → Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)
 2. Klik **Generate new token** (classic)
 3. Geef een naam, bijv. `domoticz-server`
-4. Vink **repo** aan (voor private repositories)
+4. Vink **repo** aan (voor clone/pull via HTTPS)
 5. Genereer en **kopieer het token** — je ziet het maar één keer!
 
 > Bewaar het token veilig. Deel het nooit in chat, e-mail of documentatie.
@@ -133,7 +133,7 @@ sudo systemctl restart domoticz
 |-------------|---------|-----------|
 | `Password authentication is not supported` | HTTPS met GitHub-wachtwoord | Gebruik PAT (Optie B) of SSH (Optie A) |
 | `Permission denied (publickey)` | SSH-sleutel niet op GitHub | Voeg publieke sleutel toe (Optie A, stap 3) |
-| `Repository not found` | Geen toegang tot private repo | Controleer SSH-sleutel of PAT met `repo`-scope |
+| `Repository not found` | Verkeerde URL of geen toegang | Controleer repo-URL; bij HTTPS: PAT met `repo`-scope; bij SSH: sleutel op GitHub |
 | `fatal: not a git repository` | Verkeerde map | `cd` naar `/home/root/domoticz/plugins/Easee-Domoticz-plugin` |
 
 ---
@@ -143,6 +143,7 @@ sudo systemctl restart domoticz
 ```
 /home/root/domoticz/plugins/Easee-Domoticz-plugin/
 ├── plugin.py          ← Domoticz laadt dit bestand
+├── Easee_icons.zip    ← custom iconen (automatisch geladen)
 ├── README.md
 ├── INSTALL.md
 ├── install.sh
