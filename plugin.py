@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz Plugin v10.5.5" author="Richard Leunk" version="10.5.5"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz Plugin v10.5.6" author="Richard Leunk" version="10.5.6"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
@@ -108,11 +108,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.5.5] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.5.6] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.5.5] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.5.5] {msg}')
+            Domoticz.Debug(f'[Easee v10.5.6] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.5.6] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -394,14 +394,17 @@ class BasePlugin:
         roots = ['EaseeCharger','EaseeEqualizer','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
         candidates = ['Easee_icons.zip','Easee_v10_5_icons.zip','Easee_v10_0_icons.zip','Easee_v9_0_icons.zip','Easee_v8_0_3_icons.zip','Easee_v8_0_2_icons.zip','Easee_v8_0_1_icons.zip','Easee_v8_icons.zip','Easee.zip']
         loaded_zip = None
+        load_errors = []
         for fn in candidates:
-            if not os.path.isfile(os.path.join(self.plugin_dir, fn)):
+            path = os.path.join(self.plugin_dir, fn)
+            if not os.path.isfile(path):
                 continue
             try:
                 if any(r not in Images for r in roots):
                     try:
                         Domoticz.Image(fn).Create()
                     except Exception as e:
+                        load_errors.append(f'{fn}: {e}')
                         self.debug(f'custom image zip load failed ({fn}): {e}')
                         continue
                 for r in roots:
@@ -411,11 +414,18 @@ class BasePlugin:
                     loaded_zip = fn
                     break
             except Exception as e:
+                load_errors.append(f'{fn}: {e}')
                 self.debug(f'custom images error ({fn}): {e}')
         if self.image_ids:
             self.log(f'Custom icons geladen: {len(self.image_ids)} sets' + (f' ({loaded_zip})' if loaded_zip else ''))
         else:
             self.log('Waarschuwing: geen custom icon zip gevonden — standaard Domoticz iconen worden gebruikt')
+            self.log(f'Icon zip zoekpad: {self.plugin_dir}')
+            for fn in candidates:
+                path = os.path.join(self.plugin_dir, fn)
+                self.log(f'  {fn}: {"aanwezig" if os.path.isfile(path) else "ontbreekt"}')
+            if load_errors:
+                self.log('Icon zip laden mislukt: ' + '; '.join(load_errors))
 
     def apply_images_to_devices(self):
         if not self.image_ids:

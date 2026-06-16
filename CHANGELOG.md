@@ -4,6 +4,16 @@ Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [10.5.6] — 2026-06-16
+
+### Gewijzigd
+- **Icon zip diagnostiek** — bij ontbrekende custom iconen logt de plugin nu `plugin_dir` en per kandidaat of het zip-bestand aanwezig is of ontbreekt; bij laadfouten verschijnt de foutmelding in het normale log (niet alleen debug).
+
+### Aanbevolen upgrade
+- `git pull` in de pluginmap (controleer daarna `ls -la Easee_icons.zip`) en herstart het hardware-item of Domoticz.
+
+---
+
 ## [10.5.5] — 2026-06-16
 
 ### Opgelost
