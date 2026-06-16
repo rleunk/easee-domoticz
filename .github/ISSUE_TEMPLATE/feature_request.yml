@@ -1,0 +1,29 @@
+name: Feature voorstel
+description: Stel een nieuwe functie of verbetering voor
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Beschrijving feature
+      description: Beschrijf de gewenste functionaliteit zo concreet mogelijk
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Waarom nuttig
+      description: Welk probleem lost dit op? Voor wie is dit handig?
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: "Optioneel: screenshot / voorbeeld"
+      description: Mock-up, screenshot of korte beschrijving van het gewenste gedrag
+    validations:
+      required: false

@@ -4,6 +4,13 @@ Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [Unreleased]
+
+### Toegevoegd
+- **GitHub issue templates** — Nederlandstalige formulieren voor bugmeldingen en featurevoorstellen (`.github/ISSUE_TEMPLATE/`); lege issues uitgeschakeld; README-sectie *Problemen melden*.
+
+---
+
 ## [10.5.9] — 2026-06-16
 
 ### Gewijzigd

@@ -1,0 +1,101 @@
+name: Bug melden
+description: Meld een probleem met de Easee Domoticz plugin
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin versie
+      description: "Bijv. v10.5.9 — te vinden in Domoticz → Setup → Hardware"
+      placeholder: v10.5.9
+    validations:
+      required: true
+
+  - type: input
+    id: domoticz-version
+    attributes:
+      label: Domoticz versie
+      description: "Bijv. 2024.2 — te vinden in Setup → About"
+      placeholder: "2024.2"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      description: "Besturingssysteem waarop Domoticz draait"
+      placeholder: "Debian 12 / Proxmox LXC / Raspberry Pi OS"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Beschrijving probleem
+      description: Wat gaat er mis? Wat zie je in Domoticz?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Verwacht gedrag
+      description: Wat had je verwacht dat er zou gebeuren?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Stappen om te reproduceren
+      description: "1. … 2. … 3. …"
+      placeholder: |
+        1. Hardware-item starten
+        2. Laadpaal op 'Laden' zetten
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevante logregels (Easee plugin)
+      description: "Regels met `[Easee v…]` — geen wachtwoorden of tokens plakken"
+      render: shell
+      placeholder: |
+        sudo journalctl -u domoticz -n 100 | grep "Easee v"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: equalizer
+    attributes:
+      label: Equalizer / meterkast
+      description: Gebruik je een Easee Equalizer?
+      options:
+        - Nee
+        - Ja
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tibber
+    attributes:
+      label: Tibber integratie
+      description: Is Tibber geconfigureerd voor kosten/tarief?
+      options:
+        - Nee
+        - Ja
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Optioneel — sleep afbeeldingen hierheen of plak ze
+    validations:
+      required: false

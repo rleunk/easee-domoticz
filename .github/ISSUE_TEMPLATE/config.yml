@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Bug melden
+    url: https://github.com/rleunk/easee-domoticz/issues/new?template=bug_report.yml
+    about: Gebruik het bugformulier voor problemen met de plugin
+  - name: Feature voorstel
+    url: https://github.com/rleunk/easee-domoticz/issues/new?template=feature_request.yml
+    about: Stel een nieuwe functie of verbetering voor
+  - name: Documentatie — README
+    url: https://github.com/rleunk/easee-domoticz/blob/main/README.md
+    about: Overzicht, features en quick start
+  - name: Documentatie — Installatie
+    url: https://github.com/rleunk/easee-domoticz/blob/main/INSTALL.md
+    about: Stap-voor-stap installatiehandleiding

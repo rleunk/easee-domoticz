@@ -147,6 +147,16 @@ Zie [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) voor veelvoorkomende prob
 
 **Kosten-tile toont "0 €"?** Verwijder de **Kosten (Sessie/Dag)**-tile en herstart het hardware-item — het device wordt opnieuw aangemaakt (v10.4.0 fix).
 
+## 🐛 Problemen melden
+
+Werkt iets niet zoals verwacht? Open een issue op GitHub:
+
+1. Ga naar **[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues)** → **New issue**
+2. Kies **Bug melden** (gestructureerd formulier in het Nederlands)
+3. Vul minimaal in: pluginversie, Domoticz-versie, OS, beschrijving en relevante logregels (`[Easee v...]`)
+
+Voor nieuwe ideeën: kies **Feature voorstel**. Zie eerst [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) voor veelvoorkomende oplossingen.
+
 ## 📝 Changelog
 
 Zie [CHANGELOG.md](CHANGELOG.md) voor volledige versiegeschiedenis.
@@ -169,7 +179,7 @@ Na een upgrade worden custom iconen automatisch op **bestaande** tegels gezet zo
 
 - [ ] Repo public maken (of public fork aanmaken)
 - [ ] README: ondersteunde scenario's (1/2/N laders, met/zonder EQ, met/zonder Tibber) — ✅ in deze versie
-- [ ] Issues op GitHub inschakelen voor bugreports
+- [x] Issues op GitHub inschakelen voor bugreports — ✅ issue templates (NL)
 - [ ] Versienummer + CHANGELOG bij elke release — ✅ v10.5.9
 - [ ] Optioneel: screenshot hardwarepagina toevoegen (TODO — velden staan hierboven in tabel)
 
