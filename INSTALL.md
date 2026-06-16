@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee Domoticz Plugin v10.5.2
+# Installatiehandleiding — Easee Domoticz Plugin v10.5.4
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,10 +8,11 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee Domoticz Plugin |
+| Plugin | Easee Domoticz Plugin v10.5.4 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` |
+| Custom iconen | `Easee_icons.zip` (automatisch geladen bij pluginstart) |
 | GitHub-repo | https://github.com/rleunk/easee-domoticz (privé) |
 
 ---
@@ -86,9 +87,10 @@ git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 
 ```bash
 ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
+ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons.zip
 ```
 
-Je moet het bestand zien met een recente datum.
+Je moet beide bestanden zien met een recente datum. De icon-zip wordt bij pluginstart automatisch geladen; bestaande tegels krijgen de Easee-iconen na een herstart van het hardware-item (of Domoticz).
 
 ### Stap 4: Domoticz herstarten
 
@@ -101,7 +103,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee Domoticz Plugin**
+4. Selecteer **Easee Domoticz Plugin v10.5.4**
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
 7. Klik **Add**
@@ -251,6 +253,8 @@ git pull
 sudo systemctl restart domoticz
 ```
 
+Custom iconen uit `Easee_icons.zip` worden bij start automatisch geladen en op bestaande devices toegepast.
+
 ### Handmatig (alleen plugin.py vervangen)
 
 1. Stop het hardware-item in Domoticz (**Setup → Hardware** → disablen)
@@ -276,6 +280,8 @@ cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
 git pull
 sudo systemctl restart domoticz
 ```
+
+Custom iconen uit `Easee_icons.zip` worden bij start automatisch geladen en op bestaande devices toegepast.
 
 Controleer [CHANGELOG.md](CHANGELOG.md) voor wijzigingen per versie.
 
@@ -332,6 +338,7 @@ De plugin heeft ingebouwde bescherming tegen dubbele devices. Als het toch gebeu
 | Bestand | Pad |
 |---------|-----|
 | Plugin | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py` |
+| Custom iconen | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons.zip` |
 | State (runtime) | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/easee_v9_0_state.json` |
 | Domoticz-log | `sudo journalctl -u domoticz` |
 

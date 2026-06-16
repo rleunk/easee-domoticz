@@ -4,6 +4,20 @@ Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+## [10.5.4] — 2026-06-16
+
+### Toegevoegd
+- **Custom iconen in repo** — `Easee_icons.zip` bevat acht Easee-tegeliconen (Charger, Equalizer, Power, Status, Alert, LoadBal, Cost, Overview) en wordt automatisch geladen uit de pluginmap.
+- **`apply_images_to_devices()`** — bestaande tegels krijgen na pluginherstart de juiste iconen zonder devices te verwijderen.
+
+### Gewijzigd
+- **Pluginweergavenaam** — In Domoticz Hardware staat het type nu **Easee Domoticz Plugin v10.5.4** (versienummer weer zichtbaar).
+
+### Aanbevolen upgrade
+- `git pull` (haalt `plugin.py` + `Easee_icons.zip` op) en herstart het hardware-item of Domoticz. Geen schone installatie nodig.
+
+---
+
 ## [10.5.3] — 2026-06-16
 
 ### Opgelost

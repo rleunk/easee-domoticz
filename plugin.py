@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz Plugin" author="Richard Leunk" version="10.5.3"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz Plugin v10.5.4" author="Richard Leunk" version="10.5.4"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
@@ -108,11 +108,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.5.3] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.5.4] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.5.3] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.5.3] {msg}')
+            Domoticz.Debug(f'[Easee v10.5.4] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.5.4] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -392,7 +392,8 @@ class BasePlugin:
         return 'EaseeCharger'
     def load_custom_images(self):
         roots = ['EaseeCharger','EaseeEqualizer','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
-        candidates = ['Easee_v10_0_icons.zip','Easee_v9_0_icons.zip','Easee_v8_0_3_icons.zip','Easee_v8_0_2_icons.zip','Easee_v8_0_1_icons.zip','Easee_v8_icons.zip','Easee.zip']
+        candidates = ['Easee_icons.zip','Easee_v10_5_icons.zip','Easee_v10_0_icons.zip','Easee_v9_0_icons.zip','Easee_v8_0_3_icons.zip','Easee_v8_0_2_icons.zip','Easee_v8_0_1_icons.zip','Easee_v8_icons.zip','Easee.zip']
+        loaded_zip = None
         for fn in candidates:
             if not os.path.isfile(os.path.join(self.plugin_dir, fn)):
                 continue
@@ -400,15 +401,38 @@ class BasePlugin:
                 if any(r not in Images for r in roots):
                     try:
                         Domoticz.Image(fn).Create()
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        self.debug(f'custom image zip load failed ({fn}): {e}')
+                        continue
                 for r in roots:
                     if r in Images:
                         self.image_ids[r] = Images[r].ID
                 if self.image_ids:
+                    loaded_zip = fn
                     break
-            except Exception:
-                pass
+            except Exception as e:
+                self.debug(f'custom images error ({fn}): {e}')
+        if self.image_ids:
+            self.log(f'Custom icons geladen: {len(self.image_ids)} sets' + (f' ({loaded_zip})' if loaded_zip else ''))
+        else:
+            self.log('Waarschuwing: geen custom icon zip gevonden — standaard Domoticz iconen worden gebruikt')
+
+    def apply_images_to_devices(self):
+        if not self.image_ids:
+            return
+        updated = 0
+        for unit, dev in Devices.items():
+            try:
+                root = self.image_root(self.norm(dev.Name))
+                img_id = self.image_ids.get(root)
+                if not img_id or getattr(dev, 'Image', 0) == img_id:
+                    continue
+                dev.Update(nValue=dev.nValue, sValue=str(dev.sValue), Image=img_id)
+                updated += 1
+            except Exception as e:
+                self.debug(f'icon update failed unit {unit}: {e}')
+        if updated:
+            self.log(f'Custom icons toegepast op {updated} devices')
 
     # ---- create/update ----
     def ensure_device_once(self, name, typename, device_id=None, legacy_names=None):
@@ -2481,6 +2505,7 @@ class BasePlugin:
         self.session = requests.Session()
         self.session.headers.update({'accept': 'application/json'})
         self.load_custom_images()
+        self.apply_images_to_devices()
         self.rebuild_index()
         self.load_state()
         self.login()

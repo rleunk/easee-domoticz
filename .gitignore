@@ -26,6 +26,7 @@ desktop.ini
 
 # Archives (keep source zip outside repo)
 *.zip
+!Easee_icons.zip
 
 # Logs
 *.log
