@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee Domoticz Plugin v10.5.4
+# Installatiehandleiding — Easee Domoticz Plugin v10.5.7
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,11 +8,11 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee Domoticz Plugin v10.5.4 |
+| Plugin | Easee Domoticz Plugin v10.5.7 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` |
-| Custom iconen | `Easee_icons.zip` (automatisch geladen bij pluginstart) |
+| Custom iconen | `Easee_icons.zip` (automatisch geladen bij pluginstart; zie [handmatige upload](#custom-iconen-handmatig-uploaden) als dat mislukt) |
 | GitHub-repo | https://github.com/rleunk/easee-domoticz (privé) |
 
 ---
@@ -90,7 +90,7 @@ ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
 ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons.zip
 ```
 
-Je moet beide bestanden zien met een recente datum. De icon-zip wordt bij pluginstart automatisch geladen; bestaande tegels krijgen de Easee-iconen na een herstart van het hardware-item (of Domoticz).
+Je moet beide bestanden zien met een recente datum. De icon-zip wordt bij pluginstart automatisch geladen; bestaande tegels krijgen de Easee-iconen na een herstart van het hardware-item (of Domoticz). Als automatisch laden mislukt, upload de zip eenmalig handmatig — zie [Custom iconen handmatig uploaden](#custom-iconen-handmatig-uploaden).
 
 ### Stap 4: Domoticz herstarten
 
@@ -284,6 +284,29 @@ sudo systemctl restart domoticz
 Custom iconen uit `Easee_icons.zip` worden bij start automatisch geladen en op bestaande devices toegepast.
 
 Controleer [CHANGELOG.md](CHANGELOG.md) voor wijzigingen per versie.
+
+---
+
+## Custom iconen handmatig uploaden
+
+De plugin laadt `Easee_icons.zip` automatisch uit de pluginmap. Sommige Domoticz-installaties accepteren die zip alleen via de webinterface. Upload is **eenmalig per Domoticz-installatie** — iconen blijven in de Domoticz-database bewaard.
+
+### Wanneer nodig?
+
+- Logmelding: *zip gevonden maar laden mislukt*
+- Tegels tonen standaard Domoticz-iconen i.p.v. groene/oranje Easee-tegels
+
+### Stappen
+
+1. Open Domoticz in de browser
+2. Ga naar **Setup** → **Instellingen** → **Meer opties** → **Aangepaste pictogrammen**
+3. Klik **Upload** en kies `Easee_icons.zip` uit de pluginmap:
+   ```
+   /home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons.zip
+   ```
+4. Herstart het Easee hardware-item (of Domoticz)
+
+Na een succesvolle upload herkent de plugin de iconen als *Custom icons uit Domoticz (handmatig geüpload)* in het log.
 
 ---
 

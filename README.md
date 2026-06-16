@@ -1,8 +1,8 @@
-# Easee Domoticz Plugin v10.5.4
+# Easee Domoticz Plugin v10.5.7
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators, Equalizer/meterkast ondersteuning en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.5.4-blue)
+![Version](https://img.shields.io/badge/version-10.5.7-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -16,7 +16,7 @@
 ⚡ **Hoofdzekering limiet** — Correcte weergave via `maxContinuousCurrent` en `circuit.fuse` (API)  
 💰 **Cost Tracking** — Sessie- en dagkosten per laadpaal (v10.4 fix)  
 💵 **Tibber Integration** — Actueel stroomtarief, goedkope laadwindows en kostenoverzicht (v10.4 fix)  
-🎨 **Custom icons** — Easee-tegeliconen zitten in `Easee_icons.zip` in de pluginmap (geen aparte download meer)  
+🎨 **Custom icons** — Easee-tegeliconen zitten in `Easee_icons.zip` in de pluginmap; automatisch geladen, of eenmalig handmatig uploaden (zie [INSTALL.md](INSTALL.md#custom-iconen-handmatig-uploaden))  
 🔐 **Secure** — Veilige token opslag en session management  
 🔄 **State Persistence** — Behoudt laadsessie gegevens over restarts  
 📦 **Git installatie** — Eenvoudige updates via `git pull` op je Domoticz-server  
@@ -161,6 +161,8 @@ sudo systemctl restart domoticz
 
 Na een upgrade worden custom iconen automatisch op **bestaande** tegels gezet zodra het hardware-item opnieuw start — je hoeft devices niet te verwijderen.
 
+**Iconen ontbreken na upgrade?** Upload `Easee_icons.zip` eenmalig via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**. Zie [INSTALL.md — Custom iconen handmatig uploaden](INSTALL.md#custom-iconen-handmatig-uploaden).
+
 **Van v10.4.0 naar v10.5.0?** Vervang `plugin.py` of doe `git pull` — state (`easee_v9_0_state.json`) en bestaande devices blijven behouden. Nieuwe laadpalen worden automatisch gedetecteerd.
 
 ## 🚀 Public release checklist
@@ -202,6 +204,6 @@ MIT License — zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.5.4** — Gemaakt door Richard Leunk
+**Versie 10.5.7** — Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

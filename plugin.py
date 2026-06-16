@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz Plugin v10.5.6" author="Richard Leunk" version="10.5.6"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz Plugin v10.5.7" author="Richard Leunk" version="10.5.7"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://developer.easee.com/docs/integrations">
     <description>
@@ -109,11 +109,11 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg): Domoticz.Log(f'[Easee v10.5.6] {msg}')
+    def log(self, msg): Domoticz.Log(f'[Easee v10.5.7] {msg}')
     def debug(self, msg):
         if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.5.6] {msg}')
-    def error(self, msg): Domoticz.Error(f'[Easee v10.5.6] {msg}')
+            Domoticz.Debug(f'[Easee v10.5.7] {msg}')
+    def error(self, msg): Domoticz.Error(f'[Easee v10.5.7] {msg}')
 
     # ---- helpers ----
     def norm(self, value):
@@ -393,47 +393,82 @@ class BasePlugin:
         return 'EaseeCharger'
     def icon_base(self, root):
         return f'{PLUGIN_KEY}{root}'
+
+    def _icon_images_key(self, root):
+        if root in Images:
+            return root
+        prefixed = self.icon_base(root)
+        if prefixed in Images:
+            return prefixed
+        return None
+
+    def _collect_image_ids(self):
+        roots = ['EaseeCharger','EaseeEqualizer','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
+        found = {}
+        for r in roots:
+            key = self._icon_images_key(r)
+            if key:
+                found[r] = Images[key].ID
+        return found
+
+    def _try_create_icon_zip(self, fn):
+        errors = []
+        for attempt in (lambda: Domoticz.Image(fn).Create(), lambda: Domoticz.Image(Filename=fn).Create()):
+            try:
+                attempt()
+                return True, errors
+            except Exception as e:
+                errors.append(str(e))
+        return False, errors
+
     def load_custom_images(self):
         roots = ['EaseeCharger','EaseeEqualizer','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
-        bases = [self.icon_base(r) for r in roots]
         candidates = ['Easee_icons.zip','Easee_v10_5_icons.zip','Easee_v10_0_icons.zip','Easee_v9_0_icons.zip','Easee_v8_0_3_icons.zip','Easee_v8_0_2_icons.zip','Easee_v8_0_1_icons.zip','Easee_v8_icons.zip','Easee.zip']
         loaded_zip = None
         load_errors = []
         found_zips = []
+        zip_loaded = False
+        preloaded = self._collect_image_ids()
+        if len(preloaded) == len(roots):
+            self.image_ids = preloaded
+            self.log(f'Custom icons uit Domoticz (handmatig geüpload): {len(self.image_ids)} sets')
+            return
         for fn in candidates:
             path = os.path.join(self.plugin_dir, fn)
             if not os.path.isfile(path):
                 continue
             found_zips.append(fn)
             try:
-                if any(b not in Images for b in bases):
+                if any(self._icon_images_key(r) is None for r in roots):
                     self.log(f'Custom icons laden uit {fn} (map: {self.plugin_dir})')
-                    try:
-                        Domoticz.Image(Filename=fn).Create()
-                    except Exception as e:
-                        msg = f'{fn}: Create() mislukt: {e}'
+                    ok, create_errors = self._try_create_icon_zip(fn)
+                    if ok:
+                        zip_loaded = True
+                    elif create_errors:
+                        msg = f'{fn}: Create() mislukt ({"; ".join(create_errors)})'
                         load_errors.append(msg)
                         self.error(msg)
-                        continue
-                for r, base in zip(roots, bases):
-                    if base in Images:
-                        self.image_ids[r] = Images[base].ID
-                    else:
-                        self.debug(f'icon base ontbreekt in Images na laden: {base}')
+                self.image_ids = self._collect_image_ids()
                 if self.image_ids:
                     loaded_zip = fn
                     break
-                missing = [b for b in bases if b not in Images]
+                missing = [r for r in roots if self._icon_images_key(r) is None]
                 if missing:
                     load_errors.append(f'{fn}: icons niet in Images ({", ".join(missing[:3])}{"..." if len(missing) > 3 else ""})')
             except Exception as e:
                 msg = f'{fn}: {e}'
                 load_errors.append(msg)
                 self.error(msg)
-        if self.image_ids:
-            self.log(f'Custom icons geladen: {len(self.image_ids)} sets' + (f' ({loaded_zip})' if loaded_zip else ''))
+        if not self.image_ids and preloaded:
+            self.image_ids = preloaded
+            self.log(f'Custom icons uit Domoticz (handmatig geüpload): {len(self.image_ids)} sets')
+        elif self.image_ids:
+            if zip_loaded and loaded_zip:
+                self.log(f'Custom icons geladen: {len(self.image_ids)} sets ({loaded_zip})')
+            else:
+                self.log(f'Custom icons uit Domoticz (handmatig geüpload): {len(self.image_ids)} sets')
         elif found_zips:
-            self.log('Waarschuwing: custom icon zip gevonden maar laden mislukt — standaard Domoticz iconen worden gebruikt')
+            self.log('Waarschuwing: zip gevonden maar laden mislukt — upload handmatig via Instellingen → Meer opties → Aangepaste pictogrammen')
             self.log(f'Icon zip zoekpad: {self.plugin_dir}')
             for fn in found_zips:
                 self.log(f'  {fn}: aanwezig')

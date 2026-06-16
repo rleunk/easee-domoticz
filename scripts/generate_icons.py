@@ -7,8 +7,6 @@ import struct
 import zipfile
 import zlib
 
-PLUGIN_KEY = 'EaseeCloudAutoDiscoveryV1000'
-
 ICON_SETS = [
     ('EaseeCharger', (46, 160, 67), 'plug'),
     ('EaseeEqualizer', (142, 68, 173), 'meter'),
@@ -115,20 +113,15 @@ def _icon_png(size, rgb, kind, dim=False):
     return _png_rgba(size, draw)
 
 
-def _base_name(icon_name):
-    return f'{PLUGIN_KEY}{icon_name}'
-
-
 def build_zip(out_path):
     lines = []
     entries = {}
     for icon_name, rgb, kind in ICON_SETS:
-        base = _base_name(icon_name)
-        desc = icon_name.replace('Easee', 'Easee ')
-        lines.append(f'{base};{icon_name};{desc}')
-        entries[f'{base}.png'] = _icon_png(16, rgb, kind)
-        entries[f'{base}48_On.png'] = _icon_png(48, rgb, kind, dim=False)
-        entries[f'{base}48_Off.png'] = _icon_png(48, rgb, kind, dim=True)
+        desc = icon_name.replace('Easee', 'Easee ', 1)
+        lines.append(f'{icon_name};{icon_name};{desc}')
+        entries[f'{icon_name}.png'] = _icon_png(16, rgb, kind)
+        entries[f'{icon_name}48_On.png'] = _icon_png(48, rgb, kind, dim=False)
+        entries[f'{icon_name}48_Off.png'] = _icon_png(48, rgb, kind, dim=True)
     entries['icons.txt'] = ('\n'.join(lines) + '\n').encode('utf-8')  # no BOM
     with zipfile.ZipFile(out_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
         zf.writestr('icons.txt', entries['icons.txt'])

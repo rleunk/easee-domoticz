@@ -2,7 +2,6 @@
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
-$PluginKey = 'EaseeCloudAutoDiscoveryV1000'
 $OutZip = Join-Path (Split-Path $PSScriptRoot -Parent) 'Easee_icons.zip'
 $TempDir = Join-Path $env:TEMP "easee-icons-$([guid]::NewGuid().ToString('N'))"
 New-Item -ItemType Directory -Path $TempDir | Out-Null
@@ -106,11 +105,12 @@ function Save-Png([Drawing.Bitmap]$Bmp, [string]$Path) {
 
 $Lines = New-Object System.Collections.Generic.List[string]
 foreach ($set in $IconSets) {
-    $base = "$PluginKey$($set.Name)"
-    $Lines.Add("$base;$($set.Name);$($set.Name)")
-    Save-Png (New-EaseeIcon 16 $set.Color $set.Kind $false) (Join-Path $TempDir "$base.png")
-    Save-Png (New-EaseeIcon 48 $set.Color $set.Kind $false) (Join-Path $TempDir "${base}48_On.png")
-    Save-Png (New-EaseeIcon 48 $set.Color $set.Kind $true) (Join-Path $TempDir "${base}48_Off.png")
+    $name = $set.Name
+    $desc = $name -replace '^Easee', 'Easee '
+    $Lines.Add("$name;$name;$desc")
+    Save-Png (New-EaseeIcon 16 $set.Color $set.Kind $false) (Join-Path $TempDir "$name.png")
+    Save-Png (New-EaseeIcon 48 $set.Color $set.Kind $false) (Join-Path $TempDir "${name}48_On.png")
+    Save-Png (New-EaseeIcon 48 $set.Color $set.Kind $true) (Join-Path $TempDir "${name}48_Off.png")
 }
 $iconsPath = Join-Path $TempDir 'icons.txt'
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
