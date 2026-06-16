@@ -9,7 +9,7 @@ De plugin gebruikt **`Easee_icons_v2.zip`** in de repo-root als enige iconenarch
 - **8 icon sets** — Charger, Power, Status, Cost, Alert, Overview, Equalizer, LoadBal (16×16 + 48×48 On/Off)
 - **Functie-badges** — subtiele hoekmarkering: W, i, €, !, Σ, E, L (Charger heeft geen badge)
 
-Preview: [`final-preview-with-hints.png`](final-preview-with-hints.png) (zelfde als [`../icon-preview-v2.png`](../icon-preview-v2.png)).
+Preview: [`../icon-preview-v2.png`](../icon-preview-v2.png).
 
 ## Opnieuw genereren
 

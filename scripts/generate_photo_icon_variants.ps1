@@ -13,7 +13,6 @@ $PreviewLedPath = Join-Path $OutRoot 'charger-options-preview-v4-photo-led.png'
 $PreviewPMaxPath = Join-Path $OutRoot 'charger-P-max-preview.png'
 $FinalPreviewPath = Join-Path $OutRoot 'final-preview-charger-Pmax-equalizer-v15.png'
 $FinalPreviewCombinedPath = Join-Path $OutRoot 'final-preview-combined.png'
-$FinalPreviewWithHintsPath = Join-Path $OutRoot 'final-preview-with-hints.png'
 $PMaxDir = Join-Path $OutRoot 'variant-P-max'
 $EqualizerMaxDir = Join-Path $OutRoot 'variant-Equalizer-max'
 $V2ZipPath = Join-Path $RepoRoot 'Easee_icons_v2.zip'
@@ -888,9 +887,8 @@ for ($i = 0; $i -lt $hintRows.Count; $i++) {
     $icon48.Dispose(); $icon16.Dispose()
 }
 $hg.Dispose()
-Save-Png $hintPreview $FinalPreviewWithHintsPath
+Save-Png $hintPreview $OfficialPreviewPath
 $hintPreview.Dispose()
-Copy-Item $FinalPreviewWithHintsPath $OfficialPreviewPath -Force
 
 $eqMaxOn48.Dispose(); $eqMaxOff48.Dispose(); $eqMaxOn16.Dispose()
 $lbMaxOn48.Dispose(); $lbMaxOff48.Dispose(); $lbMaxOn16.Dispose()
@@ -902,7 +900,6 @@ if ($IncludeVariants) {
 }
 
 Write-Output "Created $V2ZipPath (8 icon sets: P-max laadpaal + Equalizer-max)"
-Write-Output "Created $FinalPreviewWithHintsPath"
 Write-Output "Created $OfficialPreviewPath"
 Write-Output ('Equalizer-max vs v10.5.15 48px: {0}x{1} -> {2}x{3} px (+{4} pct H, +{5} pct W, area +{6} pct)' -f $eqMetricsV15.W, $eqMetricsV15.H, $eqMetricsMax.W, $eqMetricsMax.H, $eqHeightGain48, $eqWidthGain48, $eqAreaGain48)
 if ($IncludeVariants) {
