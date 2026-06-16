@@ -6,6 +6,18 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.5.15] — 2026-06-16
+
+### Gewijzigd
+- **Easee_icons_v2.zip** — Equalizer-silhouet verfijnd naar echte hardware: witte squircle puck met zachte 3D-gradiënt, prominent vlak binnenste cirkelvlak, subtiel lowercase **e**-logo (48px), gekleurde status-LED onderaan het cirkelvlak.
+- **scripts/generate_icons.py / .ps1** — nieuwe equalizer-geometrie (outer/inner face, inset shadow, logo, LED-positie); Charge-iconen ongewijzigd.
+- **docs/icon-preview-v2.png** — bijgewerkt.
+
+### Aanbevolen upgrade
+- `git pull` in de pluginmap en herstart het hardware-item. **Upload `Easee_icons_v2.zip` opnieuw** via **Instellingen → Meer opties → Aangepaste pictogrammen** — Domoticz cached iconen.
+
+---
+
 ## [10.5.14] — 2026-06-16
 
 ### Gewijzigd

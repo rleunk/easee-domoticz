@@ -217,24 +217,97 @@ def _charger_markings(x, y, size, g):
     return left or right
 
 
-def _equalizer_puck(x, y, size, ox=0, oy=0, scale=1.0):
+def _equalizer_geom(size, ox=0, oy=0, scale=1.0):
     s = size / 48.0 * scale
     ox_s, oy_s = ox * s, oy * s
-    r = max(2, int(8 * s))
+    return {
+        'outer_x0': int(10 * s + ox_s), 'outer_y0': int(10 * s + oy_s),
+        'outer_x1': int(38 * s + ox_s), 'outer_y1': int(38 * s + oy_s),
+        'outer_r': max(2, int(8 * s)),
+        'inner_cx': 24 * s + ox_s, 'inner_cy': 23 * s + oy_s,
+        'inner_r': max(3, 12 * s),
+        'led_cx': 24 * s + ox_s, 'led_cy': 33.5 * s + oy_s,
+        'led_r': max(1, 2.0 * s),
+        's': s, 'ox_s': ox_s, 'oy_s': oy_s,
+    }
+
+
+def _equalizer_outer(x, y, g):
     return _inside_rounded_rect(
-        x, y,
-        int(10 * s + ox_s), int(10 * s + oy_s),
-        int(38 * s + ox_s), int(38 * s + oy_s),
-        r,
-    )
+        x, y, g['outer_x0'], g['outer_y0'], g['outer_x1'], g['outer_y1'], g['outer_r'])
 
 
-def _equalizer_led(x, y, size, ox=0, oy=0, scale=1.0):
-    s = size / 48.0 * scale
-    cx = int(24 * s + ox * s)
-    cy = int(40 * s + oy * s)
-    r = max(1, int(2.5 * s))
-    return _inside_circle(x, y, cx, cy, r)
+def _equalizer_inner_face(x, y, g):
+    return _inside_circle(x, y, g['inner_cx'], g['inner_cy'], g['inner_r'])
+
+
+def _equalizer_led(x, y, g):
+    return _inside_circle(x, y, g['led_cx'], g['led_cy'], g['led_r'])
+
+
+def _equalizer_logo_e(x, y, size, g):
+    if size <= 16:
+        return False
+    s = g['s']
+    ox_s, oy_s = g['ox_s'], g['oy_s']
+    cx, cy = int(24 * s + ox_s), int(23 * s + oy_s)
+    stem_w = max(1, int(1.25 * s))
+    stem_x0 = cx - int(2.5 * s)
+    stem_x1 = stem_x0 + stem_w - 1
+    stem_y0, stem_y1 = cy - int(3.5 * s), cy + int(3 * s)
+    if _inside_rect(x, y, stem_x0, stem_y0, stem_x1, stem_y1):
+        return True
+    bar_y0 = cy - int(0.5 * s)
+    bar_y1 = cy + max(0, int(0.5 * s) - 1)
+    bar_x0, bar_x1 = stem_x0, cx + int(2.5 * s)
+    if _inside_rect(x, y, bar_x0, bar_y0, bar_x1, bar_y1):
+        return True
+    top_y0, top_y1 = cy - int(3.5 * s), cy - int(2.5 * s)
+    top_x0, top_x1 = stem_x0, cx + int(1.5 * s)
+    if _inside_rect(x, y, top_x0, top_y0, top_x1, top_y1):
+        return True
+    bot_y0, bot_y1 = cy + int(2 * s), cy + int(3 * s)
+    if _inside_rect(x, y, top_x0, bot_y0, bar_x1, bot_y1):
+        return True
+    return False
+
+
+def _equalizer_outer_color(x, y, g, dim):
+    w = max(1.0, g['outer_x1'] - g['outer_x0'])
+    h = max(1.0, g['outer_y1'] - g['outer_y0'])
+    shade = ((x - g['outer_x0']) / w + (y - g['outer_y0']) / h) * 0.5
+    light = (198, 202, 208) if dim else (248, 249, 252)
+    dark = (168, 172, 178) if dim else (218, 222, 228)
+    base = _blend_toward(light, dark, shade)
+    alpha = 200 if dim else 255
+    dx, dy = x - g['inner_cx'], y - g['inner_cy']
+    dist = (dx ** 2 + dy ** 2) ** 0.5 - g['inner_r']
+    if 0 <= dist <= 1.4 * g['s']:
+        base = _blend_toward(base, (190, 194, 200), 0.35)
+    return (base[0], base[1], base[2], alpha)
+
+
+def _equalizer_inner_color(dim):
+    alpha = 200 if dim else 255
+    rgb = (228, 231, 236) if dim else (252, 253, 255)
+    return (rgb[0], rgb[1], rgb[2], alpha)
+
+
+def _draw_equalizer_icon(x, y, size, accent, dim, ox=0, oy=0, scale=1.0):
+    g = _equalizer_geom(size, ox=ox, oy=oy, scale=scale)
+    if not _equalizer_outer(x, y, g):
+        return None
+    if _equalizer_led(x, y, g):
+        c = _status_dot_color(accent, dim)
+        alpha = 200 if dim else 255
+        return (c[0], c[1], c[2], alpha)
+    if _equalizer_logo_e(x, y, size, g):
+        logo = (150, 154, 160) if dim else (175, 178, 184)
+        alpha = 200 if dim else 255
+        return (logo[0], logo[1], logo[2], alpha)
+    if _equalizer_inner_face(x, y, g):
+        return _equalizer_inner_color(dim)
+    return _equalizer_outer_color(x, y, g, dim)
 
 
 def _draw_arrow_lr(x, y, size, ox=0, oy=0):
@@ -365,12 +438,8 @@ def _draw_symbol_v2(kind, x, y, size, accent, dim):
         return (0, 0, 0, 0)
 
     if kind == 'equalizer':
-        if _equalizer_puck(x, y, size):
-            return (puck[0], puck[1], puck[2], alpha)
-        if _equalizer_led(x, y, size):
-            c = _status_dot_color(bright, dim)
-            return (c[0], c[1], c[2], alpha)
-        return (0, 0, 0, 0)
+        px = _draw_equalizer_icon(x, y, size, bright, dim)
+        return px if px else (0, 0, 0, 0)
 
     if kind == 'overview':
         for ox in (-7, 7):
@@ -380,13 +449,11 @@ def _draw_symbol_v2(kind, x, y, size, accent, dim):
         return (0, 0, 0, 0)
 
     if kind == 'loadbal':
-        if _equalizer_puck(x, y, size, scale=0.82):
-            return (puck[0], puck[1], puck[2], alpha)
+        px = _draw_equalizer_icon(x, y, size, bright, dim, scale=0.82)
+        if px:
+            return px
         if _draw_arrow_lr(x, y, size):
             return (accent[0], accent[1], accent[2], alpha)
-        if _equalizer_led(x, y, size, scale=0.82):
-            c = _status_dot_color(bright, dim)
-            return (c[0], c[1], c[2], alpha)
         return (0, 0, 0, 0)
 
     return (0, 0, 0, 0)

@@ -171,18 +171,90 @@ function Test-ChargerMarkings([int]$x, [int]$y, [int]$Size, [hashtable]$G) {
     (([int](26 * $s + $oxs) -le $x) -and ($x -le [int](27 * $s + $oxs)))
 }
 
-function Test-EqualizerPuck([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
+function Get-EqualizerGeom([int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
     $s = ($Size / 48.0) * $Scale
     $oxs = $Ox * $s; $oys = $Oy * $s
-    $r = [math]::Max(2, [int](8 * $s))
-    Test-RoundedRect $x $y ([int](10 * $s + $oxs)) ([int](10 * $s + $oys)) ([int](38 * $s + $oxs)) ([int](38 * $s + $oys)) $r
+    @{
+        OuterX0 = [int](10 * $s + $oxs); OuterY0 = [int](10 * $s + $oys)
+        OuterX1 = [int](38 * $s + $oxs); OuterY1 = [int](38 * $s + $oys)
+        OuterR = [math]::Max(2, [int](8 * $s))
+        InnerCx = 24 * $s + $oxs; InnerCy = 23 * $s + $oys
+        InnerR = [math]::Max(3, 12 * $s)
+        LedCx = 24 * $s + $oxs; LedCy = 33.5 * $s + $oys
+        LedR = [math]::Max(1, 2.0 * $s)
+        S = $s; Oxs = $oxs; Oys = $oys
+    }
 }
 
-function Test-EqualizerLed([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
-    $s = ($Size / 48.0) * $Scale
-    $cx = [int](24 * $s + $Ox * $s); $cy = [int](40 * $s + $Oy * $s)
-    $r = [math]::Max(1, [int](2.5 * $s))
-    Test-Circle $x $y $cx $cy $r
+function Test-EqualizerOuter([int]$x, [int]$y, [hashtable]$G) {
+    Test-RoundedRect $x $y $G.OuterX0 $G.OuterY0 $G.OuterX1 $G.OuterY1 $G.OuterR
+}
+
+function Test-EqualizerInnerFace([int]$x, [int]$y, [hashtable]$G) {
+    Test-Circle $x $y $G.InnerCx $G.InnerCy $G.InnerR
+}
+
+function Test-EqualizerLed([int]$x, [int]$y, [hashtable]$G) {
+    Test-Circle $x $y $G.LedCx $G.LedCy $G.LedR
+}
+
+function Test-EqualizerLogoE([int]$x, [int]$y, [int]$Size, [hashtable]$G) {
+    if ($Size -le 16) { return $false }
+    $s = $G.S; $oxs = $G.Oxs; $oys = $G.Oys
+    $cx = [int](24 * $s + $oxs); $cy = [int](23 * $s + $oys)
+    $stemW = [math]::Max(1, [int](1.25 * $s))
+    $stemX0 = $cx - [int](2.5 * $s); $stemX1 = $stemX0 + $stemW - 1
+    $stemY0 = $cy - [int](3.5 * $s); $stemY1 = $cy + [int](3 * $s)
+    if (Test-Rect $x $y $stemX0 $stemY0 $stemX1 $stemY1) { return $true }
+    $barY0 = $cy - [int](0.5 * $s); $barY1 = $cy + [math]::Max(0, [int](0.5 * $s) - 1)
+    $barX0 = $stemX0; $barX1 = $cx + [int](2.5 * $s)
+    if (Test-Rect $x $y $barX0 $barY0 $barX1 $barY1) { return $true }
+    $topY0 = $cy - [int](3.5 * $s); $topY1 = $cy - [int](2.5 * $s)
+    $topX0 = $stemX0; $topX1 = $cx + [int](1.5 * $s)
+    if (Test-Rect $x $y $topX0 $topY0 $topX1 $topY1) { return $true }
+    $botY0 = $cy + [int](2 * $s); $botY1 = $cy + [int](3 * $s)
+    if (Test-Rect $x $y $topX0 $botY0 $barX1 $botY1) { return $true }
+    return $false
+}
+
+function Get-EqualizerOuterColor([int]$x, [int]$y, [hashtable]$G, [bool]$Dim) {
+    $w = [math]::Max(1.0, $G.OuterX1 - $G.OuterX0)
+    $h = [math]::Max(1.0, $G.OuterY1 - $G.OuterY0)
+    $shade = (($x - $G.OuterX0) / $w + ($y - $G.OuterY0) / $h) * 0.5
+    $light = if ($Dim) {
+        [Drawing.Color]::FromArgb(200, 198, 202, 208)
+    } else {
+        [Drawing.Color]::FromArgb(255, 248, 249, 252)
+    }
+    $dark = if ($Dim) {
+        [Drawing.Color]::FromArgb(200, 168, 172, 178)
+    } else {
+        [Drawing.Color]::FromArgb(255, 218, 222, 228)
+    }
+    $base = Get-BlendColor $light $dark $shade
+    $dx = $x - $G.InnerCx; $dy = $y - $G.InnerCy
+    $dist = [math]::Sqrt($dx * $dx + $dy * $dy) - $G.InnerR
+    if (($dist -ge 0) -and ($dist -le (1.4 * $G.S))) {
+        return Get-BlendColor $base ([Drawing.Color]::FromArgb($base.A, 190, 194, 200)) 0.35
+    }
+    return $base
+}
+
+function Get-EqualizerInnerColor([bool]$Dim) {
+    if ($Dim) { return [Drawing.Color]::FromArgb(200, 228, 231, 236) }
+    return [Drawing.Color]::FromArgb(255, 252, 253, 255)
+}
+
+function Get-EqualizerPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim, [double]$Ox = 0, [double]$Oy = 0, [double]$Scale = 1.0) {
+    $G = Get-EqualizerGeom $Size -Ox $Ox -Oy $Oy -Scale $Scale
+    if (-not (Test-EqualizerOuter $x $y $G)) { return $null }
+    if (Test-EqualizerLed $x $y $G) { return (Get-StatusDotColor $Bright $Dim) }
+    if (Test-EqualizerLogoE $x $y $Size $G) {
+        $logo = if ($Dim) { [Drawing.Color]::FromArgb(200, 150, 154, 160) } else { [Drawing.Color]::FromArgb(255, 175, 178, 184) }
+        return $logo
+    }
+    if (Test-EqualizerInnerFace $x $y $G) { return (Get-EqualizerInnerColor $Dim) }
+    return (Get-EqualizerOuterColor $x $y $G $Dim)
 }
 
 function Test-ArrowLR([int]$x, [int]$y, [int]$Size, [double]$Ox = 0, [double]$Oy = 0) {
@@ -235,7 +307,6 @@ function Get-ChargerPixel([int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, 
 }
 
 function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing.Color]$Bright, [bool]$Dim) {
-    $puck = if ($Dim) { [Drawing.Color]::FromArgb(200, 160, 163, 168) } else { [Drawing.Color]::FromArgb(255, 235, 237, 240) }
     $accent = Get-AccentColor $Bright $Dim
     $green = Get-AccentColor ([Drawing.Color]::FromArgb(255, 46, 160, 67)) $Dim
     $red = Get-AccentColor ([Drawing.Color]::FromArgb(255, 229, 57, 53)) $Dim
@@ -269,8 +340,8 @@ function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing
             if (Test-Circle $x $y $cx $cy ([math]::Max(1.5, $Size * 0.07))) { return $red }
         }
         'equalizer' {
-            if (Test-EqualizerPuck $x $y $Size) { return $puck }
-            if (Test-EqualizerLed $x $y $Size) { return (Get-StatusDotColor $Bright $Dim) }
+            $px = Get-EqualizerPixel $x $y $Size $Bright $Dim
+            if ($null -ne $px) { return $px }
         }
         'overview' {
             foreach ($ox in @(-7, 7)) {
@@ -279,9 +350,9 @@ function Get-SymbolPixelV2([string]$Kind, [int]$x, [int]$y, [int]$Size, [Drawing
             }
         }
         'loadbal' {
-            if (Test-EqualizerPuck $x $y $Size -Scale 0.82) { return $puck }
+            $px = Get-EqualizerPixel $x $y $Size $Bright $Dim -Scale 0.82
+            if ($null -ne $px) { return $px }
             if (Test-ArrowLR $x $y $Size) { return $accent }
-            if (Test-EqualizerLed $x $y $Size -Scale 0.82) { return (Get-StatusDotColor $Bright $Dim) }
         }
     }
     return $null
