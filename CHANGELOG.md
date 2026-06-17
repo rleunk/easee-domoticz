@@ -6,6 +6,17 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.7.0] — 2026-06-17
+
+### Gewijzigd
+- **Code cleanup** — alle passthrough-wrappers (~150 methodes) verwijderd uit `plugin.py`; modules roepen elkaar direct aan met `plugin` als eerste argument.
+- **plugin.py** — verkleind tot lifecycle- en orchestratiehub (~340 regels incl. XML-docstring); geen functionele wijzigingen.
+- **easee_api.py** — WARNING-log als `api_get` langer dan 5 seconden duurt.
+
+### Changed (EN)
+- **Code cleanup** — removed ~150 passthrough wrappers from `plugin.py`; direct module calls with `plugin` as first arg; no behavior change.
+- **easee_api.py** — logs WARNING when `api_get` takes longer than 5 seconds.
+
 ## [10.6.5] — 2026-06-17
 
 ### Toegevoegd

@@ -81,13 +81,13 @@ def charger_state(plugin, cid):
         'last_session_cost_energy': 0.0,
         'last_session_cost_tax': 0.0,
         'last_session_duration': '00:00',
-        'day_key': plugin.today_key(),
+        'day_key': today_key(plugin),
         'day_cost_total': 0.0,
         'day_cost_energy': 0.0,
         'day_cost_tax': 0.0,
     })
-    if st.get('day_key') != plugin.today_key():
-        st['day_key'] = plugin.today_key()
+    if st.get('day_key') != today_key(plugin):
+        st['day_key'] = today_key(plugin)
         st['day_cost_total'] = 0.0
         st['day_cost_energy'] = 0.0
         st['day_cost_tax'] = 0.0

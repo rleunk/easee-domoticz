@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import time
+
 import domoticz_runtime
 from easee_constants import BASE_URL, LOGIN_URL, REFRESH_URL
 import easee_logging
@@ -23,7 +25,7 @@ def login(plugin):
 
 def refresh(plugin):
     if not plugin.access_token or not plugin.refresh_token:
-        return plugin.login()
+        return login(plugin)
     try:
         r = plugin.session.post(REFRESH_URL, json={'accessToken': plugin.access_token, 'refreshToken': plugin.refresh_token}, timeout=20)
         if r.status_code == 200:
@@ -35,19 +37,23 @@ def refresh(plugin):
                 return True
     except Exception as e:
         easee_logging.debug('easee_api', f'Token refresh mislukt, opnieuw inloggen: {e}', 'login')
-    return plugin.login()
+    return login(plugin)
 
 def api_get(plugin, path, retry=True):
+    started = time.time()
     r = plugin.session.get(BASE_URL + path, headers={'Authorization': f'Bearer {plugin.access_token}'}, timeout=20)
+    elapsed = time.time() - started
+    if elapsed > 5:
+        easee_logging.warning('easee_api', f'GET {path} duurde {elapsed:.1f}s', 'api')
     if r.status_code == 401 and retry:
-        if plugin.refresh():
-            return plugin.api_get(path, False)
+        if refresh(plugin):
+            return api_get(plugin, path, False)
     r.raise_for_status()
     return r.json() if r.text else None
 
 def api_get_optional(plugin, path):
     try:
-        return plugin.api_get(path)
+        return api_get(plugin, path)
     except Exception as e:
         easee_logging.debug('easee_api', f'GET {path} optioneel mislukt: {e}', 'api')
         return None

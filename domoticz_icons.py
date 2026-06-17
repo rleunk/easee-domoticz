@@ -4,9 +4,11 @@ import os
 import Domoticz
 import domoticz_runtime
 from easee_constants import PLUGIN_KEY, CORE_DEVICE_IDS
+import easee_logging
+import easee_helpers
 
 def image_root(plugin, name, device_id=None):
-    n = plugin.norm(name).lower()
+    n = easee_helpers.norm(plugin, name).lower()
     devid = str(device_id or '').upper()
 
     if devid == CORE_DEVICE_IDS.get('LoadBal', ''):
@@ -62,7 +64,7 @@ def icon_base(plugin, root):
 def _icon_images_key(plugin, root):
     if root in domoticz_runtime.Images:
         return root
-    prefixed = plugin.icon_base(root)
+    prefixed = icon_base(plugin, root)
     if prefixed in domoticz_runtime.Images:
         return prefixed
     return None
@@ -71,7 +73,7 @@ def _collect_image_ids(plugin):
     roots = ['EaseeCharger','EaseeEqualizer','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
     found = {}
     for r in roots:
-        key = plugin._icon_images_key(r)
+        key = _icon_images_key(plugin, r)
         if key:
             found[r] = domoticz_runtime.Images[key].ID
     return found
@@ -93,10 +95,10 @@ def load_custom_images(plugin):
     load_errors = []
     found_zips = []
     zip_loaded = False
-    preloaded = plugin._collect_image_ids()
+    preloaded = _collect_image_ids(plugin)
     if len(preloaded) == len(roots):
         plugin.image_ids = preloaded
-        plugin.log(f'Custom icons uit Domoticz (handmatig geüpload): {len(plugin.image_ids)} sets')
+        easee_logging.info('domoticz_icons', f'Custom icons uit Domoticz (handmatig geüpload): {len(plugin.image_ids)} sets')
         return
     for fn in candidates:
         path = os.path.join(plugin.plugin_dir, fn)
@@ -104,47 +106,47 @@ def load_custom_images(plugin):
             continue
         found_zips.append(fn)
         try:
-            if any(plugin._icon_images_key(r) is None for r in roots):
-                plugin.log(f'Custom icons laden uit {fn} (map: {plugin.plugin_dir})')
-                ok, create_errors = plugin._try_create_icon_zip(fn)
+            if any(_icon_images_key(plugin, r) is None for r in roots):
+                easee_logging.info('domoticz_icons', f'Custom icons laden uit {fn} (map: {plugin.plugin_dir})')
+                ok, create_errors = _try_create_icon_zip(plugin, fn)
                 if ok:
                     zip_loaded = True
                 elif create_errors:
                     msg = f'{fn}: Create() mislukt ({"; ".join(create_errors)})'
                     load_errors.append(msg)
-                    plugin.error(msg)
-            plugin.image_ids = plugin._collect_image_ids()
+                    easee_logging.error('domoticz_icons', msg)
+            plugin.image_ids = _collect_image_ids(plugin)
             if plugin.image_ids:
                 loaded_zip = fn
                 break
-            missing = [r for r in roots if plugin._icon_images_key(r) is None]
+            missing = [r for r in roots if _icon_images_key(plugin, r) is None]
             if missing:
                 load_errors.append(f'{fn}: icons niet in Images ({", ".join(missing[:3])}{"..." if len(missing) > 3 else ""})')
         except Exception as e:
             msg = f'{fn}: {e}'
             load_errors.append(msg)
-            plugin.error(msg)
+            easee_logging.error('domoticz_icons', msg)
     if not plugin.image_ids and preloaded:
         plugin.image_ids = preloaded
-        plugin.log(f'Custom icons uit Domoticz (handmatig geüpload): {len(plugin.image_ids)} sets')
+        easee_logging.info('domoticz_icons', f'Custom icons uit Domoticz (handmatig geüpload): {len(plugin.image_ids)} sets')
     elif plugin.image_ids:
         if zip_loaded and loaded_zip:
-            plugin.log(f'Custom icons geladen: {len(plugin.image_ids)} sets ({loaded_zip})')
+            easee_logging.info('domoticz_icons', f'Custom icons geladen: {len(plugin.image_ids)} sets ({loaded_zip})')
         else:
-            plugin.log(f'Custom icons uit Domoticz (handmatig geüpload): {len(plugin.image_ids)} sets')
+            easee_logging.info('domoticz_icons', f'Custom icons uit Domoticz (handmatig geüpload): {len(plugin.image_ids)} sets')
     elif found_zips:
-        plugin.log('Waarschuwing: zip gevonden maar laden mislukt — upload handmatig via Instellingen → Meer opties → Aangepaste pictogrammen')
-        plugin.log(f'Icon zip zoekpad: {plugin.plugin_dir}')
+        easee_logging.info('domoticz_icons', 'Waarschuwing: zip gevonden maar laden mislukt — upload handmatig via Instellingen → Meer opties → Aangepaste pictogrammen')
+        easee_logging.info('domoticz_icons', f'Icon zip zoekpad: {plugin.plugin_dir}')
         for fn in found_zips:
-            plugin.log(f'  {fn}: aanwezig')
+            easee_logging.info('domoticz_icons', f'  {fn}: aanwezig')
         if load_errors:
-            plugin.log('Icon zip laden mislukt: ' + '; '.join(load_errors))
+            easee_logging.info('domoticz_icons', 'Icon zip laden mislukt: ' + '; '.join(load_errors))
     else:
-        plugin.log('Waarschuwing: geen custom icon zip gevonden — standaard Domoticz iconen worden gebruikt')
-        plugin.log(f'Icon zip zoekpad: {plugin.plugin_dir}')
+        easee_logging.info('domoticz_icons', 'Waarschuwing: geen custom icon zip gevonden — standaard Domoticz iconen worden gebruikt')
+        easee_logging.info('domoticz_icons', f'Icon zip zoekpad: {plugin.plugin_dir}')
         for fn in candidates:
             path = os.path.join(plugin.plugin_dir, fn)
-            plugin.log(f'  {fn}: {"aanwezig" if os.path.isfile(path) else "ontbreekt"}')
+            easee_logging.info('domoticz_icons', f'  {fn}: {"aanwezig" if os.path.isfile(path) else "ontbreekt"}')
 
 def apply_images_to_devices(plugin):
     if not plugin.image_ids:
@@ -152,15 +154,15 @@ def apply_images_to_devices(plugin):
     updated = 0
     for unit, dev in domoticz_runtime.Devices.items():
         try:
-            root = plugin.image_root(plugin.norm(dev.Name), getattr(dev, 'DeviceID', ''))
+            root = image_root(plugin, easee_helpers.norm(plugin, dev.Name), getattr(dev, 'DeviceID', ''))
             img_id = plugin.image_ids.get(root)
             if not img_id or getattr(dev, 'Image', 0) == img_id:
                 continue
             dev.Update(nValue=dev.nValue, sValue=str(dev.sValue), Image=img_id)
             updated += 1
         except Exception as e:
-            plugin.debug(f'icon update failed unit {unit}: {e}')
+            easee_logging.debug('domoticz_icons', f'icon update failed unit {unit}: {e}')
     if updated:
-        plugin.log(f'Custom icons toegepast op {updated} devices')
+        easee_logging.info('domoticz_icons', f'Custom icons toegepast op {updated} devices')
 
     # ---- create/update ----

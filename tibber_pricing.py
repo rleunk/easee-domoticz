@@ -4,27 +4,30 @@ from datetime import datetime
 import Domoticz
 from easee_constants import TIBBER_GQL
 from easee_api_keys import TIBBER_KEYS
+import easee_logging
+import easee_helpers
+import easee_state
 
 def tibber_query(plugin, query):
-    token = plugin.tibber_token()
+    token = easee_helpers.tibber_token(plugin)
     if not token:
         return None
     try:
         r = plugin.session.post(TIBBER_GQL, headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}, json={'query': query}, timeout=20)
         if r.status_code == 200:
             return r.json()
-        plugin.debug(f'tibber query http {r.status_code}: {r.text[:300]}')
+        easee_logging.debug('tibber_pricing', f'tibber query http {r.status_code}: {r.text[:300]}')
     except Exception as e:
-        plugin.debug(f'tibber query failed: {e}')
+        easee_logging.debug('tibber_pricing', f'tibber query failed: {e}')
     return None
 
 def refresh_tibber_prices(plugin):
-    if not plugin.tibber_enabled():
+    if not easee_helpers.tibber_enabled(plugin):
         plugin.state['price_cache'] = {}
         plugin.state['currency'] = 'EUR'
         return
     query = '{ viewer { homes { id currentSubscription { priceInfo { current { total energy tax currency startsAt } today { total energy tax startsAt } tomorrow { total energy tax startsAt } } } } } }'
-    result = plugin.tibber_query(query)
+    result = tibber_query(plugin, query)
     if not result:
         return
     try:
@@ -45,20 +48,20 @@ def refresh_tibber_prices(plugin):
                 total = node.get(total_k)
                 if start and total is not None:
                     cache[str(start)] = {
-                        total_k: plugin.safe_float(total, 0.0),
-                        energy_k: plugin.safe_float(node.get(energy_k), 0.0),
-                        tax_k: plugin.safe_float(node.get(tax_k), 0.0),
+                        total_k: easee_helpers.safe_float(plugin, total, 0.0),
+                        energy_k: easee_helpers.safe_float(plugin, node.get(energy_k), 0.0),
+                        tax_k: easee_helpers.safe_float(plugin, node.get(tax_k), 0.0),
                     }
         if curr.get(starts_at) and curr.get(total_k) is not None:
             cache[str(curr.get(starts_at))] = {
-                total_k: plugin.safe_float(curr.get(total_k), 0.0),
-                energy_k: plugin.safe_float(curr.get(energy_k), 0.0),
-                tax_k: plugin.safe_float(curr.get(tax_k), 0.0),
+                total_k: easee_helpers.safe_float(plugin, curr.get(total_k), 0.0),
+                energy_k: easee_helpers.safe_float(plugin, curr.get(energy_k), 0.0),
+                tax_k: easee_helpers.safe_float(plugin, curr.get(tax_k), 0.0),
             }
         plugin.state['price_cache'] = cache
-        plugin.state['price_cache_refreshed'] = int(plugin.now_ts())
+        plugin.state['price_cache_refreshed'] = int(easee_state.now_ts(plugin))
     except Exception as e:
-        plugin.debug(f'parse tibber prices failed: {e}')
+        easee_logging.debug('tibber_pricing', f'parse tibber prices failed: {e}')
 
 def current_tibber_price(plugin):
     cache = plugin.state.get('price_cache') or {}
@@ -69,7 +72,7 @@ def current_tibber_price(plugin):
     best_delta = None
     best_start = None
     for start_s, data in cache.items():
-        dt = plugin.parse_iso(start_s)
+        dt = easee_helpers.parse_iso(plugin, start_s)
         if dt is None:
             continue
         delta = (now - dt).total_seconds()
@@ -79,7 +82,7 @@ def current_tibber_price(plugin):
             best_start = start_s
     if best is None:
         for start_s, data in cache.items():
-            dt = plugin.parse_iso(start_s)
+            dt = easee_helpers.parse_iso(plugin, start_s)
             if dt is None:
                 continue
             delta = abs((dt - now).total_seconds())
@@ -94,18 +97,18 @@ def current_tibber_price(plugin):
 
 def price_status_emoji(plugin):
     cache = plugin.state.get('price_cache') or {}
-    current = plugin.current_tibber_price()
-    cur = plugin.safe_float(current.get('total'), 0.0)
-    return plugin.price_emoji(cur, cache)
+    current = current_tibber_price(plugin)
+    cur = easee_helpers.safe_float(plugin, current.get('total'), 0.0)
+    return price_emoji(plugin, cur, cache)
 
 def cheapest_window_text(plugin, hours=3):
     cache = plugin.state.get('price_cache') or {}
     points = []
     for start_s, data in cache.items():
-        dt = plugin.parse_iso(start_s)
+        dt = easee_helpers.parse_iso(plugin, start_s)
         if dt is None:
             continue
-        points.append((dt, plugin.safe_float(data.get('total'),0.0)))
+        points.append((dt, easee_helpers.safe_float(plugin, data.get('total'),0.0)))
     points.sort(key=lambda x: x[0])
     if len(points) < hours:
         return 'Onvoldoende prijsdata'
@@ -128,7 +131,7 @@ def price_emoji(plugin, price_total, cache):
     """Emoji for price level"""
     if not cache:
         return '⚪'
-    prices = sorted(plugin.safe_float(v.get('total'), 0.0) for v in cache.values() if isinstance(v, dict))
+    prices = sorted(easee_helpers.safe_float(plugin, v.get('total'), 0.0) for v in cache.values() if isinstance(v, dict))
     if len(prices) < 3:
         return '⚪'
     lo = prices[max(0, int(len(prices)*0.33)-1)]

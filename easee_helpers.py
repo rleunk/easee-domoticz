@@ -17,18 +17,18 @@ def extra_charger_names(plugin):
     raw = (domoticz_runtime.Parameters.get('Mode4', '') or '').strip()
     if not raw or raw.lower() == 'easee':
         return []
-    return [plugin.clean_label(part.strip()) for part in raw.split(',') if part.strip()]
+    return [clean_label(plugin, part.strip()) for part in raw.split(',') if part.strip()]
 
 def pref(plugin, label):
-    return f'{plugin.prefix()} - {label}'
+    return f'{prefix(plugin)} - {label}'
 
 def clean_label(plugin, name):
     """Verwijder dubbele Easee/hardware prefix uit device-namen."""
-    name = plugin.norm(name)
+    name = norm(plugin, name)
     if not name:
         return name
     prefixes = []
-    for p in (plugin.prefix(), 'Easee'):
+    for p in (prefix(plugin), 'Easee'):
         p = str(p).strip()
         if p and p.lower() not in [x.lower() for x in prefixes]:
             prefixes.append(p)
@@ -70,7 +70,7 @@ def euro_str(plugin, value):
         return '0.00'
 
 def power_watts(plugin, value):
-    x = plugin.safe_float(value, 0.0)
+    x = safe_float(plugin, value, 0.0)
     if 0 < abs(x) < 100:
         x *= 1000.0
     if x < 0:
@@ -78,7 +78,7 @@ def power_watts(plugin, value):
     return int(round(x))
 
 def kwh_value(plugin, value):
-    x = plugin.safe_float(value, 0.0)
+    x = safe_float(plugin, value, 0.0)
     if x > 10000:
         x /= 1000.0
     if x < 0:
@@ -92,7 +92,7 @@ def wh_from_kwh(plugin, value):
         return 0
 
 def poll_interval_sec(plugin):
-    return max(10, plugin.safe_int(domoticz_runtime.Parameters.get('Mode1', '30'), 30))
+    return max(10, safe_int(plugin, domoticz_runtime.Parameters.get('Mode1', '30'), 30))
 
 def short_id(plugin, full_id):
     s = str(full_id).strip()
@@ -110,12 +110,12 @@ def tibber_token(plugin):
     return (domoticz_runtime.Parameters.get('Mode7', '') or '').strip()
 
 def tibber_enabled(plugin):
-    return bool(plugin.tibber_token())
+    return bool(tibber_token(plugin))
 
     # ---- emoji & status helpers ----
 
 def kw_to_watts(plugin, value):
-    x = plugin.safe_float(value, 0.0)
+    x = safe_float(plugin, value, 0.0)
     if x <= 0:
         return 0
     if abs(x) < 100:
@@ -123,7 +123,7 @@ def kw_to_watts(plugin, value):
     return int(round(x))
 
 def format_amp(plugin, value):
-    x = plugin.safe_float(value, 0.0)
+    x = safe_float(plugin, value, 0.0)
     if x <= 0:
         return None
     if abs(x - round(x)) < 0.05:
@@ -132,14 +132,14 @@ def format_amp(plugin, value):
 
 def current_from_power_3phase(plugin, power_w):
     """Bereken lijnstroom (A) uit actief vermogen op 3×230 V."""
-    p = plugin.safe_float(power_w, 0.0)
+    p = safe_float(plugin, power_w, 0.0)
     if p <= 0:
         return 0.0
     return p / (math.sqrt(3.0) * 230.0)
 
 def amps_balanced_3phase_from_power(plugin, power_w, voltage=230):
     """Max import vermogen (W) → lijnstroom (A) bij evenwichtige 3-fase (17200 W → 24,9 A)."""
-    p = plugin.safe_float(power_w, 0.0)
+    p = safe_float(plugin, power_w, 0.0)
     if p <= 0:
         return 0.0
     return p / (3.0 * voltage)
@@ -150,7 +150,7 @@ def phase_currents_from_values(plugin, values):
     for key in EQUALIZER_KEYS['phase_current']:
         if key in values and values.get(key) is not None:
             any_obs = True
-            phases.append(plugin.safe_float(values.get(key), 0.0))
+            phases.append(safe_float(plugin, values.get(key), 0.0))
         else:
             phases.append(None)
     if not any_obs:
@@ -169,17 +169,17 @@ def format_phase_amp(plugin, val):
     return f'{val:.1f}'
 
 def actual_current_line(plugin, values, power_w):
-    l1, l2, l3, load_a, has_phases = plugin.phase_currents_from_values(values)
+    l1, l2, l3, load_a, has_phases = phase_currents_from_values(plugin, values)
     if has_phases:
-        parts = [plugin.format_phase_amp(v) for v in (l1, l2, l3)]
+        parts = [format_phase_amp(plugin, v) for v in (l1, l2, l3)]
         return f'📊 L1/L2/L3: {" / ".join(parts)} A', load_a
-    calc_a = plugin.current_from_power_3phase(power_w)
+    calc_a = current_from_power_3phase(plugin, power_w)
     if calc_a > 0:
         return f'📊 Actuele stroom: {calc_a:.1f} A (3-fase)', calc_a
     return None, 0.0
 
 def format_kw(plugin, value):
-    x = plugin.safe_float(value, 0.0)
+    x = safe_float(plugin, value, 0.0)
     if x <= 0:
         return None
     if abs(x) >= 100:
