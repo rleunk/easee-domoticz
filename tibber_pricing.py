@@ -3,6 +3,7 @@
 from datetime import datetime
 import Domoticz
 from easee_constants import TIBBER_GQL
+from easee_api_keys import TIBBER_KEYS
 
 def tibber_query(plugin, query):
     token = plugin.tibber_token()
@@ -32,17 +33,28 @@ def refresh_tibber_prices(plugin):
             return
         info = ((((homes[0] or {}).get('currentSubscription') or {}).get('priceInfo')) or {})
         cache = {}
-        curr = info.get('current') or {}
-        if curr.get('currency'):
-            plugin.state['currency'] = str(curr.get('currency'))
-        for bucket_name in ('today','tomorrow'):
+        curr = info.get(TIBBER_KEYS['bucket_current']) or {}
+        total_k, energy_k, tax_k = TIBBER_KEYS['price']
+        starts_at = TIBBER_KEYS['starts_at']
+        currency_k = TIBBER_KEYS['currency']
+        if curr.get(currency_k):
+            plugin.state['currency'] = str(curr.get(currency_k))
+        for bucket_name in TIBBER_KEYS['buckets']:
             for node in (info.get(bucket_name) or []):
-                start = node.get('startsAt')
-                total = node.get('total')
+                start = node.get(starts_at)
+                total = node.get(total_k)
                 if start and total is not None:
-                    cache[str(start)] = {'total': plugin.safe_float(total,0.0), 'energy': plugin.safe_float(node.get('energy'),0.0), 'tax': plugin.safe_float(node.get('tax'),0.0)}
-        if curr.get('startsAt') and curr.get('total') is not None:
-            cache[str(curr.get('startsAt'))] = {'total': plugin.safe_float(curr.get('total'),0.0), 'energy': plugin.safe_float(curr.get('energy'),0.0), 'tax': plugin.safe_float(curr.get('tax'),0.0)}
+                    cache[str(start)] = {
+                        total_k: plugin.safe_float(total, 0.0),
+                        energy_k: plugin.safe_float(node.get(energy_k), 0.0),
+                        tax_k: plugin.safe_float(node.get(tax_k), 0.0),
+                    }
+        if curr.get(starts_at) and curr.get(total_k) is not None:
+            cache[str(curr.get(starts_at))] = {
+                total_k: plugin.safe_float(curr.get(total_k), 0.0),
+                energy_k: plugin.safe_float(curr.get(energy_k), 0.0),
+                tax_k: plugin.safe_float(curr.get(tax_k), 0.0),
+            }
         plugin.state['price_cache'] = cache
         plugin.state['price_cache_refreshed'] = int(plugin.now_ts())
     except Exception as e:

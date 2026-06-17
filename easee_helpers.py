@@ -5,6 +5,7 @@ from datetime import datetime
 import hashlib
 import Domoticz
 import domoticz_runtime
+from easee_api_keys import EQUALIZER_KEYS
 
 def norm(plugin, value):
     return ' '.join(str(value).strip().split())
@@ -146,7 +147,7 @@ def amps_balanced_3phase_from_power(plugin, power_w, voltage=230):
 def phase_currents_from_values(plugin, values):
     phases = []
     any_obs = False
-    for key in ('currentL1', 'currentL2', 'currentL3'):
+    for key in EQUALIZER_KEYS['phase_current']:
         if key in values and values.get(key) is not None:
             any_obs = True
             phases.append(plugin.safe_float(values.get(key), 0.0))

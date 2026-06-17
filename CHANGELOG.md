@@ -6,6 +6,16 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.6.3] — 2026-06-17
+
+### Gewijzigd
+- **easee_api_keys.py** — nieuwe module met gecentraliseerde API-veldnamen: `FUSE_KEYS`, `EQUALIZER_KEYS`, `CHARGER_KEYS`, `SITE_STRUCTURE_KEYS`, `OBSERVATION_KEYS`, `TIBBER_KEYS`.
+- **equalizer_logic.py, charger_logic.py, easee_helpers.py, tibber_pricing.py** — magic strings vervangen door gedeelde constanten; enkele bron van waarheid voor fuse/eMobility-sleutels.
+
+### Changed (EN)
+- **easee_api_keys.py** — centralized API field name constants for fuse, equalizer, charger, site structure, observations, and Tibber pricing.
+- Core logic modules refactored to use shared key dicts instead of duplicated inline strings.
+
 ## [10.6.2] — 2026-06-17
 
 ### Gewijzigd

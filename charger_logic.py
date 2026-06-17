@@ -2,14 +2,14 @@
 
 import domoticz_runtime
 from easee_constants import OP_MODE_LABELS
-import easee_logging
+from easee_api_keys import CHARGER_KEYS
 import easee_logging
 
 def session_energy_kwh(plugin, values, session):
     for source in (values, session if isinstance(session, dict) else {}):
         if not isinstance(source, dict):
             continue
-        val = source.get('sessionEnergy')
+        val = plugin.first_dict_value(source, CHARGER_KEYS['session_energy'])
         if val is not None:
             return plugin.kwh_value(val)
     return None
@@ -90,9 +90,9 @@ def discover_chargers(plugin):
             for item in data:
                 if not isinstance(item, dict):
                     continue
-                cid = item.get('id') or item.get('chargerId') or item.get('serialNumber')
-                name = str(item.get('name') or item.get('serialNumber') or item.get('id') or 'Lader')
-                site = str(item.get('siteName') or item.get('locationName') or item.get('siteId') or '')
+                cid = plugin.first_dict_value(item, CHARGER_KEYS['id'])
+                name = str(plugin.first_dict_value(item, CHARGER_KEYS['name']) or 'Lader')
+                site = str(plugin.first_dict_value(item, CHARGER_KEYS['site']) or '')
                 if cid and (not flt or flt in name.lower() or flt in site.lower()):
                     chargers.append({'id': str(cid).strip(), 'name': name, 'siteName': site})
         easee_logging.info('charger_logic', f'Discovery: {len(chargers)} laadpaal(en) gevonden', 'discovery')
@@ -123,13 +123,13 @@ def poll_charger(plugin, charger):
     except Exception:
         pass
 
-    power_w = plugin.power_watts(values.get('totalPower'))
-    total_kwh = plugin.kwh_value(values.get('lifetimeEnergy'))
+    power_w = plugin.power_watts(values.get(CHARGER_KEYS['power'][0]))
+    total_kwh = plugin.kwh_value(values.get(CHARGER_KEYS['lifetime_energy'][0]))
     total_wh = plugin.wh_from_kwh(total_kwh)
-    online = values.get('isOnline')
-    op_mode = values.get('chargerOpMode')
+    online = values.get(CHARGER_KEYS['online'][0])
+    op_mode = values.get(CHARGER_KEYS['op_mode'][0])
     status_label = plugin.op_mode_label(op_mode)
-    session_status = session.get('status') or session.get('state') or ''
+    session_status = plugin.first_dict_value(session, CHARGER_KEYS['session_status']) or ''
     if session_status and not str(session_status).strip().isdigit():
         status_label = str(session_status)
     session_active = bool(session) or power_w > 50

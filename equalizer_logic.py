@@ -2,7 +2,26 @@
 
 import json, math
 import domoticz_runtime
+import easee_api_keys as ak
 import easee_logging
+from easee_api_keys import (
+    EQUALIZER_KEYS,
+    FUSE_KEYS,
+    OBSERVATION_ID_TO_FIELD,
+    OBSERVATION_KEYS,
+    SITE_STATE_PATHS,
+    SITE_STRUCTURE_KEYS,
+    SITE_STRUCTURE_PATHS,
+    emobility_fallback_key_tuple,
+    emobility_key_tuple,
+    fuse_limit_key_tuple,
+    is_emobility_key_name,
+    is_fuse_limit_key_name,
+    is_offline_circuit_current_key_name,
+    main_fuse_key_tuple,
+    offline_circuit_key_tuple,
+    first_power_value,
+)
 
 def amp_value(plugin, value):
     x = plugin.safe_float(value, 0.0)
@@ -14,51 +33,22 @@ def is_same_as_main_fuse(plugin, fuse_a, main_fuse_a):
     return main_fuse_a > 0 and fuse_a > 0 and abs(fuse_a - main_fuse_a) < 0.5
 
 def fuse_limit_keys(plugin):
-    return (
-        'fuse', 'mainFuseLimit', 'fuseLimit', 'mainFuseCurrentLimit',
-        'mainFuseLimitCurrent', 'maxFuse', 'maxFuseCurrent', 'fuseCurrent',
-        'mainFuseLimitAmps', 'mainFuseCurrentLimitAmps',
-        'mainCurrentLimit', 'currentLimit', 'importLimit', 'mainImportLimit',
-        'householdCurrentLimit', 'gridCurrentLimit', 'maxImportCurrent',
-        'maxMainCurrent', 'panelCurrentLimit', 'siteCurrentLimit',
-    )
+    return fuse_limit_key_tuple()
 
 def emobility_keys(plugin):
-    return ('maxAllocatedCurrent', 'maxCurrent', 'eMobilityLimit', 'emobilityLimit')
+    return emobility_key_tuple()
 
 def offline_circuit_current_keys(plugin):
-    return ('offlineMaxCircuitCurrentP1', 'offlineMaxCircuitCurrentP2', 'offlineMaxCircuitCurrentP3')
+    return offline_circuit_key_tuple()
 
 def is_offline_circuit_current_key(plugin, key):
-    if not isinstance(key, str):
-        return False
-    return key in plugin.offline_circuit_current_keys()
+    return is_offline_circuit_current_key_name(key)
 
 def main_fuse_keys(plugin):
-    return ('ratedCurrent', 'mainFuseSize', 'mainFuse')
+    return main_fuse_key_tuple()
 
 def is_fuse_limit_key(plugin, key):
-    if not isinstance(key, str):
-        return False
-    kl = key.lower()
-    if kl in ('ratedcurrent', 'mainfuse', 'mainfusesize', 'fusegroup', 'fuseid',
-              'maxallocatedcurrent', 'allocatedcurrent', 'maxcurrent', 'emobilitylimit',
-              'offlinemaxcircuitcurrentp1', 'offlinemaxcircuitcurrentp2', 'offlinemaxcircuitcurrentp3'):
-        return False
-    if kl in ('fuse', 'mainfuselimit', 'fuselimit', 'mainfusecurrentlimit',
-              'mainfuselimitcurrent', 'maxfuse', 'maxfusecurrent', 'fusecurrent',
-              'mainfuselimitamps', 'mainfusecurrentlimitamps', 'maincurrentlimit',
-              'currentlimit', 'importlimit', 'mainimportlimit', 'householdcurrentlimit',
-              'gridcurrentlimit', 'maximportcurrent', 'maxmaincurrent', 'panelcurrentlimit',
-              'sitecurrentlimit'):
-        return True
-    if 'fuselimit' in kl or 'fusecurrentlimit' in kl or 'mainfuselimit' in kl:
-        return True
-    if kl.endswith('fuse') or (kl.startswith('fuse') and 'rating' not in kl):
-        return True
-    if kl.endswith('limit') and any(x in kl for x in ('fuse', 'main', 'grid', 'import', 'household', 'panel', 'site')):
-        return True
-    return False
+    return is_fuse_limit_key_name(key)
 
 def is_main_limit_key(plugin, key):
     if not isinstance(key, str):
@@ -71,10 +61,7 @@ def is_main_limit_key(plugin, key):
     return kl.endswith('limit') and 'circuit' not in kl and 'emobility' not in kl and 'charger' not in kl
 
 def is_emobility_key(plugin, key):
-    if not isinstance(key, str):
-        return False
-    kl = key.lower()
-    return kl in ('maxallocatedcurrent', 'maxcurrent', 'emobilitylimit', 'emobilitycurrent')
+    return is_emobility_key_name(key)
 
 def fuse_limit_from_dict(plugin, data):
     val = plugin.first_dict_value(data, plugin.fuse_limit_keys())
@@ -510,7 +497,7 @@ def select_main_fuse_limit(plugin, candidates, main_fuse_a=0.0, root_fuse=0.0, r
         return root_fuse, root_source
     if root_fuse > 0 and root_source:
         plugin.add_fuse_candidate(candidates, root_fuse, root_source, main_fuse_a=main_fuse_a)
-    mcc_src = 'siteStructure.maxContinuousCurrent'
+    mcc_src = ak.SITE_STRUCTURE_KEYS['source_max_continuous']
     if mcc_src in candidates and plugin.is_valid_fuse_limit(candidates[mcc_src], main_fuse_a):
         return candidates[mcc_src], mcc_src
     if not candidates:
@@ -564,14 +551,14 @@ def log_site_structure_once(plugin, site_id, raw, candidates):
     plugin.log(f'Equalizer siteStructure (site {key}): keys={key_text} | fuse kandidaten: {cand_text}')
     data = plugin.parse_site_structure_json(raw)
     if data:
-        mcc = plugin.amp_value(data.get('maxContinuousCurrent'))
-        rated = plugin.amp_value(data.get('ratedCurrent'))
+        mcc = plugin.amp_value(data.get(ak.SITE_STRUCTURE_KEYS['max_continuous_current']))
+        rated = plugin.amp_value(data.get(ak.SITE_STRUCTURE_KEYS['rated_current']))
         if mcc > 0:
             if rated > 0 and mcc < rated - 0.4:
                 plugin.log(f'siteStructure maxContinuousCurrent (site {key}): {int(round(mcc))}A (hoofdzekering limiet kandidaat)')
             else:
                 plugin.log(f'siteStructure maxContinuousCurrent (site {key}): {int(round(mcc))}A')
-        tree = plugin.collect_json_key_tree(data, 'siteStructure')
+        tree = plugin.collect_json_key_tree(data, ak.SITE_STRUCTURE_KEYS['root'])
         if tree:
             tree_text = ' | '.join(tree[:12])
             if len(tree_text) > 900:
@@ -609,14 +596,15 @@ def log_site_structure_numerics_once(plugin, site_id, raw):
     data = plugin.parse_site_structure_json(raw)
     if not data:
         return
-    amp_range = plugin.deep_scan_amp_range(data, 'siteStructure', min_a=15.0, max_a=30.0)
+    amp_range = plugin.deep_scan_amp_range(
+        data, ak.SITE_STRUCTURE_KEYS['root'], min_a=15.0, max_a=30.0)
     if amp_range:
         chunk_size = 20
         for i in range(0, len(amp_range), chunk_size):
             chunk = amp_range[i:i + chunk_size]
             plugin.log(f'siteStructure amp-range 15-30 (site {key}): ' + '; '.join(chunk))
     if domoticz_runtime.Parameters.get('Mode6') == 'Debug':
-        numerics = plugin.collect_numeric_values(data, 'siteStructure')
+        numerics = plugin.collect_numeric_values(data, ak.SITE_STRUCTURE_KEYS['root'])
         if numerics:
             chunk_size = 40
             for i in range(0, len(numerics), chunk_size):
@@ -685,7 +673,7 @@ def structure_top_keys(plugin, raw):
     if not data:
         return []
     keys = list(data.keys())[:20]
-    for nest_key in ('site', 'panel', 'mainPanel', 'root', 'limits', 'loadBalancing'):
+    for nest_key in SITE_STRUCTURE_KEYS['nested_roots']:
         nested = data.get(nest_key)
         if isinstance(nested, dict):
             keys.append(f'{nest_key}:{{{",".join(list(nested.keys())[:12])}}}')
@@ -695,54 +683,55 @@ def fuse_limit_from_site_structure(plugin, raw, main_fuse_a=0.0, candidates=None
     data = plugin.parse_site_structure_json(raw)
     if not data:
         return 0.0, ''
-    mcc = plugin.amp_value(data.get('maxContinuousCurrent'))
+    mcc = plugin.amp_value(data.get(ak.SITE_STRUCTURE_KEYS['max_continuous_current']))
     if mcc > 0 and plugin.is_valid_fuse_limit(mcc, main_fuse_a):
         if candidates is not None:
             plugin.add_fuse_candidate(
-                candidates, mcc, 'siteStructure.maxContinuousCurrent',
+                candidates, mcc, ak.SITE_STRUCTURE_KEYS['source_max_continuous'],
                 main_fuse_a=main_fuse_a)
+    ss_root = ak.SITE_STRUCTURE_KEYS['root']
     if candidates is not None:
-        plugin.collect_fuse_from_dict(data, 'siteStructure', candidates, main_fuse_a=main_fuse_a)
-        plugin.scan_any_fuse_keys(data, 'siteStructure', candidates, main_fuse_a=main_fuse_a)
+        plugin.collect_fuse_from_dict(data, ss_root, candidates, main_fuse_a=main_fuse_a)
+        plugin.scan_any_fuse_keys(data, ss_root, candidates, main_fuse_a=main_fuse_a)
     direct = plugin.fuse_limit_from_dict(data)
     if direct > 0 and not plugin.is_same_as_main_fuse(direct, main_fuse_a):
         if candidates is not None:
-            plugin.add_fuse_candidate(candidates, direct, 'siteStructure.fuse', main_fuse_a=main_fuse_a)
-        return direct, 'siteStructure.fuse'
-    for key in ('site', 'panel', 'root', 'mainPanel', 'main', 'limits', 'loadBalancing', 'energy'):
+            plugin.add_fuse_candidate(candidates, direct, ak.SITE_STRUCTURE_PATHS['fuse'], main_fuse_a=main_fuse_a)
+        return direct, ak.SITE_STRUCTURE_PATHS['fuse']
+    for key in ak.SITE_STRUCTURE_KEYS['nested_roots']:
         nested = data.get(key)
         if isinstance(nested, dict):
             if candidates is not None:
-                plugin.collect_fuse_from_dict(nested, f'siteStructure.{key}', candidates, main_fuse_a=main_fuse_a)
+                plugin.collect_fuse_from_dict(nested, f'{ss_root}.{key}', candidates, main_fuse_a=main_fuse_a)
             nested_val = plugin.fuse_limit_from_dict(nested)
             if nested_val > 0 and not plugin.is_same_as_main_fuse(nested_val, main_fuse_a):
                 if candidates is not None:
-                    plugin.add_fuse_candidate(candidates, nested_val, f'siteStructure.{key}.fuse', main_fuse_a=main_fuse_a)
-                return nested_val, f'siteStructure.{key}.fuse'
-    circuits = data.get('circuits')
+                    plugin.add_fuse_candidate(candidates, nested_val, f'{ss_root}.{key}.fuse', main_fuse_a=main_fuse_a)
+                return nested_val, f'{ss_root}.{key}.fuse'
+    circuits = data.get(ak.SITE_STRUCTURE_KEYS['circuits'])
     if isinstance(circuits, list):
         if candidates is not None:
             plugin.collect_explicit_circuit_fuses(
-                circuits, 'siteStructure.', candidates, main_fuse_a=main_fuse_a)
+                circuits, f'{ss_root}.', candidates, main_fuse_a=main_fuse_a)
         fuse_a, path = plugin.fuse_limit_from_circuits(circuits, main_fuse_a=main_fuse_a)
         if fuse_a > 0 and not plugin.is_same_as_main_fuse(fuse_a, main_fuse_a):
             if candidates is not None:
-                plugin.add_fuse_candidate(candidates, fuse_a, f'siteStructure.{path}', main_fuse_a=main_fuse_a)
-            return fuse_a, f'siteStructure.{path}'
-    panels = data.get('panels')
+                plugin.add_fuse_candidate(candidates, fuse_a, f'{ss_root}.{path}', main_fuse_a=main_fuse_a)
+            return fuse_a, f'{ss_root}.{path}'
+    panels = data.get(ak.SITE_STRUCTURE_KEYS['panels'])
     if isinstance(panels, list):
         if candidates is not None:
             for panel in panels:
                 if isinstance(panel, dict):
                     pid = panel.get('id', panel.get('circuitPanelId', ''))
                     plugin.collect_fuse_from_dict(
-                        panel, f'siteStructure.panel[{pid}]', candidates, main_fuse_a=main_fuse_a)
+                        panel, f'{ss_root}.panel[{pid}]', candidates, main_fuse_a=main_fuse_a)
         fuse_a, path = plugin.fuse_limit_from_circuits(panels, main_fuse_a=main_fuse_a)
         if fuse_a > 0 and not plugin.is_same_as_main_fuse(fuse_a, main_fuse_a):
             if candidates is not None:
-                plugin.add_fuse_candidate(candidates, fuse_a, f'siteStructure.{path}', main_fuse_a=main_fuse_a)
-            return fuse_a, f'siteStructure.{path}'
-    fuse_a, path = plugin.fuse_limit_from_deep_scan(data, 'siteStructure', main_fuse_a=main_fuse_a)
+                plugin.add_fuse_candidate(candidates, fuse_a, f'{ss_root}.{path}', main_fuse_a=main_fuse_a)
+            return fuse_a, f'{ss_root}.{path}'
+    fuse_a, path = plugin.fuse_limit_from_deep_scan(data, ss_root, main_fuse_a=main_fuse_a)
     if fuse_a > 0:
         if candidates is not None:
             plugin.add_fuse_candidate(candidates, fuse_a, path, main_fuse_a=main_fuse_a)
@@ -756,7 +745,7 @@ def emobility_from_site_structure(plugin, raw):
     direct = plugin.emobility_from_dict(data)
     if direct > 0:
         return direct
-    for key in ('site', 'panel', 'limits', 'loadBalancing', 'energy'):
+    for key in ak.SITE_STRUCTURE_KEYS['nested_emobility']:
         nested = data.get(key)
         if isinstance(nested, dict):
             nested_val = plugin.emobility_from_dict(nested)
@@ -815,14 +804,16 @@ def set_emobility(plugin, info, amps, source):
     existing = info.get('emobility_a', 0.0)
     existing_src = str(info.get('emobility_source', ''))
     src_text = str(source)
-    if 'site.state.maxAllocatedCurrent' in src_text:
+    site_state_mac = SITE_STATE_PATHS['site_state_mac']
+    emob_primary = FUSE_KEYS['emobility_primary']
+    if site_state_mac in src_text:
         info['emobility_a'] = amps
         info['emobility_source'] = source
         return
-    if 'site.state.maxAllocatedCurrent' in existing_src:
+    if site_state_mac in existing_src:
         return
-    prefer_new = 'maxAllocatedCurrent' in src_text
-    prefer_existing = 'maxAllocatedCurrent' in existing_src
+    prefer_new = emob_primary in src_text
+    prefer_existing = emob_primary in existing_src
     site_new = src_text.startswith('site.') or 'site.state' in src_text
     site_existing = existing_src.startswith('site.') or 'site.state' in existing_src
     if prefer_new and prefer_existing:
@@ -904,10 +895,10 @@ def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, 
             if main_fuse is not None:
                 main_fuse_a = plugin.amp_value(main_fuse)
                 info['main_fuse_a'] = main_fuse_a
-            if site.get('fuse') is not None:
-                plugin.note_raw_fuse_value(raw_hits, site.get('fuse'), 'site.state.fuse')
+            if site.get(FUSE_KEYS['fuse_raw'][0]) is not None:
+                plugin.note_raw_fuse_value(raw_hits, site.get(FUSE_KEYS['fuse_raw'][0]), 'site.state.fuse')
                 plugin.add_fuse_candidate(
-                    candidates, site.get('fuse'), 'site.state.fuse',
+                    candidates, site.get(FUSE_KEYS['fuse_raw'][0]), 'site.state.fuse',
                     main_fuse_a=main_fuse_a, rejected=rejected)
             plugin.collect_fuse_from_dict(site, 'site.state', candidates, main_fuse_a=main_fuse_a, rejected=rejected)
             plugin.scan_any_fuse_keys(site, 'site.state', candidates, main_fuse_a=main_fuse_a, rejected=rejected)
@@ -919,13 +910,13 @@ def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, 
                 plugin.note_raw_fuse_value(raw_hits, fuse_limit, 'site.state.fuseLimit')
                 plugin.add_fuse_candidate(
                     candidates, fuse_limit, 'site.state.fuse', main_fuse_a=main_fuse_a, rejected=rejected)
-            mac = site.get('maxAllocatedCurrent')
+            mac = site.get(FUSE_KEYS['emobility_primary'])
             if mac is not None:
-                plugin.set_emobility(info, plugin.amp_value(mac), 'site.state.maxAllocatedCurrent')
+                plugin.set_emobility(info, plugin.amp_value(mac), SITE_STATE_PATHS['site_state_mac'])
             else:
-                emobility = plugin.first_dict_value(site, ('maxCurrent', 'eMobilityLimit', 'emobilityLimit'))
+                emobility = plugin.first_dict_value(site, emobility_fallback_key_tuple())
                 if emobility is not None:
-                    plugin.set_emobility(info, plugin.amp_value(emobility), 'site.state.emobility')
+                    plugin.set_emobility(info, plugin.amp_value(emobility), SITE_STATE_PATHS['site_state_emobility'])
             site_circuits = site.get('circuits')
             if isinstance(site_circuits, list):
                 all_circuits.extend(site_circuits)
@@ -934,9 +925,9 @@ def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, 
                     site_circuits, 'site.state.circuits.', candidates, main_fuse_a=main_fuse_a,
                     rejected=rejected, raw_hits=raw_hits)
                 remember_root(rf, f'site.state.circuits.{rs}')
-        mac_root = state.get('maxAllocatedCurrent')
+        mac_root = state.get(FUSE_KEYS['emobility_primary'])
         if mac_root is not None:
-            plugin.set_emobility(info, plugin.amp_value(mac_root), 'site.state.maxAllocatedCurrent')
+            plugin.set_emobility(info, plugin.amp_value(mac_root), SITE_STATE_PATHS['site_state_mac'])
         circuit_states = state.get('circuitStates')
         debug_hits.extend(plugin.collect_fuse_debug(circuit_states, 'circuitStates'))
         if isinstance(circuit_states, list):
@@ -948,9 +939,9 @@ def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, 
                 if isinstance(circuit, dict):
                     circuits.append(circuit)
                     all_circuits.append(circuit)
-                mac = item.get('maxAllocatedCurrent')
+                mac = item.get(FUSE_KEYS['emobility_primary'])
                 if mac is not None:
-                    plugin.set_emobility(info, plugin.amp_value(mac), 'circuitStates.maxAllocatedCurrent')
+                    plugin.set_emobility(info, plugin.amp_value(mac), SITE_STATE_PATHS['circuit_states_mac'])
             rf, rs = plugin.collect_fuse_from_circuits_list(
                 circuits, 'circuitStates.', candidates, main_fuse_a=main_fuse_a,
                 rejected=rejected, raw_hits=raw_hits)
@@ -965,12 +956,12 @@ def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, 
 
     if site_structure is not None:
         probes.append('equalizer.observations.siteStructure')
-        debug_hits.extend(plugin.collect_fuse_debug(plugin.parse_site_structure_json(site_structure), 'siteStructure'))
+        debug_hits.extend(plugin.collect_fuse_debug(plugin.parse_site_structure_json(site_structure), ak.SITE_STRUCTURE_KEYS['root']))
         plugin.fuse_limit_from_site_structure(
             site_structure, main_fuse_a=main_fuse_a, candidates=candidates)
         emob = plugin.emobility_from_site_structure(site_structure)
         if emob > 0:
-            plugin.set_emobility(info, emob, 'siteStructure.maxAllocatedCurrent')
+            plugin.set_emobility(info, emob, SITE_STATE_PATHS['site_structure_mac'])
         plugin.log_site_structure_once(site_id, site_structure, candidates)
 
     site_path = f'/sites/{site_id}'
@@ -1018,13 +1009,13 @@ def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, 
         if fuse_a > 0:
             plugin.add_fuse_candidate(
                 candidates, fuse_a, f'site.detailed.{src}', main_fuse_a=main_fuse_a, rejected=rejected)
-        mac = detailed.get('maxAllocatedCurrent')
+        mac = detailed.get(FUSE_KEYS['emobility_primary'])
         if mac is not None:
-            plugin.set_emobility(info, plugin.amp_value(mac), 'site.detailed.maxAllocatedCurrent')
+            plugin.set_emobility(info, plugin.amp_value(mac), SITE_STATE_PATHS['site_detailed_mac'])
         elif info.get('emobility_a', 0.0) <= 0:
-            emobility = plugin.first_dict_value(detailed, ('maxCurrent', 'eMobilityLimit', 'emobilityLimit'))
+            emobility = plugin.first_dict_value(detailed, emobility_fallback_key_tuple())
             if emobility is not None:
-                plugin.set_emobility(info, plugin.amp_value(emobility), 'site.detailed.emobility')
+                plugin.set_emobility(info, plugin.amp_value(emobility), SITE_STATE_PATHS['site_detailed_emobility'])
 
     circuits_path = f'/sites/{site_id}/circuits'
     probes.append(circuits_path)
@@ -1100,7 +1091,7 @@ def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, 
     info['fuse_debug_hits'] = debug_hits
 
     if equalizer_values:
-        mpi = equalizer_values.get('maxPowerImport')
+        mpi = equalizer_values.get(EQUALIZER_KEYS['max_power_import'][0])
         if mpi is not None:
             power_w = plugin.kw_to_watts(mpi)
             if power_w > 0:
@@ -1120,7 +1111,7 @@ def parse_equalizer_observations(plugin, obs):
     values = {}
     if not isinstance(obs, dict):
         return values
-    observations = obs.get('observations') or obs.get('data') or []
+    observations = obs.get(OBSERVATION_KEYS['container'][0]) or obs.get(OBSERVATION_KEYS['container'][1]) or []
     if not isinstance(observations, list):
         return values
     for item in observations:
@@ -1128,20 +1119,9 @@ def parse_equalizer_observations(plugin, obs):
             continue
         obs_id = item.get('id')
         obs_val = item.get('value')
-        if obs_id == 31:
-            values['currentL1'] = obs_val
-        elif obs_id == 32:
-            values['currentL2'] = obs_val
-        elif obs_id == 33:
-            values['currentL3'] = obs_val
-        elif obs_id == 40:
-            values['activePowerImport'] = obs_val
-        elif obs_id == 41:
-            values['activePowerExport'] = obs_val
-        elif obs_id == 20:
-            values['siteStructure'] = obs_val
-        elif obs_id == 44:
-            values['maxPowerImport'] = obs_val
+        field = OBSERVATION_ID_TO_FIELD.get(obs_id)
+        if field is not None:
+            values[field] = obs_val
     return values
 
     # ---- Tibber API ----
@@ -1350,47 +1330,39 @@ def poll_equalizer(plugin, equalizer):
             if not site_id:
                 site_id = data.get('siteId')
 
-    obs = plugin.api_get_optional(f'/state/{eid}/observations?ids=20,31,32,33,40,41,44')
+    obs = plugin.api_get_optional(f'/state/{eid}/observations?ids={OBSERVATION_KEYS["query_ids"]}')
     values.update(plugin.parse_equalizer_observations(obs))
 
     site_info = plugin.fetch_site_fuse_info(
         site_id,
         circuit_id=equalizer.get('circuitId'),
-        site_structure=values.get('siteStructure'),
+        site_structure=values.get(ak.SITE_STRUCTURE_KEYS['root']),
         equalizer_values=values,
         equalizer_id=eid,
     )
 
-    power_w = plugin.kw_to_watts(
-        values.get('currentPower')
-        or values.get('power')
-        or values.get('activePowerImport')
-        or values.get('activePower')
-    )
-    if power_w <= 0:
-        power_w = plugin.power_watts(values.get('currentPower') or values.get('power') or values.get('activePower'))
+    power_raw = first_power_value(values)
+    power_w = plugin.kw_to_watts(power_raw)
+    if power_w <= 0 and power_raw is not None:
+        power_w = plugin.power_watts(power_raw)
 
-    online = values.get('isOnline')
+    online = values.get(EQUALIZER_KEYS['online'][0])
     if online is None:
         online = True
-    load_bal = (
-        values.get('loadBalancingActive')
-        or values.get('loadBalancing')
-        or values.get('isLoadBalancingEnabled')
-    )
+    load_bal = plugin.first_dict_value(values, EQUALIZER_KEYS['load_balancing'])
     lb_active = plugin.truthy(load_bal) if load_bal is not None else False
     max_alloc = plugin.safe_float(site_info.get('emobility_a'), 0.0)
     emob_src = str(site_info.get('emobility_source', ''))
     site_emob_authoritative = (
-        'site.state.maxAllocatedCurrent' in emob_src
+        SITE_STATE_PATHS['site_state_mac'] in emob_src
         or emob_src.startswith('site.')
     )
     if max_alloc <= 0 or not site_emob_authoritative:
-        eq_mac = plugin.safe_float(values.get('maxAllocatedCurrent'), 0.0)
+        eq_mac = plugin.safe_float(values.get(FUSE_KEYS['emobility_primary']), 0.0)
         if eq_mac > 0 and not site_emob_authoritative:
             max_alloc = eq_mac if max_alloc <= 0 else max(max_alloc, eq_mac)
         elif max_alloc <= 0:
-            max_alloc = plugin.safe_float(values.get('allocatedCurrent'), 0.0)
+            max_alloc = plugin.safe_float(values.get(FUSE_KEYS['allocated'][0]), 0.0)
     main_fuse_a = plugin.safe_float(site_info.get('main_fuse_a'), 0.0)
     main_fuse_limit_a = plugin.safe_float(site_info.get('main_fuse_limit_a'), 0.0)
     limit_src = str(site_info.get('main_fuse_limit_source', ''))
@@ -1424,8 +1396,8 @@ def poll_equalizer(plugin, equalizer):
         lines.append('⚡ Hoofdzekering limiet: onbekend')
     max_import_kw = plugin.safe_float(site_info.get('max_power_import_kw'), 0.0)
     max_import_a = plugin.safe_float(site_info.get('max_power_import_a'), 0.0)
-    if max_import_kw <= 0 and values.get('maxPowerImport') is not None:
-        raw_kw = plugin.safe_float(values.get('maxPowerImport'), 0.0)
+    if max_import_kw <= 0 and values.get(EQUALIZER_KEYS['max_power_import'][0]) is not None:
+        raw_kw = plugin.safe_float(values.get(EQUALIZER_KEYS['max_power_import'][0]), 0.0)
         if raw_kw > 0:
             max_import_kw = raw_kw / 1000.0 if raw_kw >= 100 else raw_kw
             power_w_mpi = plugin.kw_to_watts(raw_kw)
