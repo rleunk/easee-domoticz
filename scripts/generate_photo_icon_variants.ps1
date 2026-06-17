@@ -51,7 +51,8 @@ $DomoticzIconSets = @(
     @{ Name = 'EaseeCharger';   Color = [Drawing.Color]::FromArgb(255, 46, 160, 67);  Kind = 'charger' }
     @{ Name = 'EaseeEqualizer'; Color = [Drawing.Color]::FromArgb(255, 33, 150, 243); Kind = 'equalizer' }
     @{ Name = 'EaseePower';     Color = [Drawing.Color]::FromArgb(255, 255, 193, 7);  Kind = 'power' }
-    @{ Name = 'EaseeStatus';    Color = [Drawing.Color]::FromArgb(255, 33, 150, 243); Kind = 'status' }
+    @{ Name = 'EaseeStatus';       Color = [Drawing.Color]::FromArgb(255, 33, 150, 243); Kind = 'status-charger' }
+    @{ Name = 'EaseeStatusGlobal'; Color = [Drawing.Color]::FromArgb(255, 33, 150, 243); Kind = 'status' }
     @{ Name = 'EaseeAlert';     Color = [Drawing.Color]::FromArgb(255, 229, 57, 53);  Kind = 'alert' }
     @{ Name = 'EaseeLoadBal';   Color = [Drawing.Color]::FromArgb(255, 0, 188, 212);  Kind = 'loadbal' }
     @{ Name = 'EaseeCost';      Color = [Drawing.Color]::FromArgb(255, 255, 152, 0);  Kind = 'cost' }
@@ -581,6 +582,9 @@ function New-PhotoVariantIcon([Drawing.Bitmap]$DarkCrop, [Drawing.Bitmap]$RedCro
 }
 
 function New-ProductionIcon([hashtable]$Set, [int]$Size, [bool]$Dim, [Drawing.Bitmap]$DarkCrop, [Drawing.Bitmap]$RedCrop, [Drawing.Bitmap]$DarkCropMax) {
+    if ($Set.Kind -eq 'status-charger') {
+        return New-PhotoVariantIcon $DarkCrop $RedCrop 'photo-max' $Size $Dim $Set.Color $DarkCropMax 'status' $true
+    }
     if ($Set.Kind -eq 'status') {
         $icon = New-PhotoVariantIcon $DarkCrop $RedCrop 'photo-max' $Size $Dim $Set.Color $DarkCropMax $Set.Kind $false
         $combo = Add-EqualizerPuckOverlay $icon $EqualizerColor $Dim
@@ -654,7 +658,8 @@ $combinedRows = @(
     @{ Label = 'EaseeExport - groen, teruglevering (pijl omhoog)'; Hint = [char]0x2191; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeExport' }) }
     @{ Label = 'EaseeNet - teal, netto Sigma'; Hint = [char]0x03A3; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeNet' }) }
     @{ Label = 'EaseeVoltage - paars, spanning V'; Hint = 'V'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeVoltage' }) }
-    @{ Label = 'EaseeStatus - laadpaal + EQ-puck, info i'; Hint = 'i'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeStatus' }) }
+    @{ Label = 'EaseeStatus - laadpaal, info i (geen EQ)'; Hint = 'i'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeStatus' }) }
+    @{ Label = 'EaseeStatusGlobal - laadpaal + EQ-puck, info i'; Hint = 'i'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeStatusGlobal' }) }
     @{ Label = "EaseeCost - oranje, kosten $Euro"; Hint = $Euro; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeCost' }) }
     @{ Label = 'EaseeAlert - rood, fout/waarschuwing'; Hint = '!'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeAlert' }) }
     @{ Label = "EaseeOverview - teal, overzicht $Sigma"; Hint = $Sigma; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeOverview' }) }
@@ -957,7 +962,7 @@ $combinedPreview = New-Object System.Drawing.Bitmap $combinedW, $combinedH
 $cg = [Drawing.Graphics]::FromImage($combinedPreview)
 $cg.Clear([Drawing.Color]::FromArgb(255, 28, 30, 34))
 $cg.TextRenderingHint = [Drawing.Text.TextRenderingHint]::ClearTypeGridFit
-Draw-Label $cg 'P-max laadpalen + Equalizer-max - alle 12 sets (48 px op blauwe tegel)' 8 8 ([Drawing.Color]::FromArgb(255, 255, 220, 160)) 10
+Draw-Label $cg 'P-max laadpalen + Equalizer-max - alle 13 sets (48 px op blauwe tegel)' 8 8 ([Drawing.Color]::FromArgb(255, 255, 220, 160)) 10
 Draw-Label $cg 'Iconenset / LED-kleur' 8 ($combinedHeaderH - 20) ([Drawing.Color]::White) 8.5
 Draw-Label $cg '48 px' ($combinedLabelW + $combinedPad) ($combinedHeaderH - 20) ([Drawing.Color]::FromArgb(255, 180, 220, 255)) 8.5
 for ($i = 0; $i -lt $combinedRows.Count; $i++) {
@@ -1015,8 +1020,8 @@ if ($IncludeVariants) {
     $pMaxOn48.Dispose(); $pMaxOn16.Dispose()
 }
 
-Write-Output "Created $V2ZipPath (12 sets, plugin-key Base + per-set folders)"
-Write-Output "Created 12 per-set zips in $IconSetsZipDir"
+Write-Output "Created $V2ZipPath (13 sets, plugin-key Base + per-set folders)"
+Write-Output "Created 13 per-set zips in $IconSetsZipDir"
 Write-Output "Created $OfficialPreviewPath"
 Write-Output ('Equalizer-max vs v10.5.15 48px: {0}x{1} -> {2}x{3} px (+{4} pct H, +{5} pct W, area +{6} pct)' -f $eqMetricsV15.W, $eqMetricsV15.H, $eqMetricsMax.W, $eqMetricsMax.H, $eqHeightGain48, $eqWidthGain48, $eqAreaGain48)
 if ($IncludeVariants) {

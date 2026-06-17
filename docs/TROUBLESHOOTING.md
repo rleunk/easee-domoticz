@@ -77,7 +77,7 @@ sudo journalctl -u domoticz -f | grep Easee
 3. `git pull` naar v10.9.7+ en herstart het hardware-item
 4. Zoek in het log op INFO-regels:
    - `Easee Images-keys (12): …EaseeCloudAutoDiscoveryV1000Easee…` — volledige lijst, geen sample
-   - `image_ids: 12/12 sets` en `image_ids mappings: EaseeCharger=…, …`
+   - `image_ids: 13/13 sets` en `image_ids mappings: EaseeCharger=…, …`
    - Bij 1/12 sets (v10.9.4-bug): plugin-key-prefix ontbrak in zip — upgrade naar v10.9.5
 5. Als automatisch laden mislukt: upload `Easee_icons_v2.zip` handmatig via **Aangepaste pictogrammen**, herstart hardware-item
 
@@ -88,7 +88,7 @@ sudo journalctl -u domoticz -f | grep Easee
    - `Images dict: N key(s), M met "Easee"` — als M=0: zip handmatig uploaden
    - `Zip Easee_icons_v2.zip: aanwezig, X bytes`
    - `Image().Create() zip: geslaagd` of `mislukt`
-   - `image_ids: 12/12 mapping(s)` — bij 0/12: ERROR met upload-instructie
+   - `image_ids: 13/13 mapping(s)` — bij 0/13: ERROR met upload-instructie
    - `{tegel}: icoon gezet -> Easee…` of `overgeslagen` / `mislukt` per tegel
 4. Als automatisch laden mislukt: upload eenmalig via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
 5. Status-tegel toont `⚠️ Upload Easee_icons_v2.zip` zolang iconen ontbreken

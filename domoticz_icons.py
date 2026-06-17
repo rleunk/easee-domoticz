@@ -9,7 +9,7 @@ import easee_logging
 import easee_helpers
 
 _ICON_ROOTS = [
-    'EaseeCharger', 'EaseeEqualizer', 'EaseePower', 'EaseeStatus', 'EaseeAlert',
+    'EaseeCharger', 'EaseeEqualizer', 'EaseePower', 'EaseeStatus', 'EaseeStatusGlobal', 'EaseeAlert',
     'EaseeLoadBal', 'EaseeCost', 'EaseeOverview',
     'EaseeImport', 'EaseeExport', 'EaseeNet', 'EaseeVoltage',
 ]
@@ -23,6 +23,8 @@ def image_root(plugin, name, device_id=None):
 
     if devid == CORE_DEVICE_IDS.get('LoadBal', ''):
         return 'EaseeLoadBal'
+    if devid == CORE_DEVICE_IDS.get('Status', '') or n == easee_helpers.pref(plugin, 'Status').lower():
+        return 'EaseeStatusGlobal'
     if devid.startswith('EASEE_EQ_'):
         label = n.split(' - ')[-1].strip() if ' - ' in n else n
         if label in ('import',):

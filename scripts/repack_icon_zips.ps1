@@ -10,7 +10,7 @@ $PluginKey = 'EaseeCloudAutoDiscoveryV1000'
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 
 $roots = @(
-    'EaseeCharger', 'EaseeEqualizer', 'EaseePower', 'EaseeStatus', 'EaseeAlert',
+    'EaseeCharger', 'EaseeEqualizer', 'EaseePower', 'EaseeStatus', 'EaseeStatusGlobal', 'EaseeAlert',
     'EaseeLoadBal', 'EaseeCost', 'EaseeOverview',
     'EaseeImport', 'EaseeExport', 'EaseeNet', 'EaseeVoltage'
 )
@@ -59,4 +59,4 @@ if (Test-Path $OutZip) { Remove-Item $OutZip -Force }
 Remove-Item $extractDir -Recurse -Force
 Remove-Item $masterDir -Recurse -Force
 
-Write-Output "Repacked $OutZip and 12 zips in $IconSetsZipDir"
+Write-Output "Repacked $OutZip and $($roots.Count) zips in $IconSetsZipDir"

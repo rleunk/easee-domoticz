@@ -11,7 +11,8 @@ $IconSets = @(
     @{ Name = 'EaseeCharger';   Color = [Drawing.Color]::FromArgb(255, 46, 160, 67);  Kind = 'charger' }
     @{ Name = 'EaseeEqualizer'; Color = [Drawing.Color]::FromArgb(255, 33, 150, 243); Kind = 'equalizer' }
     @{ Name = 'EaseePower';     Color = [Drawing.Color]::FromArgb(255, 255, 193, 7);  Kind = 'power' }
-    @{ Name = 'EaseeStatus';    Color = [Drawing.Color]::FromArgb(255, 33, 150, 243); Kind = 'status' }
+    @{ Name = 'EaseeStatus';       Color = [Drawing.Color]::FromArgb(255, 33, 150, 243); Kind = 'status-charger' }
+    @{ Name = 'EaseeStatusGlobal'; Color = [Drawing.Color]::FromArgb(255, 33, 150, 243); Kind = 'status' }
     @{ Name = 'EaseeAlert';     Color = [Drawing.Color]::FromArgb(255, 229, 57, 53);  Kind = 'alert' }
     @{ Name = 'EaseeLoadBal';   Color = [Drawing.Color]::FromArgb(255, 0, 188, 212);  Kind = 'loadbal' }
     @{ Name = 'EaseeCost';      Color = [Drawing.Color]::FromArgb(255, 255, 152, 0);  Kind = 'cost' }

@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.10] — 2026-06-18
+
+### Opgelost
+- **Combo-icoon alleen op globale Status** — Het gecombineerde pictogram (laadpaal + Equalizer-puck + **i**-badge) hoort alleen op *Easee - Status* (`EASEE_CORE_STATUS`). Laadpaal Status-tegels (*Easee - Voordeur - Status*, *Easee - Garage - Status*, `EASEE_CHG_*`) gebruiken weer het laadpaal-only pictogram met **i**-badge (geen EQ-puck). Nieuwe iconenset `EaseeStatusGlobal` voor de globale tegel; `EaseeStatus` terug naar charger-only.
+
+### Fixed (EN)
+- Split status icons: `EaseeStatusGlobal` (combo) for global plugin status only; `EaseeStatus` reverted to charger photo + info badge for per-charger status tiles. Updated `image_root()` DeviceID rules; regenerated `Easee_icons_v2.zip` (13 sets) and mini-zips.
+
 ## [10.9.9] — 2026-06-18
 
 ### Gewijzigd
