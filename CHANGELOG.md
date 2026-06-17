@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.6] — 2026-06-17
+
+### Opgelost
+- **Kritische icon-regressie (v10.9.2–v10.9.5)** — `apply_images_to_devices()` riep `Device.Update(UpdateProperties=True)` aan; die parameter bestaat niet in de Domoticz Python API. Alle icon-updates mislukten met `TypeError: 'updateproperties' is an invalid keyword argument`. Iconen worden nu gezet met alleen geldige parameters: `Update(Image=…)`.
+
+### Fixed (EN)
+- Icon apply regression: removed invalid `UpdateProperties` kwarg from `Device.Update()`; icon-only updates use `Update(Image=)` only.
+
 ## [10.9.5] — 2026-06-17
 
 ### Opgelost

@@ -67,13 +67,13 @@ sudo journalctl -u domoticz -f | grep Easee
 - `Easee_icons_v2.zip` ontbreekt in de pluginmap of automatisch laden mislukte
 - v10.9.2-regressie: `refresh_images_dict()` zonder argument deed niets → `image_ids` leeg (opgelost in v10.9.3)
 - Domoticz `Images`-dict niet ververst na zip-upload
-- `Device.Update(Image=…)` zonder `UpdateProperties` op nieuwere Domoticz-builds
+- v10.9.2–v10.9.5: `Device.Update(UpdateProperties=True)` — ongeldige parameter; alle icon-updates mislukken (opgelost in v10.9.6)
 - **Energy-tegels** (*Laden*, *Totaal Laden*): sommige Domoticz-versies tonen altijd het standaard bliksem-icoon ondanks custom Image — bekende Domoticz-beperking
 
-**Oplossing** (v10.9.5+):
+**Oplossing** (v10.9.6+):
 1. **Verwijder eerst oude Easee custom icons** via **Instellingen → Meer opties → Aangepaste pictogrammen** (short-name bases uit v10.9.4 kunnen conflicteren)
 2. Controleer of `Easee_icons_v2.zip` en map `icons/` (12 mini-zips) in de pluginmap staan
-3. `git pull` naar v10.9.5+ en herstart het hardware-item
+3. `git pull` naar v10.9.6+ en herstart het hardware-item
 4. Zoek in het log op INFO-regels:
    - `Easee Images-keys (12): …EaseeCloudAutoDiscoveryV1000Easee…` — volledige lijst, geen sample
    - `image_ids: 12/12 sets` en `image_ids mappings: EaseeCharger=…, …`

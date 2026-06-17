@@ -385,23 +385,23 @@ def _current_image_id(dev):
         return 0
 
 def _apply_image_to_unit(unit, dev, img_id):
-    """Pas custom icoon toe op bestaande tegel; Update(Image=) met UpdateProperties-fallback."""
-    nval = int(getattr(dev, 'nValue', 0) or 0)
-    sval = str(getattr(dev, 'sValue', ''))
+    """Pas custom icoon toe op bestaande tegel via Update(Image=)."""
     img_id = int(img_id)
     attempts = (
-        {'nValue': nval, 'sValue': sval, 'Image': img_id, 'UpdateProperties': True, 'SuppressTriggers': True},
-        {'nValue': nval, 'sValue': sval, 'Image': img_id, 'UpdateProperties': True},
-        {'nValue': nval, 'sValue': sval, 'Image': img_id, 'SuppressTriggers': True},
-        {'nValue': nval, 'sValue': sval, 'Image': img_id},
+        {'Image': img_id, 'SuppressTriggers': True},
+        {'Image': img_id},
     )
     for kwargs in attempts:
         try:
             dev.Update(**kwargs)
             if _current_image_id(dev) == img_id:
-                return True, 'Update(Image=..., UpdateProperties=...)'
+                if 'SuppressTriggers' in kwargs:
+                    return True, 'Update(Image=..., SuppressTriggers=...)'
+                return True, 'Update(Image=...)'
         except TypeError:
             safe = {k: v for k, v in kwargs.items() if k != 'SuppressTriggers'}
+            if not safe:
+                continue
             try:
                 dev.Update(**safe)
                 if _current_image_id(dev) == img_id:
@@ -410,26 +410,8 @@ def _apply_image_to_unit(unit, dev, img_id):
                 continue
         except Exception:
             continue
-    for kwargs in (
-        {'nValue': nval, 'sValue': sval, 'UpdateProperties': True, 'SuppressTriggers': True},
-        {'nValue': nval, 'sValue': sval, 'UpdateProperties': True},
-    ):
-        try:
-            dev.Image = img_id
-            dev.Update(**kwargs)
-            if _current_image_id(dev) == img_id:
-                return True, 'dev.Image + UpdateProperties'
-        except TypeError:
-            safe = {k: v for k, v in kwargs.items() if k != 'SuppressTriggers'}
-            try:
-                dev.Image = img_id
-                dev.Update(**safe)
-                if _current_image_id(dev) == img_id:
-                    return True, 'dev.Image + UpdateProperties'
-            except Exception:
-                continue
-        except Exception:
-            continue
+    nval = int(getattr(dev, 'nValue', 0) or 0)
+    sval = str(getattr(dev, 'sValue', ''))
     try:
         dev.Image = img_id
         dev.Update(nValue=nval, sValue=sval)
