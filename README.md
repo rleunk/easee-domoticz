@@ -15,6 +15,8 @@
 
 **Installeren → 2 minuten, werken → direct** · [Quick Start](#quick-start)
 
+> ⚠️ **Problemen?** Zie [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+
 ## 📸 Screenshots
 
 | Dashboard | Equalizer / iconen |
@@ -26,6 +28,12 @@
 *Equalizer / iconen:* custom P-max laadpaal- en Equalizer-max pictogrammen uit `Easee_icons_v2.zip`, met LED-kleur per tegelfunctie en functie-badges (W, i, €, E, L).
 
 > Placeholder-afbeeldingen — vervang `docs/screenshot-dashboard.png` en `docs/screenshot-equalizer.png` door echte Domoticz-screenshots indien gewenst.
+
+## 🎯 Voor wie is dit?
+
+- Domoticz gebruikers met Easee laadpaal
+- Met of zonder Equalizer
+- Optioneel met Tibber energiecontract
 
 ## ✨ Features
 
