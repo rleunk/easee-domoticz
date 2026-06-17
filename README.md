@@ -1,8 +1,8 @@
-# Easee Domoticz plugin v10.7.1
+# Easee Domoticz plugin v10.7.2
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators, Equalizer/meterkast ondersteuning en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.7.1-blue)
+![Version](https://img.shields.io/badge/version-10.7.2-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -94,7 +94,7 @@ sudo systemctl restart domoticz
 Daarna in Domoticz:
 
 1. **Setup → Hardware**
-2. Type: **"Easee Domoticz plugin v10.7.1"**
+2. Type: **"Easee Domoticz plugin v10.7.2"**
 3. Geef de hardware een naam, bijv. `Easee` (prefix op alle tegels)
 4. Username/Password: jouw Easee-inloggegevens
 5. **Create**
@@ -228,7 +228,7 @@ Details: [`docs/REFACTOR_MAPPING.md`](docs/REFACTOR_MAPPING.md).
 Centrale logging via `easee_logging.py` (v10.6.0+):
 
 ```
-[Easee v10.7.1][LEVEL][module][context] message
+[Easee v10.7.2][LEVEL][module][context] message
 ```
 
 | Niveau | Wanneer zichtbaar |
@@ -272,7 +272,7 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 
 **Sinds v10.6.0:** gebruik `git pull` (alle `.py`-modules), niet alleen `plugin.py`. State-bestand heet `easee_state.json` (automatische rename van `easee_v9_0_state.json`).
 
-### Recente wijzigingen (v10.5.18 → v10.7.1)
+### Recente wijzigingen (v10.5.18 → v10.7.2)
 
 | Versie | Belangrijkste wijzigingen |
 |--------|---------------------------|
@@ -284,6 +284,7 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 | **v10.6.3** | `easee_api_keys.py` — gecentraliseerde API-veldnamen i.p.v. magic strings |
 | **v10.6.4** | Startup-sync losgekoppeld van poll-interval: 3s min. vertraging, readiness-check op Devices, 60s fallback |
 | **v10.6.5** | Equalizer Vermogen-tegel: **Vandaag** kWh via observation 45 (cumulatief import); fallback vermogensintegratie |
+| **v10.7.2** | Fix: onHeartbeat crash door verwijderde `plugin.is_*_limit_key` wrappers in `equalizer_logic` |
 | **v10.7.1** | Fix: onHeartbeat crash door `power_emoji`/`status_emoji` naam-shadowing in `poll_charger` |
 | **v10.7.0** | Code cleanup: ~150 passthrough-wrappers verwijderd; directe module-aanroepen; `plugin.py` kleiner; geen functionele wijzigingen |
 
@@ -324,6 +325,6 @@ MIT License — zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.7.1** — Gemaakt door Richard Leunk
+**Versie 10.7.2** — Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

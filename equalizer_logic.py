@@ -457,7 +457,7 @@ def collect_fuse_from_cloud_loadbalancing(plugin, equalizer_id, candidates, main
         prefix = path.strip('/').replace('/', '.')
         collect_fuse_from_dict(plugin, data, prefix, candidates, main_fuse_a=main_fuse_a)
         scan_any_fuse_keys(plugin, data, prefix, candidates, main_fuse_a=main_fuse_a)
-        for path2, amps in deep_scan_amp_keys(plugin, data, plugin.is_main_limit_key):
+        for path2, amps in deep_scan_amp_keys(plugin, data, lambda key: is_main_limit_key(plugin, key)):
             add_fuse_candidate(plugin, candidates, amps, f'{prefix}.{path2}', main_fuse_a=main_fuse_a)
 
 def root_circuit_fuse(plugin, circuits, main_fuse_a=0.0, rejected=None, raw_hits=None):
@@ -641,10 +641,10 @@ def log_equalizer_fuse_once(plugin, eid, limit_a, source, probes=None, debug_hit
 
 def fuse_limit_from_deep_scan(plugin, obj, source_prefix='', main_fuse_a=0.0):
     candidates = {}
-    for path, amps in deep_scan_amp_keys(plugin, obj, plugin.is_fuse_limit_key):
+    for path, amps in deep_scan_amp_keys(plugin, obj, lambda key: is_fuse_limit_key(plugin, key)):
         full = f'{source_prefix}.{path}' if source_prefix else path
         candidates[full] = amps
-    for path, amps in deep_scan_amp_keys(plugin, obj, plugin.is_main_limit_key):
+    for path, amps in deep_scan_amp_keys(plugin, obj, lambda key: is_main_limit_key(plugin, key)):
         full = f'{source_prefix}.{path}' if source_prefix else path
         if full not in candidates:
             candidates[full] = amps
@@ -756,7 +756,7 @@ def emobility_from_site_structure(plugin, raw):
             nested_val = emobility_from_dict(plugin, nested)
             if nested_val > 0:
                 return nested_val
-    for _, amps in deep_scan_amp_keys(plugin, data, plugin.is_emobility_key):
+    for _, amps in deep_scan_amp_keys(plugin, data, lambda key: is_emobility_key(plugin, key)):
         if amps > 0:
             return amps
     return 0.0
@@ -907,7 +907,7 @@ def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, 
                     main_fuse_a=main_fuse_a, rejected=rejected)
             collect_fuse_from_dict(plugin, site, 'site.state', candidates, main_fuse_a=main_fuse_a, rejected=rejected)
             scan_any_fuse_keys(plugin, site, 'site.state', candidates, main_fuse_a=main_fuse_a, rejected=rejected)
-            for path, amps in deep_scan_amp_keys(plugin, site, plugin.is_main_limit_key):
+            for path, amps in deep_scan_amp_keys(plugin, site, lambda key: is_main_limit_key(plugin, key)):
                 add_fuse_candidate(plugin, 
                     candidates, amps, f'site.state.{path}', main_fuse_a=main_fuse_a, rejected=rejected)
             fuse_limit = easee_helpers.first_dict_value(plugin, site, fuse_limit_keys(plugin))

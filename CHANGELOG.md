@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.7.2] — 2026-06-17
+
+### Opgelost
+- **onHeartbeat crash** — `equalizer_logic` gebruikte nog `plugin.is_main_limit_key`, `plugin.is_fuse_limit_key` en `plugin.is_emobility_key` als callbacks na verwijdering van passthrough-wrappers in v10.7.0; omgezet naar directe module-aanroepen via lambda.
+
+### Fixed (EN)
+- **onHeartbeat crash** — `equalizer_logic` still passed removed wrapper attrs `plugin.is_main_limit_key` / `is_fuse_limit_key` / `is_emobility_key` to `deep_scan_amp_keys`; now uses direct module lambdas.
+
 ## [10.7.1] — 2026-06-17
 
 ### Opgelost
