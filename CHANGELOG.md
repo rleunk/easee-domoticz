@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.6.1] — 2026-06-17
+
+### Gewijzigd
+- **easee_state.py** — atomisch opslaan via `easee_state.json.tmp` + `os.replace`; voorkomt corrupt state-bestand bij crash; opruimen van `.tmp` bij mislukte save; save-fouten via `easee_logging.error`.
+
+### Changed (EN)
+- **easee_state.py** — atomic state writes via `.tmp` + `os.replace`; cleanup on failure; save errors logged at ERROR level.
+
 ## [10.6.0] — 2026-06-17
 
 ### Toegevoegd

@@ -43,11 +43,19 @@ def load_state(plugin):
         easee_logging.debug('easee_state', f'state load failed: {e}', 'load')
 
 def save_state(plugin):
+    fp = state_path(plugin)
+    tmp_fp = fp + '.tmp'
     try:
-        with open(state_path(plugin), 'w', encoding='utf-8') as f:
+        with open(tmp_fp, 'w', encoding='utf-8') as f:
             json.dump(plugin.state, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_fp, fp)
     except Exception as e:
-        easee_logging.debug('easee_state', f'state save failed: {e}', 'save')
+        if os.path.isfile(tmp_fp):
+            try:
+                os.remove(tmp_fp)
+            except OSError:
+                pass
+        easee_logging.error('easee_state', f'state save failed: {e}', 'save')
 
     # ---- index ----
 
