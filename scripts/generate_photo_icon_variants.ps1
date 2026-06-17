@@ -16,6 +16,8 @@ $FinalPreviewCombinedPath = Join-Path $OutRoot 'final-preview-combined.png'
 $PMaxDir = Join-Path $OutRoot 'variant-P-max'
 $EqualizerMaxDir = Join-Path $OutRoot 'variant-Equalizer-max'
 $V2ZipPath = Join-Path $RepoRoot 'Easee_icons_v2.zip'
+$IconSetsZipDir = Join-Path $RepoRoot 'icons'
+$PluginKey = 'EaseeCloudAutoDiscoveryV1000'
 $OfficialPreviewPath = Join-Path $RepoRoot 'docs\icon-preview-v2.png'
 
 $ChargerColor = [Drawing.Color]::FromArgb(255, 46, 160, 67)
@@ -803,29 +805,63 @@ Save-Png $lbMaxOn48 (Join-Path $EqualizerMaxDir 'EaseeLoadBal48_On.png')
 Save-Png $lbMaxOff48 (Join-Path $EqualizerMaxDir 'EaseeLoadBal48_Off.png')
 Save-Png $lbMaxOn16 (Join-Path $EqualizerMaxDir 'EaseeLoadBal16_On.png')
 
-# --- P-max zip + canonical v2: P-max laadpalen + Equalizer-max puck ---
+# --- P-max zip + canonical v2: plugin-key Base + per-set folders + mini-zips ---
+# Domoticz Python plugins only expose icons in Images when Base starts with the plugin XML key.
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+function Write-IconSetBundle(
+    [string]$BundleDir,
+    [string]$RootName,
+    [string]$BaseName,
+    [Drawing.Bitmap]$On16,
+    [Drawing.Bitmap]$On48,
+    [Drawing.Bitmap]$Off48
+) {
+    if (-not (Test-Path $BundleDir)) {
+        New-Item -ItemType Directory -Path $BundleDir -Force | Out-Null
+    }
+    $desc = $RootName -replace '^Easee', 'Easee '
+    Save-Png $On16 (Join-Path $BundleDir "$BaseName.png")
+    Save-Png $On48 (Join-Path $BundleDir "${BaseName}48_On.png")
+    Save-Png $Off48 (Join-Path $BundleDir "${BaseName}48_Off.png")
+  [System.IO.File]::WriteAllText(
+        (Join-Path $BundleDir 'icons.txt'),
+        "$BaseName;$RootName;$desc`n",
+        $utf8NoBom
+    )
+}
+
+function Write-IconSetZip([string]$ZipPath, [string]$BundleDir) {
+    if (Test-Path $ZipPath) { Remove-Item $ZipPath -Force }
+    [System.IO.Compression.ZipFile]::CreateFromDirectory($BundleDir, $ZipPath)
+}
+
 $zipTemp = Join-Path $env:TEMP "easee-pmax-icons-$([guid]::NewGuid().ToString('N'))"
 New-Item -ItemType Directory -Path $zipTemp -Force | Out-Null
+if (-not (Test-Path $IconSetsZipDir)) {
+    New-Item -ItemType Directory -Path $IconSetsZipDir -Force | Out-Null
+}
+
 foreach ($set in $DomoticzIconSets) {
-    $name = $set.Name
+    $rootName = $set.Name
+    $baseName = "$PluginKey$rootName"
     $on16 = New-ProductionIcon $set 16 $false $darkCrop $redCrop $darkCropMax
     $on48 = New-ProductionIcon $set 48 $false $darkCrop $redCrop $darkCropMax
     $off48 = New-ProductionIcon $set 48 $true $darkCrop $redCrop $darkCropMax
-    Save-Png $on16 (Join-Path $zipTemp "$name.png")
-    Save-Png $on48 (Join-Path $zipTemp "${name}48_On.png")
-    Save-Png $off48 (Join-Path $zipTemp "${name}48_Off.png")
+
+    $setFolder = Join-Path $zipTemp $rootName
+    Write-IconSetBundle $setFolder $rootName $baseName $on16 $on48 $off48
+
+    $miniTemp = Join-Path $env:TEMP "easee-mini-$rootName-$([guid]::NewGuid().ToString('N'))"
+    Write-IconSetBundle $miniTemp $rootName $baseName $on16 $on48 $off48
+    Write-IconSetZip (Join-Path $IconSetsZipDir "$rootName.zip") $miniTemp
+    Remove-Item $miniTemp -Recurse -Force
+
     $on16.Dispose(); $on48.Dispose(); $off48.Dispose()
 }
-$zipLines = New-Object System.Collections.Generic.List[string]
-foreach ($set in $DomoticzIconSets) {
-    $desc = $set.Name -replace '^Easee', 'Easee '
-    $zipLines.Add("$($set.Name);$($set.Name);$desc")
-}
-$iconsTxtPath = Join-Path $zipTemp 'icons.txt'
-$utf8NoBom = New-Object System.Text.UTF8Encoding $false
-[System.IO.File]::WriteAllText($iconsTxtPath, ($zipLines -join "`n") + "`n", $utf8NoBom)
+
 if (Test-Path $V2ZipPath) { Remove-Item $V2ZipPath -Force }
-Add-Type -AssemblyName System.IO.Compression.FileSystem
 [System.IO.Compression.ZipFile]::CreateFromDirectory($zipTemp, $V2ZipPath)
 Remove-Item $zipTemp -Recurse -Force
 
@@ -917,7 +953,8 @@ if ($IncludeVariants) {
     $pMaxOn48.Dispose(); $pMaxOn16.Dispose()
 }
 
-Write-Output "Created $V2ZipPath (12 icon sets: P-max laadpaal + Equalizer-max + import/export/net/voltage)"
+Write-Output "Created $V2ZipPath (12 sets, plugin-key Base + per-set folders)"
+Write-Output "Created 12 per-set zips in $IconSetsZipDir"
 Write-Output "Created $OfficialPreviewPath"
 Write-Output ('Equalizer-max vs v10.5.15 48px: {0}x{1} -> {2}x{3} px (+{4} pct H, +{5} pct W, area +{6} pct)' -f $eqMetricsV15.W, $eqMetricsV15.H, $eqMetricsMax.W, $eqMetricsMax.H, $eqHeightGain48, $eqWidthGain48, $eqAreaGain48)
 if ($IncludeVariants) {

@@ -6,6 +6,19 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.5] — 2026-06-17
+
+### Opgelost
+- **Kritische icon-bug (1/12 sets)** — `Easee_icons_v2.zip` gebruikte korte `Base`-namen (`EaseeCharger`) zonder plugin-key-prefix. Domoticz Python-plugins laden alleen iconen in de `Images`-dict wanneer `Base` begint met de XML plugin-key (`EaseeCloudAutoDiscoveryV1000`). Zip opnieuw gegenereerd met prefixed bases + per-set folders; extra 12 mini-zips in `icons/` voor betrouwbare `Image().Create()` per set.
+- **Per-set fallback** — na master-zip worden ontbrekende sets individueel geladen uit `icons/EaseeCharger.zip` enz.
+- **Diagnostiek** — logt nu alle Easee `Images`-keys en volledige `image_ids` mappings (niet alleen samples).
+
+### Gewijzigd
+- **Handmatige upload** — verwijder oude Easee custom icons vóór her-upload van `Easee_icons_v2.zip` (Instellingen → Aangepaste pictogrammen) om conflicten met oude short-name bases te voorkomen.
+
+### Fixed (EN)
+- Icon zip Base names must start with plugin key for Python `Images` dict; regenerated zip + per-set mini-zips; full diagnostic logging.
+
 ## [10.9.4] — 2026-06-17
 
 ### Opgelost

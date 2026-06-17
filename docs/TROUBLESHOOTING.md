@@ -70,7 +70,17 @@ sudo journalctl -u domoticz -f | grep Easee
 - `Device.Update(Image=…)` zonder `UpdateProperties` op nieuwere Domoticz-builds
 - **Energy-tegels** (*Laden*, *Totaal Laden*): sommige Domoticz-versies tonen altijd het standaard bliksem-icoon ondanks custom Image — bekende Domoticz-beperking
 
-**Oplossing** (v10.9.3+):
+**Oplossing** (v10.9.5+):
+1. **Verwijder eerst oude Easee custom icons** via **Instellingen → Meer opties → Aangepaste pictogrammen** (short-name bases uit v10.9.4 kunnen conflicteren)
+2. Controleer of `Easee_icons_v2.zip` en map `icons/` (12 mini-zips) in de pluginmap staan
+3. `git pull` naar v10.9.5+ en herstart het hardware-item
+4. Zoek in het log op INFO-regels:
+   - `Easee Images-keys (12): …EaseeCloudAutoDiscoveryV1000Easee…` — volledige lijst, geen sample
+   - `image_ids: 12/12 sets` en `image_ids mappings: EaseeCharger=…, …`
+   - Bij 1/12 sets (v10.9.4-bug): plugin-key-prefix ontbrak in zip — upgrade naar v10.9.5
+5. Als automatisch laden mislukt: upload `Easee_icons_v2.zip` handmatig via **Aangepaste pictogrammen**, herstart hardware-item
+
+**Oplossing** (v10.9.3–v10.9.4):
 1. Controleer of `Easee_icons_v2.zip` in de pluginmap staat (`/home/root/domoticz/plugins/Easee-Domoticz-plugin/`)
 2. Herstart het hardware-item (niet alleen Domoticz)
 3. Zoek in het log op INFO-regels:

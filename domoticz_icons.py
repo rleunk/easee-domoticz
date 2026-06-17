@@ -14,6 +14,9 @@ _ICON_ROOTS = [
     'EaseeImport', 'EaseeExport', 'EaseeNet', 'EaseeVoltage',
 ]
 
+_ICON_MASTER_ZIP = 'Easee_icons_v2.zip'
+_ICON_SETS_DIR = 'icons'
+
 def image_root(plugin, name, device_id=None):
     n = easee_helpers.norm(plugin, name).lower()
     devid = str(device_id or '').upper()
@@ -103,14 +106,25 @@ def refresh_images_dict(plugin_globals=None):
         if mod is not None:
             domoticz_runtime.bind_plugin_globals(mod.__dict__)
 
-def _easee_image_keys():
+def _images_dict(plugin_globals=None):
+    """Actuele Images-dict; plugin_globals heeft voorkeur na Image().Create()."""
+    if plugin_globals and 'Images' in plugin_globals:
+        return plugin_globals['Images']
+    mod = sys.modules.get('plugin')
+    if mod is not None and 'Images' in mod.__dict__:
+        return mod.__dict__['Images']
+    return domoticz_runtime.Images
+
+def _easee_image_keys(images=None):
+    images = images if images is not None else domoticz_runtime.Images
     keys = []
-    for key in domoticz_runtime.Images:
+    for key in images:
         if 'easee' in str(key).lower():
             keys.append(str(key))
     return sorted(keys)
 
-def _icon_images_key(plugin, root):
+def _icon_images_key(plugin, root, plugin_globals=None):
+    images = _images_dict(plugin_globals)
     candidates = (
         root,
         icon_base(plugin, root),
@@ -118,38 +132,43 @@ def _icon_images_key(plugin, root):
         f'{PLUGIN_KEY}Easee_{root}',
     )
     for key in candidates:
-        if key in domoticz_runtime.Images:
+        if key in images:
             return key
     root_lower = root.lower()
-    for key in domoticz_runtime.Images:
+    for key in images:
         key_str = str(key)
         key_lower = key_str.lower()
         if key_lower == root_lower or key_lower.endswith(root_lower):
             return key_str
     return None
 
-def _collect_image_ids(plugin):
+def _collect_image_ids(plugin, plugin_globals=None):
+    images = _images_dict(plugin_globals)
     found = {}
     for r in _ICON_ROOTS:
-        key = _icon_images_key(plugin, r)
+        key = _icon_images_key(plugin, r, plugin_globals)
         if key:
-            found[r] = domoticz_runtime.Images[key].ID
+            found[r] = images[key].ID
     return found
 
-def _log_icon_startup_diagnostic(plugin, zip_path=None, zip_exists=False, zip_size=0,
+def _missing_icon_roots(plugin, plugin_globals=None):
+    return [r for r in _ICON_ROOTS if _icon_images_key(plugin, r, plugin_globals) is None]
+
+def _log_icon_startup_diagnostic(plugin, plugin_globals=None, zip_path=None, zip_exists=False, zip_size=0,
                                   create_ok=None, create_errors=None, create_method=None):
-    refresh_images_dict()
-    total_keys = len(domoticz_runtime.Images)
-    easee_keys = _easee_image_keys()
+    refresh_images_dict(plugin_globals)
+    images = _images_dict(plugin_globals)
+    total_keys = len(images)
+    easee_keys = _easee_image_keys(images)
     easee_logging.info(
         'domoticz_icons',
         f'Images dict: {total_keys} keys totaal, {len(easee_keys)} met "Easee"',
     )
     if easee_keys:
-        preview = ', '.join(easee_keys[:8])
-        if len(easee_keys) > 8:
-            preview += '...'
-        easee_logging.info('domoticz_icons', f'Easee Images-voorbeelden: {preview}')
+        easee_logging.info(
+            'domoticz_icons',
+            f'Easee Images-keys ({len(easee_keys)}): {", ".join(easee_keys)}',
+        )
     elif total_keys:
         easee_logging.info('domoticz_icons', 'Geen Images-keys met "Easee" — handmatige upload waarschijnlijk nodig')
 
@@ -167,11 +186,13 @@ def _log_icon_startup_diagnostic(plugin, zip_path=None, zip_exists=False, zip_si
                 f'Zip Create(): mislukt — {"; ".join(create_errors or ["onbekend"])}',
             )
 
-    mappings = _collect_image_ids(plugin)
+    mappings = _collect_image_ids(plugin, plugin_globals)
     easee_logging.info('domoticz_icons', f'image_ids: {len(mappings)}/{len(_ICON_ROOTS)} sets')
     if mappings:
-        sample = ', '.join(f'{k}={v}' for k, v in list(mappings.items())[:3])
-        easee_logging.info('domoticz_icons', f'image_ids voorbeeld: {sample}')
+        easee_logging.info(
+            'domoticz_icons',
+            f'image_ids mappings: {", ".join(f"{k}={v}" for k, v in mappings.items())}',
+        )
     else:
         easee_logging.error(
             'domoticz_icons',
@@ -180,17 +201,20 @@ def _log_icon_startup_diagnostic(plugin, zip_path=None, zip_exists=False, zip_si
     return mappings
 
 def _domoticz_image_create_path(plugin, path, fn):
-    """Pad voor Image().Create(): alleen bestandsnaam — Domoticz voegt plugin_dir zelf toe."""
+    """Pad voor Image().Create(): relatief t.o.v. plugin_dir (Domoticz voegt plugin_dir toe)."""
     basename = fn or os.path.basename(path)
     plugin_dir = str(getattr(plugin, 'plugin_dir', '') or '')
     if plugin_dir:
         root = os.path.normpath(plugin_dir.rstrip(os.sep))
         normalized = os.path.normpath(path)
-        if normalized == root or normalized.startswith(root + os.sep):
+        if normalized == root:
             return basename
+        if normalized.startswith(root + os.sep):
+            rel = os.path.relpath(normalized, root).replace('\\', '/')
+            return rel or basename
     if os.path.isabs(path):
         return basename
-    return basename
+    return basename.replace('\\', '/')
 
 def _try_create_icon_zip(plugin, path, fn):
     errors = []
@@ -208,9 +232,37 @@ def _try_create_icon_zip(plugin, path, fn):
             errors.append(f'{label}: {e}')
     return False, errors, None
 
+def _try_load_per_set_zips(plugin, plugin_globals, missing_roots, load_errors):
+    """Domoticz plugin Images vereist Base met plugin-key; per-set mini-zips laden ontbrekende sets."""
+    sets_dir = os.path.join(plugin.plugin_dir, _ICON_SETS_DIR)
+    loaded = 0
+    for root in missing_roots:
+        fn = f'{root}.zip'
+        path = os.path.join(sets_dir, fn)
+        if not os.path.isfile(path):
+            load_errors.append(f'{fn}: niet gevonden in {sets_dir}')
+            continue
+        easee_logging.info('domoticz_icons', f'Per-set icon zip laden: {fn}')
+        rel_path = os.path.join(_ICON_SETS_DIR, fn).replace('\\', '/')
+        create_ok, create_errors, create_method = _try_create_icon_zip(plugin, path, rel_path)
+        if create_ok:
+            refresh_images_dict(plugin_globals)
+            loaded += 1
+            if _icon_images_key(plugin, root, plugin_globals):
+                easee_logging.info('domoticz_icons', f'Per-set zip OK: {root}')
+            else:
+                load_errors.append(f'{fn}: Create() OK maar {root} niet in Images')
+        elif create_errors:
+            msg = f'{fn}: Create() mislukt ({"; ".join(create_errors)})'
+            load_errors.append(msg)
+            easee_logging.error('domoticz_icons', msg)
+    if loaded:
+        easee_logging.info('domoticz_icons', f'Per-set zips geladen: {loaded}/{len(missing_roots)}')
+    return loaded
+
 def load_custom_images(plugin, plugin_globals=None):
     refresh_images_dict(plugin_globals)
-    candidates = ['Easee_icons_v2.zip']
+    candidates = [_ICON_MASTER_ZIP]
     loaded_zip = None
     load_errors = []
     found_zips = []
@@ -222,12 +274,12 @@ def load_custom_images(plugin, plugin_globals=None):
     diagnostic_zip_size = 0
     diagnostic_zip_exists = False
 
-    preloaded = _collect_image_ids(plugin)
+    preloaded = _collect_image_ids(plugin, plugin_globals)
     if len(preloaded) == len(_ICON_ROOTS):
         plugin.image_ids = preloaded
         plugin.icons_upload_required = False
         easee_logging.info('domoticz_icons', f'Custom icons uit Domoticz (handmatig geüpload): {len(plugin.image_ids)} sets')
-        _log_icon_startup_diagnostic(plugin)
+        _log_icon_startup_diagnostic(plugin, plugin_globals)
         return
 
     for fn in candidates:
@@ -239,7 +291,7 @@ def load_custom_images(plugin, plugin_globals=None):
         diagnostic_zip_exists = True
         diagnostic_zip_size = os.path.getsize(path)
         try:
-            if any(_icon_images_key(plugin, r) is None for r in _ICON_ROOTS):
+            if _missing_icon_roots(plugin, plugin_globals):
                 easee_logging.info('domoticz_icons', f'Custom icons laden uit {fn} (map: {plugin.plugin_dir})')
                 create_ok, create_errors, create_method = _try_create_icon_zip(plugin, path, fn)
                 if create_ok:
@@ -249,17 +301,29 @@ def load_custom_images(plugin, plugin_globals=None):
                     msg = f'{fn}: Create() mislukt ({"; ".join(create_errors)})'
                     load_errors.append(msg)
                     easee_logging.error('domoticz_icons', msg)
-            plugin.image_ids = _collect_image_ids(plugin)
-            if plugin.image_ids:
+            plugin.image_ids = _collect_image_ids(plugin, plugin_globals)
+            if len(plugin.image_ids) == len(_ICON_ROOTS):
                 loaded_zip = fn
                 break
-            missing = [r for r in _ICON_ROOTS if _icon_images_key(plugin, r) is None]
+            missing = _missing_icon_roots(plugin, plugin_globals)
             if missing:
-                load_errors.append(f'{fn}: icons niet in Images ({", ".join(missing[:3])}{"..." if len(missing) > 3 else ""})')
+                load_errors.append(
+                    f'{fn}: {len(plugin.image_ids)}/{len(_ICON_ROOTS)} sets in Images '
+                    f'(ontbrekend: {", ".join(missing)})'
+                )
         except Exception as e:
             msg = f'{fn}: {e}'
             load_errors.append(msg)
             easee_logging.error('domoticz_icons', msg)
+
+    missing_after_master = _missing_icon_roots(plugin, plugin_globals)
+    if missing_after_master:
+        per_set_loaded = _try_load_per_set_zips(plugin, plugin_globals, missing_after_master, load_errors)
+        if per_set_loaded:
+            zip_loaded = True
+            if not loaded_zip:
+                loaded_zip = f'{per_set_loaded} per-set zips'
+        plugin.image_ids = _collect_image_ids(plugin, plugin_globals)
 
     if not plugin.image_ids and preloaded:
         plugin.image_ids = preloaded
@@ -298,6 +362,7 @@ def load_custom_images(plugin, plugin_globals=None):
 
     _log_icon_startup_diagnostic(
         plugin,
+        plugin_globals=plugin_globals,
         zip_path=diagnostic_zip_path,
         zip_exists=diagnostic_zip_exists,
         zip_size=diagnostic_zip_size,
@@ -395,7 +460,7 @@ def apply_icon_to_unit(plugin, unit, force=False):
 def apply_images_to_devices(plugin, force=False):
     refresh_images_dict()
     if not plugin.image_ids:
-        plugin.image_ids = _collect_image_ids(plugin)
+        plugin.image_ids = _collect_image_ids(plugin, None)
     plugin.icons_upload_required = not bool(plugin.image_ids)
     if not plugin.image_ids:
         easee_logging.warning(

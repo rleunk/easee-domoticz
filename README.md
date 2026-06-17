@@ -179,12 +179,12 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare paramet
 
 De plugin levert twaalf Easee-tegeliconen via **`Easee_icons_v2.zip`** (P-max productfoto laadpaal + Equalizer-max puck) in de pluginmap.
 
-- **`Easee_icons_v2.zip`** — enige iconenarchief, meegeleverd in de pluginmap
+- **`Easee_icons_v2.zip`** — master zip (12 per-set folders, plugin-key Base) + map **`icons/`** met 12 mini-zips voor betrouwbare plugin-load
 - **12 icon sets:** EaseeCharger, EaseePower, EaseeImport, EaseeExport, EaseeNet, EaseeVoltage, EaseeStatus, EaseeCost, EaseeEqualizer, EaseeOverview, EaseeLoadBal, EaseeAlert
 - **LED-strip kleur** op P-max laadpaal-foto (of LED-dot op Equalizer-puck) volgt de **tegelfunctie** — zie tabel hieronder
 - **Functie-badge** rechtsonder op icoon (W, ↓, ↑, Σ, V, i, €, !, E, L) — ~30% groter sinds v10.6.0 (16px: 8px, 48px: 17px); EaseeCharger heeft geen badge
 - Automatisch geladen bij pluginstart; toegepast op **bestaande** tegels na herstart (en 3× opnieuw na sync in v10.9.2+); v10.9.3 laadt iconen vóór device-aanmaak
-- Mislukt automatisch laden? Upload de zip **eenmalig** via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
+- Mislukt automatisch laden? Verwijder oude Easee custom icons, upload `Easee_icons_v2.zip` via **Aangepaste pictogrammen**, herstart hardware-item
 - Verwacht logregel: `Custom icons geladen: 12 sets (Easee_icons_v2.zip)` of `Custom icons uit Domoticz (handmatig geüpload)`
 - Preview: [`docs/icon-preview-v2.png`](docs/icon-preview-v2.png) · regeneratie: `.\scripts\generate_photo_icon_variants.ps1`
 
