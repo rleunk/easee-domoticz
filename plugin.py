@@ -163,7 +163,7 @@ class BasePlugin:
         domoticz_devices.rebuild_index(self)
         self.initial_sync()
         domoticz_icons.load_custom_images(self, plugin_globals=globals())
-        domoticz_icons.apply_images_to_devices(self)
+        domoticz_icons.apply_images_to_devices(self, force=True)
         self.icon_reapply_remaining = 3
         self.sync_done = True
         easee_state.save_state(self)
@@ -329,7 +329,7 @@ class BasePlugin:
                 return
             if self.icon_reapply_remaining > 0:
                 domoticz_icons.load_custom_images(self, plugin_globals=globals())
-                domoticz_icons.apply_images_to_devices(self)
+                domoticz_icons.apply_images_to_devices(self, force=True)
                 self.icon_reapply_remaining -= 1
             interval = max(10, easee_helpers.safe_int(self, Parameters.get('Mode1', '30'), 30))
             if time.time() - self.last_poll < interval:

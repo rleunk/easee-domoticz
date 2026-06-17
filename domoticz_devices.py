@@ -160,7 +160,10 @@ def _recreate_device_at_unit(plugin, unit, name, typename, device_id):
             return None
     rebuild_index(plugin)
     easee_logging.info('domoticz_devices', f'Legacy tegel gemigreerd naar {key} ({typename}) op unit {unit}')
-    return find_unit_by_devid(plugin, device_id) or find_unit(plugin, key)
+    new_unit = find_unit_by_devid(plugin, device_id) or find_unit(plugin, key)
+    if new_unit is not None:
+        domoticz_icons.apply_icon_to_unit(plugin, new_unit, force=True)
+    return new_unit
 
 def _equalizer_label_from_name(plugin, display, name):
     display_key = easee_helpers.clean_label(plugin, display).lower()
@@ -420,58 +423,17 @@ def ensure_charger_devices(plugin, charger, index):
         ]
         ensure_device_once(plugin, name, typ, device_id=devid, legacy_names=legacy)
 
-def _device_subtype(dev):
-    try:
-        return int(getattr(dev, 'Subtype', 0) or 0)
-    except Exception:
-        return 0
-
 def _name_contains_import(plugin, name):
     label = easee_helpers.clean_label(plugin, name).lower()
     return 'import' in label and 'terug' not in label and 'netto' not in label
 
 def _find_legacy_vermogen_unit(plugin, eid, display):
-    for legacy_key in ('Import', 'Vermogen', 'Terug & netto', 'Netto', 'Teruglevering'):
-        unit = find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, legacy_key))
-        if unit is not None:
-            return unit
+    unit = _find_equalizer_legacy_unit(plugin, display, eid, 'Vermogen')
+    if unit is not None:
+        return unit
     import_name = equalizer_logic.equalizer_dev_name(plugin, display, 'Import')
-    unit = find_unit(plugin, import_name)
-    if unit is not None:
-        return unit
-    unit = find_unit_by_devid(plugin, make_device_id(plugin, import_name))
-    if unit is not None:
-        return unit
-    display_l = easee_helpers.norm(plugin, display).lower()
-    for unit, dev in domoticz_runtime.Devices.items():
-        name = easee_helpers.norm(plugin, dev.Name)
-        name_l = name.lower()
-        if display_l and display_l not in name_l:
-            continue
-        if _name_contains_import(plugin, name):
-            return unit
-    return None
-
-def _recreate_equalizer_text_device(plugin, unit, name, devid):
-    old_name = ''
-    try:
-        old_name = easee_helpers.norm(plugin, domoticz_runtime.Devices[unit].Name)
-        domoticz_runtime.Devices[unit].Delete()
-        easee_logging.info(
-            'domoticz_devices',
-            f'Legacy Energy-tegel verwijderd voor Text-migratie: {old_name} (unit {unit})',
-        )
-    except Exception as e:
-        easee_logging.warning(
-            'domoticz_devices',
-            f'Verwijderen legacy Energy-tegel mislukt unit {unit} ({old_name or name}): {e}',
-        )
-        return unit
-    rebuild_index(plugin)
-    new_unit = ensure_device_once(plugin, name, 'Text', device_id=devid)
-    if new_unit is not None:
-        domoticz_icons.apply_images_to_devices(plugin)
-    return new_unit
+    unit = find_unit(plugin, import_name) or find_unit_by_devid(plugin, make_device_id(plugin, import_name))
+    return unit
 
 def ensure_equalizer_devices(plugin, equalizer, index):
     display = equalizer_logic.equalizer_display_name(plugin, equalizer, index)
@@ -509,12 +471,12 @@ def ensure_equalizer_devices(plugin, equalizer, index):
         if unit is not None:
             dev = domoticz_runtime.Devices.get(unit)
             if label_key == 'Vermogen' and dev is not None:
-                if _device_subtype(dev) == DEVICE_TYPES['Energy']['Subtype']:
+                if _device_subtype(unit) == DEVICE_TYPES['Energy']['Subtype']:
                     easee_logging.info(
                         'domoticz_devices',
                         f'Equalizer {display}: legacy Import Energy → Text Vermogen (unit {unit})',
                     )
-                    _recreate_equalizer_text_device(plugin, unit, name, devid)
+                    _recreate_device_at_unit(plugin, unit, name, typ, devid)
                     continue
                 if _name_contains_import(plugin, dev.Name):
                     easee_logging.info(
@@ -522,5 +484,6 @@ def ensure_equalizer_devices(plugin, equalizer, index):
                         f'Equalizer {display}: Import-naam → Vermogen (unit {unit})',
                     )
             sync_device_name(plugin, unit, name)
+            domoticz_icons.apply_icon_to_unit(plugin, unit)
             continue
         ensure_device_once(plugin, name, typ, device_id=devid, legacy_names=legacy)

@@ -279,7 +279,7 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 
 | Versie | Belangrijkste wijzigingen |
 |--------|---------------------------|
-| **v10.9.2** | Icon fix: Images refresh + UpdateProperties; 3× heartbeat re-apply; legacy Import Energy → Vermogen Text |
+| **v10.9.2** | Icon fix: Images refresh + UpdateProperties fallback; legacy Import Energy → Vermogen Text; icon re-apply 3 heartbeats |
 | **v10.9.1** | Equalizer 2 tegels (Status + Vermogen Text); icon fix na fresh add; legacy Import/Terug & netto → Vermogen |
 | **v10.9.0** | Equalizer tegels geconsolideerd: 3 tegels (Status, Import, Terug & netto); spanning/LB-detail op Status; legacy Netto/Teruglevering → Terug & netto |
 | **v10.8.0** | Equalizer Proposal C: 6 meterkast-tegels; Import/Teruglevering/Netto/Spanning/LB-detail; 4 nieuwe icon sets; legacy Vermogen → Import |
@@ -297,9 +297,7 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 
 **Upgrade vanaf v10.5.x:** `git pull`, herstart hardware-item. Upload **`Easee_icons_v2.zip` opnieuw** (v10.5.18 iconen + v10.6.0 grotere badges). State en devices blijven behouden.
 
-**Upgrade naar v10.9.2:** `git pull`, herstart hardware-item. Controleer log op `Icoon … -> Easee…` per tegel. Legacy *Meterkast - Import* (Energy) wordt automatisch *Vermogen* (Text). Energy-tegels (*Laden*) kunnen in sommige Domoticz-builds nog standaard bliksem tonen.
-
-**Upgrade naar v10.9.1:** `git pull`, herstart hardware-item. Bestaande *Import*- of *Terug & netto*-tegel wordt hernoemd naar *Vermogen* (één tegel); verwijder eventuele wees-tegels handmatig. Controleer log op `Custom icons geladen: 12 sets` — anders upload `Easee_icons_v2.zip` opnieuw via Instellingen → Aangepaste pictogrammen.
+**Upgrade naar v10.9.2:** `git pull`, herstart hardware-item. Legacy *Import*-Energy-tegel wordt automatisch vervangen door Text *Vermogen*. Controleer log op `Custom icons geladen: 12 sets` en `Icoon … -> Easee…` — anders upload `Easee_icons_v2.zip` opnieuw via Instellingen → Aangepaste pictogrammen.
 
 **Upgrade naar v10.9.0:** `git pull`, herstart hardware-item. Bestaande *Netto*- of *Teruglevering*-tegel wordt hernoemd naar *Terug & netto*; *Spanning* en *Load balancing* blijven als wees-tegels (handmatig verwijderen). Geen nieuwe icon zip nodig.
 
