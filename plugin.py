@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.5.18" author="Richard Leunk" version="10.5.18"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.6.0" author="Richard Leunk" version="10.6.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.5.18</h2><br/>
+        <h2>Easee Domoticz plugin v10.6.0</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -48,6 +48,7 @@ except Exception:
 import domoticz_runtime
 domoticz_runtime.bind_plugin_globals(globals())
 
+import easee_logging
 import easee_helpers
 import easee_api
 import easee_state
@@ -56,7 +57,7 @@ import domoticz_icons
 import domoticz_devices
 import charger_logic
 import equalizer_logic
-from easee_constants import ULTRA_DEBUG
+from easee_constants import ULTRA_DEBUG, PLUGIN_VERSION
 
 class BasePlugin:
     def __init__(self):
@@ -85,15 +86,17 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     # ---- logging ----
-    def log(self, msg):
-        Domoticz.Log(f'[Easee v10.5.18] {msg}')
+    def log(self, msg, module='plugin', context=''):
+        easee_logging.info(module, msg, context)
 
-    def debug(self, msg):
-        if Parameters.get('Mode6') == 'Debug':
-            Domoticz.Debug(f'[Easee v10.5.18] {msg}')
+    def debug(self, msg, module='plugin', context=''):
+        easee_logging.debug(module, msg, context)
 
-    def error(self, msg):
-        Domoticz.Error(f'[Easee v10.5.18] {msg}')
+    def warning(self, msg, module='plugin', context=''):
+        easee_logging.warning(module, msg, context)
+
+    def error(self, msg, module='plugin', context=''):
+        easee_logging.error(module, msg, context)
 
     def amp_value(self, *args, **kwargs): return equalizer_logic.amp_value(self, *args, **kwargs)
     def is_same_as_main_fuse(self, *args, **kwargs): return equalizer_logic.is_same_as_main_fuse(self, *args, **kwargs)
@@ -319,6 +322,14 @@ class BasePlugin:
             self.poll_charger(c)
         for eq in self.equalizers:
             self.poll_equalizer(eq)
+        total_power = sum(v.get('power', 0) for v in self.latest_chargers.values())
+        online = sum(1 for v in self.latest_chargers.values() if v.get('online'))
+        self.debug(
+            f'Poll klaar: {len(self.chargers)} lader(s), {len(self.equalizers)} EQ, '
+            f'{online}/{len(self.chargers)} online, totaal {total_power} W',
+            module='plugin',
+            context='poll',
+        )
 
     def update_combined(self):
         total_power = sum(v.get('power', 0) for v in self.latest_chargers.values())

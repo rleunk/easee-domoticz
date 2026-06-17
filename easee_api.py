@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import Domoticz
 import domoticz_runtime
 from easee_constants import BASE_URL, LOGIN_URL, REFRESH_URL
+import easee_logging
 
 def login(plugin):
     try:
@@ -11,10 +11,14 @@ def login(plugin):
             data = r.json()
             plugin.access_token = data.get('accessToken','')
             plugin.refresh_token = data.get('refreshToken','')
-            return bool(plugin.access_token)
-        plugin.error(f'Login mislukt, HTTP {r.status_code}: {r.text[:300]}')
+            if plugin.access_token:
+                easee_logging.info('easee_api', 'Login geslaagd', 'login')
+                return True
+            easee_logging.error('easee_api', 'Login mislukt: geen access token in response', 'login')
+            return False
+        easee_logging.error('easee_api', f'Login mislukt, HTTP {r.status_code}: {r.text[:300]}', 'login')
     except Exception as e:
-        plugin.error(f'Login exception: {e}')
+        easee_logging.error('easee_api', f'Login exception: {e}', 'login')
     return False
 
 def refresh(plugin):
@@ -26,9 +30,11 @@ def refresh(plugin):
             data = r.json()
             plugin.access_token = data.get('accessToken','')
             plugin.refresh_token = data.get('refreshToken','')
-            return bool(plugin.access_token)
-    except Exception:
-        pass
+            if plugin.access_token:
+                easee_logging.debug('easee_api', 'Token refresh geslaagd', 'login')
+                return True
+    except Exception as e:
+        easee_logging.debug('easee_api', f'Token refresh mislukt, opnieuw inloggen: {e}', 'login')
     return plugin.login()
 
 def api_get(plugin, path, retry=True):
@@ -43,5 +49,5 @@ def api_get_optional(plugin, path):
     try:
         return plugin.api_get(path)
     except Exception as e:
-        plugin.debug(f'GET {path} optioneel mislukt: {e}')
+        easee_logging.debug('easee_api', f'GET {path} optioneel mislukt: {e}', 'api')
         return None

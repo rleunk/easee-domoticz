@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import Domoticz
 import domoticz_runtime
 from easee_constants import OP_MODE_LABELS
+import easee_logging
+import easee_logging
 
 def session_energy_kwh(plugin, values, session):
     for source in (values, session if isinstance(session, dict) else {}):
@@ -94,8 +95,9 @@ def discover_chargers(plugin):
                 site = str(item.get('siteName') or item.get('locationName') or item.get('siteId') or '')
                 if cid and (not flt or flt in name.lower() or flt in site.lower()):
                     chargers.append({'id': str(cid).strip(), 'name': name, 'siteName': site})
+        easee_logging.info('charger_logic', f'Discovery: {len(chargers)} laadpaal(en) gevonden', 'discovery')
     except Exception as e:
-        plugin.error(f'Discovery chargers mislukt: {e}')
+        easee_logging.error('charger_logic', f'Discovery chargers mislukt: {e}', 'discovery')
     return sorted({c['id']: c for c in chargers}.values(), key=lambda x: x['id'])
 
 def poll_charger(plugin, charger):
@@ -107,7 +109,7 @@ def poll_charger(plugin, charger):
         if isinstance(state, dict):
             values.update(state)
     except Exception as e:
-        plugin.error(f'State ophalen mislukt voor lader {cid}: {e}')
+        easee_logging.error('charger_logic', f'State ophalen mislukt voor lader {cid}: {e}', 'poll')
     try:
         cfg = plugin.api_get(f'/chargers/{cid}/config') or {}
         if isinstance(cfg, dict):

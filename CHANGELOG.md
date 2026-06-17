@@ -6,6 +6,30 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.6.0] — 2026-06-17
+
+### Toegevoegd
+- **easee_logging.py** — centrale logging met vaste formatter `[Easee v10.6.0][LEVEL][module][context] message`; niveaus DEBUG, INFO, WARNING, ERROR. DEBUG alleen bij Debug-modus of `ULTRA_DEBUG`. WARNING via Domoticz.Log met ⚠, ERROR via Domoticz.Error.
+- **State-migratie** — runtime state hernoemd van `easee_v9_0_state.json` naar `easee_state.json`; automatische rename bij eerste load na upgrade.
+
+### Gewijzigd
+- **plugin.py** — `log`/`debug`/`error`/`warning` delegeren naar `easee_logging`; poll-samenvatting in debug-modus.
+- **easee_api.py, charger_logic.py, equalizer_logic.py** — kernpaden (login, discovery, errors, poll) migreren naar centrale logger.
+- **Easee_icons_v2.zip** — functie-badges ~30% groter (16px: 6→8px, 48px: 13→17px); lettergrootte mee opgeschaald.
+- **docs/icon-preview-v2.png** — bijgewerkt.
+
+### Aanbevolen upgrade
+- `git pull` in de pluginmap, **upload `Easee_icons_v2.zip` opnieuw** via **Instellingen → Meer opties → Aangepaste pictogrammen**, herstart het hardware-item. State migreert automatisch (`easee_v9_0_state.json` → `easee_state.json`).
+
+### Added (EN)
+- **easee_logging.py** — central logging with `[Easee v10.6.0][LEVEL][module][context]` format; DEBUG gated by debug mode or `ULTRA_DEBUG`.
+- **State migration** — auto-rename `easee_v9_0_state.json` → `easee_state.json` on first load.
+
+### Changed (EN)
+- Plugin delegates and core modules use shared logger; function badges ~30% larger on icons; version v10.6.0.
+
+---
+
 ## [10.5.18] — 2026-06-16
 
 ### Gewijzigd

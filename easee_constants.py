@@ -4,7 +4,9 @@ BASE_URL = 'https://api.easee.com/api'
 LOGIN_URL = BASE_URL + '/accounts/login'
 REFRESH_URL = BASE_URL + '/accounts/refresh_token'
 TIBBER_GQL = 'https://api.tibber.com/v1-beta/gql'
-STATE_FILE = 'easee_v9_0_state.json'
+STATE_FILE = 'easee_state.json'
+LEGACY_STATE_FILE = 'easee_v9_0_state.json'
+PLUGIN_VERSION = '10.6.0'
 PLUGIN_KEY = 'EaseeCloudAutoDiscoveryV1000'
 ULTRA_DEBUG = False
 

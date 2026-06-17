@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import json, math
-import Domoticz
 import domoticz_runtime
+import easee_logging
 
 def amp_value(plugin, value):
     x = plugin.safe_float(value, 0.0)
@@ -629,7 +629,7 @@ def log_equalizer_fuse_once(plugin, eid, limit_a, source, probes=None, debug_hit
         return
     plugin.fuse_first_poll_logged.add(key)
     if limit_a > 0:
-        plugin.log(f'Equalizer fuse: limit={int(round(limit_a))}A src={source}')
+        easee_logging.info('equalizer_logic', f'Equalizer fuse: limit={int(round(limit_a))}A src={source}', 'poll')
     else:
         parts = []
         if probes:
@@ -640,7 +640,11 @@ def log_equalizer_fuse_once(plugin, eid, limit_a, source, probes=None, debug_hit
             parts.append('afgewezen: ' + '; '.join(rejected[:12]))
         if debug_hits:
             parts.append('keys: ' + '; '.join(debug_hits[:20]))
-        plugin.log('Equalizer fuse: limit=onbekend | ' + (' | '.join(parts) if parts else 'geen fuse-data'))
+        easee_logging.warning(
+            'equalizer_logic',
+            'Equalizer fuse: limit=onbekend | ' + (' | '.join(parts) if parts else 'geen fuse-data'),
+            'poll',
+        )
 
 def fuse_limit_from_deep_scan(plugin, obj, source_prefix='', main_fuse_a=0.0):
     candidates = {}
@@ -1331,8 +1335,8 @@ def discover_equalizers(plugin):
     plugin.equalizer_probes = probes
     plugin.equalizer_source = ','.join(dict.fromkeys(sources)) if sources else 'none'
     equalizers = sorted({e['id']: e for e in equalizers}.values(), key=lambda x: x['id'])
-    plugin.debug(f'Equalizer probes: {probes}')
-    plugin.debug(f'Equalizer discovery: {len(equalizers)} via {plugin.equalizer_source}')
+    easee_logging.debug('equalizer_logic', f'Equalizer probes: {probes}', 'discovery')
+    easee_logging.info('equalizer_logic', f'Equalizer discovery: {len(equalizers)} via {plugin.equalizer_source}', 'discovery')
     return equalizers
 
 def poll_equalizer(plugin, equalizer):

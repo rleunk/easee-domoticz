@@ -360,7 +360,7 @@ function Add-FunctionHintOverlay([Drawing.Bitmap]$Src, [string]$Kind, [Drawing.C
     $g.TextRenderingHint = [Drawing.Text.TextRenderingHint]::ClearTypeGridFit
     $g.CompositingQuality = [Drawing.Drawing2D.CompositingQuality]::HighQuality
 
-    $badge = if ($size -le 16) { 6 } else { 13 }
+    $badge = if ($size -le 16) { 8 } else { 17 }
     $margin = if ($size -le 16) { 0 } else { 1 }
     $bx = $size - $badge - $margin
     $by = $size - $badge - $margin
@@ -371,7 +371,7 @@ function Add-FunctionHintOverlay([Drawing.Bitmap]$Src, [string]$Kind, [Drawing.C
     $borderWidth = if ($size -le 16) { 1.0 } else { 1.25 }
     $borderPen = New-Object System.Drawing.Pen $accent, ([single]$borderWidth)
     $rect = New-Object System.Drawing.RectangleF ([single]$bx), ([single]$by), ([single]$badge), ([single]$badge)
-    $radius = if ($size -le 16) { 1.5 } else { 3.0 }
+    $radius = if ($size -le 16) { 2.0 } else { 3.5 }
     $path = New-Object System.Drawing.Drawing2D.GraphicsPath
     $path.AddArc($rect.X, $rect.Y, $radius * 2, $radius * 2, 180, 90)
     $path.AddArc($rect.Right - $radius * 2, $rect.Y, $radius * 2, $radius * 2, 270, 90)
@@ -381,7 +381,7 @@ function Add-FunctionHintOverlay([Drawing.Bitmap]$Src, [string]$Kind, [Drawing.C
     $g.FillPath($bgBrush, $path)
     $g.DrawPath($borderPen, $path)
 
-    $fontSize = if ($size -le 16) { 4.25 } else { 7.5 }
+    $fontSize = if ($size -le 16) { 5.5 } else { 9.75 }
     $font = New-Object System.Drawing.Font 'Segoe UI', $fontSize, ([Drawing.FontStyle]::Bold)
     $textBrush = New-Object System.Drawing.SolidBrush ([Drawing.Color]::FromArgb(255, 248, 250, 252))
     $format = New-Object System.Drawing.StringFormat

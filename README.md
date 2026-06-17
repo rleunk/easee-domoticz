@@ -197,7 +197,7 @@ sudo systemctl restart domoticz
 
 Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 
-**Van v10.4.0 naar v10.5.0?** Vervang `plugin.py` of doe `git pull` — state (`easee_v9_0_state.json`) en bestaande devices blijven behouden. Nieuwe laadpalen worden automatisch gedetecteerd.
+**Van v10.5.x naar v10.6.0?** Vervang `plugin.py` of doe `git pull` — state (`easee_state.json`, automatisch gemigreerd van `easee_v9_0_state.json`) en bestaande devices blijven behouden. Upload **`Easee_icons_v2.zip` opnieuw** na upgrade (grotere functie-badges). Zet **Debug logging** (Mode6) aan voor gestructureerde logs met module/context.
 
 ## 🚀 Release
 

@@ -2,28 +2,52 @@
 
 import os, json, time
 from datetime import datetime
-from easee_constants import STATE_FILE
+from easee_constants import STATE_FILE, LEGACY_STATE_FILE
+import easee_logging
 
 def state_path(plugin):
     return os.path.join(plugin.plugin_dir, STATE_FILE)
 
+def legacy_state_path(plugin):
+    return os.path.join(plugin.plugin_dir, LEGACY_STATE_FILE)
+
+def _migrate_state_file(plugin):
+    new_fp = state_path(plugin)
+    old_fp = legacy_state_path(plugin)
+    if os.path.isfile(old_fp) and not os.path.isfile(new_fp):
+        try:
+            os.rename(old_fp, new_fp)
+            easee_logging.info('easee_state', f'State-bestand gemigreerd: {LEGACY_STATE_FILE} → {STATE_FILE}', 'migration')
+        except Exception as e:
+            easee_logging.warning('easee_state', f'State-migratie mislukt ({LEGACY_STATE_FILE}): {e}', 'migration')
+
+def _resolve_state_file(plugin):
+    new_fp = state_path(plugin)
+    if os.path.isfile(new_fp):
+        return new_fp
+    old_fp = legacy_state_path(plugin)
+    if os.path.isfile(old_fp):
+        return old_fp
+    return new_fp
+
 def load_state(plugin):
+    _migrate_state_file(plugin)
     try:
-        fp = plugin.state_path()
+        fp = _resolve_state_file(plugin)
         if os.path.isfile(fp):
             with open(fp, 'r', encoding='utf-8') as f:
                 loaded = json.load(f)
                 if isinstance(loaded, dict):
                     plugin.state.update(loaded)
     except Exception as e:
-        plugin.debug(f'state load failed: {e}')
+        easee_logging.debug('easee_state', f'state load failed: {e}', 'load')
 
 def save_state(plugin):
     try:
-        with open(plugin.state_path(), 'w', encoding='utf-8') as f:
+        with open(state_path(plugin), 'w', encoding='utf-8') as f:
             json.dump(plugin.state, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        plugin.debug(f'state save failed: {e}')
+        easee_logging.debug('easee_state', f'state save failed: {e}', 'save')
 
     # ---- index ----
 

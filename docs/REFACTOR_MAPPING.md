@@ -1,8 +1,8 @@
 # Refactor-mapping: `plugin.py` → modules
 
-**Status:** module-split uitgevoerd (geen versie-bump, geen commit)  
+**Status:** module-split uitgevoerd (v10.6.0)  
 **Bron:** oorspronkelijk monolithisch `plugin.py` — **2653 regels** (v10.5.18)  
-**Resultaat:** 10 bestanden, **2993 regels** totaal (incl. imports/delegates)
+**Resultaat:** 11 bestanden incl. `easee_logging.py`, **~3000 regels** totaal (incl. imports/delegates)
 
 ---
 
@@ -41,7 +41,7 @@
 |------|-------|-------------|
 | `BASE_URL`, `LOGIN_URL`, `REFRESH_URL` | 48–50 | `easee_constants.py` |
 | `TIBBER_GQL` | 51 | `tibber_pricing.py` *(nieuw)* |
-| `STATE_FILE` | 52 | `easee_constants.py` |
+| `STATE_FILE` | 7 | `easee_constants.py` (`easee_state.json`; legacy `easee_v9_0_state.json`) |
 | `PLUGIN_KEY`, `ULTRA_DEBUG` | 53–54 | `easee_constants.py` |
 | `OP_MODE_LABELS` | 56–66 | `easee_constants.py` |
 | `DEVICE_TYPES` | 68–74 | `easee_constants.py` |
@@ -82,11 +82,25 @@ Aanbevolen patroon: **`BasePlugin` blijft orchestrator** en delegeert naar modul
 |------|-------|-----------|
 | `BASE_URL`, `LOGIN_URL`, `REFRESH_URL` | 48–50 | Easee API endpoints |
 | `TIBBER_GQL` | 51 | *Alternatief:* `tibber_pricing.py` |
-| `STATE_FILE` | 52 | State-bestandsnaam |
+| `STATE_FILE` | 52 | State-bestandsnaam (`easee_state.json`; legacy `easee_v9_0_state.json`) |
+| `LEGACY_STATE_FILE` | 52 | Oude state-bestandsnaam (migratie) |
+| `PLUGIN_VERSION` | 53 | Pluginversie in logs |
 | `PLUGIN_KEY`, `ULTRA_DEBUG` | 53–54 | Plugin-identiteit / debug-flag |
 | `OP_MODE_LABELS` | 56–66 | Charger status labels |
 | `DEVICE_TYPES` | 68–74 | Domoticz device specs |
 | `CORE_DEVICE_IDS` | 76–83 | Stable DeviceID's voor core devices |
+
+---
+
+## 1b. `easee_logging.py` (v10.6.0)
+
+| Functie | Rationale |
+|---------|-----------|
+| `debug` / `info` / `warning` / `error` | Centrale formatter `[Easee vX][LEVEL][module][context] msg` |
+| `is_debug_enabled` | `ULTRA_DEBUG` of Domoticz Debug-modus (Mode6) |
+
+**Afhankelijkheden:** `Domoticz`, `domoticz_runtime.Parameters`, `PLUGIN_VERSION`, `ULTRA_DEBUG`.  
+**Gebruik:** `plugin.log/debug/error/warning` delegeren hiernaartoe; modules kunnen `easee_logging` direct importeren.
 
 ---
 
