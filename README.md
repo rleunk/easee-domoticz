@@ -15,6 +15,18 @@
 
 **Installeren → 2 minuten, werken → direct** · [Quick Start](#quick-start)
 
+## 📸 Screenshots
+
+| Dashboard | Equalizer / iconen |
+|-----------|-------------------|
+| ![Domoticz dashboard](docs/screenshot-dashboard.png) | ![Equalizer tegels](docs/screenshot-equalizer.png) |
+
+*Dashboard:* compacte Domoticz-tegels met live vermogen, laadstatus en Equalizer-overzicht — emoji's (⚡, ✅, 🟢) geven vermogen, status en prijs in één oogopslag weer.
+
+*Equalizer / iconen:* custom P-max laadpaal- en Equalizer-max pictogrammen uit `Easee_icons_v2.zip`, met LED-kleur per tegelfunctie en functie-badges (W, i, €, E, L).
+
+> Placeholder-afbeeldingen — vervang `docs/screenshot-dashboard.png` en `docs/screenshot-equalizer.png` door echte Domoticz-screenshots indien gewenst.
+
 ## ✨ Features
 
 ✨ **Auto-Discovery** — Automatische detectie van alle Easee laadpalen en Equalizer  
