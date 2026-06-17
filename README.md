@@ -6,6 +6,15 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
+## 🚀 Wat doet deze plugin in 1 minuut
+
+- ✅ Auto-detectie van laadpalen en Equalizer
+- ✅ Live vermogen en status in Domoticz
+- ✅ Kostenberekening via Tibber
+- ✅ Slimme UI met emoji's en compacte tegels
+
+**Installeren → 2 minuten, werken → direct** · [Quick Start](#quick-start)
+
 ## ✨ Features
 
 ✨ **Auto-Discovery** — Automatische detectie van alle Easee laadpalen en Equalizer  
@@ -50,7 +59,7 @@ Zie **[INSTALL.md](INSTALL.md)** voor stap-voor-stap instructies (Debian/Domotic
 
 > Git-authenticatie (SSH of PAT): [docs/GIT_SETUP.md](docs/GIT_SETUP.md)
 
-### Quick Start
+### Quick Start {#quick-start}
 
 Op je Domoticz-server (Debian):
 
