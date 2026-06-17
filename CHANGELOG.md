@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.7] — 2026-06-18
+
+### Opgelost
+- **Icon-regressie v10.9.6** — `Device.Update(Image=…)` zonder `nValue`/`sValue` faalt op sommige Domoticz-builds (Debian) met `TypeError: function missing required argument 'nvalue'`. Icon-updates gebruiken nu altijd de huidige tegelwaarden: `Update(nValue=…, sValue=…, Image=…)`.
+
+### Fixed (EN)
+- Icon apply regression: always pass current `nValue` and `sValue` with `Image=` on `Device.Update()` (required on some Domoticz builds).
+
 ## [10.9.6] — 2026-06-17
 
 ### Opgelost

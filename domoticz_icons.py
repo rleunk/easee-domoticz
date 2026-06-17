@@ -385,19 +385,22 @@ def _current_image_id(dev):
         return 0
 
 def _apply_image_to_unit(unit, dev, img_id):
-    """Pas custom icoon toe op bestaande tegel via Update(Image=)."""
+    """Pas custom icoon toe op bestaande tegel; behoud nValue/sValue (vereist op sommige Domoticz-builds)."""
     img_id = int(img_id)
+    n_value = int(getattr(dev, 'nValue', 0) or 0)
+    s_value = str(getattr(dev, 'sValue', '') or '')
+    base_kwargs = {'nValue': n_value, 'sValue': s_value, 'Image': img_id}
     attempts = (
-        {'Image': img_id, 'SuppressTriggers': True},
-        {'Image': img_id},
+        {**base_kwargs, 'SuppressTriggers': True},
+        base_kwargs,
     )
     for kwargs in attempts:
         try:
             dev.Update(**kwargs)
             if _current_image_id(dev) == img_id:
                 if 'SuppressTriggers' in kwargs:
-                    return True, 'Update(Image=..., SuppressTriggers=...)'
-                return True, 'Update(Image=...)'
+                    return True, 'Update(nValue, sValue, Image=..., SuppressTriggers=...)'
+                return True, 'Update(nValue, sValue, Image=...)'
         except TypeError:
             safe = {k: v for k, v in kwargs.items() if k != 'SuppressTriggers'}
             if not safe:
@@ -405,16 +408,16 @@ def _apply_image_to_unit(unit, dev, img_id):
             try:
                 dev.Update(**safe)
                 if _current_image_id(dev) == img_id:
-                    return True, 'Update(Image=...)'
+                    return True, 'Update(nValue, sValue, Image=...)'
             except Exception:
                 continue
         except Exception:
             continue
     try:
         dev.Image = img_id
-        dev.Update(Image=img_id)
+        dev.Update(nValue=n_value, sValue=s_value, Image=img_id)
         if _current_image_id(dev) == img_id:
-            return True, 'dev.Image + Update(Image=...)'
+            return True, 'dev.Image + Update(nValue, sValue, Image=...)'
     except Exception as e:
         return False, str(e)
     return False, f'Update voltooid maar Image={_current_image_id(dev)} (verwacht {img_id})'
