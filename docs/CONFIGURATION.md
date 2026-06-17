@@ -101,7 +101,8 @@ Als geen Equalizer wordt gevonden, verschijnen geen extra tegels en toont Status
 | Max import | obs. 44 MaxPowerImport | Informatief: max vermogen aansluiting (bijv. 17,2 kW ≈ 25 A) — **verandert niet** bij limiet 22→24 A |
 | L1/L2/L3 | obs. 31–33 | Fase-stromen; ontbrekend = `—`, nul = `0.0` |
 | Actuele stroom | fallback berekend uit vermogen | Alleen als geen fase-observations |
-| Huisvermogen | obs. 40 ActivePowerImport | Watt |
+
+**Huisvermogen staat niet meer op Status** (sinds v10.8.0) — zie Import-tegel.
 
 **Drie verschillende begrippen:**
 - **Hoofdzekering (25 A)** = fysieke zekeringgrootte
@@ -112,7 +113,22 @@ Als limiet **onbekend** is, controleer het Domoticz-log op `siteStructure amp-ra
 
 Zet **Debug logging** aan (Mode6) voor uitgebreide fuse-probe details.
 
-### Equalizer Vermogen-tegel (v10.6.5+)
+### Equalizer tegels Proposal C (v10.8.0+)
+
+| Tegel | Type | Bron | Weergave |
+|-------|------|------|----------|
+| Status | Text | state + site fuse API | Online, LB, limieten, L1/L2/L3 stroom (A) |
+| Import | Energy | obs. 40 / 45 | Vermogen (W) + **Vandaag** kWh import |
+| Teruglevering | Energy | obs. 41 / 46 | Vermogen (W) + **Vandaag** kWh export |
+| Netto | Text | berekend | Netto W (import − export), totaal netto kWh |
+| Spanning | Text | state / obs. 34–36 | L1/L2/L3 spanning (V) |
+| Load balancing | Text | state / obs. 230–232 | Vrij L1/L2/L3 (A), gelijkstroom L1/L2/L3 (A) |
+
+Core **LoadBal**-schakelaar (site-wide) blijft ongewijzigd.
+
+Legacy: bestaande **Vermogen**-tegel wordt automatisch **Import** (zelfde DeviceID via legacy lookup).
+
+### Equalizer Import-tegel (v10.6.5 – v10.7.x, vervangen door Import in v10.8.0)
 
 | Weergave | Bron | Betekenis |
 |----------|------|-----------|
@@ -159,7 +175,11 @@ Devices krijgen automatisch deze namen:
 ### Per Equalizer (indien gevonden)
 ```
 [PREFIX] - [NAAM] - Status
-[PREFIX] - [NAAM] - Vermogen   ← actueel vermogen (W) + Vandaag kWh (obs. 45, v10.6.5+)
+[PREFIX] - [NAAM] - Import          ← obs. 40/45 (legacy: Vermogen)
+[PREFIX] - [NAAM] - Teruglevering   ← obs. 41/46 (v10.8.0+)
+[PREFIX] - [NAAM] - Netto           ← import − export (v10.8.0+)
+[PREFIX] - [NAAM] - Spanning        ← L1/L2/L3 V (v10.8.0+)
+[PREFIX] - [NAAM] - Load balancing  ← LB fase-detail (v10.8.0+)
 ```
 
 ### Per Laadpaal
@@ -174,7 +194,7 @@ Devices krijgen automatisch deze namen:
 
 De plugin bewaart automatisch in **`easee_state.json`** (pluginmap):
 - Laadsessies, kosten, prijscache
-- Equalizer vermogensintegratie (fallback als observation 45 ontbreekt)
+- Equalizer import/export energie-integratie (fallback als observation 45/46 ontbreekt)
 
 Bij upgrade van oudere versies wordt `easee_v9_0_state.json` automatisch hernoemd. Opslaan is atomisch (`.tmp` + `os.replace`, sinds v10.6.1).
 

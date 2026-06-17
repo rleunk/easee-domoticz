@@ -6,6 +6,24 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.8.0] — 2026-06-17
+
+### Toegevoegd
+- **Equalizer Proposal C (Meterkast)** — zes tegels per Equalizer: Status, Import, Teruglevering, Netto, Spanning, Load balancing.
+- **Import / Teruglevering** — aparte Energy-tegels voor obs. 40/45 (import) en 41/46 (export) met Vandaag kWh.
+- **Netto-tegel** — netto vermogen (W) en totaal netto kWh (import − export).
+- **Spanning-tegel** — L1/L2/L3 spanning (V) uit `/equalizers/{id}/state` of obs. 34–36.
+- **Load balancing detail** — vrij beschikbare stroom en gelijkstroom per fase uit state (obs. 230–232 fallback).
+- **Icon sets** — EaseeImport (↓), EaseeExport (↑), EaseeNet (Σ), EaseeVoltage (V); zip bevat nu 12 sets.
+
+### Gewijzigd
+- **Status-tegel** — huisvermogen-regel verwijderd (verplaatst naar Import-tegel).
+- **Vermogen → Import** — bestaande *Meterkast - Vermogen* devices worden automatisch hernoemd via legacy DeviceID-lookup.
+- **Observations query** — uitgebreid met spanning (34–36) en beschikbare stroom (230–232).
+
+### Added (EN)
+- Equalizer Proposal C: six tiles per equalizer; separate import/export energy tiles; net/voltage/LB detail text tiles; four new icon sets in `Easee_icons_v2.zip`.
+
 ## [10.7.2] — 2026-06-17
 
 ### Opgelost

@@ -134,4 +134,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Domoticz Forum**: https://www.domoticz.com/forum/
 
-Bij een issue: pluginversie (bijv. **v10.7.2**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).
+Bij een issue: pluginversie (bijv. **v10.8.0**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).

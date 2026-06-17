@@ -67,7 +67,13 @@ def resolve_charger_unit(plugin, cid, label_key):
     return find_unit_by_devid(plugin, make_charger_device_id(plugin, cid, label_key))
 
 def resolve_equalizer_unit(plugin, eid, label_key):
-    return find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, label_key))
+    devid = make_equalizer_device_id(plugin, eid, label_key)
+    unit = find_unit_by_devid(plugin, devid)
+    if unit is not None:
+        return unit
+    if label_key == 'Import':
+        return find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, 'Vermogen'))
+    return None
 
 def resolve_core_unit(plugin, label):
     label = easee_helpers.clean_label(plugin, label)
@@ -293,7 +299,11 @@ def ensure_equalizer_devices(plugin, equalizer, index):
     eid = equalizer['id']
     devices = [
         ('Text', 'Status'),
-        ('Energy', 'Vermogen'),
+        ('Energy', 'Import'),
+        ('Energy', 'Teruglevering'),
+        ('Text', 'Netto'),
+        ('Text', 'Spanning'),
+        ('Text', 'Load balancing'),
     ]
     for typ, label_key in devices:
         name = equalizer_logic.equalizer_dev_name(plugin, display, label_key)
@@ -303,4 +313,16 @@ def ensure_equalizer_devices(plugin, equalizer, index):
             f'Easee - {display} - {label_key}',
             f'Easee - Easee - {display} - {label_key}',
         ]
+        if label_key == 'Import':
+            legacy.extend([
+                easee_helpers.pref(plugin, f'{display} - Vermogen'),
+                f'Easee - {display} - Vermogen',
+                f'Easee - Easee - {display} - Vermogen',
+            ])
+        unit = find_unit_by_devid(plugin, devid)
+        if unit is None and label_key == 'Import':
+            unit = find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, 'Vermogen'))
+        if unit is not None:
+            sync_device_name(plugin, unit, name)
+            continue
         ensure_device_once(plugin, name, typ, device_id=devid, legacy_names=legacy)

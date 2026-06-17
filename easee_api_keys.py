@@ -53,10 +53,21 @@ SITE_STRUCTURE_PATHS = {
 
 EQUALIZER_KEYS = {
     'power': ('currentPower', 'power', 'activePowerImport', 'activePower'),
+    'power_import': ('activePowerImport', 'currentPower', 'power'),
+    'power_export': ('activePowerExport',),
     'power_fallback': ('currentPower', 'power', 'activePower'),
     'load_balancing': ('loadBalancingActive', 'loadBalancing', 'isLoadBalancingEnabled'),
     'max_power_import': ('maxPowerImport',),
     'phase_current': ('currentL1', 'currentL2', 'currentL3'),
+    'phase_voltage': (
+        'voltageNL1', 'voltageNL2', 'voltageNL3',
+        'voltageL1', 'voltageL2', 'voltageL3',
+        'voltage_N_L1', 'voltage_N_L2', 'voltage_N_L3',
+    ),
+    'available_current': ('availableCurrentL1', 'availableCurrentL2', 'availableCurrentL3'),
+    'equalized_charge_current': (
+        'equalizedChargeCurrentL1', 'equalizedChargeCurrentL2', 'equalizedChargeCurrentL3',
+    ),
     'cumulative_import': ('cumulativeActivePowerImport',),
     'cumulative_export': ('cumulativeActivePowerExport',),
     'online': ('isOnline',),
@@ -66,7 +77,7 @@ EQUALIZER_KEYS = {
 
 OBSERVATION_KEYS = {
     'container': ('observations', 'data'),
-    'query_ids': '20,31,32,33,40,41,44,45,46',
+    'query_ids': '20,31,32,33,34,35,36,40,41,44,45,46,230,231,232',
 }
 
 OBSERVATION_ID_TO_FIELD = {
@@ -74,11 +85,17 @@ OBSERVATION_ID_TO_FIELD = {
     31: 'currentL1',
     32: 'currentL2',
     33: 'currentL3',
+    34: 'voltageNL1',
+    35: 'voltageNL2',
+    36: 'voltageNL3',
     40: 'activePowerImport',
     41: 'activePowerExport',
     44: 'maxPowerImport',
     45: 'cumulativeActivePowerImport',
     46: 'cumulativeActivePowerExport',
+    230: 'availableCurrentL1',
+    231: 'availableCurrentL2',
+    232: 'availableCurrentL3',
 }
 
 # ---- Charger state & session ----
@@ -185,11 +202,42 @@ def first_dict_value(data, keys):
 
 
 def first_power_value(values):
-    """First non-empty equalizer power reading from *values*."""
+    """First non-empty equalizer import power reading from *values*."""
     if not isinstance(values, dict):
         return None
+    for key in EQUALIZER_KEYS['power_import']:
+        val = values.get(key)
+        if val is not None and val != '':
+            return val
     for key in EQUALIZER_KEYS['power']:
         val = values.get(key)
         if val is not None and val != '':
             return val
     return None
+
+
+def first_export_power_value(values):
+    """First non-empty equalizer export power reading from *values*."""
+    if not isinstance(values, dict):
+        return None
+    for key in EQUALIZER_KEYS['power_export']:
+        val = values.get(key)
+        if val is not None and val != '':
+            return val
+    return None
+
+
+def phase_voltage_keys():
+    return (
+        ('voltageNL1', 'voltageL1', 'voltage_N_L1'),
+        ('voltageNL2', 'voltageL2', 'voltage_N_L2'),
+        ('voltageNL3', 'voltageL3', 'voltage_N_L3'),
+    )
+
+
+def phase_available_current_keys():
+    return EQUALIZER_KEYS['available_current']
+
+
+def phase_equalized_charge_keys():
+    return EQUALIZER_KEYS['equalized_charge_current']

@@ -54,6 +54,10 @@ $DomoticzIconSets = @(
     @{ Name = 'EaseeLoadBal';   Color = [Drawing.Color]::FromArgb(255, 0, 188, 212);  Kind = 'loadbal' }
     @{ Name = 'EaseeCost';      Color = [Drawing.Color]::FromArgb(255, 255, 152, 0);  Kind = 'cost' }
     @{ Name = 'EaseeOverview';  Color = [Drawing.Color]::FromArgb(255, 0, 150, 136);  Kind = 'overview' }
+    @{ Name = 'EaseeImport';    Color = [Drawing.Color]::FromArgb(255, 255, 193, 7);  Kind = 'import' }
+    @{ Name = 'EaseeExport';    Color = [Drawing.Color]::FromArgb(255, 76, 175, 80);  Kind = 'export' }
+    @{ Name = 'EaseeNet';       Color = [Drawing.Color]::FromArgb(255, 0, 150, 136);  Kind = 'net' }
+    @{ Name = 'EaseeVoltage';   Color = [Drawing.Color]::FromArgb(255, 103, 58, 183); Kind = 'voltage' }
 )
 
 function Save-Png([Drawing.Bitmap]$Bmp, [string]$Path) {
@@ -332,6 +336,10 @@ function Get-FunctionHintGlyph([string]$Kind) {
     switch ($Kind) {
         'charger'   { return $null }
         'power'     { return 'W' }
+        'import'    { return [char]0x2193 }  # ↓
+        'export'    { return [char]0x2191 }  # ↑
+        'net'       { return [char]0x03A3 }  # Σ
+        'voltage'   { return 'V' }
         'status'    { return 'i' }
         'cost'      { return [char]0x20AC }  # €
         'alert'     { return '!' }
@@ -525,11 +533,15 @@ function New-PhotoVariantIcon([Drawing.Bitmap]$DarkCrop, [Drawing.Bitmap]$RedCro
 }
 
 function New-ProductionIcon([hashtable]$Set, [int]$Size, [bool]$Dim, [Drawing.Bitmap]$DarkCrop, [Drawing.Bitmap]$RedCrop, [Drawing.Bitmap]$DarkCropMax) {
-    if ($Set.Kind -in @('equalizer', 'loadbal')) {
-        $icon = New-EaseeIconV2 $Size $Set.Color $Set.Kind $Dim $true
+    if ($Set.Kind -in @('equalizer', 'loadbal', 'net', 'voltage')) {
+        $drawKind = if ($Set.Kind -in @('net', 'voltage')) { 'equalizer' } else { $Set.Kind }
+        $icon = New-EaseeIconV2 $Size $Set.Color $drawKind $Dim $true
         $hinted = Add-FunctionHintOverlay $icon $Set.Kind $Set.Color $Dim
         $icon.Dispose()
         return $hinted
+    }
+    if ($Set.Kind -in @('import', 'export')) {
+        return New-PhotoVariantIcon $DarkCrop $RedCrop 'photo-max' $Size $Dim $Set.Color $DarkCropMax $Set.Kind $true
     }
     return New-PhotoVariantIcon $DarkCrop $RedCrop 'photo-max' $Size $Dim $Set.Color $DarkCropMax $Set.Kind $true
 }
@@ -575,6 +587,24 @@ $redCropMax = Import-PhotoSource $RedSourcePath -AggressiveCrop
 
 # --- Generate P-U folders (optional) ---
 $shapeReport = New-Object System.Collections.Generic.List[string]
+
+# --- Icon preview row definitions (used with and without -IncludeVariants) ---
+$Euro = [char]0x20AC
+$Sigma = [char]0x03A3
+$combinedRows = @(
+    @{ Label = 'EaseeCharger - groen, laden (geen hint)'; Hint = $null; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeCharger' }) }
+    @{ Label = 'EaseePower - geel, vermogen W/kW'; Hint = 'W'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseePower' }) }
+    @{ Label = 'EaseeImport - geel, import (pijl omlaag)'; Hint = [char]0x2193; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeImport' }) }
+    @{ Label = 'EaseeExport - groen, teruglevering (pijl omhoog)'; Hint = [char]0x2191; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeExport' }) }
+    @{ Label = 'EaseeNet - teal, netto Sigma'; Hint = [char]0x03A3; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeNet' }) }
+    @{ Label = 'EaseeVoltage - paars, spanning V'; Hint = 'V'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeVoltage' }) }
+    @{ Label = 'EaseeStatus - blauw, core status'; Hint = 'i'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeStatus' }) }
+    @{ Label = "EaseeCost - oranje, kosten $Euro"; Hint = $Euro; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeCost' }) }
+    @{ Label = 'EaseeAlert - rood, fout/waarschuwing'; Hint = '!'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeAlert' }) }
+    @{ Label = "EaseeOverview - teal, overzicht $Sigma"; Hint = $Sigma; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeOverview' }) }
+    @{ Label = 'EaseeEqualizer - blauw, EQ/charger status'; Hint = 'E'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeEqualizer' }) }
+    @{ Label = 'EaseeLoadBal - teal, load balancing'; Hint = 'L'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeLoadBal' }) }
+)
 
 if ($IncludeVariants) {
 foreach ($v in $PhotoVariants) {
@@ -821,27 +851,15 @@ $fg.Dispose()
 Save-Png $finalPreview $FinalPreviewPath
 $finalCharger48.Dispose(); $finalEqualizer48.Dispose(); $eqV15On48.Dispose()
 
-# --- Combined preview: all 8 icon sets @48px on blue tile with labels ---
+# --- Combined preview: all icon sets @48px on blue tile with labels ---
 $combinedLabelW = 200; $combinedPad = 10; $combinedTile = 48; $combinedRowH = 56; $combinedHeaderH = 44
-$Euro = [char]0x20AC
-$Sigma = [char]0x03A3
-$combinedRows = @(
-    @{ Label = 'EaseeCharger - groen, laden (geen hint)'; Hint = $null; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeCharger' }) }
-    @{ Label = 'EaseePower - geel, vermogen W/kW'; Hint = 'W'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseePower' }) }
-    @{ Label = 'EaseeStatus - blauw, core status'; Hint = 'i'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeStatus' }) }
-    @{ Label = "EaseeCost - oranje, kosten $Euro"; Hint = $Euro; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeCost' }) }
-    @{ Label = 'EaseeAlert - rood, fout/waarschuwing'; Hint = '!'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeAlert' }) }
-    @{ Label = "EaseeOverview - teal, overzicht $Sigma"; Hint = $Sigma; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeOverview' }) }
-    @{ Label = 'EaseeEqualizer - blauw, EQ/charger status'; Hint = 'E'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeEqualizer' }) }
-    @{ Label = 'EaseeLoadBal - teal, load balancing'; Hint = 'L'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeLoadBal' }) }
-)
 $combinedW = $combinedPad + $combinedLabelW + $combinedPad + $combinedTile + $combinedPad
 $combinedH = $combinedHeaderH + $combinedRows.Count * $combinedRowH + $combinedPad
 $combinedPreview = New-Object System.Drawing.Bitmap $combinedW, $combinedH
 $cg = [Drawing.Graphics]::FromImage($combinedPreview)
 $cg.Clear([Drawing.Color]::FromArgb(255, 28, 30, 34))
 $cg.TextRenderingHint = [Drawing.Text.TextRenderingHint]::ClearTypeGridFit
-Draw-Label $cg 'P-max laadpalen + Equalizer-max — alle 8 sets (48 px op blauwe tegel)' 8 8 ([Drawing.Color]::FromArgb(255, 255, 220, 160)) 10
+Draw-Label $cg 'P-max laadpalen + Equalizer-max - alle 12 sets (48 px op blauwe tegel)' 8 8 ([Drawing.Color]::FromArgb(255, 255, 220, 160)) 10
 Draw-Label $cg 'Iconenset / LED-kleur' 8 ($combinedHeaderH - 20) ([Drawing.Color]::White) 8.5
 Draw-Label $cg '48 px' ($combinedLabelW + $combinedPad) ($combinedHeaderH - 20) ([Drawing.Color]::FromArgb(255, 180, 220, 255)) 8.5
 for ($i = 0; $i -lt $combinedRows.Count; $i++) {
@@ -899,7 +917,7 @@ if ($IncludeVariants) {
     $pMaxOn48.Dispose(); $pMaxOn16.Dispose()
 }
 
-Write-Output "Created $V2ZipPath (8 icon sets: P-max laadpaal + Equalizer-max)"
+Write-Output "Created $V2ZipPath (12 icon sets: P-max laadpaal + Equalizer-max + import/export/net/voltage)"
 Write-Output "Created $OfficialPreviewPath"
 Write-Output ('Equalizer-max vs v10.5.15 48px: {0}x{1} -> {2}x{3} px (+{4} pct H, +{5} pct W, area +{6} pct)' -f $eqMetricsV15.W, $eqMetricsV15.H, $eqMetricsMax.W, $eqMetricsMax.H, $eqHeightGain48, $eqWidthGain48, $eqAreaGain48)
 if ($IncludeVariants) {

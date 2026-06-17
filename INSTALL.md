@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee Domoticz plugin v10.7.2
+# Installatiehandleiding — Easee Domoticz plugin v10.8.0
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,7 +8,7 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee Domoticz plugin v10.7.2 |
+| Plugin | Easee Domoticz plugin v10.8.0 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` (+ 12 Python-modules = 13 `.py`-bestanden sinds v10.6.0) |
@@ -104,7 +104,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee Domoticz plugin v10.7.2**
+4. Selecteer **Easee Domoticz plugin v10.8.0**
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
 7. Klik **Add**
@@ -286,6 +286,12 @@ Custom iconen uit `Easee_icons_v2.zip` worden bij start automatisch geladen en o
 - `git pull` haalt alle 13 `.py`-bestanden op; herstart hardware-item of Domoticz.
 - State migreert automatisch naar `easee_state.json` (atomisch opslaan sinds v10.6.1).
 - Upload **`Easee_icons_v2.zip` opnieuw** als badges/iconen niet veranderen (Domoticz cached iconen).
+
+### Specifiek: v10.8.0
+
+- **Equalizer Proposal C** — zes meterkast-tegels: Status, Import, Teruglevering, Netto, Spanning, Load balancing.
+- **Iconen** — upload **`Easee_icons_v2.zip` opnieuw** (12 sets i.p.v. 8).
+- **Legacy** — *Vermogen* wordt *Import*; nieuwe tegels verschijnen na herstart hardware-item.
 
 ### Specifiek: v10.7.x
 

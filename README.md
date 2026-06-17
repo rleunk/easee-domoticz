@@ -1,8 +1,8 @@
-# Easee Domoticz plugin v10.7.2
+# Easee Domoticz plugin v10.8.0
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators, Equalizer/meterkast ondersteuning en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.7.2-blue)
+![Version](https://img.shields.io/badge/version-10.8.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -94,7 +94,7 @@ sudo systemctl restart domoticz
 Daarna in Domoticz:
 
 1. **Setup → Hardware**
-2. Type: **"Easee Domoticz plugin v10.7.2"**
+2. Type: **"Easee Domoticz plugin v10.8.0"**
 3. Geef de hardware een naam, bijv. `Easee` (prefix op alle tegels)
 4. Username/Password: jouw Easee-inloggegevens
 5. **Create**
@@ -131,8 +131,12 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare paramet
 - **Beste laden** — Goedkoopste laadwindow (3 uur, met Tibber)
 
 ### Per Equalizer (indien gevonden)
-- **[Naam] - Status** — online, load balancing, limieten, hoofdzekering, actuele stroom, huisvermogen
-- **[Naam] - Vermogen** — actueel vermogen (Watt) en **Vandaag** kWh (cumulatief import via Equalizer observation 45)
+- **[Naam] - Status** — online, load balancing, limieten, hoofdzekering, L1/L2/L3 stroom (A); geen huisvermogen (verplaatst naar energie-tegels)
+- **[Naam] - Import** — actueel importvermogen (W) en **Vandaag** kWh (obs. 40 / 45)
+- **[Naam] - Teruglevering** — actueel exportvermogen (W) en **Vandaag** kWh (obs. 41 / 46)
+- **[Naam] - Netto** — netto vermogen (import − export) en totaal netto kWh
+- **[Naam] - Spanning** — L1/L2/L3 spanning (V) uit state of obs. 34–36
+- **[Naam] - Load balancing** — LB-detail: vrij beschikbare stroom en gelijkstroom per fase (state / obs. 230–232)
 
 ### Per Laadpaal
 - **[Naam] - Laden** — Power meter (Watt)
@@ -177,27 +181,31 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare paramet
 
 ## 🎨 Custom iconen
 
-De plugin levert acht Easee-tegeliconen via **`Easee_icons_v2.zip`** (P-max productfoto laadpaal + Equalizer-max puck) in de pluginmap.
+De plugin levert twaalf Easee-tegeliconen via **`Easee_icons_v2.zip`** (P-max productfoto laadpaal + Equalizer-max puck) in de pluginmap.
 
 - **`Easee_icons_v2.zip`** — enige iconenarchief, meegeleverd in de pluginmap
-- **8 icon sets:** EaseeCharger (groen), EaseePower (geel), EaseeStatus (blauw), EaseeCost (oranje), EaseeEqualizer (blauw), EaseeOverview (teal), EaseeLoadBal (teal), EaseeAlert (rood)
+- **12 icon sets:** EaseeCharger, EaseePower, EaseeImport, EaseeExport, EaseeNet, EaseeVoltage, EaseeStatus, EaseeCost, EaseeEqualizer, EaseeOverview, EaseeLoadBal, EaseeAlert
 - **LED-strip kleur** op P-max laadpaal-foto (of LED-dot op Equalizer-puck) volgt de **tegelfunctie** — zie tabel hieronder
-- **Functie-badge** rechtsonder op icoon (W, i, €, !, Σ, E, L) — ~30% groter sinds v10.6.0 (16px: 8px, 48px: 17px); EaseeCharger heeft geen badge
+- **Functie-badge** rechtsonder op icoon (W, ↓, ↑, Σ, V, i, €, !, E, L) — ~30% groter sinds v10.6.0 (16px: 8px, 48px: 17px); EaseeCharger heeft geen badge
 - Automatisch geladen bij pluginstart; toegepast op **bestaande** tegels na herstart van het hardware-item
 - Mislukt automatisch laden? Upload de zip **eenmalig** via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
-- Verwacht logregel: `Custom icons geladen: 8 sets (Easee_icons_v2.zip)` of `Custom icons uit Domoticz (handmatig geüpload)`
+- Verwacht logregel: `Custom icons geladen: 12 sets (Easee_icons_v2.zip)` of `Custom icons uit Domoticz (handmatig geüpload)`
 - Preview: [`docs/icon-preview-v2.png`](docs/icon-preview-v2.png) · regeneratie: `.\scripts\generate_photo_icon_variants.ps1`
 
 | Iconenset | LED-kleur | Badge | Tegelfunctie |
 |-----------|-----------|-------|--------------|
 | EaseeCharger | Groen `#2EA043` | — | Standaard laadpaal |
-| EaseePower | Geel `#FFC107` | W | Vermogen W/kW |
+| EaseePower | Geel `#FFC107` | W | Laadpaal vermogen W/kW |
+| EaseeImport | Geel `#FFC107` | ↓ | Meterkast import |
+| EaseeExport | Groen `#4CAF50` | ↑ | Meterkast teruglevering |
+| EaseeNet | Teal `#009688` | Σ | Meterkast netto |
+| EaseeVoltage | Paars `#673AB7` | V | Meterkast spanning |
 | EaseeStatus | Blauw `#2196F3` | i | Core status |
 | EaseeCost | Oranje `#FF9800` | € | Kosten / tarief |
 | EaseeAlert | Rood `#E53935` | ! | Fout / waarschuwing |
 | EaseeOverview | Teal `#009688` | Σ | Overzicht |
-| EaseeEqualizer | Blauw `#2196F3` | E | EQ / charger status |
-| EaseeLoadBal | Teal `#00BCD4` | L | Load balancing |
+| EaseeEqualizer | Blauw `#2196F3` | E | EQ status |
+| EaseeLoadBal | Teal `#00BCD4` | L | Load balancing detail |
 
 Zie [INSTALL.md — Custom iconen handmatig uploaden](INSTALL.md#custom-iconen-handmatig-uploaden) voor details.
 
@@ -228,7 +236,7 @@ Details: [`docs/REFACTOR_MAPPING.md`](docs/REFACTOR_MAPPING.md).
 Centrale logging via `easee_logging.py` (v10.6.0+):
 
 ```
-[Easee v10.7.2][LEVEL][module][context] message
+[Easee v10.8.0][LEVEL][module][context] message
 ```
 
 | Niveau | Wanneer zichtbaar |
@@ -276,6 +284,7 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 
 | Versie | Belangrijkste wijzigingen |
 |--------|---------------------------|
+| **v10.8.0** | Equalizer Proposal C: 6 meterkast-tegels; Import/Teruglevering/Netto/Spanning/LB-detail; 4 nieuwe icon sets; legacy Vermogen → Import |
 | **v10.5.18** | Definitieve foto-iconen (P-max laadpaal, Equalizer-max puck); LED-kleur per tegelfunctie; functie-badges; alleen nog `Easee_icons_v2.zip` |
 | **Module refactor** | `plugin.py` opgesplitst in modules op main (zelfde basis als 10.5.18); fixes voor Domoticz-imports en Parameters-binding |
 | **v10.6.0** | `easee_logging.py`; state → `easee_state.json` + migratie; functie-badges ~30% groter |
@@ -289,6 +298,8 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 | **v10.7.2** | Fix: onHeartbeat crash door verwijderde `plugin.is_*_limit_key` wrappers in `equalizer_logic` |
 
 **Upgrade vanaf v10.5.x:** `git pull`, herstart hardware-item. Upload **`Easee_icons_v2.zip` opnieuw** (v10.5.18 iconen + v10.6.0 grotere badges). State en devices blijven behouden.
+
+**Upgrade naar v10.8.0:** `git pull`, **upload `Easee_icons_v2.zip` opnieuw** (12 sets), herstart hardware-item. Bestaande *Vermogen*-tegel wordt automatisch hernoemd naar *Import*; nieuwe tegels (Teruglevering, Netto, Spanning, Load balancing) worden aangemaakt bij eerste poll.
 
 **Upgrade naar v10.7.x:** `git pull`, herstart hardware-item. Geen state-migratie nodig; v10.7.1 en v10.7.2 lossen regressies op na de wrapper-cleanup in v10.7.0.
 
@@ -327,6 +338,6 @@ MIT License — zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.7.2** — Gemaakt door Richard Leunk
+**Versie 10.8.0** — Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

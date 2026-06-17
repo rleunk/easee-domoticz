@@ -26,6 +26,10 @@ from easee_api_keys import (
     main_fuse_key_tuple,
     offline_circuit_key_tuple,
     first_power_value,
+    first_export_power_value,
+    phase_voltage_keys,
+    phase_available_current_keys,
+    phase_equalized_charge_keys,
 )
 
 def amp_value(plugin, value):
@@ -1150,6 +1154,113 @@ def equalizer_display_name(plugin, equalizer, index):
 def equalizer_dev_name(plugin, display, label):
     return easee_helpers.clean_label(plugin, f'{display} - {label}')
 
+def _phase_values_from_keys(plugin, values, key_groups):
+    phases = []
+    any_val = False
+    for keys in key_groups:
+        val = easee_helpers.first_dict_value(plugin, values, keys)
+        if val is not None:
+            any_val = True
+            phases.append(easee_helpers.safe_float(plugin, val, 0.0))
+        else:
+            phases.append(None)
+    return phases, any_val
+
+def _format_phase_triple(plugin, phases, unit, decimals=1):
+    parts = []
+    for val in phases:
+        if val is None:
+            parts.append('—')
+        elif val <= 0 and unit == 'A':
+            parts.append('0.0')
+        elif unit == 'V':
+            parts.append(f'{int(round(val))}' if abs(val - round(val)) < 0.5 else f'{val:.1f}')
+        elif abs(val - round(val)) < 0.05:
+            parts.append(f'{int(round(val))}.0')
+        else:
+            parts.append(f'{val:.{decimals}f}')
+    return ' / '.join(parts)
+
+def _energy_wh_from_field(plugin, eid, values, field_name, state_key, power_w):
+    if field_name in values:
+        kwh = easee_helpers.kwh_value(plugin, values.get(field_name))
+        total_wh = easee_helpers.wh_from_kwh(plugin, kwh)
+        easee_logging.debug(
+            'equalizer_logic',
+            f'Equalizer {eid} {state_key} kWh: {field_name} {kwh} kWh → {total_wh} Wh',
+            'energy',
+        )
+        return total_wh
+    st = easee_state.equalizer_state(plugin, eid)
+    integrated_key = f'integrated_{state_key}_kwh'
+    st[integrated_key] = round(
+        easee_helpers.safe_float(plugin, st.get(integrated_key), 0.0)
+        + charger_logic.power_integrated_kwh(plugin, power_w),
+        6,
+    )
+    total_wh = easee_helpers.wh_from_kwh(plugin, st[integrated_key])
+    easee_logging.debug(
+        'equalizer_logic',
+        f'Equalizer {eid} {state_key} kWh: fallback integrated {st[integrated_key]} kWh → {total_wh} Wh',
+        'energy',
+    )
+    return total_wh
+
+def _import_power_w(plugin, values):
+    raw = first_power_value(values)
+    power_w = easee_helpers.kw_to_watts(plugin, raw)
+    if power_w <= 0 and raw is not None:
+        power_w = easee_helpers.power_watts(plugin, raw)
+    return power_w
+
+def _export_power_w(plugin, values):
+    raw = first_export_power_value(values)
+    power_w = easee_helpers.kw_to_watts(plugin, raw)
+    if power_w <= 0 and raw is not None:
+        power_w = easee_helpers.power_watts(plugin, raw)
+    return max(0, power_w)
+
+def _voltage_lines(plugin, values):
+    phases, has = _phase_values_from_keys(plugin, values, phase_voltage_keys())
+    if not has:
+        return '⚡ Spanning: onbekend'
+    return f'⚡ L1/L2/L3: {_format_phase_triple(plugin, phases, "V")} V'
+
+def _phase_values_from_key_list(plugin, values, keys):
+    phases = []
+    any_val = False
+    for key in keys:
+        if key in values and values.get(key) is not None:
+            any_val = True
+            phases.append(easee_helpers.safe_float(plugin, values.get(key), 0.0))
+        else:
+            phases.append(None)
+    return phases, any_val
+
+def _load_balancing_detail_text(plugin, values, lb_active):
+    avail, has_avail = _phase_values_from_key_list(plugin, values, phase_available_current_keys())
+    eq, has_eq = _phase_values_from_key_list(plugin, values, phase_equalized_charge_keys())
+    lines = []
+    lb_emoji = '⚖️' if lb_active else '⏸️'
+    lines.append(f'{lb_emoji} Load balancing: {"Aan" if lb_active else "Uit"}')
+    if has_avail:
+        lines.append(f'🔋 Vrij L1/L2/L3: {_format_phase_triple(plugin, avail, "A")} A')
+    else:
+        lines.append('🔋 Vrij L1/L2/L3: onbekend')
+    if has_eq:
+        lines.append(f'🔌 Gelijkstroom L1/L2/L3: {_format_phase_triple(plugin, eq, "A")} A')
+    else:
+        lines.append('🔌 Gelijkstroom L1/L2/L3: onbekend')
+    return '\n'.join(lines)
+
+def _netto_text(plugin, net_w, import_kwh, export_kwh):
+    sign = '+' if net_w >= 0 else '−'
+    lines = [f'📊 Netto: {sign}{abs(int(net_w))} W']
+    if import_kwh is not None and export_kwh is not None:
+        net_kwh = round(import_kwh - export_kwh, 3)
+        lines.append(f'📈 Totaal netto: {net_kwh:.3f} kWh')
+    return '\n'.join(lines)
+
 def _equalizer_matches_filter(plugin, name, site_name):
     flt = domoticz_runtime.Parameters.get('Mode5', '').strip().lower()
     if not flt:
@@ -1346,10 +1457,9 @@ def poll_equalizer(plugin, equalizer):
         equalizer_id=eid,
     )
 
-    power_raw = first_power_value(values)
-    power_w = easee_helpers.kw_to_watts(plugin, power_raw)
-    if power_w <= 0 and power_raw is not None:
-        power_w = easee_helpers.power_watts(plugin, power_raw)
+    power_w = _import_power_w(plugin, values)
+    export_w = _export_power_w(plugin, values)
+    net_w = power_w - export_w
 
     online = values.get(EQUALIZER_KEYS['online'][0])
     if online is None:
@@ -1414,37 +1524,27 @@ def poll_equalizer(plugin, equalizer):
     current_line, _load_a = easee_helpers.actual_current_line(plugin, values, power_w)
     if current_line:
         lines.append(current_line)
-    if power_w > 0:
-        lines.append(f'🔥 Huisvermogen: {int(power_w)} W')
     status_text = '\n'.join(lines)
 
-    cumulative_field = EQUALIZER_KEYS['cumulative_import'][0]
-    if cumulative_field in values:
-        import_kwh = easee_helpers.kwh_value(plugin, values.get(cumulative_field))
-        total_wh = easee_helpers.wh_from_kwh(plugin, import_kwh)
-        easee_logging.debug(
-            'equalizer_logic',
-            f'Equalizer {eid} Vermogen kWh: cumulative import {import_kwh} kWh → {total_wh} Wh',
-            'energy',
-        )
-    else:
-        st = easee_state.equalizer_state(plugin, eid)
-        st['integrated_kwh'] = round(
-            easee_helpers.safe_float(plugin, st.get('integrated_kwh'), 0.0) + charger_logic.power_integrated_kwh(plugin, power_w),
-            6,
-        )
-        total_wh = easee_helpers.wh_from_kwh(plugin, st['integrated_kwh'])
-        easee_logging.debug(
-            'equalizer_logic',
-            f'Equalizer {eid} Vermogen kWh: fallback integrated {st["integrated_kwh"]} kWh → {total_wh} Wh',
-            'energy',
-        )
+    import_field = EQUALIZER_KEYS['cumulative_import'][0]
+    export_field = EQUALIZER_KEYS['cumulative_export'][0]
+    import_wh = _energy_wh_from_field(plugin, eid, values, import_field, 'import', power_w)
+    export_wh = _energy_wh_from_field(plugin, eid, values, export_field, 'export', export_w)
 
-    domoticz_devices.update_equalizer_energy(plugin, eid, 'Vermogen', power_w, total_wh)
+    import_kwh = easee_helpers.kwh_value(plugin, values.get(import_field)) if import_field in values else None
+    export_kwh = easee_helpers.kwh_value(plugin, values.get(export_field)) if export_field in values else None
+
+    domoticz_devices.update_equalizer_energy(plugin, eid, 'Import', power_w, import_wh)
+    domoticz_devices.update_equalizer_energy(plugin, eid, 'Teruglevering', export_w, export_wh)
+    domoticz_devices.update_equalizer_text(plugin, eid, 'Netto', _netto_text(plugin, net_w, import_kwh, export_kwh))
+    domoticz_devices.update_equalizer_text(plugin, eid, 'Spanning', _voltage_lines(plugin, values))
+    domoticz_devices.update_equalizer_text(plugin, eid, 'Load balancing', _load_balancing_detail_text(plugin, values, lb_active))
     domoticz_devices.update_equalizer_text(plugin, eid, 'Status', status_text)
 
     plugin.latest_equalizers[eid] = {
         'power': power_w,
+        'export': export_w,
+        'net': net_w,
         'online': online,
         'loadbal': lb_active,
     }

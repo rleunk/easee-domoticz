@@ -7,6 +7,12 @@ from easee_constants import PLUGIN_KEY, CORE_DEVICE_IDS
 import easee_logging
 import easee_helpers
 
+_ICON_ROOTS = [
+    'EaseeCharger', 'EaseeEqualizer', 'EaseePower', 'EaseeStatus', 'EaseeAlert',
+    'EaseeLoadBal', 'EaseeCost', 'EaseeOverview',
+    'EaseeImport', 'EaseeExport', 'EaseeNet', 'EaseeVoltage',
+]
+
 def image_root(plugin, name, device_id=None):
     n = easee_helpers.norm(plugin, name).lower()
     devid = str(device_id or '').upper()
@@ -15,8 +21,16 @@ def image_root(plugin, name, device_id=None):
         return 'EaseeLoadBal'
     if devid.startswith('EASEE_EQ_'):
         label = n.split(' - ')[-1].strip() if ' - ' in n else n
+        if label in ('import',):
+            return 'EaseeImport'
+        if label in ('teruglevering', 'export'):
+            return 'EaseeExport'
+        if label in ('netto', 'net'):
+            return 'EaseeNet'
+        if label in ('spanning', 'voltage'):
+            return 'EaseeVoltage'
         if label in ('vermogen', 'huisvermogen', 'power'):
-            return 'EaseePower'
+            return 'EaseeImport'
         if label in ('status',):
             return 'EaseeEqualizer'
         if 'load bal' in label or 'loadbal' in label or 'load balancing' in label:
@@ -36,8 +50,16 @@ def image_root(plugin, name, device_id=None):
 
     is_eq = 'equalizer' in n or 'meterkast' in n
     if is_eq:
+        if 'import' in n or 'teruglevering' in n:
+            if 'terug' in n or 'export' in n:
+                return 'EaseeExport'
+            return 'EaseeImport'
+        if 'netto' in n or ' net ' in f' {n} ':
+            return 'EaseeNet'
+        if 'spanning' in n or 'voltage' in n:
+            return 'EaseeVoltage'
         if 'vermogen' in n or 'huisvermogen' in n:
-            return 'EaseePower'
+            return 'EaseeImport'
         if 'load bal' in n or 'loadbal' in n or 'load balancing' in n:
             return 'EaseeLoadBal'
         if 'l1' in n or 'l2' in n or 'l3' in n or 'fase' in n:
@@ -70,9 +92,8 @@ def _icon_images_key(plugin, root):
     return None
 
 def _collect_image_ids(plugin):
-    roots = ['EaseeCharger','EaseeEqualizer','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
     found = {}
-    for r in roots:
+    for r in _ICON_ROOTS:
         key = _icon_images_key(plugin, r)
         if key:
             found[r] = domoticz_runtime.Images[key].ID
@@ -89,14 +110,13 @@ def _try_create_icon_zip(plugin, fn):
     return False, errors
 
 def load_custom_images(plugin):
-    roots = ['EaseeCharger','EaseeEqualizer','EaseePower','EaseeStatus','EaseeAlert','EaseeLoadBal','EaseeCost','EaseeOverview']
     candidates = ['Easee_icons_v2.zip']
     loaded_zip = None
     load_errors = []
     found_zips = []
     zip_loaded = False
     preloaded = _collect_image_ids(plugin)
-    if len(preloaded) == len(roots):
+    if len(preloaded) == len(_ICON_ROOTS):
         plugin.image_ids = preloaded
         easee_logging.info('domoticz_icons', f'Custom icons uit Domoticz (handmatig geüpload): {len(plugin.image_ids)} sets')
         return
@@ -106,7 +126,7 @@ def load_custom_images(plugin):
             continue
         found_zips.append(fn)
         try:
-            if any(_icon_images_key(plugin, r) is None for r in roots):
+            if any(_icon_images_key(plugin, r) is None for r in _ICON_ROOTS):
                 easee_logging.info('domoticz_icons', f'Custom icons laden uit {fn} (map: {plugin.plugin_dir})')
                 ok, create_errors = _try_create_icon_zip(plugin, fn)
                 if ok:
@@ -119,7 +139,7 @@ def load_custom_images(plugin):
             if plugin.image_ids:
                 loaded_zip = fn
                 break
-            missing = [r for r in roots if _icon_images_key(plugin, r) is None]
+            missing = [r for r in _ICON_ROOTS if _icon_images_key(plugin, r) is None]
             if missing:
                 load_errors.append(f'{fn}: icons niet in Images ({", ".join(missing[:3])}{"..." if len(missing) > 3 else ""})')
         except Exception as e:
