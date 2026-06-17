@@ -1278,6 +1278,16 @@ def _build_status_text(plugin, values, online, lb_active, max_alloc, main_fuse_a
     lines.append(_voltage_status_line(plugin, values))
     return '\n'.join(lines)
 
+def _daily_import_kwh(plugin, eid, import_kwh):
+    if import_kwh is None:
+        return None
+    st = easee_state.equalizer_state(plugin, eid)
+    tk = easee_state.today_key(plugin)
+    if st.get('import_day_key') != tk:
+        st['import_day_key'] = tk
+        st['import_day_baseline'] = import_kwh
+    return round(import_kwh - easee_helpers.safe_float(plugin, st.get('import_day_baseline'), import_kwh), 3)
+
 def _daily_netto_kwh(plugin, eid, import_kwh, export_kwh):
     if import_kwh is None or export_kwh is None:
         return None
@@ -1291,13 +1301,19 @@ def _daily_netto_kwh(plugin, eid, import_kwh, export_kwh):
     day_export = export_kwh - easee_helpers.safe_float(plugin, st.get('net_day_export_baseline'), export_kwh)
     return round(day_import - day_export, 3)
 
-def _terug_netto_text(plugin, eid, power_w, export_w, net_w, import_kwh, export_kwh):
+def _vermogen_text(plugin, eid, power_w, export_w, net_w, import_kwh, export_kwh):
     lines = [
         f'📥 Import: {int(power_w)} W | Terug: {int(export_w)} W',
         f'📊 Netto: {int(net_w)} W',
     ]
+    day_import = _daily_import_kwh(plugin, eid, import_kwh)
     day_net = _daily_netto_kwh(plugin, eid, import_kwh, export_kwh)
-    if day_net is not None:
+    if day_import is not None and day_net is not None:
+        net_sign = '+' if day_net >= 0 else '−'
+        lines.append(f'📈 Vandaag import: {day_import:.3f} kWh | netto: {net_sign}{abs(day_net):.3f} kWh')
+    elif day_import is not None:
+        lines.append(f'📈 Vandaag import: {day_import:.3f} kWh')
+    elif day_net is not None:
         sign = '+' if day_net >= 0 else '−'
         lines.append(f'📈 Vandaag netto: {sign}{abs(day_net):.3f} kWh')
     elif import_kwh is not None and export_kwh is not None:
@@ -1547,15 +1563,14 @@ def poll_equalizer(plugin, equalizer):
     import_field = EQUALIZER_KEYS['cumulative_import'][0]
     export_field = EQUALIZER_KEYS['cumulative_export'][0]
     import_wh = _energy_wh_from_field(plugin, eid, values, import_field, 'import', power_w)
-    export_wh = _energy_wh_from_field(plugin, eid, values, export_field, 'export', export_w)
-
     import_kwh = easee_helpers.kwh_value(plugin, values.get(import_field)) if import_field in values else None
     export_kwh = easee_helpers.kwh_value(plugin, values.get(export_field)) if export_field in values else None
 
-    domoticz_devices.update_equalizer_energy(plugin, eid, 'Import', power_w, import_wh)
-    domoticz_devices.update_equalizer_text(
-        plugin, eid, 'Terug & netto',
-        _terug_netto_text(plugin, eid, power_w, export_w, net_w, import_kwh, export_kwh),
+    domoticz_devices.update_equalizer_vermogen(
+        plugin, eid,
+        _vermogen_text(plugin, eid, power_w, export_w, net_w, import_kwh, export_kwh),
+        power_w=power_w,
+        import_wh=import_wh,
     )
     domoticz_devices.update_equalizer_text(plugin, eid, 'Status', status_text)
 

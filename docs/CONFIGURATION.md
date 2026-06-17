@@ -114,9 +114,20 @@ Gegroepeerde weergave op één teksttegel:
 | Stroom L1/L2/L3 | obs. 31–33 | Fase-stromen |
 | Spanning L1/L2/L3 | state / obs. 34–36 | Fase-spanning (V) |
 
-**Huisvermogen staat niet op Status** — zie Import-tegel.
+**Huisvermogen staat niet op Status** — zie Vermogen-tegel.
 
-### Equalizer tegels (v10.9.0+)
+### Equalizer tegels (v10.9.1+)
+
+| Tegel | Type | Bron | Weergave |
+|-------|------|------|----------|
+| Status | Text | state + site fuse API | Verbinding, LB-detail, limieten, stroom, spanning |
+| Vermogen | Text | obs. 40/41/45/46 + berekend | Import W, terug W, netto W, vandaag import/netto kWh |
+
+Core **LoadBal**-schakelaar (site-wide) blijft ongewijzigd.
+
+Legacy: *Import*, *Terug & netto*, *Netto*, *Teruglevering* → *Vermogen*. Wees-tegels uit v10.8.0/v10.9.0 handmatig verwijderen.
+
+### Equalizer tegels (v10.9.0, vervangen door 2 tegels in v10.9.1)
 
 | Tegel | Type | Bron | Weergave |
 |-------|------|------|----------|
@@ -124,9 +135,7 @@ Gegroepeerde weergave op één teksttegel:
 | Import | Energy | obs. 40 / 45 | Vermogen (W) + **Vandaag** kWh import |
 | Terug & netto | Text | obs. 41/46 + berekend | Import W, terug W, netto W, vandaag/totaal netto kWh |
 
-Core **LoadBal**-schakelaar (site-wide) blijft ongewijzigd.
-
-Legacy: *Vermogen* → *Import*; *Netto* of *Teruglevering* → *Terug & netto*. Wees-tegels *Spanning* / *Load balancing* uit v10.8.0 handmatig verwijderen.
+Legacy: *Vermogen* → *Import*; *Netto* of *Teruglevering* → *Terug & netto*.
 
 ### Equalizer Status-tegel (v10.3.0 – v10.8.x, vervangen door gegroepeerde Status in v10.9.0)
 
@@ -139,7 +148,7 @@ Legacy: *Vermogen* → *Import*; *Netto* of *Teruglevering* → *Terug & netto*.
 | L1/L2/L3 | obs. 31–33 | Fase-stromen; ontbrekend = `—`, nul = `0.0` |
 | Actuele stroom | fallback berekend uit vermogen | Alleen als geen fase-observations |
 
-**Huisvermogen staat niet meer op Status** (sinds v10.8.0) — zie Import-tegel.
+**Huisvermogen staat niet meer op Status** (sinds v10.8.0) — zie Vermogen-tegel.
 
 **Drie verschillende begrippen:**
 - **Hoofdzekering (25 A)** = fysieke zekeringgrootte
@@ -212,8 +221,7 @@ Devices krijgen automatisch deze namen:
 ### Per Equalizer (indien gevonden)
 ```
 [PREFIX] - [NAAM] - Status
-[PREFIX] - [NAAM] - Import          ← obs. 40/45 (legacy: Vermogen)
-[PREFIX] - [NAAM] - Terug & netto   ← import/terug/netto (v10.9.0+; legacy: Netto/Teruglevering)
+[PREFIX] - [NAAM] - Vermogen        ← import/terug/netto (v10.9.1+; legacy: Import, Terug & netto, Netto, Teruglevering)
 ```
 
 ### Per Laadpaal

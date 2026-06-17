@@ -159,21 +159,36 @@ def load_custom_images(plugin):
         else:
             easee_logging.info('domoticz_icons', f'Custom icons uit Domoticz (handmatig geüpload): {len(plugin.image_ids)} sets')
     elif found_zips:
-        easee_logging.info('domoticz_icons', 'Waarschuwing: zip gevonden maar laden mislukt — upload handmatig via Instellingen → Meer opties → Aangepaste pictogrammen')
-        easee_logging.info('domoticz_icons', f'Icon zip zoekpad: {plugin.plugin_dir}')
+        easee_logging.warning(
+            'domoticz_icons',
+            'Zip gevonden maar laden mislukt — upload handmatig via Instellingen → Meer opties → Aangepaste pictogrammen',
+        )
+        easee_logging.warning('domoticz_icons', f'Icon zip zoekpad: {plugin.plugin_dir}')
         for fn in found_zips:
-            easee_logging.info('domoticz_icons', f'  {fn}: aanwezig')
+            easee_logging.warning('domoticz_icons', f'  {fn}: aanwezig')
         if load_errors:
-            easee_logging.info('domoticz_icons', 'Icon zip laden mislukt: ' + '; '.join(load_errors))
+            easee_logging.warning('domoticz_icons', 'Icon zip laden mislukt: ' + '; '.join(load_errors))
     else:
-        easee_logging.info('domoticz_icons', 'Waarschuwing: geen custom icon zip gevonden — standaard Domoticz iconen worden gebruikt')
-        easee_logging.info('domoticz_icons', f'Icon zip zoekpad: {plugin.plugin_dir}')
+        easee_logging.warning(
+            'domoticz_icons',
+            'Geen custom icon zip gevonden — standaard Domoticz iconen worden gebruikt',
+        )
+        easee_logging.warning('domoticz_icons', f'Icon zip zoekpad: {plugin.plugin_dir}')
         for fn in candidates:
             path = os.path.join(plugin.plugin_dir, fn)
-            easee_logging.info('domoticz_icons', f'  {fn}: {"aanwezig" if os.path.isfile(path) else "ontbreekt"}')
+            easee_logging.warning('domoticz_icons', f'  {fn}: {"aanwezig" if os.path.isfile(path) else "ontbreekt"}')
+    if not plugin.image_ids:
+        easee_logging.warning(
+            'domoticz_icons',
+            'Geen custom icon sets geladen (image_ids leeg) — tegels krijgen standaard Text-iconen tot zip handmatig is geüpload',
+        )
 
 def apply_images_to_devices(plugin):
     if not plugin.image_ids:
+        easee_logging.warning(
+            'domoticz_icons',
+            'apply_images_to_devices overgeslagen: image_ids leeg — laad Easee_icons_v2.zip en herstart hardware-item',
+        )
         return
     updated = 0
     for unit, dev in domoticz_runtime.Devices.items():

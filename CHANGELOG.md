@@ -6,6 +6,24 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.1] — 2026-06-17
+
+### Opgelost
+- **Custom iconen na hardware remove/re-add** — `apply_images_to_devices()` draait nu opnieuw na `initial_sync()` zodat nieuw aangemaakte tegels (Status, Vermogen) meteen het juiste pictogram krijgen; WARNING in log als `image_ids` leeg blijft.
+- **Icon zip diagnostiek** — mislukte of ontbrekende zip → WARNING i.p.v. INFO.
+
+### Gewijzigd
+- **Equalizer: 2 tegels** — **Status** + **Vermogen** (Text) per Equalizer; import/terug/netto W en vandaag import/netto kWh op één **Vermogen**-tegel.
+- **Import → Vermogen** — naam terug naar origineel Nederlands; legacy *Import*, *Terug & netto*, *Netto*, *Teruglevering* migreren naar *Vermogen* (DeviceID-lookup).
+- **Vermogen icoon** — `EaseeImport` (geel ↓).
+
+### Verwijderd (als aparte tegels)
+- *Import* (Energy) en *Terug & netto* — niet meer aangemaakt; wees-tegels uit v10.9.0 handmatig verwijderen.
+
+### Fixed (EN)
+- Icons applied after device creation on fresh hardware add; WARNING when image_ids empty.
+- Two Equalizer tiles: Status + Vermogen text (all power metrics merged); legacy Import/Terug & netto → Vermogen rename.
+
 ## [10.9.0] — 2026-06-17
 
 ### Gewijzigd

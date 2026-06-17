@@ -1,8 +1,8 @@
-# Easee Domoticz plugin v10.9.0
+# Easee Domoticz plugin v10.9.1
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators, Equalizer/meterkast ondersteuning en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.9.0-blue)
+![Version](https://img.shields.io/badge/version-10.9.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -94,7 +94,7 @@ sudo systemctl restart domoticz
 Daarna in Domoticz:
 
 1. **Setup → Hardware**
-2. Type: **"Easee Domoticz plugin v10.9.0"**
+2. Type: **"Easee Domoticz plugin v10.9.1"**
 3. Geef de hardware een naam, bijv. `Easee` (prefix op alle tegels)
 4. Username/Password: jouw Easee-inloggegevens
 5. **Create**
@@ -132,8 +132,7 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare paramet
 
 ### Per Equalizer (indien gevonden)
 - **[Naam] - Status** — verbinding, load balancing (fase-detail), limieten, max import, L1/L2/L3 stroom (A) en spanning (V)
-- **[Naam] - Import** — actueel importvermogen (W) en **Vandaag** kWh (obs. 40 / 45)
-- **[Naam] - Terug & netto** — import/terug W, netto W en vandaag netto kWh (gecombineerde tegel sinds v10.9.0)
+- **[Naam] - Vermogen** — import/terug/netto W, vandaag import en netto kWh (gecombineerde teksttegel sinds v10.9.1)
 
 ### Per Laadpaal
 - **[Naam] - Laden** — Power meter (Watt)
@@ -193,7 +192,7 @@ De plugin levert twaalf Easee-tegeliconen via **`Easee_icons_v2.zip`** (P-max pr
 |-----------|-----------|-------|--------------|
 | EaseeCharger | Groen `#2EA043` | — | Standaard laadpaal |
 | EaseePower | Geel `#FFC107` | W | Laadpaal vermogen W/kW |
-| EaseeImport | Geel `#FFC107` | ↓ | Meterkast import |
+| EaseeImport | Geel `#FFC107` | ↓ | Meterkast Vermogen (import/terug/netto) |
 | EaseeNet | Teal `#009688` | Σ | Meterkast terug & netto |
 | EaseeVoltage | Paars `#673AB7` | V | (legacy v10.8.0 spanning-tegel) |
 | EaseeStatus | Blauw `#2196F3` | i | Core status |
@@ -232,7 +231,7 @@ Details: [`docs/REFACTOR_MAPPING.md`](docs/REFACTOR_MAPPING.md).
 Centrale logging via `easee_logging.py` (v10.6.0+):
 
 ```
-[Easee v10.9.0][LEVEL][module][context] message
+[Easee v10.9.1][LEVEL][module][context] message
 ```
 
 | Niveau | Wanneer zichtbaar |
@@ -280,6 +279,7 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 
 | Versie | Belangrijkste wijzigingen |
 |--------|---------------------------|
+| **v10.9.1** | Equalizer 2 tegels (Status + Vermogen Text); icon fix na fresh add; legacy Import/Terug & netto → Vermogen |
 | **v10.9.0** | Equalizer tegels geconsolideerd: 3 tegels (Status, Import, Terug & netto); spanning/LB-detail op Status; legacy Netto/Teruglevering → Terug & netto |
 | **v10.8.0** | Equalizer Proposal C: 6 meterkast-tegels; Import/Teruglevering/Netto/Spanning/LB-detail; 4 nieuwe icon sets; legacy Vermogen → Import |
 | **v10.5.18** | Definitieve foto-iconen (P-max laadpaal, Equalizer-max puck); LED-kleur per tegelfunctie; functie-badges; alleen nog `Easee_icons_v2.zip` |
@@ -295,6 +295,8 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 | **v10.7.2** | Fix: onHeartbeat crash door verwijderde `plugin.is_*_limit_key` wrappers in `equalizer_logic` |
 
 **Upgrade vanaf v10.5.x:** `git pull`, herstart hardware-item. Upload **`Easee_icons_v2.zip` opnieuw** (v10.5.18 iconen + v10.6.0 grotere badges). State en devices blijven behouden.
+
+**Upgrade naar v10.9.1:** `git pull`, herstart hardware-item. Bestaande *Import*- of *Terug & netto*-tegel wordt hernoemd naar *Vermogen* (één tegel); verwijder eventuele wees-tegels handmatig. Controleer log op `Custom icons geladen: 12 sets` — anders upload `Easee_icons_v2.zip` opnieuw via Instellingen → Aangepaste pictogrammen.
 
 **Upgrade naar v10.9.0:** `git pull`, herstart hardware-item. Bestaande *Netto*- of *Teruglevering*-tegel wordt hernoemd naar *Terug & netto*; *Spanning* en *Load balancing* blijven als wees-tegels (handmatig verwijderen). Geen nieuwe icon zip nodig.
 
@@ -337,6 +339,6 @@ MIT License — zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.9.0** — Gemaakt door Richard Leunk
+**Versie 10.9.1** — Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

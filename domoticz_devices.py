@@ -71,10 +71,8 @@ def resolve_equalizer_unit(plugin, eid, label_key):
     unit = find_unit_by_devid(plugin, devid)
     if unit is not None:
         return unit
-    if label_key == 'Import':
-        return find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, 'Vermogen'))
-    if label_key == 'Terug & netto':
-        for legacy_key in ('Netto', 'Teruglevering'):
+    if label_key == 'Vermogen':
+        for legacy_key in ('Import', 'Terug & netto', 'Netto', 'Teruglevering'):
             unit = find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, legacy_key))
             if unit is not None:
                 return unit
@@ -249,6 +247,28 @@ def update_equalizer_text(plugin, eid, label_key, value):
     if u is not None:
         domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
 
+_EQUALIZER_VERMOGEN_ENERGY_WARNED = set()
+
+def update_equalizer_vermogen(plugin, eid, text_value, power_w=0, import_wh=0):
+    u = resolve_equalizer_unit(plugin, eid, 'Vermogen')
+    if u is None:
+        return
+    try:
+        is_energy = int(domoticz_runtime.Devices[u].SubType) == DEVICE_TYPES['Energy']['Subtype']
+    except Exception:
+        is_energy = False
+    if is_energy:
+        key = str(eid)
+        if key not in _EQUALIZER_VERMOGEN_ENERGY_WARNED:
+            _EQUALIZER_VERMOGEN_ENERGY_WARNED.add(key)
+            easee_logging.warning(
+                'domoticz_devices',
+                f'Equalizer {eid}: legacy Energy-tegel hernoemd naar Vermogen — verwijder wees-tegels en herstart hardware-item voor Text-weergave',
+            )
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(import_wh)}')
+        return
+    domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(text_value)[:4000])
+
 def update_equalizer_energy(plugin, eid, label_key, power_w, total_wh=0):
     u = resolve_equalizer_unit(plugin, eid, label_key)
     if u is not None:
@@ -304,8 +324,7 @@ def ensure_equalizer_devices(plugin, equalizer, index):
     eid = equalizer['id']
     devices = [
         ('Text', 'Status'),
-        ('Energy', 'Import'),
-        ('Text', 'Terug & netto'),
+        ('Text', 'Vermogen'),
     ]
     for typ, label_key in devices:
         name = equalizer_logic.equalizer_dev_name(plugin, display, label_key)
@@ -315,14 +334,14 @@ def ensure_equalizer_devices(plugin, equalizer, index):
             f'Easee - {display} - {label_key}',
             f'Easee - Easee - {display} - {label_key}',
         ]
-        if label_key == 'Import':
+        if label_key == 'Vermogen':
             legacy.extend([
-                easee_helpers.pref(plugin, f'{display} - Vermogen'),
-                f'Easee - {display} - Vermogen',
-                f'Easee - Easee - {display} - Vermogen',
-            ])
-        if label_key == 'Terug & netto':
-            legacy.extend([
+                easee_helpers.pref(plugin, f'{display} - Import'),
+                f'Easee - {display} - Import',
+                f'Easee - Easee - {display} - Import',
+                easee_helpers.pref(plugin, f'{display} - Terug & netto'),
+                f'Easee - {display} - Terug & netto',
+                f'Easee - Easee - {display} - Terug & netto',
                 easee_helpers.pref(plugin, f'{display} - Teruglevering'),
                 f'Easee - {display} - Teruglevering',
                 f'Easee - Easee - {display} - Teruglevering',
@@ -331,10 +350,8 @@ def ensure_equalizer_devices(plugin, equalizer, index):
                 f'Easee - Easee - {display} - Netto',
             ])
         unit = find_unit_by_devid(plugin, devid)
-        if unit is None and label_key == 'Import':
-            unit = find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, 'Vermogen'))
-        if unit is None and label_key == 'Terug & netto':
-            for legacy_key in ('Netto', 'Teruglevering'):
+        if unit is None and label_key == 'Vermogen':
+            for legacy_key in ('Import', 'Vermogen', 'Terug & netto', 'Netto', 'Teruglevering'):
                 unit = find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, legacy_key))
                 if unit is not None:
                     break

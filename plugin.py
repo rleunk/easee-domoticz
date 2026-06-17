@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.0" author="Richard Leunk" version="10.9.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.1" author="Richard Leunk" version="10.9.1"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.0</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.1</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -161,6 +161,7 @@ class BasePlugin:
         )
         domoticz_devices.rebuild_index(self)
         self.initial_sync()
+        domoticz_icons.apply_images_to_devices(self)
         self.sync_done = True
         easee_state.save_state(self)
 
@@ -194,12 +195,17 @@ class BasePlugin:
         self.discover_entities()
         self.charger_names = {c['id']: charger_logic.charger_display_name(self, c, i) for i, c in enumerate(self.chargers)}
         self.equalizer_names = {e['id']: equalizer_logic.equalizer_display_name(self, e, i) for i, e in enumerate(self.equalizers)}
+        created = False
         for i, c in enumerate(self.chargers):
             if c['id'] not in old_charger_ids:
                 domoticz_devices.ensure_charger_devices(self, c, i)
+                created = True
         for i, eq in enumerate(self.equalizers):
             if eq['id'] not in old_eq_ids:
                 domoticz_devices.ensure_equalizer_devices(self, eq, i)
+                created = True
+        if created:
+            domoticz_icons.apply_images_to_devices(self)
         self.write_debug(False)
 
     def write_debug(self, created=False):
