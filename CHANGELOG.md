@@ -6,6 +6,22 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.2] — 2026-06-17
+
+### Opgelost
+- **Custom iconen op bestaande tegels** — `Images`-dict wordt na zip-`Create()` ververst; `apply_images_to_devices()` gebruikt `Update(Image=…)` met `UpdateProperties`-fallback (Domoticz 2024.4+); iconen worden opnieuw toegepast na sync en op de eerste 3 heartbeats.
+- **Icoon-log per tegel** — INFO-regel `Icoon {naam} -> {icon_set}` bij elke succesvolle toepassing.
+- **Legacy Import Energy → Vermogen Text** — oude *Import*-Energy-tegel (bijv. *Meterkast - Import* met W/kWh) wordt verwijderd en opnieuw aangemaakt als Text *Vermogen*; naam met *Import* wordt geforceerd hernoemd.
+
+### Gewijzigd
+- **Icon lookup** — dubbele sleutel (`EaseeCharger` / `EaseeCloudAutoDiscoveryV1000EaseeCharger`) blijft actief; alleen Easee-device(s) krijgen icon-updates.
+
+### Documentatie
+- Troubleshooting: iconen na reinstall, Energy-tegels (bliksem), handmatige zip-upload.
+
+### Fixed (EN)
+- Icons refresh Images dict after zip Create; UpdateProperties fallback; re-apply on 3 heartbeats post-sync; legacy Import Energy tile recreated as Text Vermogen.
+
 ## [10.9.1] — 2026-06-17
 
 ### Opgelost

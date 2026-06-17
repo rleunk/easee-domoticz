@@ -1,8 +1,8 @@
-# Easee Domoticz plugin v10.9.1
+# Easee Domoticz plugin v10.9.2
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators, Equalizer/meterkast ondersteuning en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.9.1-blue)
+![Version](https://img.shields.io/badge/version-10.9.2-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -94,7 +94,7 @@ sudo systemctl restart domoticz
 Daarna in Domoticz:
 
 1. **Setup → Hardware**
-2. Type: **"Easee Domoticz plugin v10.9.1"**
+2. Type: **"Easee Domoticz plugin v10.9.2"**
 3. Geef de hardware een naam, bijv. `Easee` (prefix op alle tegels)
 4. Username/Password: jouw Easee-inloggegevens
 5. **Create**
@@ -183,7 +183,7 @@ De plugin levert twaalf Easee-tegeliconen via **`Easee_icons_v2.zip`** (P-max pr
 - **12 icon sets:** EaseeCharger, EaseePower, EaseeImport, EaseeExport, EaseeNet, EaseeVoltage, EaseeStatus, EaseeCost, EaseeEqualizer, EaseeOverview, EaseeLoadBal, EaseeAlert
 - **LED-strip kleur** op P-max laadpaal-foto (of LED-dot op Equalizer-puck) volgt de **tegelfunctie** — zie tabel hieronder
 - **Functie-badge** rechtsonder op icoon (W, ↓, ↑, Σ, V, i, €, !, E, L) — ~30% groter sinds v10.6.0 (16px: 8px, 48px: 17px); EaseeCharger heeft geen badge
-- Automatisch geladen bij pluginstart; toegepast op **bestaande** tegels na herstart van het hardware-item
+- Automatisch geladen bij pluginstart; toegepast op **bestaande** tegels na herstart (en 3× opnieuw na sync in v10.9.2+)
 - Mislukt automatisch laden? Upload de zip **eenmalig** via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
 - Verwacht logregel: `Custom icons geladen: 12 sets (Easee_icons_v2.zip)` of `Custom icons uit Domoticz (handmatig geüpload)`
 - Preview: [`docs/icon-preview-v2.png`](docs/icon-preview-v2.png) · regeneratie: `.\scripts\generate_photo_icon_variants.ps1`
@@ -231,7 +231,7 @@ Details: [`docs/REFACTOR_MAPPING.md`](docs/REFACTOR_MAPPING.md).
 Centrale logging via `easee_logging.py` (v10.6.0+):
 
 ```
-[Easee v10.9.1][LEVEL][module][context] message
+[Easee v10.9.2][LEVEL][module][context] message
 ```
 
 | Niveau | Wanneer zichtbaar |
@@ -279,6 +279,7 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 
 | Versie | Belangrijkste wijzigingen |
 |--------|---------------------------|
+| **v10.9.2** | Icon fix: Images refresh + UpdateProperties; 3× heartbeat re-apply; legacy Import Energy → Vermogen Text |
 | **v10.9.1** | Equalizer 2 tegels (Status + Vermogen Text); icon fix na fresh add; legacy Import/Terug & netto → Vermogen |
 | **v10.9.0** | Equalizer tegels geconsolideerd: 3 tegels (Status, Import, Terug & netto); spanning/LB-detail op Status; legacy Netto/Teruglevering → Terug & netto |
 | **v10.8.0** | Equalizer Proposal C: 6 meterkast-tegels; Import/Teruglevering/Netto/Spanning/LB-detail; 4 nieuwe icon sets; legacy Vermogen → Import |
@@ -295,6 +296,8 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 | **v10.7.2** | Fix: onHeartbeat crash door verwijderde `plugin.is_*_limit_key` wrappers in `equalizer_logic` |
 
 **Upgrade vanaf v10.5.x:** `git pull`, herstart hardware-item. Upload **`Easee_icons_v2.zip` opnieuw** (v10.5.18 iconen + v10.6.0 grotere badges). State en devices blijven behouden.
+
+**Upgrade naar v10.9.2:** `git pull`, herstart hardware-item. Controleer log op `Icoon … -> Easee…` per tegel. Legacy *Meterkast - Import* (Energy) wordt automatisch *Vermogen* (Text). Energy-tegels (*Laden*) kunnen in sommige Domoticz-builds nog standaard bliksem tonen.
 
 **Upgrade naar v10.9.1:** `git pull`, herstart hardware-item. Bestaande *Import*- of *Terug & netto*-tegel wordt hernoemd naar *Vermogen* (één tegel); verwijder eventuele wees-tegels handmatig. Controleer log op `Custom icons geladen: 12 sets` — anders upload `Easee_icons_v2.zip` opnieuw via Instellingen → Aangepaste pictogrammen.
 
@@ -339,6 +342,6 @@ MIT License — zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.9.1** — Gemaakt door Richard Leunk
+**Versie 10.9.2** — Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

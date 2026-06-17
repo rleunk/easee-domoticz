@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.1" author="Richard Leunk" version="10.9.1"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.2" author="Richard Leunk" version="10.9.2"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.1</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.2</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -76,6 +76,7 @@ class BasePlugin:
         self.units_by_name = {}
         self.units_by_devid = {}
         self.image_ids = {}
+        self.icon_reapply_remaining = 0
         self.state = {'chargers': {}, 'price_cache': {}, 'currency': 'EUR'}
         self.chargers = []
         self.equalizers = []
@@ -161,7 +162,9 @@ class BasePlugin:
         )
         domoticz_devices.rebuild_index(self)
         self.initial_sync()
+        domoticz_icons.load_custom_images(self, plugin_globals=globals())
         domoticz_icons.apply_images_to_devices(self)
+        self.icon_reapply_remaining = 3
         self.sync_done = True
         easee_state.save_state(self)
 
@@ -290,11 +293,12 @@ class BasePlugin:
                 pass
         self.session = requests.Session()
         self.session.headers.update({'accept': 'application/json'})
-        domoticz_icons.load_custom_images(self)
-        domoticz_icons.apply_images_to_devices(self)
+        domoticz_icons.load_custom_images(self, plugin_globals=globals())
         domoticz_devices.rebuild_index(self)
+        domoticz_icons.apply_images_to_devices(self)
         easee_state.load_state(self)
         self.sync_done = False
+        self.icon_reapply_remaining = 0
         self.startup_at = time.time()
         self.startup_min_delay = 3
         self.startup_force_after = 60
@@ -323,6 +327,10 @@ class BasePlugin:
             if not self.sync_done:
                 self.handle_startup_sync()
                 return
+            if self.icon_reapply_remaining > 0:
+                domoticz_icons.load_custom_images(self, plugin_globals=globals())
+                domoticz_icons.apply_images_to_devices(self)
+                self.icon_reapply_remaining -= 1
             interval = max(10, easee_helpers.safe_int(self, Parameters.get('Mode1', '30'), 30))
             if time.time() - self.last_poll < interval:
                 return

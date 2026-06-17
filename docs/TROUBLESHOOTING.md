@@ -59,17 +59,34 @@ sudo journalctl -u domoticz -f | grep Easee
 4. Bekijk log: `sudo journalctl -u domoticz -f | grep -i "charger\|Discovery"`
 5. Refresh Domoticz UI (F5)
 
-### Custom iconen ontbreken
+### Custom iconen ontbreken (na reinstall of upgrade)
 
-**Symptoom**: Tegels tonen standaard Domoticz-iconen
+**Symptoom**: Tegels tonen standaard Domoticz-iconen (generiek Text-icoon, gele bliksem op Energy-tegels)
 
-**Oplossing**:
+**Oorzaken**:
+- `Easee_icons_v2.zip` ontbreekt in de pluginmap of automatisch laden mislukte
+- Domoticz `Images`-dict niet ververst na zip-upload (v10.9.1)
+- `Device.Update(Image=…)` zonder `UpdateProperties` op nieuwere Domoticz-builds
+- **Energy-tegels** (*Laden*, *Totaal Laden*): sommige Domoticz-versies tonen altijd het standaard bliksem-icoon ondanks custom Image — bekende Domoticz-beperking
+
+**Oplossing** (v10.9.2+):
 1. Controleer of `Easee_icons_v2.zip` in de pluginmap staat
-2. Herstart het hardware-item
-3. Als automatisch laden mislukt: upload eenmalig via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
+2. Herstart het hardware-item (niet alleen Domoticz)
+3. Zoek in het log op:
+   - `Custom icons geladen: 12 sets` — zip OK
+   - `Icoon Meterkast - Status -> EaseeEqualizer` — per-tegel bevestiging
+   - `apply_images_to_devices overgeslagen: image_ids leeg` — zip handmatig uploaden
+4. Als automatisch laden mislukt: upload eenmalig via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
    - Pad: `/home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip`
+5. Na upgrade van v10.9.0/v10.9.1: wacht 3 heartbeats (~90s) — iconen worden opnieuw toegepast
 
 Zie [INSTALL.md — Custom iconen](../INSTALL.md#custom-iconen-handmatig-uploaden).
+
+### Meterkast - Import blijft bestaan (legacy Energy)
+
+**Symptoom**: Tegel heet nog *Import* en toont `Energy 1581W` i.p.v. Text *Vermogen* met terug/netto
+
+**Oplossing** (v10.9.2+): herstart hardware-item — plugin verwijdert legacy Energy *Import* en maakt Text *Vermogen* opnieuw aan. Controleer log op `legacy Import Energy → Text Vermogen`.
 
 ### Geen Equalizer gevonden
 
@@ -134,4 +151,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Domoticz Forum**: https://www.domoticz.com/forum/
 
-Bij een issue: pluginversie (bijv. **v10.9.1**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).
+Bij een issue: pluginversie (bijv. **v10.9.2**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import Domoticz
 import domoticz_runtime
 from easee_constants import PLUGIN_KEY, CORE_DEVICE_IDS
@@ -49,6 +50,12 @@ def image_root(plugin, name, device_id=None):
         label = n.split(' - ')[-1].strip() if ' - ' in n else n
         if label in ('status',):
             return 'EaseeEqualizer'
+        if label in ('laden',):
+            return 'EaseeCharger'
+        if label in ('totaal & sessie',):
+            return 'EaseePower'
+        if label in ('kosten (sessie/dag)',):
+            return 'EaseeCost'
 
     is_eq = 'equalizer' in n or 'meterkast' in n
     if is_eq:
@@ -87,12 +94,25 @@ def image_root(plugin, name, device_id=None):
 def icon_base(plugin, root):
     return f'{PLUGIN_KEY}{root}'
 
+def refresh_images_dict(plugin_globals=None):
+    """Herlaad Domoticz Images-dict na Image().Create() — anders blijft image_ids leeg."""
+    if plugin_globals:
+        domoticz_runtime.bind_plugin_globals(plugin_globals)
+    else:
+        mod = sys.modules.get('plugin')
+        if mod is not None:
+            domoticz_runtime.bind_plugin_globals(mod.__dict__)
+
 def _icon_images_key(plugin, root):
-    if root in domoticz_runtime.Images:
-        return root
-    prefixed = icon_base(plugin, root)
-    if prefixed in domoticz_runtime.Images:
-        return prefixed
+    candidates = (
+        root,
+        icon_base(plugin, root),
+        f'Easee_{root}',
+        f'{PLUGIN_KEY}Easee_{root}',
+    )
+    for key in candidates:
+        if key in domoticz_runtime.Images:
+            return key
     return None
 
 def _collect_image_ids(plugin):
@@ -113,7 +133,13 @@ def _try_create_icon_zip(plugin, fn):
             errors.append(str(e))
     return False, errors
 
-def load_custom_images(plugin):
+def refresh_images_dict(plugin_globals=None):
+    """Herlaad Domoticz Images-dict na Image().Create() — anders blijft image_ids leeg."""
+    if plugin_globals:
+        domoticz_runtime.bind_plugin_globals(plugin_globals)
+
+def load_custom_images(plugin, plugin_globals=None):
+    refresh_images_dict(plugin_globals)
     candidates = ['Easee_icons_v2.zip']
     loaded_zip = None
     load_errors = []
@@ -135,6 +161,7 @@ def load_custom_images(plugin):
                 ok, create_errors = _try_create_icon_zip(plugin, fn)
                 if ok:
                     zip_loaded = True
+                    refresh_images_dict(plugin_globals)
                 elif create_errors:
                     msg = f'{fn}: Create() mislukt ({"; ".join(create_errors)})'
                     load_errors.append(msg)
@@ -183,25 +210,115 @@ def load_custom_images(plugin):
             'Geen custom icon sets geladen (image_ids leeg) — tegels krijgen standaard Text-iconen tot zip handmatig is geüpload',
         )
 
-def apply_images_to_devices(plugin):
+def _is_easee_device(dev):
+    devid = str(getattr(dev, 'DeviceID', '') or '')
+    if devid.startswith('EASEE_'):
+        return True
+    name = str(getattr(dev, 'Name', '') or '').lower()
+    return 'easee' in name or 'meterkast' in name or 'equalizer' in name
+
+def _current_image_id(dev):
+    try:
+        return int(getattr(dev, 'Image', 0) or 0)
+    except Exception:
+        return 0
+
+def _apply_image_to_unit(unit, dev, img_id):
+    """Pas custom icoon toe op bestaande tegel; Update(Image=) met UpdateProperties-fallback."""
+    nval = int(getattr(dev, 'nValue', 0) or 0)
+    sval = str(getattr(dev, 'sValue', ''))
+    for kwargs in (
+        {'nValue': nval, 'sValue': sval, 'Image': img_id, 'SuppressTriggers': True},
+        {'nValue': nval, 'sValue': sval, 'Image': img_id},
+    ):
+        try:
+            dev.Update(**kwargs)
+            return True, 'Update(Image=...)'
+        except TypeError:
+            safe = {k: v for k, v in kwargs.items() if k != 'SuppressTriggers'}
+            try:
+                dev.Update(**safe)
+                return True, 'Update(Image=...)'
+            except Exception:
+                continue
+        except Exception:
+            continue
+    for kwargs in (
+        {'nValue': nval, 'sValue': sval, 'UpdateProperties': True, 'SuppressTriggers': True},
+        {'nValue': nval, 'sValue': sval, 'UpdateProperties': True},
+    ):
+        try:
+            dev.Image = img_id
+            dev.Update(**kwargs)
+            return True, 'UpdateProperties'
+        except TypeError:
+            safe = {k: v for k, v in kwargs.items() if k != 'SuppressTriggers'}
+            try:
+                dev.Image = img_id
+                dev.Update(**safe)
+                return True, 'UpdateProperties'
+            except Exception:
+                continue
+        except Exception:
+            continue
+    try:
+        dev.Image = img_id
+        dev.Update(nValue=nval, sValue=sval)
+        return True, 'Image+Update'
+    except Exception as e:
+        return False, str(e)
+
+def apply_icon_to_unit(plugin, unit, force=False):
+    dev = domoticz_runtime.Devices.get(unit)
+    if dev is None or not _is_easee_device(dev):
+        return False
+    if not plugin.image_ids:
+        return False
+    name = easee_helpers.norm(plugin, dev.Name)
+    root = image_root(plugin, name, getattr(dev, 'DeviceID', ''))
+    img_id = plugin.image_ids.get(root)
+    if not img_id:
+        return False
+    if not force and _current_image_id(dev) == int(img_id):
+        return False
+    ok, _method = _apply_image_to_unit(unit, dev, img_id)
+    if ok:
+        easee_logging.info('domoticz_icons', f'Icoon {name} -> {root}')
+    return ok
+
+def apply_images_to_devices(plugin, force=False):
+    if not plugin.image_ids:
+        refresh_images_dict()
+        plugin.image_ids = _collect_image_ids(plugin)
     if not plugin.image_ids:
         easee_logging.warning(
             'domoticz_icons',
             'apply_images_to_devices overgeslagen: image_ids leeg — laad Easee_icons_v2.zip en herstart hardware-item',
         )
-        return
+        return 0
     updated = 0
-    for unit, dev in domoticz_runtime.Devices.items():
+    for unit, dev in list(domoticz_runtime.Devices.items()):
+        if not _is_easee_device(dev):
+            continue
+        name = easee_helpers.norm(plugin, dev.Name)
         try:
-            root = image_root(plugin, easee_helpers.norm(plugin, dev.Name), getattr(dev, 'DeviceID', ''))
+            root = image_root(plugin, name, getattr(dev, 'DeviceID', ''))
             img_id = plugin.image_ids.get(root)
-            if not img_id or getattr(dev, 'Image', 0) == img_id:
+            if not img_id:
+                easee_logging.debug('domoticz_icons', f'Geen icon mapping voor {name} (root={root})')
                 continue
-            dev.Update(nValue=dev.nValue, sValue=str(dev.sValue), Image=img_id)
-            updated += 1
+            if not force and _current_image_id(dev) == int(img_id):
+                continue
+            ok, method = _apply_image_to_unit(unit, dev, img_id)
+            if ok:
+                updated += 1
+                easee_logging.info('domoticz_icons', f'Icoon {name} -> {root}')
+            else:
+                easee_logging.warning('domoticz_icons', f'Icoon {name} -> {root} mislukt: {method}')
         except Exception as e:
-            easee_logging.debug('domoticz_icons', f'icon update failed unit {unit}: {e}')
+            easee_logging.warning('domoticz_icons', f'Icoon update mislukt unit {unit} ({name}): {e}')
     if updated:
-        easee_logging.info('domoticz_icons', f'Custom icons toegepast op {updated} devices')
+        easee_logging.info('domoticz_icons', f'Custom icons toegepast op {updated} Easee-device(s)')
+    return updated
 
     # ---- create/update ----
