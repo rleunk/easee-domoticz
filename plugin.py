@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.3" author="Richard Leunk" version="10.9.3"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.4" author="Richard Leunk" version="10.9.4"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.3</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.4</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>

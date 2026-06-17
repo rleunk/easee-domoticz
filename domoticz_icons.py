@@ -179,13 +179,26 @@ def _log_icon_startup_diagnostic(plugin, zip_path=None, zip_exists=False, zip_si
         )
     return mappings
 
+def _domoticz_image_create_path(plugin, path, fn):
+    """Pad voor Image().Create(): alleen bestandsnaam — Domoticz voegt plugin_dir zelf toe."""
+    basename = fn or os.path.basename(path)
+    plugin_dir = str(getattr(plugin, 'plugin_dir', '') or '')
+    if plugin_dir:
+        root = os.path.normpath(plugin_dir.rstrip(os.sep))
+        normalized = os.path.normpath(path)
+        if normalized == root or normalized.startswith(root + os.sep):
+            return basename
+    if os.path.isabs(path):
+        return basename
+    return basename
+
 def _try_create_icon_zip(plugin, path, fn):
     errors = []
+    create_path = _domoticz_image_create_path(plugin, path, fn)
+    easee_logging.info('domoticz_icons', f'Image().Create() aanroep met: "{create_path}"')
     attempts = (
-        ('Image(path).Create()', lambda: Domoticz.Image(path).Create()),
-        ('Image(Filename=path).Create()', lambda: Domoticz.Image(Filename=path).Create()),
-        ('Image(fn).Create()', lambda: Domoticz.Image(fn).Create()),
-        ('Image(Filename=fn).Create()', lambda: Domoticz.Image(Filename=fn).Create()),
+        ('Image(fn).Create()', lambda p=create_path: Domoticz.Image(p).Create()),
+        ('Image(Filename=fn).Create()', lambda p=create_path: Domoticz.Image(Filename=p).Create()),
     )
     for label, attempt in attempts:
         try:

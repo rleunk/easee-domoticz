@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.4] — 2026-06-17
+
+### Opgelost
+- **Zip pad verdubbeling** — `Image().Create()` kreeg het volledige absolute pad; Domoticz voegt zelf `plugin_dir` toe, waardoor het zip-bestand niet gevonden werd (`Error opening zip file`). Alleen nog bestandsnaam (`Easee_icons_v2.zip`); INFO-log toont exact argument aan `Create()`.
+
+### Fixed (EN)
+- Domoticz prepends plugin dir to `Image().Create()` path — pass filename only, not absolute path (fixes doubled path on Linux).
+
 ## [10.9.3] — 2026-06-17
 
 ### Opgelost
