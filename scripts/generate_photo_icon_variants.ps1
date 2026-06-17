@@ -359,6 +359,52 @@ function Get-DimAccentColor([Drawing.Color]$Color) {
         [math]::Max(0, [int]($Color.B * 0.55 + 40)))
 }
 
+function Get-EqualizerPuckOverlayScale([int]$Size) {
+    if ($Size -le 16) { return 0.44 }
+    if ($Size -le 48) { return 0.40 }
+    return 0.38
+}
+
+function Add-EqualizerPuckOverlay([Drawing.Bitmap]$Src, [Drawing.Color]$EqColor, [bool]$Dim) {
+    $size = $Src.Width
+    $scale = Get-EqualizerPuckOverlayScale $size
+    $eqSize = [math]::Max(6, [int][math]::Round($size * $scale))
+    $eqIcon = New-EaseeIconV2 $eqSize $EqColor 'equalizer' $Dim $true
+
+    $out = $Src.Clone()
+    $g = [Drawing.Graphics]::FromImage($out)
+    $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $g.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.CompositingMode = [Drawing.Drawing2D.CompositingMode]::SourceOver
+    $g.CompositingQuality = [Drawing.Drawing2D.CompositingQuality]::HighQuality
+
+    $margin = if ($size -le 16) { 0 } else { 1 }
+    $ex = $margin
+    $ey = $size - $eqSize - $margin
+
+    $shadowPad = if ($size -le 16) { 0.5 } else { 1.0 }
+    $shadowAlpha = if ($Dim) { 90 } else { 140 }
+    $shadowBrush = New-Object System.Drawing.SolidBrush ([Drawing.Color]::FromArgb($shadowAlpha, 8, 10, 14))
+    $shadowRect = New-Object System.Drawing.RectangleF (
+        ([single]($ex - $shadowPad)),
+        ([single]($ey - $shadowPad)),
+        ([single]($eqSize + 2 * $shadowPad)),
+        ([single]($eqSize + 2 * $shadowPad))
+    )
+    $shadowRadius = if ($size -le 16) { 1.5 } else { 3.0 }
+    $shadowPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $shadowPath.AddArc($shadowRect.X, $shadowRect.Y, $shadowRadius * 2, $shadowRadius * 2, 180, 90)
+    $shadowPath.AddArc($shadowRect.Right - $shadowRadius * 2, $shadowRect.Y, $shadowRadius * 2, $shadowRadius * 2, 270, 90)
+    $shadowPath.AddArc($shadowRect.Right - $shadowRadius * 2, $shadowRect.Bottom - $shadowRadius * 2, $shadowRadius * 2, $shadowRadius * 2, 0, 90)
+    $shadowPath.AddArc($shadowRect.X, $shadowRect.Bottom - $shadowRadius * 2, $shadowRadius * 2, $shadowRadius * 2, 90, 90)
+    $shadowPath.CloseFigure()
+    $g.FillPath($shadowBrush, $shadowPath)
+    $g.DrawImage($eqIcon, $ex, $ey, $eqSize, $eqSize)
+
+    $shadowPath.Dispose(); $shadowBrush.Dispose(); $g.Dispose(); $eqIcon.Dispose()
+    return $out
+}
+
 function Add-FunctionHintOverlay([Drawing.Bitmap]$Src, [string]$Kind, [Drawing.Color]$AccentColor, [bool]$Dim) {
     $glyph = Get-FunctionHintGlyph $Kind
     if (-not $glyph) { return $Src.Clone() }
@@ -534,12 +580,49 @@ function New-PhotoVariantIcon([Drawing.Bitmap]$DarkCrop, [Drawing.Bitmap]$RedCro
     return $icon
 }
 
+function Add-EqualizerPuckOverlay([Drawing.Bitmap]$Src, [int]$Size, [Drawing.Color]$EqColor, [bool]$Dim) {
+    $out = $Src.Clone()
+    $g = [Drawing.Graphics]::FromImage($out)
+    $g.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
+    $g.CompositingQuality = [Drawing.Drawing2D.CompositingQuality]::HighQuality
+    $g.PixelOffsetMode = [Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+
+    # Bottom-left overlay: readable at 48px, clears space from bottom-right "i" badge.
+    $puckSize = if ($Size -le 16) { 7 } else { [int][math]::Round($Size * 0.38) }
+    $puck = New-EaseeIconV2 $puckSize $EqColor 'equalizer' $Dim $true
+    $margin = if ($Size -le 16) { 0 } else { 1 }
+    $bx = $margin
+    $by = $Size - $puckSize - $margin
+    $g.DrawImage($puck, $bx, $by, $puckSize, $puckSize)
+    $puck.Dispose(); $g.Dispose()
+    return $out
+}
+
+function New-StatusComboIcon([int]$Size, [bool]$Dim, [Drawing.Bitmap]$DarkCrop, [Drawing.Bitmap]$RedCrop, [Drawing.Bitmap]$DarkCropMax, [Drawing.Color]$StatusColor) {
+    $icon = New-PhotoVariantIcon $DarkCrop $RedCrop 'photo-max' $Size $Dim $StatusColor $DarkCropMax 'status' $true
+    $tmp = Add-EqualizerPuckOverlay $icon $Size $EqualizerColor $Dim
+    $icon.Dispose()
+    return $tmp
+}
+
 function New-ProductionIcon([hashtable]$Set, [int]$Size, [bool]$Dim, [Drawing.Bitmap]$DarkCrop, [Drawing.Bitmap]$RedCrop, [Drawing.Bitmap]$DarkCropMax) {
+    if ($Set.Kind -eq 'status') {
+        return New-StatusComboIcon $Size $Dim $DarkCrop $RedCrop $DarkCropMax $Set.Color
+    }
     if ($Set.Kind -in @('equalizer', 'loadbal', 'net', 'voltage')) {
         $drawKind = if ($Set.Kind -in @('net', 'voltage')) { 'equalizer' } else { $Set.Kind }
         $icon = New-EaseeIconV2 $Size $Set.Color $drawKind $Dim $true
         $hinted = Add-FunctionHintOverlay $icon $Set.Kind $Set.Color $Dim
         $icon.Dispose()
+        return $hinted
+    }
+    if ($Set.Kind -eq 'status') {
+        $icon = New-PhotoVariantIcon $DarkCrop $RedCrop 'photo-max' $Size $Dim $Set.Color $DarkCropMax $Set.Kind $false
+        $combo = Add-EqualizerPuckOverlay $icon $EqualizerColor $Dim
+        $icon.Dispose()
+        $hinted = Add-FunctionHintOverlay $combo 'status' $Set.Color $Dim
+        $combo.Dispose()
         return $hinted
     }
     if ($Set.Kind -in @('import', 'export')) {
@@ -600,7 +683,7 @@ $combinedRows = @(
     @{ Label = 'EaseeExport - groen, teruglevering (pijl omhoog)'; Hint = [char]0x2191; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeExport' }) }
     @{ Label = 'EaseeNet - teal, netto Sigma'; Hint = [char]0x03A3; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeNet' }) }
     @{ Label = 'EaseeVoltage - paars, spanning V'; Hint = 'V'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeVoltage' }) }
-    @{ Label = 'EaseeStatus - blauw, core status'; Hint = 'i'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeStatus' }) }
+    @{ Label = 'EaseeStatus - laadpaal + EQ-puck, info i'; Hint = 'i'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeStatus' }) }
     @{ Label = "EaseeCost - oranje, kosten $Euro"; Hint = $Euro; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeCost' }) }
     @{ Label = 'EaseeAlert - rood, fout/waarschuwing'; Hint = '!'; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeAlert' }) }
     @{ Label = "EaseeOverview - teal, overzicht $Sigma"; Hint = $Sigma; Set = ($DomoticzIconSets | Where-Object { $_.Name -eq 'EaseeOverview' }) }
@@ -785,6 +868,14 @@ $pOn48.Dispose(); $pOn16.Dispose(); $rOn48.Dispose(); $rOn16.Dispose()
 if (-not (Test-Path $EqualizerMaxDir)) { New-Item -ItemType Directory -Path $EqualizerMaxDir -Force | Out-Null }
 $global:EaseeIconsDotSourceOnly = $true
 . (Join-Path $PSScriptRoot 'generate_icons.ps1')
+
+# generate_icons.ps1 defines its own Save-Png (disposes bitmap, no mkdir) — restore production helper.
+function Save-Png([Drawing.Bitmap]$Bmp, [string]$Path) {
+    $dir = Split-Path $Path -Parent
+    if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    $Bmp.Save($Path, [Drawing.Imaging.ImageFormat]::Png)
+}
+
 $eqMaxOn48 = New-EaseeIconV2 48 $EqualizerColor 'equalizer' $false $true
 $eqMaxOff48 = New-EaseeIconV2 48 $EqualizerColor 'equalizer' $true $true
 $eqMaxOn16 = New-EaseeIconV2 16 $EqualizerColor 'equalizer' $false $true

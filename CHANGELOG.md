@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.9] — 2026-06-18
+
+### Gewijzigd
+- **EaseeStatus combo-icoon** — Status-tegel (laadpaal *Easee - Status*) toont nu een gecombineerd pictogram: P-max foto-laadpaal (blauwe LED) + Equalizer-max puck linksonder (40% schaal, subtiele schaduw) + **i**-badge rechtsonder (ongewijzigde badge-stijl). Ontwerp leesbaar op 48 px Domoticz-tegel.
+
+### Changed (EN)
+- EaseeStatus icon: charger photo + equalizer puck overlay (bottom-left) + info badge (bottom-right); regenerated `Easee_icons_v2.zip` and `icons/EaseeStatus.zip`.
+
 ## [10.9.8] — 2026-06-18
 
 ### Opgelost

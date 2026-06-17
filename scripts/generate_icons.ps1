@@ -407,8 +407,10 @@ function New-EaseeIconV2([int]$Size, [Drawing.Color]$Color, [string]$Kind, [bool
 }
 
 function Save-Png([Drawing.Bitmap]$Bmp, [string]$Path) {
+    $dir = Split-Path $Path -Parent
+    if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
     $Bmp.Save($Path, [Drawing.Imaging.ImageFormat]::Png)
-    $Bmp.Dispose()
+    if (-not $global:EaseeIconsDotSourceOnly) { $Bmp.Dispose() }
 }
 
 $Lines = New-Object System.Collections.Generic.List[string]
