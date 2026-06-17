@@ -6,7 +6,7 @@ De plugin gebruikt **`Easee_icons_v2.zip`** in de repo-root als enige iconenarch
 
 - **P-max laadpaal** — productfoto (Easee Charge), maximale tegelvulling, verticale LED-strip in functiekleur
 - **Equalizer-max puck** — vector squircle (v10.5.15-stijl), maximale tegelvulling
-- **8 icon sets** — Charger, Power, Status, Cost, Alert, Overview, Equalizer, LoadBal (16×16 + 48×48 On/Off)
+- **13 icon sets** — Charger, Power, Status, StatusGlobal, Cost, Alert, Overview, Equalizer, LoadBal, Import, Export, Net, Voltage (16×16 + 48×48 On/Off)
 - **Functie-badges** — subtiele hoekmarkering: W, i, €, !, Σ, E, L (Charger heeft geen badge)
 
 Preview: [`../icon-preview-v2.png`](../icon-preview-v2.png).
@@ -33,4 +33,4 @@ Vector Equalizer-tekenlogica staat in `scripts/generate_icons.ps1` (wordt dot-so
 
 Na upgrade: upload **`Easee_icons_v2.zip`** via **Instellingen → Meer opties → Aangepaste pictogrammen** (Domoticz cached iconen).
 
-Zie [README.md](../../README.md#-custom-iconen) en [INSTALL.md](../../INSTALL.md#custom-iconen-handmatig-uploaden).
+Zie [README.md](../../README.md#custom-iconen) en [INSTALL.md](../../INSTALL.md#custom-iconen-handmatig-uploaden).

@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee Domoticz plugin v10.9.1
+# Installatiehandleiding — Easee Domoticz plugin v10.9.10
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,7 +8,7 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee Domoticz plugin v10.9.1 |
+| Plugin | Easee Domoticz plugin v10.9.10 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` (+ 12 Python-modules = 13 `.py`-bestanden sinds v10.6.0) |
@@ -104,7 +104,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee Domoticz plugin v10.9.1**
+4. Selecteer **Easee Domoticz plugin v10.9.10**
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
 7. Klik **Add**
@@ -287,22 +287,22 @@ Custom iconen uit `Easee_icons_v2.zip` worden bij start automatisch geladen en o
 - State migreert automatisch naar `easee_state.json` (atomisch opslaan sinds v10.6.1).
 - Upload **`Easee_icons_v2.zip` opnieuw** als badges/iconen niet veranderen (Domoticz cached iconen).
 
-### Specifiek: v10.9.1
+### Specifiek: v10.9.10 (huidige release)
 
-- **Equalizer: 2 tegels** — Status + **Vermogen** (Text) met import/terug/netto W en vandaag kWh.
-- **Icon fix** — custom pictogrammen worden na device-aanmaak opnieuw toegepast; controleer log op `Custom icons geladen: 12 sets`.
-- Legacy *Import* / *Terug & netto* → *Vermogen*; verwijder wees-tegels handmatig.
+- **Status-iconen gesplitst** — combo-icoon (laadpaal + EQ-puck + **i**) alleen op globale *Easee - Status*; laadpaal Status (Garage, Voordeur) = laadpaal-only met **i**.
+- **13 icon sets** — upload **`Easee_icons_v2.zip` opnieuw** via Aangepaste pictogrammen; controleer log op `image_ids: 13/13 sets`.
+- **Equalizer: 2 tegels** — Status + Vermogen (sinds v10.9.1).
 
-### Specifiek: v10.9.0
+### Specifiek: v10.9.3 – v10.9.9
 
-- **Equalizer tegels geconsolideerd** — drie meterkast-tegels: Status (LB, spanning, limieten), Import, Terug & netto.
-- Legacy *Netto*/*Teruglevering* → *Terug & netto*; wees-tegels *Spanning*/*Load balancing* handmatig verwijderen.
+- Icon-loading fixes (zip-pad, plugin-key-prefix, `Device.Update`-parameters).
+- v10.9.8: laadpaal Status kreeg weer `EaseeStatus`, Equalizer Vermogen `EaseeEqualizer`.
+- Verwijder oude Easee custom icons vóór her-upload als iconen ontbreken.
 
-### Specifiek: v10.8.0
+### Oudere versies (v10.8.0 en eerder)
 
-- **Equalizer Proposal C** — zes meterkast-tegels: Status, Import, Teruglevering, Netto, Spanning, Load balancing.
-- **Iconen** — upload **`Easee_icons_v2.zip` opnieuw** (12 sets i.p.v. 8).
-- **Legacy** — *Vermogen* wordt *Import*; nieuwe tegels verschijnen na herstart hardware-item.
+- v10.8.0 had **6** Equalizer-tegels — upgrade naar v10.9.1+ voor **2** tegels (Status + Vermogen).
+- Wees-tegels uit oude versies (*Import*, *Spanning*, *Load balancing*, …) handmatig verwijderen.
 
 ### Specifiek: v10.7.x
 
@@ -341,20 +341,24 @@ De plugin laadt `Easee_icons_v2.zip` automatisch uit de pluginmap. Sommige Domot
 
 ### Wanneer nodig?
 
-- Logmelding: *zip gevonden maar laden mislukt*
-- Tegels tonen standaard Domoticz-iconen i.p.v. groene/oranje Easee-tegels
+- Logmelding: *zip gevonden maar laden mislukt* of `image_ids: 0/13`
+- Tegels tonen standaard Domoticz-iconen i.p.v. Easee-tegels
+- Na upgrade waarbij icon sets zijn gewijzigd (bijv. v10.9.10 → `EaseeStatusGlobal`)
 
 ### Stappen
 
-1. Open Domoticz in de browser
-2. Ga naar **Setup** → **Instellingen** → **Meer opties** → **Aangepaste pictogrammen**
-3. Klik **Upload** en kies `Easee_icons_v2.zip` uit de pluginmap:
+1. **Verwijder eerst** oude Easee custom icons (zelfde menu) — voorkomt conflicten met oude Base-namen
+2. Open Domoticz in de browser
+3. Ga naar **Setup** → **Instellingen** → **Meer opties** → **Aangepaste pictogrammen**
+4. Klik **Upload** en kies `Easee_icons_v2.zip` uit de pluginmap:
    ```
    /home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip
    ```
-4. Herstart het Easee hardware-item (of Domoticz)
+5. Herstart het Easee hardware-item (of Domoticz)
 
-Na een succesvolle upload herkent de plugin de iconen als *Custom icons uit Domoticz (handmatig geüpload)* in het log.
+Na een succesvolle upload herkent de plugin de iconen als *Custom icons uit Domoticz (handmatig geüpload)* in het log. Verwacht: `Custom icons geladen: 13 sets` of `image_ids: 13/13 sets`.
+
+> **Energy-tegels** (*Laden*, *Totaal Laden*) kunnen in sommige Domoticz-versies toch het standaard bliksem-icoon tonen — bekende beperking.
 
 ---
 

@@ -116,14 +116,14 @@ Gegroepeerde weergave op één teksttegel:
 
 **Huisvermogen staat niet op Status** — zie Vermogen-tegel.
 
-### Equalizer tegels (v10.9.1+)
+### Equalizer tegels (v10.9.1+, huidige release v10.9.10)
 
-| Tegel | Type | Bron | Weergave |
-|-------|------|------|----------|
-| Status | Text | state + site fuse API | Verbinding, LB-detail, limieten, stroom, spanning |
-| Vermogen | Text | obs. 40/41/45/46 + berekend | Import W, terug W, netto W, vandaag import/netto kWh |
+| Tegel | Type | Icoon | Weergave |
+|-------|------|-------|----------|
+| Status | Text | `EaseeEqualizer` | Verbinding, LB-detail, limieten, stroom, spanning |
+| Vermogen | Text | `EaseeEqualizer` | Import W, terug W, netto W, vandaag import/netto kWh |
 
-Core **LoadBal**-schakelaar (site-wide) blijft ongewijzigd.
+Core **LoadBal**-schakelaar (site-wide) blijft ongewijzigd; icoon `EaseeLoadBal`.
 
 Legacy: *Import*, *Terug & netto*, *Netto*, *Teruglevering* → *Vermogen*. Wees-tegels uit v10.8.0/v10.9.0 handmatig verwijderen.
 
@@ -231,6 +231,22 @@ Devices krijgen automatisch deze namen:
 [PREFIX] - [NAAM] - Status
 [PREFIX] - [NAAM] - Kosten (Sessie/Dag) (Tibber)
 ```
+
+## Custom iconen (v10.9.10)
+
+13 sets in `Easee_icons_v2.zip`. Belangrijkste mapping:
+
+| Tegel | Iconenset |
+|-------|-----------|
+| **[PREFIX] - Status** (globaal) | `EaseeStatusGlobal` — combo laadpaal + EQ-puck + **i** |
+| **[PREFIX] - [Naam] - Status** (laadpaal) | `EaseeStatus` — laadpaal-only + **i** |
+| **[PREFIX] - [Naam] - Laden** | `EaseeCharger` |
+| **[PREFIX] - [Naam] - Kosten** | `EaseeCost` |
+| **[PREFIX] - [EQ] - Status / Vermogen** | `EaseeEqualizer` |
+| **LoadBal** | `EaseeLoadBal` |
+| **Totaal Laden / kWh** | `EaseePower` *(Energy-tegel kan standaard bliksem tonen — Domoticz-beperking)* |
+
+Auto-load bij start; anders handmatige upload — zie [INSTALL.md](../INSTALL.md#custom-iconen-handmatig-uploaden).
 
 ## State Persistence
 

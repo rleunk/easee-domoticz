@@ -1,89 +1,14 @@
-# Easee Domoticz plugin v10.9.3
+# Easee Domoticz plugin v10.9.10
 
-**Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators, Equalizer/meterkast ondersteuning en Tibber stroomtarief integratie.**
+**Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.9.3-blue)
+![Version](https://img.shields.io/badge/version-10.9.10-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-## 🚀 Wat doet deze plugin in 1 minuut
+> **Status:** v10.9.10 — *stable testing* (pauze in actieve ontwikkeling). Getest met 2× Charge Lite, 1× Equalizer en Tibber. Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
 
-- ✅ Auto-detectie van laadpalen en Equalizer
-- ✅ Live vermogen en status in Domoticz
-- ✅ Kostenberekening via Tibber
-- ✅ Slimme UI met emoji's en compacte tegels
-
-**Installeren → 2 minuten, werken → direct** · [Quick Start](#quick-start)
-
-> ⚠️ **Problemen?** Zie [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
-
-## 📸 Screenshots
-
-### Easee - Domoticz dashboard
-
-![Easee Domoticz dashboard met laadpaal- en Equalizer-tegels](docs/screenshot-dashboard.png)
-
-*Emoji-status, compacte tegels en live vermogen/kosten.*
-
-### Equalizer & custom iconen
-
-![Equalizer puck en P-max laadpaal iconen met functie-badges](docs/screenshot-equalizer.png)
-
-*Custom iconen met LED-kleuren per tegelfunctie.*
-
-## 🎯 Voor wie is dit?
-
-- Domoticz gebruikers met Easee laadpaal
-- Met of zonder Equalizer
-- Optioneel met Tibber energiecontract
-
-## ✨ Features
-
-✨ **Auto-Discovery** — Automatische detectie van alle Easee laadpalen en Equalizer  
-📊 **Realtime Monitoring** — Live vermogen, energie en status updates  
-💬 **Leesbare status** — Laadstatus in Nederlands (Laden, Wacht op start, …)  
-🏷️ **Eigen namen** — Optionele namen per laadpaal via Mode2/Mode3/Mode4  
-⚖️ **Equalizer / Meterkast** — Auto-discovery, load balancing, hoofdzekering en eMobility-limieten  
-⚡ **Hoofdzekering limiet** — Correcte weergave via `maxContinuousCurrent` en `circuit.fuse` (API)  
-💰 **Cost Tracking** — Sessie- en dagkosten per laadpaal (v10.4 fix)  
-💵 **Tibber Integration** — Actueel stroomtarief, goedkope laadwindows en kostenoverzicht (v10.4 fix)  
-🎨 **Custom iconen** — Foto-gebaseerde P-max/EQ-max tegels uit `Easee_icons_v2.zip` met LED-kleuren en functie-badges; zie [Custom iconen](#-custom-iconen)  
-🔐 **Secure** — Veilige token opslag en session management  
-🔄 **State Persistence** — `easee_state.json` met atomische writes; automatische migratie van legacy state  
-📋 **Gestructureerde logging** — Centrale logger `[Easee vX][LEVEL][module][context]`; zie [Logging](#-logging)  
-🧩 **Modulaire codebase** — Plugin opgesplitst in losse Python-modules (sinds v10.6.0); zie [Module structuur](#-module-structuur)  
-🚀 **Betrouwbare startup** — Initiële sync losgekoppeld van poll-interval; readiness-check op Domoticz Devices  
-📦 **Git installatie** — Eenvoudige updates via `git pull` op je Domoticz-server  
-
-## 📋 Ondersteunde scenario's
-
-| Scenario | Wat werkt | Configuratie |
-|----------|-----------|--------------|
-| **1 laadpaal** | Alle laadpaal-tegels, totaal-overzicht | Alleen **Mode2** invullen (optioneel) |
-| **2 laadpalen** | Per lader: Laden, Totaal & Sessie, Status (+ Kosten met Tibber) | **Mode2** + **Mode3** (optioneel) |
-| **3+ laadpalen** | Auto-discovery + tegels per lader | Namen uit Easee-app **of** **Mode4** (komma-gescheiden, vanaf lader 3) |
-| **Geen Equalizer** | Plugin werkt volledig | Geen meterkast-tegels; Status toont `Geen EQ` |
-| **Geen Tibber** | Laadpalen + Equalizer OK | Geen kosten-/tarief-tegels; rest blijft werken |
-
-### Laadpaalnamen (1 / 2 / 3+)
-
-| Aantal | Velden | Voorbeeld |
-|--------|--------|-----------|
-| 1 lader | Mode2 (optioneel) | `Garage` |
-| 2 laders | Mode2 + Mode3 (optioneel) | `Garage`, `Voordeur` |
-| 3+ laders | Mode2 + Mode3 + **Mode4** | Mode4: `Carport, Werf` → 3e lader = Carport, 4e = Werf |
-
-Laat velden leeg om de naam uit de Easee-app te gebruiken. De **hardwarenaam** in Domoticz (bijv. `Easee`) wordt automatisch als prefix op alle tegels gezet.
-
-## 📦 Installatie
-
-Zie **[INSTALL.md](INSTALL.md)** voor stap-voor-stap instructies (Debian/Domoticz).
-
-> Git-authenticatie (SSH of PAT): [docs/GIT_SETUP.md](docs/GIT_SETUP.md)
-
-### Quick Start {#quick-start}
-
-Op je Domoticz-server (Debian):
+## TL;DR — installeren in 2 minuten
 
 ```bash
 cd /home/root/domoticz/plugins
@@ -91,180 +16,133 @@ git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
 sudo systemctl restart domoticz
 ```
 
-Daarna in Domoticz:
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.9.10** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
-1. **Setup → Hardware**
-2. Type: **"Easee Domoticz plugin v10.9.3"**
-3. Geef de hardware een naam, bijv. `Easee` (prefix op alle tegels)
-4. Username/Password: jouw Easee-inloggegevens
-5. **Create**
+Optioneel: Tibber-token (Mode7), laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
-Alternatief: automatisch installatiescript — zie [INSTALL.md](INSTALL.md).
+> Git-authenticatie: [docs/GIT_SETUP.md](docs/GIT_SETUP.md) · Problemen: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
-## ⚙️ Configuratie
+## Wat doet deze plugin?
 
-Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare parameters.
+- Auto-detectie van laadpalen en Equalizer
+- Live vermogen, status en load balancing in Domoticz
+- Kosten via Tibber (sessie, dag, goedkoopste laadwindow)
+- 13 custom tegeliconen (P-max laadpaal + Equalizer-puck) — auto-load + handmatige upload als fallback
+- Modulaire codebase (sinds v10.6) — updates via `git pull`
 
-### Basis Settings
+## Voor wie is dit?
+
+- Domoticz-gebruikers met Easee-laadpaal(en)
+- Met of zonder Equalizer (meterkast)
+- Optioneel met Tibber-energiecontract
+- Geen programmeerkennis nodig — scannable tegels en Nederlandse status
+
+## Features
+
+| Onderdeel | Wat je krijgt |
+|-----------|---------------|
+| **Laadpalen** | Auto-discovery; per lader: Laden, Totaal & Sessie, Status, Kosten (met Tibber) |
+| **Equalizer** | 2 tegels per Equalizer: **Status** (LB, limieten, stroom, spanning) + **Vermogen** (import/terug/netto W, vandaag kWh) |
+| **Tibber** | Actueel tarief, dagkosten, **Beste laden** (3 uur goedkoop) |
+| **Core** | Globale Status, Totaal Laden, Totaal kWh, LoadBal-schakelaar |
+| **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
+| **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
+
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.9.10][LEVEL]…`.
+
+## Screenshots
+
+### Dashboard (illustratie)
+
+![Illustratief dashboard-overzicht](docs/screenshot-dashboard.png)
+
+*Illustratief tegeloverzicht — geen echte Domoticz-screenshot. Toont globale tegels, laadpaal (Garage) en Equalizer (Meterkast).*
+
+### Iconen (actuele referentie)
+
+![Alle 13 iconensets — preview](docs/icon-preview-v2.png)
+
+*Actuele iconensets v10.9.10, inclusief `EaseeStatusGlobal` (combo) en `EaseeStatus` (laadpaal-only).*
+
+### Equalizer-tegels (illustratie)
+
+![Equalizer puck en laadpaal-iconen](docs/screenshot-equalizer.png)
+
+*Illustratie van custom iconen met LED-kleuren en functie-badges — geen live Domoticz-capture.*
+
+## Ondersteunde scenario's
+
+| Scenario | Wat werkt | Configuratie |
+|----------|-----------|--------------|
+| **1 laadpaal** | Alle laadpaal-tegels + totaal | Alleen **Mode2** (optioneel) |
+| **2 laadpalen** | Per lader eigen tegels | **Mode2** + **Mode3** (optioneel) |
+| **3+ laadpalen** | Auto-discovery + tegels per lader | **Mode4** (komma-gescheiden vanaf lader 3) |
+| **Geen Equalizer** | Plugin werkt volledig | Geen meterkast-tegels; Status toont `Geen EQ` |
+| **Geen Tibber** | Laadpalen + Equalizer OK | Geen kosten-/tarief-tegels |
+
+Laat naamvelden leeg voor de Easee-appnaam. De **hardwarenaam** in Domoticz (bijv. `Easee`) is het prefix op alle tegels.
+
+## Devices
+
+### Core
+- **Easee - Status** — online, Equalizer-aantal, load balancing, Tibber
+- **Totaal Laden**, **Totaal kWh**, **LoadBal**
+- **Kosten & Samenvatting**, **Beste laden** (met Tibber)
+
+### Per Equalizer
+- **[Naam] - Status** — verbinding, LB (fase-detail), limieten, stroom L1/L2/L3, spanning
+- **[Naam] - Vermogen** — import/terug/netto W, vandaag import en netto kWh (Text-tegel)
+
+### Per laadpaal
+- **[Naam] - Laden**, **Totaal & Sessie**, **Status**, **Kosten (Sessie/Dag)** (met Tibber)
+
+Details: [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
+
+## Custom iconen
+
+De plugin levert **13 iconensets** via **`Easee_icons_v2.zip`** (master zip + map `icons/` met 13 mini-zips).
+
+**Automatisch:** bij pluginstart geladen en toegepast op bestaande tegels na herstart.
+
+**Handmatig** (als log `image_ids: 0/13` of generieke iconen):
+1. Verwijder oude Easee custom icons via **Instellingen → Aangepaste pictogrammen**
+2. Upload `Easee_icons_v2.zip`
+3. Herstart hardware-item
+
+Verwacht in log: `Custom icons geladen: 13 sets` of `Custom icons uit Domoticz (handmatig geüpload)`.
+
+### Welke tegel krijgt welk icoon?
+
+| Iconenset | Tegel(s) |
+|-----------|----------|
+| **EaseeStatusGlobal** | Alleen globale **Easee - Status** (laadpaal + EQ-puck + **i**) |
+| **EaseeStatus** | Laadpaal **Status** per locatie (bijv. Garage, Voordeur) — laadpaal + **i**, geen EQ |
+| **EaseeEqualizer** | Equalizer **Status** en **Vermogen** (Meterkast) |
+| **EaseeCharger** | Laadpaal **Laden** |
+| **EaseePower** | **Totaal Laden**, laadpaal **Totaal & Sessie** |
+| **EaseeCost** | Kosten-tegels |
+| **EaseeOverview** | **Beste laden**, overzicht |
+| **EaseeLoadBal** | **LoadBal**-schakelaar |
+| Overige sets | Legacy/gereserveerd (Import, Export, Net, Voltage, Alert) |
+
+**Bekende beperking:** sommige **Energy**-tegels (bliksem/globe) tonen ondanks custom Image het Domoticz-standaardicoon — bekend Domoticz-gedrag.
+
+Volledige LED/badge-tabel: [INSTALL.md — Custom iconen](INSTALL.md#custom-iconen-handmatig-uploaden) · preview: [docs/icon-preview-v2.png](docs/icon-preview-v2.png).
+
+## Configuratie (kort)
 
 | Parameter | Standaard | Omschrijving |
 |-----------|-----------|--------------|
-| Username | - | Easee account username/telefoonnummer |
-| Password | - | Easee account wachtwoord |
-| Poll interval (Mode1) | 30 sec | Hoe vaak data wordt opgehaald |
-| Debug logging (Mode6) | Normal | Zet op *Debug* bij problemen |
-| Naam laadpaal 1 (Mode2) | - | Optioneel, bijv. `Charge Lite Links` |
-| Naam laadpaal 2 (Mode3) | - | Optioneel, bijv. `Charge Lite Rechts` |
-| Extra laadpaalnamen (Mode4) | - | Komma-gescheiden vanaf lader 3, bijv. `Carport, Werf` |
-| Naam Equalizer (Address) | - | Optioneel, bijv. `Meterkast` |
-| Equalizer ID (IP) | - | Handmatig, alleen als discovery faalt |
-| Tibber token (Mode7) | - | Optioneel: Tibber API token voor prijzen |
+| Username / Password | — | Easee-inlog (verplicht) |
+| Poll interval (Mode1) | 30 sec | API-interval |
+| Debug (Mode6) | Normal | Zet op *Debug* bij problemen |
+| Mode2 / Mode3 / Mode4 | — | Laadpaalnamen 1 / 2 / 3+ |
+| Address / IP | — | Equalizer-naam / handmatig ID |
+| Tibber token (Mode7) | — | Optioneel |
 
-## 📊 Devices
+Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
-### Core Devices
-- **Status** — Online status, Equalizer-aantal, load balancing, Tibber-status
-- **Totaal Laden** — Huidige vermogen (Watt)
-- **Totaal kWh** — Totaal geladen energie
-- **LoadBal** — Load balancing schakelaar (Equalizer)
-- **Kosten & Samenvatting** — Dagkosten, actueel Tibber-tarief, energie/belasting
-- **Beste laden** — Goedkoopste laadwindow (3 uur, met Tibber)
-
-### Per Equalizer (indien gevonden)
-- **[Naam] - Status** — verbinding, load balancing (fase-detail), limieten, max import, L1/L2/L3 stroom (A) en spanning (V)
-- **[Naam] - Vermogen** — import/terug/netto W, vandaag import en netto kWh (gecombineerde teksttegel sinds v10.9.1)
-
-### Per Laadpaal
-- **[Naam] - Laden** — Power meter (Watt)
-- **[Naam] - Totaal & Sessie** — Totaal en sessie kWh
-- **[Naam] - Status** — Laadstatus in Nederlands + emoji
-- **[Naam] - Kosten (Sessie/Dag)** — Sessie- en dagkosten (met Tibber)
-
-## ⚠️ Bekende beperkingen
-
-- Domoticz biedt beperkt aantal Mode-velden: namen voor lader 1–2 via Mode2/Mode3; lader 3+ via Mode4 (komma-gescheiden) of Easee-appnaam.
-- Zonder Equalizer: geen meterkast-tegels; load balancing en fuse-limieten niet zichtbaar in Domoticz.
-- Zonder Tibber: geen **Kosten & Samenvatting**, **Beste laden** of per-lader kosten-tegels.
-- Device-namen wijzigen niet automatisch als je later Mode2/Mode3/Mode4 aanpast — herstart het hardware-item of verwijder en laat opnieuw aanmaken.
-
-## 🎨 Emoji Indicators
-
-### Charger Status (tekst op tegel)
-| Tekst | Betekenis |
-|-------|-----------|
-| Laden | Actief aan het laden |
-| Wacht op start | Auto aangesloten, wacht op start |
-| Geen auto | Geen auto aangesloten |
-| Voltooid | Laden afgerond/pauze |
-| Fout | Fout op de lader |
-| Offline | Lader offline |
-
-### Power Status (emoji)
-- `⚡⚡` = Hoog vermogen (>7 kW)
-- `⚡` = Medium vermogen (>3,5 kW)
-- `🔌` = Laag vermogen (>50 W)
-- `⏸️` = Standby/niet laden
-
-### Charger Status
-- `✅` = Online & Laden
-- `🔴` = Online & Standby
-- `❌` = Offline
-
-### Prijs Status (Tibber)
-- `🟢` = Goedkoop (onderste 33%)
-- `🟡` = Normaal (middel 33%)
-- `🔴` = Duur (bovenste 33%)
-
-## 🎨 Custom iconen
-
-De plugin levert dertien Easee-tegeliconen via **`Easee_icons_v2.zip`** (P-max productfoto laadpaal + Equalizer-max puck) in de pluginmap.
-
-- **`Easee_icons_v2.zip`** — master zip (13 per-set folders, plugin-key Base) + map **`icons/`** met 13 mini-zips voor betrouwbare plugin-load
-- **13 icon sets:** EaseeCharger, EaseePower, EaseeImport, EaseeExport, EaseeNet, EaseeVoltage, EaseeStatus, EaseeStatusGlobal, EaseeCost, EaseeEqualizer, EaseeOverview, EaseeLoadBal, EaseeAlert
-- **LED-strip kleur** op P-max laadpaal-foto (of LED-dot op Equalizer-puck) volgt de **tegelfunctie** — zie tabel hieronder
-- **Functie-badge** rechtsonder op icoon (W, ↓, ↑, Σ, V, i, €, !, E, L) — ~30% groter sinds v10.6.0 (16px: 8px, 48px: 17px); EaseeCharger heeft geen badge
-- Automatisch geladen bij pluginstart; toegepast op **bestaande** tegels na herstart (en 3× opnieuw na sync in v10.9.2+); v10.9.3 laadt iconen vóór device-aanmaak
-- Mislukt automatisch laden? Verwijder oude Easee custom icons, upload `Easee_icons_v2.zip` via **Aangepaste pictogrammen**, herstart hardware-item
-- Verwacht logregel: `Custom icons geladen: 13 sets (Easee_icons_v2.zip)` of `Custom icons uit Domoticz (handmatig geüpload)`
-- Preview: [`docs/icon-preview-v2.png`](docs/icon-preview-v2.png) · regeneratie: `.\scripts\generate_photo_icon_variants.ps1`
-
-| Iconenset | LED-kleur | Badge | Tegelfunctie |
-|-----------|-----------|-------|--------------|
-| EaseeCharger | Groen `#2EA043` | — | Standaard laadpaal |
-| EaseePower | Geel `#FFC107` | W | Laadpaal vermogen W/kW |
-| EaseeImport | Geel `#FFC107` | ↓ | Meterkast Vermogen (import/terug/netto) |
-| EaseeNet | Teal `#009688` | Σ | Meterkast terug & netto |
-| EaseeVoltage | Paars `#673AB7` | V | (legacy v10.8.0 spanning-tegel) |
-| EaseeStatus | Blauw `#2196F3` | i | Laadpaal status (per locatie) |
-| EaseeStatusGlobal | Blauw `#2196F3` | i + EQ | Globale plugin status (*Easee - Status*) |
-| EaseeCost | Oranje `#FF9800` | € | Kosten / tarief |
-| EaseeAlert | Rood `#E53935` | ! | Fout / waarschuwing |
-| EaseeOverview | Teal `#009688` | Σ | Overzicht |
-| EaseeEqualizer | Blauw `#2196F3` | E | EQ status (LB, spanning, limieten) |
-| EaseeLoadBal | Teal `#00BCD4` | L | (legacy v10.8.0 LB-detail) |
-
-Zie [INSTALL.md — Custom iconen handmatig uploaden](INSTALL.md#custom-iconen-handmatig-uploaden) voor details.
-
-## 🧩 Module structuur
-
-Sinds v10.6.0 is de monolithische `plugin.py` opgesplitst in **13 Python-bestanden** (refactor op main na v10.5.18, inclusief import-fixes; v10.7.0 verkleinde `plugin.py` verder door wrapper-cleanup). Alle `.py`-bestanden horen in de pluginmap naast `Easee_icons_v2.zip`.
-
-| Bestand | Rol |
-|---------|-----|
-| `plugin.py` | Domoticz lifecycle, heartbeat, orchestratie |
-| `easee_constants.py` | Versie, API-URLs, device-ID's, labels |
-| `easee_logging.py` | Centrale logging (DEBUG/INFO/WARNING/ERROR) |
-| `easee_api.py` | Easee login, token refresh, HTTP GET |
-| `easee_api_keys.py` | Gecentraliseerde API-veldnamen (fuse, charger, Tibber, …) |
-| `easee_state.py` | Runtime state (`easee_state.json`), migratie, atomisch opslaan |
-| `easee_helpers.py` | Gedeelde formatting en helpers |
-| `domoticz_runtime.py` | Domoticz `Parameters`/`Devices`/`Images` binding |
-| `domoticz_devices.py` | Device-aanmaak, index, tegel-updates |
-| `domoticz_icons.py` | Laden en toepassen van custom iconen |
-| `charger_logic.py` | Laadpaal discovery, poll, sessie |
-| `equalizer_logic.py` | Equalizer discovery, fuse/limiet-detectie |
-| `tibber_pricing.py` | Tibber GraphQL, tarieven en kosten |
-
-Details: [`docs/REFACTOR_MAPPING.md`](docs/REFACTOR_MAPPING.md).
-
-## 📋 Logging
-
-Centrale logging via `easee_logging.py` (v10.6.0+):
-
-```
-[Easee v10.9.3][LEVEL][module][context] message
-```
-
-| Niveau | Wanneer zichtbaar |
-|--------|-------------------|
-| **DEBUG** | Alleen bij **Debug logging** (Mode6) of `ULTRA_DEBUG` |
-| **INFO** | Normale logregels (login, discovery, poll-samenvatting in debug) |
-| **WARNING** | Domoticz-log met ⚠ (bijv. geforceerde startup-sync na 60s) |
-| **ERROR** | Domoticz Error-log (API-fouten, device-aanmaak, state-save) |
-
-Bij problemen: zet Mode6 op *Debug* en zoek op `[Easee v` in het Domoticz-log.
-
-## 🔧 Troubleshooting
-
-Zie [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) voor veelvoorkomende problemen en oplossingen.
-
-**Kosten-tile toont "0 €"?** Verwijder de **Kosten (Sessie/Dag)**-tile en herstart het hardware-item — het device wordt opnieuw aangemaakt (v10.4.0 fix).
-
-## 🐛 Problemen melden
-
-Werkt iets niet zoals verwacht? Open een issue op GitHub:
-
-1. Ga naar **[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues)** → **New issue**
-2. Kies **Bug melden** (gestructureerd formulier in het Nederlands)
-3. Vul minimaal in: pluginversie, Domoticz-versie, OS, beschrijving en relevante logregels (`[Easee v...]`)
-
-Voor nieuwe ideeën: kies **Feature voorstel**. Zie eerst [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) voor veelvoorkomende oplossingen.
-
-## 📝 Changelog
-
-Zie [CHANGELOG.md](CHANGELOG.md) voor volledige versiegeschiedenis.
-
-## 🆙 Updates
+## Updates & upgrade
 
 ```bash
 cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
@@ -272,78 +150,55 @@ git pull
 sudo systemctl restart domoticz
 ```
 
-Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
+**Na elke upgrade:** herstart het Easee hardware-item in Domoticz.
 
-**Sinds v10.6.0:** gebruik `git pull` (alle `.py`-modules), niet alleen `plugin.py`. State-bestand heet `easee_state.json` (automatische rename van `easee_v9_0_state.json`).
+**Bij icon-wijzigingen (v10.9.5+):** upload **`Easee_icons_v2.zip` opnieuw** via Aangepaste pictogrammen. Controleer log: `image_ids: 13/13 sets`.
 
-### Recente wijzigingen (v10.5.18 → v10.7.2)
+Stap-voor-stap: [INSTALL.md](INSTALL.md).
 
-| Versie | Belangrijkste wijzigingen |
-|--------|---------------------------|
-| **v10.9.3** | Icon fix: refresh_images_dict regressie; full-path zip Create; fuzzy Images lookup; icons vóór sync; INFO diagnostiek; Status upload-waarschuwing |
-| **v10.9.2** | Icon fix: Images refresh + UpdateProperties fallback; legacy Import Energy → Vermogen Text; icon re-apply 3 heartbeats |
-| **v10.9.1** | Equalizer 2 tegels (Status + Vermogen Text); icon fix na fresh add; legacy Import/Terug & netto → Vermogen |
-| **v10.9.0** | Equalizer tegels geconsolideerd: 3 tegels (Status, Import, Terug & netto); spanning/LB-detail op Status; legacy Netto/Teruglevering → Terug & netto |
-| **v10.8.0** | Equalizer Proposal C: 6 meterkast-tegels; Import/Teruglevering/Netto/Spanning/LB-detail; 4 nieuwe icon sets; legacy Vermogen → Import |
-| **v10.5.18** | Definitieve foto-iconen (P-max laadpaal, Equalizer-max puck); LED-kleur per tegelfunctie; functie-badges; alleen nog `Easee_icons_v2.zip` |
-| **Module refactor** | `plugin.py` opgesplitst in modules op main (zelfde basis als 10.5.18); fixes voor Domoticz-imports en Parameters-binding |
-| **v10.6.0** | `easee_logging.py`; state → `easee_state.json` + migratie; functie-badges ~30% groter |
-| **v10.6.1** | Atomisch state opslaan (`.tmp` + `os.replace`) tegen corrupt JSON bij crash |
-| **v10.6.2** | Device-aanmaak: bij mislukte `Device.Create()` worden kwargs + traceback gelogd |
-| **v10.6.3** | `easee_api_keys.py` — gecentraliseerde API-veldnamen i.p.v. magic strings |
-| **v10.6.4** | Startup-sync losgekoppeld van poll-interval: 3s min. vertraging, readiness-check op Devices, 60s fallback |
-| **v10.6.5** | Equalizer Vermogen-tegel: **Vandaag** kWh via observation 45 (cumulatief import); fallback vermogensintegratie |
-| **v10.7.0** | Code cleanup: ~150 passthrough-wrappers verwijderd; directe module-aanroepen; `plugin.py` kleiner; geen functionele wijzigingen |
-| **v10.7.1** | Fix: onHeartbeat crash door `power_emoji`/`status_emoji` naam-shadowing in `poll_charger` |
-| **v10.7.2** | Fix: onHeartbeat crash door verwijderde `plugin.is_*_limit_key` wrappers in `equalizer_logic` |
+## Changelog & release
 
-**Upgrade vanaf v10.5.x:** `git pull`, herstart hardware-item. Upload **`Easee_icons_v2.zip` opnieuw** (v10.5.18 iconen + v10.6.0 grotere badges). State en devices blijven behouden.
+- Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md)
+- Laatste release: **[v10.9.10](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.10)** — status combo-icoon alleen op globale Status; laadpaal Status weer charger-only; icon mapping fixes v10.9.8–10.9.10
 
-**Upgrade naar v10.9.3:** `git pull`, herstart hardware-item. Controleer log op `image_ids: 12/12` en per-tegel `icoon gezet -> Easee…`. Bij `image_ids: 0/12` of `Images dict: … 0 met "Easee"`: upload `Easee_icons_v2.zip` via Instellingen → Aangepaste pictogrammen.
+### v10.9.x in het kort
 
-**Upgrade naar v10.9.2:** `git pull`, herstart hardware-item. Legacy *Import*-Energy-tegel wordt automatisch vervangen door Text *Vermogen*. Controleer log op `Custom icons geladen: 12 sets` en `Icoon … -> Easee…` — anders upload `Easee_icons_v2.zip` opnieuw via Instellingen → Aangepaste pictogrammen.
+| Versie | Thema |
+|--------|-------|
+| **10.9.10** | Combo-icoon alleen op *Easee - Status*; `EaseeStatusGlobal` |
+| **10.9.9** | Combo-icoon op Status (later gesplitst in 10.9.10) |
+| **10.9.8** | Icon mapping: laadpaal Status → `EaseeStatus`; EQ Vermogen → `EaseeEqualizer` |
+| **10.9.3–10.9.7** | Icon laden/toepassen fixes (zip-pad, plugin-key prefix, `Device.Update`) |
+| **10.9.1** | Equalizer: 2 tegels (Status + Vermogen) |
+| **10.9.0** | Equalizer geconsolideerd (was 6 tegels in v10.8) |
 
-**Upgrade naar v10.9.0:** `git pull`, herstart hardware-item. Bestaande *Netto*- of *Teruglevering*-tegel wordt hernoemd naar *Terug & netto*; *Spanning* en *Load balancing* blijven als wees-tegels (handmatig verwijderen). Geen nieuwe icon zip nodig.
+## Troubleshooting (snel)
 
-**Upgrade naar v10.8.0:** `git pull`, **upload `Easee_icons_v2.zip` opnieuw** (12 sets), herstart hardware-item. Bestaande *Vermogen*-tegel wordt automatisch hernoemd naar *Import*; nieuwe tegels (Teruglevering, Netto, Spanning, Load balancing) worden aangemaakt bij eerste poll.
+| Probleem | Zie |
+|----------|-----|
+| Plugin niet in lijst | [INSTALL.md](INSTALL.md) — pad + `python3-requests` |
+| Geen iconen | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — custom iconen |
+| Login mislukt | Credentials + rate limit (5–10 min wachten) |
+| Geen Equalizer | Debug aan; handmatig ID in IP-veld |
+| Kosten 0 € | Tibber-token; tile verwijderen + hardware herstarten |
+| Verkeerd icoon op tegel | Upgrade naar v10.9.10+; zip opnieuw uploaden |
 
-**Upgrade naar v10.7.x:** `git pull`, herstart hardware-item. Geen state-migratie nodig; v10.7.1 en v10.7.2 lossen regressies op na de wrapper-cleanup in v10.7.0.
+## Module structuur
 
-## 🚀 Release
+Sinds v10.6.0: 13 Python-modules naast `Easee_icons_v2.zip`. Overzicht: [docs/REFACTOR_MAPPING.md](docs/REFACTOR_MAPPING.md).
 
-Deze plugin staat op [GitHub](https://github.com/rleunk/easee-domoticz) als **openbare** repository. Bugreports en featurevoorstellen via [Issues](https://github.com/rleunk/easee-domoticz/issues) (Nederlandse templates).
+## Problemen melden
 
-## 🤖 AI Development
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.9.10**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
 
-Deze plugin is in meerdere stappen ontwikkeld met behulp van AI-tools, onder begeleiding en review van de auteur:
+## Support & credits
 
-| Fase | Tool | Rol |
-|------|------|-----|
-| Eerste versies (v9.x – v10.2) | **Copilot** | Initiële opzet, API-integratie en device-logica |
-| Verdere ontwikkeling (v10.3+) | **GitHub Copilot** | Uitbreidingen, bugfixes en feature-iteraties |
-| Verfijning & documentatie (v10.4+) | **Cursor** | Code-review, stabilisatie en repository-documentatie |
+- **Repo:** [github.com/rleunk/easee-domoticz](https://github.com/rleunk/easee-domoticz)
+- **Installatie:** [INSTALL.md](INSTALL.md)
+- **Easee API:** [developer.easee.com](https://developer.easee.com/) · **Tibber:** [developer.tibber.com](https://developer.tibber.com/)
 
-Alle functionele keuzes, configuratie en productie-inzet worden door Richard Leunk beheerd.
-
-## 🤝 Support
-
-- **Issue tracker**: [GitHub Issues](https://github.com/rleunk/easee-domoticz/issues)
-- **Documentatie**: [INSTALL.md](INSTALL.md) · [docs/](docs/)
-- **Domoticz Wiki**: [wiki.domoticz.com](https://wiki.domoticz.com/)
-- **Easee Developer**: [developer.easee.com](https://developer.easee.com/)
-
-## 📄 Licentie
-
-MIT License — zie [LICENSE](LICENSE) voor details.
-
-## 🙏 Credits
-
-- **Easee API**: [developer.easee.com](https://developer.easee.com/)
-- **Tibber API**: [developer.tibber.com](https://developer.tibber.com/)
-- **Domoticz Platform**: [www.domoticz.com](https://www.domoticz.com/)
+MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Versie 10.9.3** — Gemaakt door Richard Leunk
-
-**Status**: ✅ Production Ready
+**Versie 10.9.10** — Richard Leunk

@@ -6,6 +6,19 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## v10.9.x overzicht (stable testing line)
+
+| Versie | Hoofdthema |
+|--------|------------|
+| **10.9.10** | Status combo-icoon alleen globaal; `EaseeStatusGlobal` (13 sets) |
+| **10.9.9** | Combo-icoon op Status (later gesplitst in 10.9.10) |
+| **10.9.8** | Icon mapping: laadpaal Status → `EaseeStatus`, EQ Vermogen → `EaseeEqualizer` |
+| **10.9.3–10.9.7** | Icon loading/apply fixes (zip-pad, plugin-key, `Device.Update` API) |
+| **10.9.1** | Equalizer: 2 tegels (Status + Vermogen) |
+| **10.9.0** | Equalizer: 3 tegels (vervangen door 2 in 10.9.1) |
+
+Getest met 2× Charge Lite, 1× Equalizer, Tibber. Zie [README.md](README.md).
+
 ## [10.9.10] — 2026-06-18
 
 ### Opgelost

@@ -1,30 +1,19 @@
 # Troubleshooting Gids
 
+> **Huidige versie:** v10.9.10 · Volledige installatie: [INSTALL.md](../INSTALL.md)
+
 ## Veelvoorkomende Problemen
 
 ### Plugin laadt niet
 
 **Symptoom**: *Easee Domoticz plugin* type niet beschikbaar in Hardware menu
 
-**Oorzaken**:
-- Plugin directory verkeerd geplaatst
-- Python `requests` library niet geïnstalleerd
-- Permissieproblemen
-- Domoticz niet herstart
-
 **Oplossing**:
 
 ```bash
-# 1. Check locatie
 ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
-
-# 2. Install requests
 sudo apt install -y python3-requests
-
-# 3. Restart
 sudo systemctl restart domoticz
-
-# 4. Check logs
 sudo journalctl -u domoticz -f | grep Easee
 ```
 
@@ -32,130 +21,98 @@ sudo journalctl -u domoticz -f | grep Easee
 
 **Symptoom**: *Login mislukt, HTTP 401* in logs
 
-**Oorzaken**:
-- Verkeerd username/wachtwoord
-- Easee account vergrendeld
-- API rate limit bereikt
-
 **Oplossing**:
 1. Controleer credentials in Domoticz (**Setup → Hardware**)
-2. Test of je kunt inloggen in de Easee-app
-3. Zet **Debug logging** (Mode6) aan voor meer details
-4. Wacht 5–10 minuten en probeer opnieuw (rate limit)
+2. Test inlog in de Easee-app
+3. Zet **Debug logging** (Mode6) aan
+4. Wacht 5–10 minuten bij rate limit
 
 ### Geen devices gemaakt
 
-**Symptoom**: Hardware actief maar geen devices verschijnen
-
-**Oorzaken**:
-- Geen laadpalen aan account gekoppeld
-- Site filter (Mode5) elimineert alle palen
-- Initiële sync nog bezig
+**Symptoom**: Hardware actief maar geen devices
 
 **Oplossing**:
-1. Controleer Easee-app — palen zichtbaar en gekoppeld?
+1. Palen zichtbaar in Easee-app?
 2. Verwijder site filter (Mode5) tijdelijk
 3. Wacht 1–2 minuten na eerste start
-4. Bekijk log: `sudo journalctl -u domoticz -f | grep -i "charger\|Discovery"`
-5. Refresh Domoticz UI (F5)
+4. Log: `sudo journalctl -u domoticz -f | grep -i "charger\|Discovery"`
 
-### Custom iconen ontbreken (na reinstall of upgrade)
+### Custom iconen ontbreken
 
-**Symptoom**: Tegels tonen standaard Domoticz-iconen (generiek Text-icoon, gele bliksem op Energy-tegels)
+**Symptoom**: Generieke Text-iconen; log toont `image_ids: 0/13`
 
-**Oorzaken**:
-- `Easee_icons_v2.zip` ontbreekt in de pluginmap of automatisch laden mislukte
-- v10.9.2-regressie: `refresh_images_dict()` zonder argument deed niets → `image_ids` leeg (opgelost in v10.9.3)
-- Domoticz `Images`-dict niet ververst na zip-upload
-- v10.9.2–v10.9.5: `Device.Update(UpdateProperties=True)` — ongeldige parameter; alle icon-updates mislukken (opgelost in v10.9.6)
-- v10.9.6: `Device.Update(Image=…)` zonder `nValue`/`sValue` — faalt op sommige Domoticz-builds met `missing required argument 'nvalue'` (opgelost in v10.9.7)
-- **Energy-tegels** (*Laden*, *Totaal Laden*): sommige Domoticz-versies tonen altijd het standaard bliksem-icoon ondanks custom Image — bekende Domoticz-beperking
+**Oorzaken (historisch, opgelost in v10.9.7+):**
+- v10.9.2–v10.9.5: ongeldige `UpdateProperties`-parameter
+- v10.9.6: `Device.Update(Image=…)` zonder `nValue`/`sValue`
+- v10.9.4: zip-pad verdubbeling; v10.9.5: plugin-key-prefix ontbrak (1/12 sets)
 
-**Oplossing** (v10.9.7+):
-1. **Verwijder eerst oude Easee custom icons** via **Instellingen → Meer opties → Aangepaste pictogrammen** (short-name bases uit v10.9.4 kunnen conflicteren)
-2. Controleer of `Easee_icons_v2.zip` en map `icons/` (12 mini-zips) in de pluginmap staan
-3. `git pull` naar v10.9.7+ en herstart het hardware-item
-4. Zoek in het log op INFO-regels:
-   - `Easee Images-keys (12): …EaseeCloudAutoDiscoveryV1000Easee…` — volledige lijst, geen sample
-   - `image_ids: 13/13 sets` en `image_ids mappings: EaseeCharger=…, …`
-   - Bij 1/12 sets (v10.9.4-bug): plugin-key-prefix ontbrak in zip — upgrade naar v10.9.5
-5. Als automatisch laden mislukt: upload `Easee_icons_v2.zip` handmatig via **Aangepaste pictogrammen**, herstart hardware-item
+**Oplossing** (v10.9.10):
+1. **Verwijder oude Easee custom icons** via **Instellingen → Aangepaste pictogrammen**
+2. Controleer `Easee_icons_v2.zip` en map `icons/` (13 mini-zips) in pluginmap
+3. `git pull` naar v10.9.10 en herstart hardware-item
+4. Log controleren:
+   - `Custom icons geladen: 13 sets`
+   - `image_ids: 13/13 sets`
+5. Mislukt automatisch laden? Upload `Easee_icons_v2.zip` handmatig, herstart hardware-item
 
-**Oplossing** (v10.9.3–v10.9.4):
-1. Controleer of `Easee_icons_v2.zip` in de pluginmap staat (`/home/root/domoticz/plugins/Easee-Domoticz-plugin/`)
-2. Herstart het hardware-item (niet alleen Domoticz)
-3. Zoek in het log op INFO-regels:
-   - `Images dict: N key(s), M met "Easee"` — als M=0: zip handmatig uploaden
-   - `Zip Easee_icons_v2.zip: aanwezig, X bytes`
-   - `Image().Create() zip: geslaagd` of `mislukt`
-   - `image_ids: 13/13 mapping(s)` — bij 0/13: ERROR met upload-instructie
-   - `{tegel}: icoon gezet -> Easee…` of `overgeslagen` / `mislukt` per tegel
-4. Als automatisch laden mislukt: upload eenmalig via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
-5. Status-tegel toont `⚠️ Upload Easee_icons_v2.zip` zolang iconen ontbreken
-6. Na upgrade: wacht 3 heartbeats (~90s) — iconen worden opnieuw toegepast
+**Energy-tegels** (*Laden*, *Totaal Laden*): sommige Domoticz-versies tonen altijd het bliksem-icoon — **bekende beperking**, geen plugin-bug.
 
 Zie [INSTALL.md — Custom iconen](../INSTALL.md#custom-iconen-handmatig-uploaden).
 
-### Meterkast - Import blijft bestaan (legacy Energy)
+### Verkeerd icoon op tegel
 
-**Symptoom**: Tegel heet nog *Import* en toont `Energy 1581W` i.p.v. Text *Vermogen* met terug/netto
+**Symptoom**: Laadpaal Status toont Equalizer-puck, of globale Status mist combo-icoon
 
-**Oplossing** (v10.9.2+): herstart hardware-item — plugin verwijdert legacy Energy *Import* en maakt Text *Vermogen* opnieuw aan. Controleer log op `legacy Import Energy → Text Vermogen`.
+**Oplossing** (v10.9.8–10.9.10):
+- Upgrade naar **v10.9.10**
+- Upload **`Easee_icons_v2.zip` opnieuw** (bevat `EaseeStatusGlobal`)
+- Verwacht mapping:
+  - *Easee - Status* → combo (`EaseeStatusGlobal`)
+  - *Garage - Status* / *Voordeur - Status* → laadpaal-only (`EaseeStatus`)
+  - *Meterkast - Status* / *Vermogen* → Equalizer-puck (`EaseeEqualizer`)
+
+### Meterkast - Import blijft bestaan (legacy)
+
+**Symptoom**: Tegel heet *Import* met Energy W/kWh i.p.v. Text *Vermogen*
+
+**Oplossing** (v10.9.2+): herstart hardware-item — plugin maakt Text *Vermogen* opnieuw aan. Log: `legacy Import Energy → Text Vermogen`.
 
 ### Geen Equalizer gevonden
 
-1. Zet **Debug logging** op *Debug* (Mode6)
-2. Herstart het hardware-item en bekijk het log
-3. Vul handmatig **Equalizer ID** in bij het IP-veld
-4. Controleer of de Equalizer zichtbaar is in de Easee-app
+1. Debug logging aan (Mode6)
+2. Herstart hardware-item
+3. Handmatig **Equalizer ID** in IP-veld
+4. Equalizer zichtbaar in Easee-app?
 
 Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 
 ### Tibber / kosten-tegels
 
-**Symptoom**: Geen kosten- of tarief-tegels, of *0 €*
-
-**Oplossing**:
-- Zonder Tibber-token: kosten-tegels worden niet aangemaakt (verwacht)
-- Met Tibber: controleer token op [developer.tibber.com](https://developer.tibber.com/settings/access-token)
-- Kosten-tile toont *0 €* na upgrade: verwijder **Kosten (Sessie/Dag)**-tile en herstart hardware-item
+- Zonder Tibber-token: geen kosten-tegels (verwacht)
+- Met Tibber: token op [developer.tibber.com](https://developer.tibber.com/settings/access-token)
+- Kosten *0 €*: verwijder **Kosten (Sessie/Dag)**-tile en herstart hardware-item
 
 ### Devices dubbel na herstart
 
-De plugin wacht bij opstarten tot Domoticz de Devices-lijst heeft geladen (minimaal 3 seconden, daarna readiness-check op bestaande Easee-devices of een stabiele device-count). Polling start pas na deze initiële sync. Als het toch gebeurt:
-
-1. Stop het hardware-item
-2. Verwijder dubbele devices handmatig
-3. Start het hardware-item opnieuw
+1. Stop hardware-item
+2. Verwijder dubbele devices
+3. Start opnieuw
 
 ## Debug Mode
 
-1. Ga naar **Setup → Hardware**
-2. Klik op je Easee hardware-item
-3. Zet **Debug logging** (Mode6) op *Debug*
-4. Klik **Update**
-
-### Logs bekijken
-
-```bash
-# Real-time
-sudo journalctl -u domoticz -f | grep "Easee v"
-
-# Laatste 100 regels
-sudo journalctl -u domoticz -n 200 | grep Easee
-```
+1. **Setup → Hardware** → Easee-item → **Debug logging** (Mode6) = *Debug*
+2. Logs: `sudo journalctl -u domoticz -f | grep "Easee v"`
 
 ## Performance
 
-- Verhoog poll interval (Mode1) naar 60–120 sec bij hoog CPU-gebruik
-- Zet Debug logging op *Normal* als je niet troubleshoott
+- Poll interval (Mode1) verhogen naar 60–120 sec bij hoog CPU
+- Debug op *Normal* als je niet troubleshoott
 
 ## Reset state
 
 ```bash
 sudo systemctl stop domoticz
 rm /home/root/domoticz/plugins/Easee-Domoticz-plugin/easee_state.json
-# Legacy na upgrade: easee_v9_0_state.json (wordt automatisch gemigreerd)
 sudo systemctl start domoticz
 ```
 
@@ -163,6 +120,6 @@ sudo systemctl start domoticz
 
 - **GitHub Issues**: https://github.com/rleunk/easee-domoticz/issues
 - **Installatie**: [INSTALL.md](../INSTALL.md)
-- **Domoticz Forum**: https://www.domoticz.com/forum/
+- **Configuratie**: [CONFIGURATION.md](CONFIGURATION.md)
 
-Bij een issue: pluginversie (bijv. **v10.9.2**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).
+Bij een issue: pluginversie **v10.9.10**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
