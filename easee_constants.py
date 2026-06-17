@@ -6,7 +6,7 @@ REFRESH_URL = BASE_URL + '/accounts/refresh_token'
 TIBBER_GQL = 'https://api.tibber.com/v1-beta/gql'
 STATE_FILE = 'easee_state.json'
 LEGACY_STATE_FILE = 'easee_v9_0_state.json'
-PLUGIN_VERSION = '10.9.2'
+PLUGIN_VERSION = '10.9.3'
 PLUGIN_KEY = 'EaseeCloudAutoDiscoveryV1000'
 ULTRA_DEBUG = False
 

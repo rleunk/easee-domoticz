@@ -6,6 +6,23 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.3] — 2026-06-17
+
+### Opgelost
+- **Icon refresh bug (v10.9.2 regressie)** — dubbele `refresh_images_dict()` overschreef de werkende implementatie; aanroep zonder `plugin_globals` deed niets, waardoor `Images` niet ververst werd en `image_ids` leeg bleef.
+- **Zip auto-load op Linux** — `Image().Create()` probeert nu het volledige pad (`/home/root/domoticz/plugins/.../Easee_icons_v2.zip`) naast relatieve bestandsnaam.
+- **Icon lookup** — fuzzy match op alle `Images`-keys (case-insensitive, suffix-match) naast vaste kandidaten (`EaseeCharger`, `EaseeCloudAutoDiscoveryV1000EaseeCharger`, …).
+- **Timing** — custom iconen worden vóór `initial_sync()` geladen zodat nieuwe tegels meteen `Image=` bij `Device.Create()` krijgen.
+- **Update verificatie** — na `Device.Update(Image=…)` wordt gecontroleerd of `Image` daadwerkelijk gewijzigd is; `UpdateProperties` eerst (Domoticz 2024.4+).
+
+### Gewijzigd
+- **Startup diagnostiek (INFO)** — zip pad/grootte, `Create()` resultaat, aantal `Images`-keys, Easee-key sample, `image_ids` count + eerste 3 mappings; ERROR met upload-instructie als `image_ids` leeg.
+- **Per-tegel icon log** — elke Easee-tegel logt gezet / overgeslagen / mislukt met reden.
+- **Status-tegel waarschuwing** — `⚠️ Upload Easee_icons_v2.zip (Instellingen)` zolang iconen ontbreken.
+
+### Fixed (EN)
+- Duplicate refresh_images_dict regression; full-path zip Create; fuzzy Images key lookup; icons before initial_sync; UpdateProperties-first with post-update verification; INFO diagnostics and Status tile upload warning.
+
 ## [10.9.2] — 2026-06-17
 
 ### Opgelost

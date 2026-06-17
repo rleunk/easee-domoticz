@@ -65,20 +65,23 @@ sudo journalctl -u domoticz -f | grep Easee
 
 **Oorzaken**:
 - `Easee_icons_v2.zip` ontbreekt in de pluginmap of automatisch laden mislukte
-- Domoticz `Images`-dict niet ververst na zip-upload (v10.9.1)
+- v10.9.2-regressie: `refresh_images_dict()` zonder argument deed niets → `image_ids` leeg (opgelost in v10.9.3)
+- Domoticz `Images`-dict niet ververst na zip-upload
 - `Device.Update(Image=…)` zonder `UpdateProperties` op nieuwere Domoticz-builds
 - **Energy-tegels** (*Laden*, *Totaal Laden*): sommige Domoticz-versies tonen altijd het standaard bliksem-icoon ondanks custom Image — bekende Domoticz-beperking
 
-**Oplossing** (v10.9.2+):
-1. Controleer of `Easee_icons_v2.zip` in de pluginmap staat
+**Oplossing** (v10.9.3+):
+1. Controleer of `Easee_icons_v2.zip` in de pluginmap staat (`/home/root/domoticz/plugins/Easee-Domoticz-plugin/`)
 2. Herstart het hardware-item (niet alleen Domoticz)
-3. Zoek in het log op:
-   - `Custom icons geladen: 12 sets` — zip OK
-   - `Icoon Meterkast - Status -> EaseeEqualizer` — per-tegel bevestiging
-   - `apply_images_to_devices overgeslagen: image_ids leeg` — zip handmatig uploaden
+3. Zoek in het log op INFO-regels:
+   - `Images dict: N key(s), M met "Easee"` — als M=0: zip handmatig uploaden
+   - `Zip Easee_icons_v2.zip: aanwezig, X bytes`
+   - `Image().Create() zip: geslaagd` of `mislukt`
+   - `image_ids: 12/12 mapping(s)` — bij 0/12: ERROR met upload-instructie
+   - `{tegel}: icoon gezet -> Easee…` of `overgeslagen` / `mislukt` per tegel
 4. Als automatisch laden mislukt: upload eenmalig via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
-   - Pad: `/home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip`
-5. Na upgrade van v10.9.0/v10.9.1: wacht 3 heartbeats (~90s) — iconen worden opnieuw toegepast
+5. Status-tegel toont `⚠️ Upload Easee_icons_v2.zip` zolang iconen ontbreken
+6. Na upgrade: wacht 3 heartbeats (~90s) — iconen worden opnieuw toegepast
 
 Zie [INSTALL.md — Custom iconen](../INSTALL.md#custom-iconen-handmatig-uploaden).
 

@@ -54,6 +54,10 @@ fi
 if [[ ! -f "$PLUGIN_DIR/Easee_icons_v2.zip" ]]; then
     echo "WARNING: Easee_icons_v2.zip not found in $PLUGIN_DIR"
     echo "         Custom icons will not load. Run: git -C \"$PLUGIN_DIR\" checkout HEAD -- Easee_icons_v2.zip"
+else
+    echo "==> Icon zip present: $PLUGIN_DIR/Easee_icons_v2.zip ($(stat -c%s "$PLUGIN_DIR/Easee_icons_v2.zip" 2>/dev/null || wc -c < "$PLUGIN_DIR/Easee_icons_v2.zip") bytes)"
+    echo "    If tiles still show default icons after restart, upload the zip once via:"
+    echo "    Domoticz → Setup → Settings → More Options → Custom Icons"
 fi
 
 echo "==> Plugin installed at $PLUGIN_DIR/plugin.py"

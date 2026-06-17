@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.2" author="Richard Leunk" version="10.9.2"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.3" author="Richard Leunk" version="10.9.3"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.2</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.3</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -76,6 +76,7 @@ class BasePlugin:
         self.units_by_name = {}
         self.units_by_devid = {}
         self.image_ids = {}
+        self.icons_upload_required = False
         self.icon_reapply_remaining = 0
         self.state = {'chargers': {}, 'price_cache': {}, 'currency': 'EUR'}
         self.chargers = []
@@ -161,8 +162,8 @@ class BasePlugin:
             'startup',
         )
         domoticz_devices.rebuild_index(self)
-        self.initial_sync()
         domoticz_icons.load_custom_images(self, plugin_globals=globals())
+        self.initial_sync()
         domoticz_icons.apply_images_to_devices(self, force=True)
         self.icon_reapply_remaining = 3
         self.sync_done = True
@@ -273,11 +274,16 @@ class BasePlugin:
             eq_part = f' | EQ: {eq_count}' if eq_count else ' | Geen EQ'
             lb_part = ' | LB actief' if any_lb else ''
             status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part + ' | Tibber actief'
+            if self.icons_upload_required:
+                status_msg = '⚠️ Upload Easee_icons_v2.zip (Instellingen) | ' + status_msg
             domoticz_devices.update_core_text(self, 'Status', status_msg)
         else:
             eq_part = f' | EQ: {eq_count}' if eq_count else ' | Geen EQ'
             lb_part = ' | LB actief' if any_lb else ''
-            domoticz_devices.update_core_text(self, 'Status', ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part)
+            status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
+            if self.icons_upload_required:
+                status_msg = '⚠️ Upload Easee_icons_v2.zip (Instellingen) | ' + status_msg
+            domoticz_devices.update_core_text(self, 'Status', status_msg)
 
         domoticz_devices.update_core_sw(self, 'LoadBal', any_lb)
 
