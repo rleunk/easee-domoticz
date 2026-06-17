@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.7.1] — 2026-06-17
+
+### Opgelost
+- **onHeartbeat crash** — `poll_charger` gebruikte lokale variabelen `power_emoji` en `status_emoji` met dezelfde namen als module-functies; Python zag ze als unassigned locals (regressie na wrapper-verwijdering in v10.7.0).
+
+### Fixed (EN)
+- **onHeartbeat crash** — `poll_charger` assigned locals named `power_emoji`/`status_emoji` that shadowed module functions; call helpers directly in the status f-string.
+
 ## [10.7.0] — 2026-06-17
 
 ### Gewijzigd

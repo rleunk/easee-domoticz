@@ -221,9 +221,10 @@ def poll_charger(plugin, charger):
     totaal_sessie = f'{int(round(total_kwh))} kWh | Sessie: {int(round(session_kwh))} kWh'
     domoticz_devices.update_charger_custom(plugin, cid, 'Totaal & Sessie', totaal_sessie)
     
-    power_emoji = power_emoji(plugin, power_w)
-    status_emoji = status_emoji(plugin, online, session_active)
-    status_text = f'{status_emoji} {power_emoji} {status_label} | ⏱️ {laadduur}'
+    status_text = (
+        f'{status_emoji(plugin, online, session_active)} '
+        f'{power_emoji(plugin, power_w)} {status_label} | ⏱️ {laadduur}'
+    )
     domoticz_devices.update_charger_text(plugin, cid, 'Status', status_text)
     
     if easee_helpers.tibber_enabled(plugin):
