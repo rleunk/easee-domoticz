@@ -92,3 +92,7 @@ def charger_state(plugin, cid):
         st['day_cost_energy'] = 0.0
         st['day_cost_tax'] = 0.0
     return st
+
+def equalizer_state(plugin, eid):
+    store = plugin.state.setdefault('equalizers', {})
+    return store.setdefault(eid, {'integrated_kwh': 0.0})

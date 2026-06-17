@@ -6,6 +6,15 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.6.5] — 2026-06-17
+
+### Toegevoegd
+- **Equalizer Vermogen — Vandaag kWh** — observation 45 (`CumulativeActivePowerImport`) wordt opgehaald en als cumulatieve teller (Wh) naar de Domoticz Energy-tegel geschreven; Domoticz berekent **Vandaag:** uit het verschil sinds middernacht (zelfde patroon als laadpaal `lifetimeEnergy`).
+- **Fallback** — als observation 45 ontbreekt, wordt vermogen geïntegreerd via `power_integrated_kwh` met state in `easee_state.json`; DEBUG-log toont bron (cumulative vs integrated).
+
+### Changed (EN)
+- **Equalizer Vermogen tile** — fetches obs 45 cumulative import kWh, writes Wh counter for Domoticz daily delta; integrated power fallback when obs 45 is absent.
+
 ## [10.6.4] — 2026-06-17
 
 ### Gewijzigd

@@ -1,8 +1,8 @@
-# Easee Domoticz plugin v10.6.4
+# Easee Domoticz plugin v10.6.5
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators, Equalizer/meterkast ondersteuning en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.6.4-blue)
+![Version](https://img.shields.io/badge/version-10.6.5-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -101,7 +101,7 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor alle beschikbare paramet
 
 ### Per Equalizer (indien gevonden)
 - **[Naam] - Status** — online, load balancing, limieten, hoofdzekering, actuele stroom, huisvermogen
-- **[Naam] - Vermogen** — actueel vermogen (Watt)
+- **[Naam] - Vermogen** — actueel vermogen (Watt) en **Vandaag** kWh (cumulatief import via Equalizer observation 45)
 
 ### Per Laadpaal
 - **[Naam] - Laden** — Power meter (Watt)
@@ -241,7 +241,7 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 
 **Sinds v10.6.0:** gebruik `git pull` (alle `.py`-modules), niet alleen `plugin.py`. State-bestand heet `easee_state.json` (automatische rename van `easee_v9_0_state.json`).
 
-### Recente wijzigingen (v10.5.18 → v10.6.4)
+### Recente wijzigingen (v10.5.18 → v10.6.5)
 
 | Versie | Belangrijkste wijzigingen |
 |--------|---------------------------|
@@ -251,6 +251,7 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 | **v10.6.1** | Atomisch state opslaan (`.tmp` + `os.replace`) tegen corrupt JSON bij crash |
 | **v10.6.2** | Device-aanmaak: bij mislukte `Device.Create()` worden kwargs + traceback gelogd |
 | **v10.6.3** | `easee_api_keys.py` — gecentraliseerde API-veldnamen i.p.v. magic strings |
+| **v10.6.5** | Equalizer Vermogen-tegel: **Vandaag** kWh via observation 45 (cumulatief import); fallback vermogensintegratie |
 | **v10.6.4** | Startup-sync losgekoppeld van poll-interval: 3s min. vertraging, readiness-check op Devices, 60s fallback |
 
 **Upgrade vanaf v10.5.x:** `git pull`, herstart hardware-item. Upload **`Easee_icons_v2.zip` opnieuw** (v10.5.18 iconen + v10.6.0 grotere badges). State en devices blijven behouden.
@@ -289,6 +290,6 @@ MIT License — zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.6.4** — Gemaakt door Richard Leunk
+**Versie 10.6.5** — Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready

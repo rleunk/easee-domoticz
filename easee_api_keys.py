@@ -57,6 +57,8 @@ EQUALIZER_KEYS = {
     'load_balancing': ('loadBalancingActive', 'loadBalancing', 'isLoadBalancingEnabled'),
     'max_power_import': ('maxPowerImport',),
     'phase_current': ('currentL1', 'currentL2', 'currentL3'),
+    'cumulative_import': ('cumulativeActivePowerImport',),
+    'cumulative_export': ('cumulativeActivePowerExport',),
     'online': ('isOnline',),
     'site_id': ('siteId',),
     'allocated_current': ('allocatedCurrent',),
@@ -64,7 +66,7 @@ EQUALIZER_KEYS = {
 
 OBSERVATION_KEYS = {
     'container': ('observations', 'data'),
-    'query_ids': '20,31,32,33,40,41,44',
+    'query_ids': '20,31,32,33,40,41,44,45,46',
 }
 
 OBSERVATION_ID_TO_FIELD = {
@@ -75,6 +77,8 @@ OBSERVATION_ID_TO_FIELD = {
     40: 'activePowerImport',
     41: 'activePowerExport',
     44: 'maxPowerImport',
+    45: 'cumulativeActivePowerImport',
+    46: 'cumulativeActivePowerExport',
 }
 
 # ---- Charger state & session ----

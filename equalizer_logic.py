@@ -1413,7 +1413,29 @@ def poll_equalizer(plugin, equalizer):
         lines.append(f'🔥 Huisvermogen: {int(power_w)} W')
     status_text = '\n'.join(lines)
 
-    plugin.update_equalizer_energy(eid, 'Vermogen', power_w, 0)
+    cumulative_field = EQUALIZER_KEYS['cumulative_import'][0]
+    if cumulative_field in values:
+        import_kwh = plugin.kwh_value(values.get(cumulative_field))
+        total_wh = plugin.wh_from_kwh(import_kwh)
+        easee_logging.debug(
+            'equalizer_logic',
+            f'Equalizer {eid} Vermogen kWh: cumulative import {import_kwh} kWh → {total_wh} Wh',
+            'energy',
+        )
+    else:
+        st = plugin.equalizer_state(eid)
+        st['integrated_kwh'] = round(
+            plugin.safe_float(st.get('integrated_kwh'), 0.0) + plugin.power_integrated_kwh(power_w),
+            6,
+        )
+        total_wh = plugin.wh_from_kwh(st['integrated_kwh'])
+        easee_logging.debug(
+            'equalizer_logic',
+            f'Equalizer {eid} Vermogen kWh: fallback integrated {st["integrated_kwh"]} kWh → {total_wh} Wh',
+            'energy',
+        )
+
+    plugin.update_equalizer_energy(eid, 'Vermogen', power_w, total_wh)
     plugin.update_equalizer_text(eid, 'Status', status_text)
 
     plugin.latest_equalizers[eid] = {
