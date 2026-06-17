@@ -68,8 +68,7 @@ sudo journalctl -u domoticz -f | grep Easee
 - v10.9.2-regressie: `refresh_images_dict()` zonder argument deed niets → `image_ids` leeg (opgelost in v10.9.3)
 - Domoticz `Images`-dict niet ververst na zip-upload
 - v10.9.2–v10.9.5: `Device.Update(UpdateProperties=True)` — ongeldige parameter; alle icon-updates mislukken (opgelost in v10.9.6)
-- v10.9.6: `Device.Update(Image=…)` zonder `nValue`/`sValue` — vereist op sommige Domoticz-builds; `TypeError: function missing required argument 'nvalue'` (opgelost in v10.9.7)
-- v10.9.6: `Device.Update(Image=…)` zonder `nValue`/`sValue` — faalt op Debian-builds met `missing required argument 'nvalue'` (opgelost in v10.9.7)
+- v10.9.6: `Device.Update(Image=…)` zonder `nValue`/`sValue` — faalt op sommige Domoticz-builds met `missing required argument 'nvalue'` (opgelost in v10.9.7)
 - **Energy-tegels** (*Laden*, *Totaal Laden*): sommige Domoticz-versies tonen altijd het standaard bliksem-icoon ondanks custom Image — bekende Domoticz-beperking
 
 **Oplossing** (v10.9.7+):
