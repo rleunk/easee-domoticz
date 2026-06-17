@@ -27,8 +27,6 @@
 
 *Equalizer / iconen:* custom P-max laadpaal- en Equalizer-max pictogrammen uit `Easee_icons_v2.zip`, met LED-kleur per tegelfunctie en functie-badges (W, i, €, E, L).
 
-> Placeholder-afbeeldingen — vervang `docs/screenshot-dashboard.png` en `docs/screenshot-equalizer.png` door echte Domoticz-screenshots indien gewenst.
-
 ## 🎯 Voor wie is dit?
 
 - Domoticz gebruikers met Easee laadpaal
