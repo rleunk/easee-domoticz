@@ -1,8 +1,8 @@
-# Easee Domoticz plugin v10.5.18
+# Easee Domoticz plugin v10.6.4
 
 **Complete Easee laadpaal integratie voor Domoticz met compacte UI, intelligente emoji indicators, Equalizer/meterkast ondersteuning en Tibber stroomtarief integratie.**
 
-![Version](https://img.shields.io/badge/version-10.5.18-blue)
+![Version](https://img.shields.io/badge/version-10.6.4-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
@@ -16,9 +16,12 @@
 ⚡ **Hoofdzekering limiet** — Correcte weergave via `maxContinuousCurrent` en `circuit.fuse` (API)  
 💰 **Cost Tracking** — Sessie- en dagkosten per laadpaal (v10.4 fix)  
 💵 **Tibber Integration** — Actueel stroomtarief, goedkope laadwindows en kostenoverzicht (v10.4 fix)  
-🎨 **Custom iconen** — Easee-tegeliconen uit `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen)  
+🎨 **Custom iconen** — Foto-gebaseerde P-max/EQ-max tegels uit `Easee_icons_v2.zip` met LED-kleuren en functie-badges; zie [Custom iconen](#-custom-iconen)  
 🔐 **Secure** — Veilige token opslag en session management  
-🔄 **State Persistence** — Behoudt laadsessie gegevens over restarts  
+🔄 **State Persistence** — `easee_state.json` met atomische writes; automatische migratie van legacy state  
+📋 **Gestructureerde logging** — Centrale logger `[Easee vX][LEVEL][module][context]`; zie [Logging](#-logging)  
+🧩 **Modulaire codebase** — Plugin opgesplitst in losse Python-modules (sinds v10.6.0); zie [Module structuur](#-module-structuur)  
+🚀 **Betrouwbare startup** — Initiële sync losgekoppeld van poll-interval; readiness-check op Domoticz Devices  
 📦 **Git installatie** — Eenvoudige updates via `git pull` op je Domoticz-server  
 
 ## 📋 Ondersteunde scenario's
@@ -60,7 +63,7 @@ sudo systemctl restart domoticz
 Daarna in Domoticz:
 
 1. **Setup → Hardware**
-2. Type: **"Easee Domoticz plugin v10.5.18"**
+2. Type: **"Easee Domoticz plugin v10.6.4"**
 3. Geef de hardware een naam, bijv. `Easee` (prefix op alle tegels)
 4. Username/Password: jouw Easee-inloggegevens
 5. **Create**
@@ -148,7 +151,7 @@ De plugin levert acht Easee-tegeliconen via **`Easee_icons_v2.zip`** (P-max prod
 - **`Easee_icons_v2.zip`** — enige iconenarchief, meegeleverd in de pluginmap
 - **8 icon sets:** EaseeCharger (groen), EaseePower (geel), EaseeStatus (blauw), EaseeCost (oranje), EaseeEqualizer (blauw), EaseeOverview (teal), EaseeLoadBal (teal), EaseeAlert (rood)
 - **LED-strip kleur** op P-max laadpaal-foto (of LED-dot op Equalizer-puck) volgt de **tegelfunctie** — zie tabel hieronder
-- **Functie-badge** rechtsonder op icoon (W, i, €, !, Σ, E, L) — subtiele extra hint; EaseeCharger heeft geen badge
+- **Functie-badge** rechtsonder op icoon (W, i, €, !, Σ, E, L) — ~30% groter sinds v10.6.0 (16px: 8px, 48px: 17px); EaseeCharger heeft geen badge
 - Automatisch geladen bij pluginstart; toegepast op **bestaande** tegels na herstart van het hardware-item
 - Mislukt automatisch laden? Upload de zip **eenmalig** via **Setup → Instellingen → Meer opties → Aangepaste pictogrammen**
 - Verwacht logregel: `Custom icons geladen: 8 sets (Easee_icons_v2.zip)` of `Custom icons uit Domoticz (handmatig geüpload)`
@@ -166,6 +169,45 @@ De plugin levert acht Easee-tegeliconen via **`Easee_icons_v2.zip`** (P-max prod
 | EaseeLoadBal | Teal `#00BCD4` | L | Load balancing |
 
 Zie [INSTALL.md — Custom iconen handmatig uploaden](INSTALL.md#custom-iconen-handmatig-uploaden) voor details.
+
+## 🧩 Module structuur
+
+Sinds v10.6.0 is de monolithische `plugin.py` opgesplitst in modules (refactor op main na v10.5.18, inclusief import-fixes). Alle `.py`-bestanden horen in de pluginmap naast `Easee_icons_v2.zip`.
+
+| Bestand | Rol |
+|---------|-----|
+| `plugin.py` | Domoticz lifecycle, heartbeat, orchestratie |
+| `easee_constants.py` | Versie, API-URLs, device-ID's, labels |
+| `easee_logging.py` | Centrale logging (DEBUG/INFO/WARNING/ERROR) |
+| `easee_api.py` | Easee login, token refresh, HTTP GET |
+| `easee_api_keys.py` | Gecentraliseerde API-veldnamen (fuse, charger, Tibber, …) |
+| `easee_state.py` | Runtime state (`easee_state.json`), migratie, atomisch opslaan |
+| `easee_helpers.py` | Gedeelde formatting en helpers |
+| `domoticz_runtime.py` | Domoticz `Parameters`/`Devices`/`Images` binding |
+| `domoticz_devices.py` | Device-aanmaak, index, tegel-updates |
+| `domoticz_icons.py` | Laden en toepassen van custom iconen |
+| `charger_logic.py` | Laadpaal discovery, poll, sessie |
+| `equalizer_logic.py` | Equalizer discovery, fuse/limiet-detectie |
+| `tibber_pricing.py` | Tibber GraphQL, tarieven en kosten |
+
+Details: [`docs/REFACTOR_MAPPING.md`](docs/REFACTOR_MAPPING.md).
+
+## 📋 Logging
+
+Centrale logging via `easee_logging.py` (v10.6.0+):
+
+```
+[Easee v10.6.4][LEVEL][module][context] message
+```
+
+| Niveau | Wanneer zichtbaar |
+|--------|-------------------|
+| **DEBUG** | Alleen bij **Debug logging** (Mode6) of `ULTRA_DEBUG` |
+| **INFO** | Normale logregels (login, discovery, poll-samenvatting in debug) |
+| **WARNING** | Domoticz-log met ⚠ (bijv. geforceerde startup-sync na 60s) |
+| **ERROR** | Domoticz Error-log (API-fouten, device-aanmaak, state-save) |
+
+Bij problemen: zet Mode6 op *Debug* en zoek op `[Easee v` in het Domoticz-log.
 
 ## 🔧 Troubleshooting
 
@@ -197,7 +239,21 @@ sudo systemctl restart domoticz
 
 Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 
-**Van v10.5.x naar v10.6.0?** Vervang `plugin.py` of doe `git pull` — state (`easee_state.json`, automatisch gemigreerd van `easee_v9_0_state.json`) en bestaande devices blijven behouden. Upload **`Easee_icons_v2.zip` opnieuw** na upgrade (grotere functie-badges). Zet **Debug logging** (Mode6) aan voor gestructureerde logs met module/context.
+**Sinds v10.6.0:** gebruik `git pull` (alle `.py`-modules), niet alleen `plugin.py`. State-bestand heet `easee_state.json` (automatische rename van `easee_v9_0_state.json`).
+
+### Recente wijzigingen (v10.5.18 → v10.6.4)
+
+| Versie | Belangrijkste wijzigingen |
+|--------|---------------------------|
+| **v10.5.18** | Definitieve foto-iconen (P-max laadpaal, Equalizer-max puck); LED-kleur per tegelfunctie; functie-badges; alleen nog `Easee_icons_v2.zip` |
+| **Module refactor** | `plugin.py` opgesplitst in modules op main (zelfde basis als 10.5.18); fixes voor Domoticz-imports en Parameters-binding |
+| **v10.6.0** | `easee_logging.py`; state → `easee_state.json` + migratie; functie-badges ~30% groter |
+| **v10.6.1** | Atomisch state opslaan (`.tmp` + `os.replace`) tegen corrupt JSON bij crash |
+| **v10.6.2** | Device-aanmaak: bij mislukte `Device.Create()` worden kwargs + traceback gelogd |
+| **v10.6.3** | `easee_api_keys.py` — gecentraliseerde API-veldnamen i.p.v. magic strings |
+| **v10.6.4** | Startup-sync losgekoppeld van poll-interval: 3s min. vertraging, readiness-check op Devices, 60s fallback |
+
+**Upgrade vanaf v10.5.x:** `git pull`, herstart hardware-item. Upload **`Easee_icons_v2.zip` opnieuw** (v10.5.18 iconen + v10.6.0 grotere badges). State en devices blijven behouden.
 
 ## 🚀 Release
 
@@ -233,6 +289,6 @@ MIT License — zie [LICENSE](LICENSE) voor details.
 
 ---
 
-**Versie 10.5.18** — Gemaakt door Richard Leunk
+**Versie 10.6.4** — Gemaakt door Richard Leunk
 
 **Status**: ✅ Production Ready
