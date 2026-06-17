@@ -1220,12 +1220,6 @@ def _export_power_w(plugin, values):
         power_w = easee_helpers.power_watts(plugin, raw)
     return max(0, power_w)
 
-def _voltage_lines(plugin, values):
-    phases, has = _phase_values_from_keys(plugin, values, phase_voltage_keys())
-    if not has:
-        return '⚡ Spanning: onbekend'
-    return f'⚡ L1/L2/L3: {_format_phase_triple(plugin, phases, "V")} V'
-
 def _phase_values_from_key_list(plugin, values, keys):
     phases = []
     any_val = False
@@ -1237,26 +1231,76 @@ def _phase_values_from_key_list(plugin, values, keys):
             phases.append(None)
     return phases, any_val
 
-def _load_balancing_detail_text(plugin, values, lb_active):
+def _lb_phase_compact(plugin, values):
     avail, has_avail = _phase_values_from_key_list(plugin, values, phase_available_current_keys())
     eq, has_eq = _phase_values_from_key_list(plugin, values, phase_equalized_charge_keys())
-    lines = []
+    vrij = _format_phase_triple(plugin, avail, 'A') if has_avail else '— / — / —'
+    laad = _format_phase_triple(plugin, eq, 'A') if has_eq else '— / — / —'
+    return f'   Vrij: {vrij} A  |  Laad: {laad} A'
+
+def _limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a):
+    emob = easee_helpers.format_amp(plugin, max_alloc) or '—'
+    hoofd = easee_helpers.format_amp(plugin, main_fuse_a) or '—'
+    limiet = easee_helpers.format_amp(plugin, main_fuse_limit_a) or '—'
+    return f'🛡️ eMobility: {emob} | Hoofd: {hoofd} | Limiet: {limiet}'
+
+def _voltage_status_line(plugin, values):
+    phases, has = _phase_values_from_keys(plugin, values, phase_voltage_keys())
+    if not has:
+        return '🔌 Spanning L1/L2/L3: — V'
+    return f'🔌 Spanning L1/L2/L3: {_format_phase_triple(plugin, phases, "V")} V'
+
+def _current_status_line(plugin, values, power_w):
+    current_line, _load_a = easee_helpers.actual_current_line(plugin, values, power_w)
+    if not current_line:
+        return None
+    if 'L1/L2/L3' in current_line:
+        return current_line.replace('📊 L1/L2/L3:', '📊 Stroom L1/L2/L3:')
+    return current_line
+
+def _build_status_text(plugin, values, online, lb_active, max_alloc, main_fuse_a, main_fuse_limit_a,
+                       max_import_kw, power_w):
+    status_emoji = '✅' if online else '❌'
     lb_emoji = '⚖️' if lb_active else '⏸️'
-    lines.append(f'{lb_emoji} Load balancing: {"Aan" if lb_active else "Uit"}')
-    if has_avail:
-        lines.append(f'🔋 Vrij L1/L2/L3: {_format_phase_triple(plugin, avail, "A")} A')
-    else:
-        lines.append('🔋 Vrij L1/L2/L3: onbekend')
-    if has_eq:
-        lines.append(f'🔌 Gelijkstroom L1/L2/L3: {_format_phase_triple(plugin, eq, "A")} A')
-    else:
-        lines.append('🔌 Gelijkstroom L1/L2/L3: onbekend')
+    lb_text = 'Aan' if lb_active else 'Uit'
+    lines = [
+        f'{status_emoji} Equalizer online' if online else f'{status_emoji} Equalizer offline',
+        f'{lb_emoji} Load balancing: {lb_text}',
+        _lb_phase_compact(plugin, values),
+        _limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a),
+    ]
+    if max_import_kw > 0:
+        kw_text = easee_helpers.format_kw(plugin, max_import_kw) or f'{max_import_kw:.1f} kW'
+        lines.append(f'⚡ Max import: {kw_text}')
+    current_line = _current_status_line(plugin, values, power_w)
+    if current_line:
+        lines.append(current_line)
+    lines.append(_voltage_status_line(plugin, values))
     return '\n'.join(lines)
 
-def _netto_text(plugin, net_w, import_kwh, export_kwh):
-    sign = '+' if net_w >= 0 else '−'
-    lines = [f'📊 Netto: {sign}{abs(int(net_w))} W']
-    if import_kwh is not None and export_kwh is not None:
+def _daily_netto_kwh(plugin, eid, import_kwh, export_kwh):
+    if import_kwh is None or export_kwh is None:
+        return None
+    st = easee_state.equalizer_state(plugin, eid)
+    tk = easee_state.today_key(plugin)
+    if st.get('net_day_key') != tk:
+        st['net_day_key'] = tk
+        st['net_day_import_baseline'] = import_kwh
+        st['net_day_export_baseline'] = export_kwh
+    day_import = import_kwh - easee_helpers.safe_float(plugin, st.get('net_day_import_baseline'), import_kwh)
+    day_export = export_kwh - easee_helpers.safe_float(plugin, st.get('net_day_export_baseline'), export_kwh)
+    return round(day_import - day_export, 3)
+
+def _terug_netto_text(plugin, eid, power_w, export_w, net_w, import_kwh, export_kwh):
+    lines = [
+        f'📥 Import: {int(power_w)} W | Terug: {int(export_w)} W',
+        f'📊 Netto: {int(net_w)} W',
+    ]
+    day_net = _daily_netto_kwh(plugin, eid, import_kwh, export_kwh)
+    if day_net is not None:
+        sign = '+' if day_net >= 0 else '−'
+        lines.append(f'📈 Vandaag netto: {sign}{abs(day_net):.3f} kWh')
+    elif import_kwh is not None and export_kwh is not None:
         net_kwh = round(import_kwh - export_kwh, 3)
         lines.append(f'📈 Totaal netto: {net_kwh:.3f} kWh')
     return '\n'.join(lines)
@@ -1490,41 +1534,15 @@ def poll_equalizer(plugin, equalizer):
         rejected=site_info.get('fuse_rejected'),
     )
 
-    status_emoji = '✅' if online else '❌'
-    lb_emoji = '⚖️' if lb_active else '⏸️'
-    lb_text = 'Aan' if lb_active else 'Uit'
-    lines = [
-        f'{status_emoji} Equalizer online' if online else f'{status_emoji} Equalizer offline',
-        f'{lb_emoji} Load balancing: {lb_text}',
-    ]
-    if max_alloc > 0:
-        lines.append(f'🔌 eMobility limiet: {easee_helpers.format_amp(plugin, max_alloc)}')
-    else:
-        lines.append('🔌 eMobility limiet: onbekend')
-    if main_fuse_a > 0:
-        lines.append(f'🏠 Hoofdzekering: {easee_helpers.format_amp(plugin, main_fuse_a)}')
-    else:
-        lines.append('🏠 Hoofdzekering: onbekend')
-    if main_fuse_limit_a > 0:
-        lines.append(f'⚡ Hoofdzekering limiet: {easee_helpers.format_amp(plugin, main_fuse_limit_a)}')
-    else:
-        lines.append('⚡ Hoofdzekering limiet: onbekend')
     max_import_kw = easee_helpers.safe_float(plugin, site_info.get('max_power_import_kw'), 0.0)
-    max_import_a = easee_helpers.safe_float(plugin, site_info.get('max_power_import_a'), 0.0)
     if max_import_kw <= 0 and values.get(EQUALIZER_KEYS['max_power_import'][0]) is not None:
         raw_kw = easee_helpers.safe_float(plugin, values.get(EQUALIZER_KEYS['max_power_import'][0]), 0.0)
         if raw_kw > 0:
             max_import_kw = raw_kw / 1000.0 if raw_kw >= 100 else raw_kw
-            power_w_mpi = easee_helpers.kw_to_watts(plugin, raw_kw)
-            max_import_a = round(easee_helpers.amps_balanced_3phase_from_power(plugin, power_w_mpi))
-    if max_import_kw > 0:
-        kw_text = easee_helpers.format_kw(plugin, max_import_kw) or f'{max_import_kw:.1f} kW'
-        amp_hint = f' (~{int(max_import_a)} A)' if max_import_a > 0 else ''
-        lines.append(f'📈 Max import: {kw_text}{amp_hint}')
-    current_line, _load_a = easee_helpers.actual_current_line(plugin, values, power_w)
-    if current_line:
-        lines.append(current_line)
-    status_text = '\n'.join(lines)
+    status_text = _build_status_text(
+        plugin, values, online, lb_active, max_alloc, main_fuse_a, main_fuse_limit_a,
+        max_import_kw, power_w,
+    )
 
     import_field = EQUALIZER_KEYS['cumulative_import'][0]
     export_field = EQUALIZER_KEYS['cumulative_export'][0]
@@ -1535,10 +1553,10 @@ def poll_equalizer(plugin, equalizer):
     export_kwh = easee_helpers.kwh_value(plugin, values.get(export_field)) if export_field in values else None
 
     domoticz_devices.update_equalizer_energy(plugin, eid, 'Import', power_w, import_wh)
-    domoticz_devices.update_equalizer_energy(plugin, eid, 'Teruglevering', export_w, export_wh)
-    domoticz_devices.update_equalizer_text(plugin, eid, 'Netto', _netto_text(plugin, net_w, import_kwh, export_kwh))
-    domoticz_devices.update_equalizer_text(plugin, eid, 'Spanning', _voltage_lines(plugin, values))
-    domoticz_devices.update_equalizer_text(plugin, eid, 'Load balancing', _load_balancing_detail_text(plugin, values, lb_active))
+    domoticz_devices.update_equalizer_text(
+        plugin, eid, 'Terug & netto',
+        _terug_netto_text(plugin, eid, power_w, export_w, net_w, import_kwh, export_kwh),
+    )
     domoticz_devices.update_equalizer_text(plugin, eid, 'Status', status_text)
 
     plugin.latest_equalizers[eid] = {

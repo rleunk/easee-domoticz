@@ -91,7 +91,44 @@ De plugin zoekt de Equalizer via:
 
 Als geen Equalizer wordt gevonden, verschijnen geen extra tegels en toont Status `Geen EQ`.
 
-### Equalizer Status-tegel (v10.3.0+)
+### Equalizer Status-tegel (v10.9.0+)
+
+Gegroepeerde weergave op één teksttegel:
+
+```
+✅ Equalizer online
+⚖️ Load balancing: Uit
+   Vrij: - / - / - A  |  Laad: - / - / -
+🛡️ eMobility: 20 A | Hoofd: 25 A | Limiet: 24 A
+⚡ Max import: 17.2 kW
+📊 Stroom L1/L2/L3: 0.0 / 4.0 / 0.0 A
+🔌 Spanning L1/L2/L3: 231 / 230 / 229 V
+```
+
+| Regel | API-bron | Betekenis |
+|-------|----------|-----------|
+| Verbinding | `online` state | Online/offline |
+| Load balancing | LB state + obs. 230–232 | Aan/uit + vrij/laad per fase |
+| Limieten | site fuse API | eMobility, hoofdzekering, ingestelde limiet |
+| Max import | obs. 44 MaxPowerImport | Max vermogen aansluiting |
+| Stroom L1/L2/L3 | obs. 31–33 | Fase-stromen |
+| Spanning L1/L2/L3 | state / obs. 34–36 | Fase-spanning (V) |
+
+**Huisvermogen staat niet op Status** — zie Import-tegel.
+
+### Equalizer tegels (v10.9.0+)
+
+| Tegel | Type | Bron | Weergave |
+|-------|------|------|----------|
+| Status | Text | state + site fuse API | Verbinding, LB-detail, limieten, stroom, spanning |
+| Import | Energy | obs. 40 / 45 | Vermogen (W) + **Vandaag** kWh import |
+| Terug & netto | Text | obs. 41/46 + berekend | Import W, terug W, netto W, vandaag/totaal netto kWh |
+
+Core **LoadBal**-schakelaar (site-wide) blijft ongewijzigd.
+
+Legacy: *Vermogen* → *Import*; *Netto* of *Teruglevering* → *Terug & netto*. Wees-tegels *Spanning* / *Load balancing* uit v10.8.0 handmatig verwijderen.
+
+### Equalizer Status-tegel (v10.3.0 – v10.8.x, vervangen door gegroepeerde Status in v10.9.0)
 
 | Regel | API-bron | Betekenis |
 |-------|----------|-----------|
@@ -113,7 +150,7 @@ Als limiet **onbekend** is, controleer het Domoticz-log op `siteStructure amp-ra
 
 Zet **Debug logging** aan (Mode6) voor uitgebreide fuse-probe details.
 
-### Equalizer tegels Proposal C (v10.8.0+)
+### Equalizer tegels Proposal C (v10.8.0, vervangen door 3 tegels in v10.9.0)
 
 | Tegel | Type | Bron | Weergave |
 |-------|------|------|----------|
@@ -176,10 +213,7 @@ Devices krijgen automatisch deze namen:
 ```
 [PREFIX] - [NAAM] - Status
 [PREFIX] - [NAAM] - Import          ← obs. 40/45 (legacy: Vermogen)
-[PREFIX] - [NAAM] - Teruglevering   ← obs. 41/46 (v10.8.0+)
-[PREFIX] - [NAAM] - Netto           ← import − export (v10.8.0+)
-[PREFIX] - [NAAM] - Spanning        ← L1/L2/L3 V (v10.8.0+)
-[PREFIX] - [NAAM] - Load balancing  ← LB fase-detail (v10.8.0+)
+[PREFIX] - [NAAM] - Terug & netto   ← import/terug/netto (v10.9.0+; legacy: Netto/Teruglevering)
 ```
 
 ### Per Laadpaal

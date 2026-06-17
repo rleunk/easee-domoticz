@@ -23,18 +23,20 @@ def image_root(plugin, name, device_id=None):
         label = n.split(' - ')[-1].strip() if ' - ' in n else n
         if label in ('import',):
             return 'EaseeImport'
+        if label in ('terug & netto', 'terug en netto', 'energie netto'):
+            return 'EaseeNet'
         if label in ('teruglevering', 'export'):
-            return 'EaseeExport'
+            return 'EaseeNet'
         if label in ('netto', 'net'):
             return 'EaseeNet'
-        if label in ('spanning', 'voltage'):
-            return 'EaseeVoltage'
         if label in ('vermogen', 'huisvermogen', 'power'):
             return 'EaseeImport'
         if label in ('status',):
             return 'EaseeEqualizer'
+        if label in ('spanning', 'voltage'):
+            return 'EaseeEqualizer'
         if 'load bal' in label or 'loadbal' in label or 'load balancing' in label:
-            return 'EaseeLoadBal'
+            return 'EaseeEqualizer'
         if 'l1' in label or 'l2' in label or 'l3' in label or 'fase' in label:
             return 'EaseePower'
         if 'hoofd' in label or 'zekering' in label or 'huis' in label:
@@ -50,18 +52,20 @@ def image_root(plugin, name, device_id=None):
 
     is_eq = 'equalizer' in n or 'meterkast' in n
     if is_eq:
-        if 'import' in n or 'teruglevering' in n:
-            if 'terug' in n or 'export' in n:
-                return 'EaseeExport'
+        if 'terug & netto' in n or 'terug en netto' in n or 'energie netto' in n:
+            return 'EaseeNet'
+        if 'import' in n and 'terug' not in n and 'netto' not in n:
             return 'EaseeImport'
+        if 'teruglevering' in n or ('terug' in n and 'netto' not in n) or 'export' in n:
+            return 'EaseeNet'
         if 'netto' in n or ' net ' in f' {n} ':
             return 'EaseeNet'
         if 'spanning' in n or 'voltage' in n:
-            return 'EaseeVoltage'
+            return 'EaseeEqualizer'
         if 'vermogen' in n or 'huisvermogen' in n:
             return 'EaseeImport'
         if 'load bal' in n or 'loadbal' in n or 'load balancing' in n:
-            return 'EaseeLoadBal'
+            return 'EaseeEqualizer'
         if 'l1' in n or 'l2' in n or 'l3' in n or 'fase' in n:
             return 'EaseePower'
         if 'overzicht' in n or 'overview' in n:

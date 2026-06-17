@@ -73,6 +73,11 @@ def resolve_equalizer_unit(plugin, eid, label_key):
         return unit
     if label_key == 'Import':
         return find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, 'Vermogen'))
+    if label_key == 'Terug & netto':
+        for legacy_key in ('Netto', 'Teruglevering'):
+            unit = find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, legacy_key))
+            if unit is not None:
+                return unit
     return None
 
 def resolve_core_unit(plugin, label):
@@ -300,10 +305,7 @@ def ensure_equalizer_devices(plugin, equalizer, index):
     devices = [
         ('Text', 'Status'),
         ('Energy', 'Import'),
-        ('Energy', 'Teruglevering'),
-        ('Text', 'Netto'),
-        ('Text', 'Spanning'),
-        ('Text', 'Load balancing'),
+        ('Text', 'Terug & netto'),
     ]
     for typ, label_key in devices:
         name = equalizer_logic.equalizer_dev_name(plugin, display, label_key)
@@ -319,9 +321,23 @@ def ensure_equalizer_devices(plugin, equalizer, index):
                 f'Easee - {display} - Vermogen',
                 f'Easee - Easee - {display} - Vermogen',
             ])
+        if label_key == 'Terug & netto':
+            legacy.extend([
+                easee_helpers.pref(plugin, f'{display} - Teruglevering'),
+                f'Easee - {display} - Teruglevering',
+                f'Easee - Easee - {display} - Teruglevering',
+                easee_helpers.pref(plugin, f'{display} - Netto'),
+                f'Easee - {display} - Netto',
+                f'Easee - Easee - {display} - Netto',
+            ])
         unit = find_unit_by_devid(plugin, devid)
         if unit is None and label_key == 'Import':
             unit = find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, 'Vermogen'))
+        if unit is None and label_key == 'Terug & netto':
+            for legacy_key in ('Netto', 'Teruglevering'):
+                unit = find_unit_by_devid(plugin, make_equalizer_device_id(plugin, eid, legacy_key))
+                if unit is not None:
+                    break
         if unit is not None:
             sync_device_name(plugin, unit, name)
             continue

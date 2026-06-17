@@ -6,6 +6,24 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.0] — 2026-06-17
+
+### Gewijzigd
+- **Equalizer tegels geconsolideerd** — drie tegels per Equalizer: **Status**, **Import**, **Terug & netto** (was zes tegels in v10.8.0).
+- **Status-tegel** — gegroepeerde secties: verbinding, load balancing (fase-detail Vrij/Laad), limieten (eMobility | Hoofd | Limiet), max import, stroom L1/L2/L3, spanning L1/L2/L3.
+- **Terug & netto** — gecombineerde teksttegel: import W, terug W, netto W, vandaag netto kWh (of totaal netto kWh).
+- **Icon mapping** — Status/spanning/LB → `EaseeEqualizer`; Terug & netto → `EaseeNet` (geen nieuwe zip nodig).
+
+### Verwijderd (als aparte tegels)
+- Spanning, Teruglevering (standalone), Netto (standalone), Load balancing (detail) — niet meer aangemaakt.
+
+### Legacy / upgrade
+- Bestaande *Netto*- of *Teruglevering*-tegel wordt hernoemd naar *Terug & netto* (DeviceID-lookup).
+- *Spanning* en *Load balancing* wees-tegels uit v10.8.0 blijven staan tot handmatige verwijdering.
+
+### Changed (EN)
+- Equalizer tiles consolidated to three: Status (grouped LB/voltage/limits/currents), Import (unchanged), Terug & netto (export+net text); legacy Netto/Teruglevering devices migrate to combined tile.
+
 ## [10.8.0] — 2026-06-17
 
 ### Toegevoegd
