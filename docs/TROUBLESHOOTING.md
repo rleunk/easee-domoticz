@@ -108,7 +108,7 @@ De plugin wacht bij opstarten tot Domoticz de Devices-lijst heeft geladen (minim
 
 ```bash
 # Real-time
-sudo journalctl -u domoticz -f | grep "Easee v10.5.18"
+sudo journalctl -u domoticz -f | grep "Easee v"
 
 # Laatste 100 regels
 sudo journalctl -u domoticz -n 200 | grep Easee
@@ -123,7 +123,8 @@ sudo journalctl -u domoticz -n 200 | grep Easee
 
 ```bash
 sudo systemctl stop domoticz
-rm /home/root/domoticz/plugins/Easee-Domoticz-plugin/easee_v9_0_state.json
+rm /home/root/domoticz/plugins/Easee-Domoticz-plugin/easee_state.json
+# Legacy na upgrade: easee_v9_0_state.json (wordt automatisch gemigreerd)
 sudo systemctl start domoticz
 ```
 
@@ -133,4 +134,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Domoticz Forum**: https://www.domoticz.com/forum/
 
-Bij een issue: pluginversie (**v10.5.18**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).
+Bij een issue: pluginversie (bijv. **v10.6.5**), Domoticz-versie en relevante logregels (zonder wachtwoorden/tokens).

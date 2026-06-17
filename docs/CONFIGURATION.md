@@ -112,6 +112,14 @@ Als limiet **onbekend** is, controleer het Domoticz-log op `siteStructure amp-ra
 
 Zet **Debug logging** aan (Mode6) voor uitgebreide fuse-probe details.
 
+### Equalizer Vermogen-tegel (v10.6.5+)
+
+| Weergave | Bron | Betekenis |
+|----------|------|-----------|
+| Vermogen (W) | observation 40 ActivePowerImport | Actueel importvermogen |
+| **Vandaag** kWh | observation 45 CumulativeActivePowerImport | Cumulatieve teller (Wh); Domoticz berekent dagtotaal sinds middernacht |
+| Fallback | `power_integrated_kwh` in `easee_state.json` | Als observation 45 ontbreekt: geïntegreerd vermogen over tijd |
+
 ## Tibber Integration (Optioneel)
 
 ### Tibber Token (Mode7)
@@ -151,7 +159,7 @@ Devices krijgen automatisch deze namen:
 ### Per Equalizer (indien gevonden)
 ```
 [PREFIX] - [NAAM] - Status
-[PREFIX] - [NAAM] - Vermogen
+[PREFIX] - [NAAM] - Vermogen   ← actueel vermogen (W) + Vandaag kWh (obs. 45, v10.6.5+)
 ```
 
 ### Per Laadpaal
@@ -164,10 +172,11 @@ Devices krijgen automatisch deze namen:
 
 ## State Persistence
 
-De plugin bewaart automatisch:
-- `easee_v9_0_state.json` - Laadsessies, kosten, prijscache
+De plugin bewaart automatisch in **`easee_state.json`** (pluginmap):
+- Laadsessies, kosten, prijscache
+- Equalizer vermogensintegratie (fallback als observation 45 ontbreekt)
 
-Bestanden worden opgeslagen in de plugin directory en hersteld bij restart.
+Bij upgrade van oudere versies wordt `easee_v9_0_state.json` automatisch hernoemd. Opslaan is atomisch (`.tmp` + `os.replace`, sinds v10.6.1).
 
 ## Best Practices
 

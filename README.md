@@ -63,7 +63,7 @@ sudo systemctl restart domoticz
 Daarna in Domoticz:
 
 1. **Setup → Hardware**
-2. Type: **"Easee Domoticz plugin v10.6.4"**
+2. Type: **"Easee Domoticz plugin v10.6.5"**
 3. Geef de hardware een naam, bijv. `Easee` (prefix op alle tegels)
 4. Username/Password: jouw Easee-inloggegevens
 5. **Create**
@@ -197,7 +197,7 @@ Details: [`docs/REFACTOR_MAPPING.md`](docs/REFACTOR_MAPPING.md).
 Centrale logging via `easee_logging.py` (v10.6.0+):
 
 ```
-[Easee v10.6.4][LEVEL][module][context] message
+[Easee v10.6.5][LEVEL][module][context] message
 ```
 
 | Niveau | Wanneer zichtbaar |
@@ -251,14 +251,15 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 | **v10.6.1** | Atomisch state opslaan (`.tmp` + `os.replace`) tegen corrupt JSON bij crash |
 | **v10.6.2** | Device-aanmaak: bij mislukte `Device.Create()` worden kwargs + traceback gelogd |
 | **v10.6.3** | `easee_api_keys.py` — gecentraliseerde API-veldnamen i.p.v. magic strings |
-| **v10.6.5** | Equalizer Vermogen-tegel: **Vandaag** kWh via observation 45 (cumulatief import); fallback vermogensintegratie |
 | **v10.6.4** | Startup-sync losgekoppeld van poll-interval: 3s min. vertraging, readiness-check op Devices, 60s fallback |
+| **v10.6.5** | Equalizer Vermogen-tegel: **Vandaag** kWh via observation 45 (cumulatief import); fallback vermogensintegratie |
 
 **Upgrade vanaf v10.5.x:** `git pull`, herstart hardware-item. Upload **`Easee_icons_v2.zip` opnieuw** (v10.5.18 iconen + v10.6.0 grotere badges). State en devices blijven behouden.
 
 ## 🚀 Release
 
 Deze plugin staat op [GitHub](https://github.com/rleunk/easee-domoticz) als **openbare** repository. Bugreports en featurevoorstellen via [Issues](https://github.com/rleunk/easee-domoticz/issues) (Nederlandse templates).
+
 ## 🤖 AI Development
 
 Deze plugin is in meerdere stappen ontwikkeld met behulp van AI-tools, onder begeleiding en review van de auteur:

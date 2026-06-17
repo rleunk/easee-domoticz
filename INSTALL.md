@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee Domoticz plugin v10.5.18
+# Installatiehandleiding — Easee Domoticz plugin v10.6.5
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,10 +8,10 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee Domoticz plugin v10.5.18 |
+| Plugin | Easee Domoticz plugin v10.6.5 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
-| Hoofdbestand | `plugin.py` |
+| Hoofdbestand | `plugin.py` (+ 12 Python-modules sinds v10.6.0) |
 | Custom iconen | `Easee_icons_v2.zip` (automatisch geladen bij pluginstart; zie [handmatige upload](#custom-iconen-handmatig-uploaden) als dat mislukt) |
 | GitHub-repo | https://github.com/rleunk/easee-domoticz |
 
@@ -87,10 +87,11 @@ git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 
 ```bash
 ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
+ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/*.py
 ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip
 ```
 
-Je moet beide bestanden zien met een recente datum. De icon-zip wordt bij pluginstart automatisch geladen; bestaande tegels krijgen de Easee-iconen na een herstart van het hardware-item (of Domoticz). Als automatisch laden mislukt, upload de zip eenmalig handmatig — zie [Custom iconen handmatig uploaden](#custom-iconen-handmatig-uploaden).
+Je moet alle `.py`-modules (13 bestanden), `plugin.py` en de icon-zip zien met een recente datum. De icon-zip wordt bij pluginstart automatisch geladen; bestaande tegels krijgen de Easee-iconen na een herstart van het hardware-item (of Domoticz). Als automatisch laden mislukt, upload de zip eenmalig handmatig — zie [Custom iconen handmatig uploaden](#custom-iconen-handmatig-uploaden).
 
 ### Stap 4: Domoticz herstarten
 
@@ -103,7 +104,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee Domoticz plugin v10.5.18**
+4. Selecteer **Easee Domoticz plugin v10.6.5**
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
 7. Klik **Add**
@@ -143,15 +144,15 @@ Gebruik dit als je geen git op de server wilt instellen.
 
 ### Stap 1: Zip downloaden
 
-Op GitHub: **Code** → **Download ZIP**. GitHub levert een archief met een naam als `easee-domoticz-main.zip`. Pak lokaal uit; je vindt `plugin.py` en `Easee_icons_v2.zip` in de map `easee-domoticz-main/` (of vergelijkbaar).
+Op GitHub: **Code** → **Download ZIP**. GitHub levert een archief met een naam als `easee-domoticz-main.zip`. Pak lokaal uit; je vindt alle `.py`-modules en `Easee_icons_v2.zip` in de map `easee-domoticz-main/` (of vergelijkbaar).
 
 ### Stap 2: Uploaden naar de server
 
-Via SCP, SFTP of WinSCP kopieer **beide** bestanden:
+Via SCP, SFTP of WinSCP kopieer **alle `.py`-bestanden** en **`Easee_icons_v2.zip`** naar de pluginmap (sinds v10.6.0 is de plugin modulair — niet alleen `plugin.py`):
 
 ```
-Lokaal:  plugin.py              → Server: .../Easee-Domoticz-plugin/plugin.py
-Lokaal:  Easee_icons_v2.zip        → Server: .../Easee-Domoticz-plugin/Easee_icons_v2.zip
+Lokaal:  *.py                 → Server: .../Easee-Domoticz-plugin/
+Lokaal:  Easee_icons_v2.zip  → Server: .../Easee-Domoticz-plugin/Easee_icons_v2.zip
 ```
 
 Als iconen na start niet verschijnen, upload `Easee_icons_v2.zip` eenmalig handmatig — zie [Custom iconen handmatig uploaden](#custom-iconen-handmatig-uploaden).
@@ -168,8 +169,20 @@ Zorg dat de structuur **plat** is:
 
 ```
 Easee-Domoticz-plugin/
-├── plugin.py       ← direct hier, geen submap eronder
-└── Easee_icons_v2.zip ← custom tegeliconen (zelfde map)
+├── plugin.py
+├── easee_constants.py
+├── easee_logging.py
+├── easee_api.py
+├── easee_api_keys.py
+├── easee_state.py
+├── easee_helpers.py
+├── domoticz_runtime.py
+├── domoticz_devices.py
+├── domoticz_icons.py
+├── charger_logic.py
+├── equalizer_logic.py
+├── tibber_pricing.py
+└── Easee_icons_v2.zip     ← custom tegeliconen (zelfde map)
 ```
 
 **Fout** (submap te diep):
@@ -256,15 +269,23 @@ git pull
 sudo systemctl restart domoticz
 ```
 
+Sinds v10.6.0 haalt `git pull` alle `.py`-modules op — niet alleen `plugin.py`. State migreert automatisch naar `easee_state.json`.
+
 Custom iconen uit `Easee_icons_v2.zip` worden bij start automatisch geladen en op bestaande devices toegepast.
 
-### Handmatig (alleen plugin.py vervangen)
+### Handmatig (zip of losse bestanden)
 
 1. Stop het hardware-item in Domoticz (**Setup → Hardware** → disablen)
-2. Vervang `plugin.py` op de server
+2. Vervang **alle `.py`-modules** en `Easee_icons_v2.zip` op de server (sinds v10.6.0 niet alleen `plugin.py`)
 3. Start het hardware-item weer
 
-> State-bestand (`easee_v9_0_state.json`) en bestaande devices blijven behouden bij upgrade.
+> State-bestand (`easee_state.json`; legacy `easee_v9_0_state.json` wordt automatisch hernoemd) en bestaande devices blijven behouden bij upgrade.
+
+### Specifiek: v10.6.0+
+
+- `git pull` haalt alle modules op; herstart hardware-item of Domoticz.
+- State migreert automatisch naar `easee_state.json`.
+- Upload **`Easee_icons_v2.zip` opnieuw** als badges/iconen niet veranderen (Domoticz cached iconen).
 
 ### Specifiek: v10.4.0 → v10.5.0
 
@@ -365,7 +386,7 @@ De plugin wacht bij opstarten tot Domoticz de Devices-lijst heeft geladen (minim
 |---------|-----|
 | Plugin | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py` |
 | Custom iconen | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip` |
-| State (runtime) | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/easee_v9_0_state.json` |
+| State (runtime) | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/easee_state.json` |
 | Domoticz-log | `sudo journalctl -u domoticz` |
 
 ---

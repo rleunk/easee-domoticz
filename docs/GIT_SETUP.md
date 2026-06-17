@@ -142,12 +142,25 @@ sudo systemctl restart domoticz
 
 ```
 /home/root/domoticz/plugins/Easee-Domoticz-plugin/
-├── plugin.py          ← Domoticz laadt dit bestand
-├── Easee_icons_v2.zip    ← custom iconen (automatisch geladen)
+├── plugin.py              ← Domoticz entrypoint
+├── easee_constants.py
+├── easee_logging.py
+├── easee_api.py
+├── easee_api_keys.py
+├── easee_state.py
+├── easee_helpers.py
+├── domoticz_runtime.py
+├── domoticz_devices.py
+├── domoticz_icons.py
+├── charger_logic.py
+├── equalizer_logic.py
+├── tibber_pricing.py
+├── Easee_icons_v2.zip     ← custom iconen (automatisch geladen)
+├── easee_state.json       ← runtime state (aangemaakt bij eerste run)
 ├── README.md
 ├── INSTALL.md
 ├── install.sh
 └── docs/
 ```
 
-Domoticz heeft alleen `plugin.py` nodig om te draaien. De overige bestanden zijn documentatie en hulpscripts.
+Domoticz laadt `plugin.py`; alle `.py`-modules in dezelfde map zijn verplicht sinds v10.6.0. Overige bestanden zijn documentatie en hulpscripts.
