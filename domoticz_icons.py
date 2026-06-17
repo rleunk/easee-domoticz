@@ -410,13 +410,11 @@ def _apply_image_to_unit(unit, dev, img_id):
                 continue
         except Exception:
             continue
-    nval = int(getattr(dev, 'nValue', 0) or 0)
-    sval = str(getattr(dev, 'sValue', ''))
     try:
         dev.Image = img_id
-        dev.Update(nValue=nval, sValue=sval)
+        dev.Update(Image=img_id)
         if _current_image_id(dev) == img_id:
-            return True, 'dev.Image + Update'
+            return True, 'dev.Image + Update(Image=...)'
     except Exception as e:
         return False, str(e)
     return False, f'Update voltooid maar Image={_current_image_id(dev)} (verwacht {img_id})'
