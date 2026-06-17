@@ -91,6 +91,8 @@ Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 
 ### Devices dubbel na herstart
 
+De plugin wacht bij opstarten tot Domoticz de Devices-lijst heeft geladen (minimaal 3 seconden, daarna readiness-check op bestaande Easee-devices of een stabiele device-count). Polling start pas na deze initiële sync. Als het toch gebeurt:
+
 1. Stop het hardware-item
 2. Verwijder dubbele devices handmatig
 3. Start het hardware-item opnieuw

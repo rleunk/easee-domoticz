@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.6.4] — 2026-06-17
+
+### Gewijzigd
+- **plugin.py** — initiële sync losgekoppeld van poll-interval (Mode1): vaste startup-vertraging (3s), readiness-check op geladen Domoticz Devices (bestaande Easee-devices, stabiele device-count of Devices > 0), fallback-sync na 60s met WARNING; poll-interval geldt alleen na `sync_done`.
+
+### Changed (EN)
+- **plugin.py** — decoupled initial sync from Mode1 poll interval: 3s startup delay, Domoticz Devices readiness checks, 60s forced fallback with WARNING; poll interval applies only after initial sync completes.
+
 ## [10.6.3] — 2026-06-17
 
 ### Gewijzigd

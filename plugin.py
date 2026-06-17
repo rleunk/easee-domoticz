@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.6.3" author="Richard Leunk" version="10.6.3"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.6.4" author="Richard Leunk" version="10.6.4"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.6.3</h2><br/>
+        <h2>Easee Domoticz plugin v10.6.4</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (stap 1).</p>
     </description>
     <params>
@@ -66,6 +66,11 @@ class BasePlugin:
         self.refresh_token = ''
         self.started = False
         self.sync_done = False
+        self.startup_at = 0
+        self.startup_min_delay = 3
+        self.startup_force_after = 60
+        self.devices_stable_count = 0
+        self.last_devices_count = -1
         self.last_poll = 0
         self.units_by_name = {}
         self.units_by_devid = {}
@@ -256,6 +261,74 @@ class BasePlugin:
 
     # ---- lifecycle sync ----
 
+    def count_easee_devices(self):
+        return sum(
+            1 for devid in self.units_by_devid
+            if str(devid).startswith('EASEE_')
+        )
+
+    def devices_ready(self):
+        """Controleer of Domoticz Devices geladen zijn voor veilige initiële sync."""
+        self.rebuild_index()
+        devices_count = len(Devices)
+        easee_count = self.count_easee_devices()
+
+        if easee_count > 0:
+            return True, f'{easee_count} bestaande Easee-device(s) in index'
+
+        if devices_count > 0:
+            if devices_count == self.last_devices_count:
+                self.devices_stable_count += 1
+            else:
+                self.devices_stable_count = 1
+            self.last_devices_count = devices_count
+            if self.devices_stable_count >= 2:
+                return True, f'Devices stabiel ({devices_count}, {self.devices_stable_count} heartbeats)'
+            return True, f'Devices geladen ({devices_count})'
+
+        self.devices_stable_count = 0
+        self.last_devices_count = -1
+        return False, 'Devices-lijst nog leeg'
+
+    def handle_startup_sync(self):
+        elapsed = time.time() - self.startup_at
+        if elapsed < self.startup_min_delay:
+            self.debug(
+                f'Startup-sync wacht op minimale vertraging ({elapsed:.1f}/{self.startup_min_delay}s)',
+                module='plugin',
+                context='startup',
+            )
+            return
+
+        ready, reason = self.devices_ready()
+        force = elapsed >= self.startup_force_after
+
+        if not ready and not force:
+            self.debug(
+                f'Startup-sync wacht: {reason} (elapsed={elapsed:.1f}s)',
+                module='plugin',
+                context='startup',
+            )
+            return
+
+        if force and not ready:
+            self.warning(
+                f'Startup-sync geforceerd na {elapsed:.0f}s (readiness niet bereikt: {reason})',
+                module='plugin',
+                context='startup',
+            )
+            reason = f'fallback na {self.startup_force_after}s'
+
+        self.log(
+            f'Initiële sync start ({reason}, elapsed={elapsed:.1f}s)',
+            module='plugin',
+            context='startup',
+        )
+        self.rebuild_index()
+        self.initial_sync()
+        self.sync_done = True
+        self.save_state()
+
     def initial_sync(self):
         self.discover_entities()
         self.charger_names = {}
@@ -381,9 +454,15 @@ class BasePlugin:
         self.apply_images_to_devices()
         self.rebuild_index()
         self.load_state()
+        self.sync_done = False
+        self.startup_at = time.time()
+        self.startup_min_delay = 3
+        self.startup_force_after = 60
+        self.devices_stable_count = 0
+        self.last_devices_count = -1
         self.login()
         self.started = True
-        self.log('Plugin gestart (initiële sync is vertraagd om dubbele devices na restart te voorkomen)')
+        self.log('Plugin gestart (initiële sync wacht op Domoticz Devices-readiness)')
 
     def onStop(self):
         self.save_state()
@@ -397,20 +476,17 @@ class BasePlugin:
     def onHeartbeat(self):
         if not self.started:
             return
-        interval = max(10, self.safe_int(Parameters.get('Mode1', '30'), 30))
-        if time.time() - self.last_poll < interval:
-            return
-        self.last_poll = time.time()
         try:
             if not self.access_token and not self.login():
                 self.update_core_text('Status', 'Login mislukt')
                 return
             if not self.sync_done:
-                self.rebuild_index()
-                self.initial_sync()
-                self.sync_done = True
-                self.save_state()
+                self.handle_startup_sync()
                 return
+            interval = max(10, self.safe_int(Parameters.get('Mode1', '30'), 30))
+            if time.time() - self.last_poll < interval:
+                return
+            self.last_poll = time.time()
             self.refresh_entity_cache_only()
             self.poll_all()
             self.update_combined()

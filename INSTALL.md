@@ -351,7 +351,7 @@ sudo systemctl restart domoticz
 
 ### Devices dubbel na herstart
 
-De plugin heeft ingebouwde bescherming tegen dubbele devices. Als het toch gebeurt:
+De plugin wacht bij opstarten tot Domoticz de Devices-lijst heeft geladen (minimaal 3 seconden, daarna readiness-check op bestaande Easee-devices of een stabiele device-count). Polling start pas na deze initiële sync. Als het toch gebeurt:
 
 1. Stop het plugin
 2. Verwijder dubbele devices handmatig in Domoticz
