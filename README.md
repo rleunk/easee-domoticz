@@ -19,13 +19,17 @@
 
 ## 📸 Screenshots
 
-| Dashboard | Equalizer / iconen |
-|-----------|-------------------|
-| ![Domoticz dashboard](docs/screenshot-dashboard.png) | ![Equalizer tegels](docs/screenshot-equalizer.png) |
+### Easee - Domoticz dashboard
 
-*Dashboard:* compacte Domoticz-tegels met live vermogen, laadstatus en Equalizer-overzicht — emoji's (⚡, ✅, 🟢) geven vermogen, status en prijs in één oogopslag weer.
+![Easee Domoticz dashboard met laadpaal- en Equalizer-tegels](docs/screenshot-dashboard.png)
 
-*Equalizer / iconen:* custom P-max laadpaal- en Equalizer-max pictogrammen uit `Easee_icons_v2.zip`, met LED-kleur per tegelfunctie en functie-badges (W, i, €, E, L).
+*Emoji-status, compacte tegels en live vermogen/kosten.*
+
+### Equalizer & custom iconen
+
+![Equalizer puck en P-max laadpaal iconen met functie-badges](docs/screenshot-equalizer.png)
+
+*Custom iconen met LED-kleuren per tegelfunctie.*
 
 ## 🎯 Voor wie is dit?
 
