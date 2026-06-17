@@ -163,4 +163,4 @@ sudo systemctl restart domoticz
 └── docs/
 ```
 
-Domoticz laadt `plugin.py`; alle `.py`-modules in dezelfde map zijn verplicht sinds v10.6.0. Overige bestanden zijn documentatie en hulpscripts.
+Domoticz laadt `plugin.py`; alle **13 `.py`-bestanden** in dezelfde map zijn verplicht sinds v10.6.0. Overige bestanden zijn documentatie en hulpscripts.

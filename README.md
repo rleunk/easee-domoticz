@@ -203,7 +203,7 @@ Zie [INSTALL.md — Custom iconen handmatig uploaden](INSTALL.md#custom-iconen-h
 
 ## 🧩 Module structuur
 
-Sinds v10.6.0 is de monolithische `plugin.py` opgesplitst in modules (refactor op main na v10.5.18, inclusief import-fixes). Alle `.py`-bestanden horen in de pluginmap naast `Easee_icons_v2.zip`.
+Sinds v10.6.0 is de monolithische `plugin.py` opgesplitst in **13 Python-bestanden** (refactor op main na v10.5.18, inclusief import-fixes; v10.7.0 verkleinde `plugin.py` verder door wrapper-cleanup). Alle `.py`-bestanden horen in de pluginmap naast `Easee_icons_v2.zip`.
 
 | Bestand | Rol |
 |---------|-----|
@@ -284,11 +284,13 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 | **v10.6.3** | `easee_api_keys.py` — gecentraliseerde API-veldnamen i.p.v. magic strings |
 | **v10.6.4** | Startup-sync losgekoppeld van poll-interval: 3s min. vertraging, readiness-check op Devices, 60s fallback |
 | **v10.6.5** | Equalizer Vermogen-tegel: **Vandaag** kWh via observation 45 (cumulatief import); fallback vermogensintegratie |
-| **v10.7.2** | Fix: onHeartbeat crash door verwijderde `plugin.is_*_limit_key` wrappers in `equalizer_logic` |
-| **v10.7.1** | Fix: onHeartbeat crash door `power_emoji`/`status_emoji` naam-shadowing in `poll_charger` |
 | **v10.7.0** | Code cleanup: ~150 passthrough-wrappers verwijderd; directe module-aanroepen; `plugin.py` kleiner; geen functionele wijzigingen |
+| **v10.7.1** | Fix: onHeartbeat crash door `power_emoji`/`status_emoji` naam-shadowing in `poll_charger` |
+| **v10.7.2** | Fix: onHeartbeat crash door verwijderde `plugin.is_*_limit_key` wrappers in `equalizer_logic` |
 
 **Upgrade vanaf v10.5.x:** `git pull`, herstart hardware-item. Upload **`Easee_icons_v2.zip` opnieuw** (v10.5.18 iconen + v10.6.0 grotere badges). State en devices blijven behouden.
+
+**Upgrade naar v10.7.x:** `git pull`, herstart hardware-item. Geen state-migratie nodig; v10.7.1 en v10.7.2 lossen regressies op na de wrapper-cleanup in v10.7.0.
 
 ## 🚀 Release
 

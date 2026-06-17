@@ -15,7 +15,7 @@ De canonieke installatiehandleiding staat in **[INSTALL.md](../INSTALL.md)** (Ne
 
 Selecteer bij **Setup → Hardware → Python plugins**:
 
-**Easee Domoticz plugin v10.6.5**
+**Easee Domoticz plugin v10.7.2**
 
 ### Updates
 
