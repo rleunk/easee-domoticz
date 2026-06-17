@@ -2,6 +2,7 @@
 
 import hashlib
 import Domoticz
+from domoticz_runtime import Devices
 from easee_constants import DEVICE_TYPES, CORE_DEVICE_IDS, ULTRA_DEBUG
 
 def make_charger_device_id(plugin, cid, label_key):

@@ -2,6 +2,7 @@
 
 import json, math
 import Domoticz
+from domoticz_runtime import Parameters
 
 def amp_value(plugin, value):
     x = plugin.safe_float(value, 0.0)

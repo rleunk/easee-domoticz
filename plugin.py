@@ -45,6 +45,9 @@ try:
 except Exception:
     requests = None
 
+import domoticz_runtime
+domoticz_runtime.bind_plugin_globals(globals())
+
 import easee_helpers
 import easee_api
 import easee_state

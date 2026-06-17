@@ -2,6 +2,7 @@
 
 import os
 import Domoticz
+from domoticz_runtime import Devices, Images
 from easee_constants import PLUGIN_KEY, CORE_DEVICE_IDS
 
 def image_root(plugin, name, device_id=None):

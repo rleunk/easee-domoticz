@@ -4,6 +4,7 @@ import math
 from datetime import datetime
 import hashlib
 import Domoticz
+from domoticz_runtime import Parameters
 
 def norm(plugin, value):
     return ' '.join(str(value).strip().split())

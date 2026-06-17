@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import Domoticz
+from domoticz_runtime import Parameters
 from easee_constants import BASE_URL, LOGIN_URL, REFRESH_URL
 
 def login(plugin):
