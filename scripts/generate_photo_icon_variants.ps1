@@ -580,49 +580,20 @@ function New-PhotoVariantIcon([Drawing.Bitmap]$DarkCrop, [Drawing.Bitmap]$RedCro
     return $icon
 }
 
-function Add-EqualizerPuckOverlay([Drawing.Bitmap]$Src, [int]$Size, [Drawing.Color]$EqColor, [bool]$Dim) {
-    $out = $Src.Clone()
-    $g = [Drawing.Graphics]::FromImage($out)
-    $g.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-    $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
-    $g.CompositingQuality = [Drawing.Drawing2D.CompositingQuality]::HighQuality
-    $g.PixelOffsetMode = [Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-
-    # Bottom-left overlay: readable at 48px, clears space from bottom-right "i" badge.
-    $puckSize = if ($Size -le 16) { 7 } else { [int][math]::Round($Size * 0.38) }
-    $puck = New-EaseeIconV2 $puckSize $EqColor 'equalizer' $Dim $true
-    $margin = if ($Size -le 16) { 0 } else { 1 }
-    $bx = $margin
-    $by = $Size - $puckSize - $margin
-    $g.DrawImage($puck, $bx, $by, $puckSize, $puckSize)
-    $puck.Dispose(); $g.Dispose()
-    return $out
-}
-
-function New-StatusComboIcon([int]$Size, [bool]$Dim, [Drawing.Bitmap]$DarkCrop, [Drawing.Bitmap]$RedCrop, [Drawing.Bitmap]$DarkCropMax, [Drawing.Color]$StatusColor) {
-    $icon = New-PhotoVariantIcon $DarkCrop $RedCrop 'photo-max' $Size $Dim $StatusColor $DarkCropMax 'status' $true
-    $tmp = Add-EqualizerPuckOverlay $icon $Size $EqualizerColor $Dim
-    $icon.Dispose()
-    return $tmp
-}
-
 function New-ProductionIcon([hashtable]$Set, [int]$Size, [bool]$Dim, [Drawing.Bitmap]$DarkCrop, [Drawing.Bitmap]$RedCrop, [Drawing.Bitmap]$DarkCropMax) {
-    if ($Set.Kind -eq 'status') {
-        return New-StatusComboIcon $Size $Dim $DarkCrop $RedCrop $DarkCropMax $Set.Color
-    }
-    if ($Set.Kind -in @('equalizer', 'loadbal', 'net', 'voltage')) {
-        $drawKind = if ($Set.Kind -in @('net', 'voltage')) { 'equalizer' } else { $Set.Kind }
-        $icon = New-EaseeIconV2 $Size $Set.Color $drawKind $Dim $true
-        $hinted = Add-FunctionHintOverlay $icon $Set.Kind $Set.Color $Dim
-        $icon.Dispose()
-        return $hinted
-    }
     if ($Set.Kind -eq 'status') {
         $icon = New-PhotoVariantIcon $DarkCrop $RedCrop 'photo-max' $Size $Dim $Set.Color $DarkCropMax $Set.Kind $false
         $combo = Add-EqualizerPuckOverlay $icon $EqualizerColor $Dim
         $icon.Dispose()
         $hinted = Add-FunctionHintOverlay $combo 'status' $Set.Color $Dim
         $combo.Dispose()
+        return $hinted
+    }
+    if ($Set.Kind -in @('equalizer', 'loadbal', 'net', 'voltage')) {
+        $drawKind = if ($Set.Kind -in @('net', 'voltage')) { 'equalizer' } else { $Set.Kind }
+        $icon = New-EaseeIconV2 $Size $Set.Color $drawKind $Dim $true
+        $hinted = Add-FunctionHintOverlay $icon $Set.Kind $Set.Color $Dim
+        $icon.Dispose()
         return $hinted
     }
     if ($Set.Kind -in @('import', 'export')) {
