@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.8] — 2026-06-18
+
+### Opgelost
+- **Icon mapping laadpaal vs equalizer** — `EASEE_CHG_*` Status-tegels (bijv. Garage, Voordeur) kregen per ongeluk `EaseeEqualizer` (sinds v10.5.19); nu weer `EaseeStatus` (laadpaal-pictogram). Equalizer *Vermogen* (`EASEE_EQ_*`, bijv. Meterkast) kreeg `EaseeImport`; nu `EaseeEqualizer` (equalizer-puck). Equalizer *Status* blijft `EaseeEqualizer`.
+
+### Fixed (EN)
+- Icon mapping: charger Status tiles → `EaseeStatus`; equalizer Vermogen → `EaseeEqualizer` (DeviceID-based rules in `image_root()`).
+
 ## [10.9.7] — 2026-06-18
 
 ### Opgelost

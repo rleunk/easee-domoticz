@@ -34,7 +34,7 @@ def image_root(plugin, name, device_id=None):
         if label in ('netto', 'net'):
             return 'EaseeNet'
         if label in ('vermogen', 'huisvermogen', 'power'):
-            return 'EaseeImport'
+            return 'EaseeEqualizer'
         if label in ('status',):
             return 'EaseeEqualizer'
         if label in ('spanning', 'voltage'):
@@ -52,7 +52,7 @@ def image_root(plugin, name, device_id=None):
     if devid.startswith('EASEE_CHG_'):
         label = n.split(' - ')[-1].strip() if ' - ' in n else n
         if label in ('status',):
-            return 'EaseeEqualizer'
+            return 'EaseeStatus'
         if label in ('laden',):
             return 'EaseeCharger'
         if label in ('totaal & sessie',):
@@ -73,7 +73,7 @@ def image_root(plugin, name, device_id=None):
         if 'spanning' in n or 'voltage' in n:
             return 'EaseeEqualizer'
         if 'vermogen' in n or 'huisvermogen' in n:
-            return 'EaseeImport'
+            return 'EaseeEqualizer'
         if 'load bal' in n or 'loadbal' in n or 'load balancing' in n:
             return 'EaseeEqualizer'
         if 'l1' in n or 'l2' in n or 'l3' in n or 'fase' in n:
