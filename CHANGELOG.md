@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.6.2] — 2026-06-17
+
+### Gewijzigd
+- **domoticz_devices.py** — `ensure_device_once` logt bij mislukte `Device.Create()` de exacte (gesanitiseerde) kwargs, exception-samenvatting en expliciete retry zonder `Image`; bij definitieve fout ERROR met volledige kwargs.
+
+### Changed (EN)
+- **domoticz_devices.py** — `ensure_device_once` logs sanitized kwargs, exception summary, and explicit Image-less retry on `Device.Create()` failure; final failure logged at ERROR.
+
 ## [10.6.1] — 2026-06-17
 
 ### Gewijzigd

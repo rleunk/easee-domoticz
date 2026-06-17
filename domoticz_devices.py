@@ -1,9 +1,28 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
+import traceback
 import Domoticz
 import domoticz_runtime
+import easee_logging
 from easee_constants import DEVICE_TYPES, CORE_DEVICE_IDS, ULTRA_DEBUG
+
+_DEVICE_LOG_FIELDS = frozenset({
+    'Name', 'Unit', 'DeviceID', 'Type', 'TypeName', 'Subtype', 'Switchtype', 'Options', 'Image',
+})
+_SENSITIVE_KWARG_KEYS = frozenset({'Password', 'password', 'Token', 'token'})
+
+
+def _device_kwargs_for_log(kwargs):
+    safe = {k: kwargs[k] for k in _DEVICE_LOG_FIELDS if k in kwargs}
+    for k in kwargs:
+        if k in _SENSITIVE_KWARG_KEYS:
+            safe[k] = '***'
+    return safe
+
+
+def _exc_summary(exc):
+    return ''.join(traceback.format_exception_only(type(exc), exc)).strip()
 
 def make_charger_device_id(plugin, cid, label_key):
     raw = f'{cid}|{label_key}'.encode('utf-8', errors='ignore')
@@ -104,12 +123,26 @@ def ensure_device_once(plugin, name, typename, device_id=None, legacy_names=None
         kwargs['Image'] = plugin.image_ids[root]
     try:
         Domoticz.Device(**kwargs).Create()
-    except Exception:
+    except Exception as e:
+        easee_logging.warning(
+            'domoticz_devices',
+            f'Device.Create() failed for {key}: {_exc_summary(e)} | kwargs={_device_kwargs_for_log(kwargs)}',
+            'ensure_device_once',
+        )
         kwargs.pop('Image', None)
+        easee_logging.warning(
+            'domoticz_devices',
+            f'Retrying Device.Create() without Image for {key} | kwargs={_device_kwargs_for_log(kwargs)}',
+            'ensure_device_once',
+        )
         try:
             Domoticz.Device(**kwargs).Create()
-        except Exception as e:
-            plugin.error(f'Device creation failed for {key}: {e}')
+        except Exception as e2:
+            easee_logging.error(
+                'domoticz_devices',
+                f'Device creation failed for {key} after retry without Image: {_exc_summary(e2)} | kwargs={_device_kwargs_for_log(kwargs)}',
+                'ensure_device_once',
+            )
             return None
     plugin.rebuild_index()
     return plugin.resolve_unit(key)
