@@ -283,7 +283,8 @@ Custom iconen na upgrade: zie [Custom iconen](#-custom-iconen).
 | **v10.6.2** | Device-aanmaak: bij mislukte `Device.Create()` worden kwargs + traceback gelogd |
 | **v10.6.3** | `easee_api_keys.py` — gecentraliseerde API-veldnamen i.p.v. magic strings |
 | **v10.6.4** | Startup-sync losgekoppeld van poll-interval: 3s min. vertraging, readiness-check op Devices, 60s fallback |
-| **v10.7.0** | Equalizer Vermogen-tegel: **Vandaag** kWh via observation 45 (cumulatief import); fallback vermogensintegratie |
+| **v10.6.5** | Equalizer Vermogen-tegel: **Vandaag** kWh via observation 45 (cumulatief import); fallback vermogensintegratie |
+| **v10.7.0** | Code cleanup: ~150 passthrough-wrappers verwijderd; directe module-aanroepen; `plugin.py` kleiner; geen functionele wijzigingen |
 
 **Upgrade vanaf v10.5.x:** `git pull`, herstart hardware-item. Upload **`Easee_icons_v2.zip` opnieuw** (v10.5.18 iconen + v10.6.0 grotere badges). State en devices blijven behouden.
 
