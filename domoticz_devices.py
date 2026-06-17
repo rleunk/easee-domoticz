@@ -24,6 +24,10 @@ def _device_kwargs_for_log(kwargs):
 def _exc_summary(exc):
     return ''.join(traceback.format_exception_only(type(exc), exc)).strip()
 
+
+def _traceback_summary():
+    return traceback.format_exc().strip()
+
 def make_charger_device_id(plugin, cid, label_key):
     raw = f'{cid}|{label_key}'.encode('utf-8', errors='ignore')
     return 'EASEE_CHG_' + hashlib.sha1(raw).hexdigest()[:24].upper()
@@ -126,7 +130,8 @@ def ensure_device_once(plugin, name, typename, device_id=None, legacy_names=None
     except Exception as e:
         easee_logging.warning(
             'domoticz_devices',
-            f'Device.Create() failed for {key}: {_exc_summary(e)} | kwargs={_device_kwargs_for_log(kwargs)}',
+            f'Device.Create() failed for {key}: {_exc_summary(e)} | '
+            f'traceback={_traceback_summary()} | kwargs={_device_kwargs_for_log(kwargs)}',
             'ensure_device_once',
         )
         kwargs.pop('Image', None)
@@ -140,7 +145,8 @@ def ensure_device_once(plugin, name, typename, device_id=None, legacy_names=None
         except Exception as e2:
             easee_logging.error(
                 'domoticz_devices',
-                f'Device creation failed for {key} after retry without Image: {_exc_summary(e2)} | kwargs={_device_kwargs_for_log(kwargs)}',
+                f'Device creation failed for {key} after retry without Image: {_exc_summary(e2)} | '
+                f'traceback={_traceback_summary()} | kwargs={_device_kwargs_for_log(kwargs)}',
                 'ensure_device_once',
             )
             return None
