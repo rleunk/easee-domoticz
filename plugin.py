@@ -355,6 +355,7 @@ class BasePlugin:
         self.update_core_sw('LoadBal', any_lb)
 
     def onStart(self):
+        domoticz_runtime.bind_plugin_globals(globals())
         if requests is None:
             self.error("Python module 'requests' ontbreekt. Installeer python3-requests in dezelfde Python omgeving als Domoticz.")
             return

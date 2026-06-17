@@ -2,7 +2,7 @@
 
 import json, math
 import Domoticz
-from domoticz_runtime import Parameters
+import domoticz_runtime
 
 def amp_value(plugin, value):
     x = plugin.safe_float(value, 0.0)
@@ -615,7 +615,7 @@ def log_site_structure_numerics_once(plugin, site_id, raw):
         for i in range(0, len(amp_range), chunk_size):
             chunk = amp_range[i:i + chunk_size]
             plugin.log(f'siteStructure amp-range 15-30 (site {key}): ' + '; '.join(chunk))
-    if Parameters.get('Mode6') == 'Debug':
+    if domoticz_runtime.Parameters.get('Mode6') == 'Debug':
         numerics = plugin.collect_numeric_values(data, 'siteStructure')
         if numerics:
             chunk_size = 40
@@ -842,7 +842,7 @@ def set_emobility(plugin, info, amps, source):
         info['emobility_source'] = source
 
 def log_fuse_probe_debug(plugin, site_id, info, debug_hits, candidates=None, site_structure=None, raw_hits=None, rejected=None):
-    if Parameters.get('Mode6') != 'Debug':
+    if domoticz_runtime.Parameters.get('Mode6') != 'Debug':
         return
     parts = [
         f'site={site_id}',
@@ -1143,10 +1143,10 @@ def parse_equalizer_observations(plugin, obs):
     # ---- Tibber API ----
 
 def custom_equalizer_name(plugin):
-    return plugin.clean_label(Parameters.get('Address', '') or '')
+    return plugin.clean_label(domoticz_runtime.Parameters.get('Address', '') or '')
 
 def manual_equalizer_id(plugin):
-    return str(Parameters.get('IP', '') or '').strip()
+    return str(domoticz_runtime.Parameters.get('IP', '') or '').strip()
 
 def equalizer_display_name(plugin, equalizer, index):
     custom = plugin.custom_equalizer_name()
@@ -1162,7 +1162,7 @@ def equalizer_dev_name(plugin, display, label):
     return plugin.clean_label(f'{display} - {label}')
 
 def _equalizer_matches_filter(plugin, name, site_name):
-    flt = Parameters.get('Mode5', '').strip().lower()
+    flt = domoticz_runtime.Parameters.get('Mode5', '').strip().lower()
     if not flt:
         return True
     return flt in str(name).lower() or flt in str(site_name).lower()

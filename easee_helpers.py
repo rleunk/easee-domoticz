@@ -4,7 +4,7 @@ import math
 from datetime import datetime
 import hashlib
 import Domoticz
-from domoticz_runtime import Parameters
+import domoticz_runtime
 
 def norm(plugin, value):
     return ' '.join(str(value).strip().split())
@@ -13,7 +13,7 @@ def prefix(plugin):
     return 'Easee'
 
 def extra_charger_names(plugin):
-    raw = (Parameters.get('Mode4', '') or '').strip()
+    raw = (domoticz_runtime.Parameters.get('Mode4', '') or '').strip()
     if not raw or raw.lower() == 'easee':
         return []
     return [plugin.clean_label(part.strip()) for part in raw.split(',') if part.strip()]
@@ -91,7 +91,7 @@ def wh_from_kwh(plugin, value):
         return 0
 
 def poll_interval_sec(plugin):
-    return max(10, plugin.safe_int(Parameters.get('Mode1', '30'), 30))
+    return max(10, plugin.safe_int(domoticz_runtime.Parameters.get('Mode1', '30'), 30))
 
 def short_id(plugin, full_id):
     s = str(full_id).strip()
@@ -106,7 +106,7 @@ def parse_iso(plugin, value):
         return None
 
 def tibber_token(plugin):
-    return (Parameters.get('Mode7', '') or '').strip()
+    return (domoticz_runtime.Parameters.get('Mode7', '') or '').strip()
 
 def tibber_enabled(plugin):
     return bool(plugin.tibber_token())

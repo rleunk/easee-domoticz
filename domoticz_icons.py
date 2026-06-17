@@ -2,7 +2,7 @@
 
 import os
 import Domoticz
-from domoticz_runtime import Devices, Images
+import domoticz_runtime
 from easee_constants import PLUGIN_KEY, CORE_DEVICE_IDS
 
 def image_root(plugin, name, device_id=None):
@@ -60,10 +60,10 @@ def icon_base(plugin, root):
     return f'{PLUGIN_KEY}{root}'
 
 def _icon_images_key(plugin, root):
-    if root in Images:
+    if root in domoticz_runtime.Images:
         return root
     prefixed = plugin.icon_base(root)
-    if prefixed in Images:
+    if prefixed in domoticz_runtime.Images:
         return prefixed
     return None
 
@@ -73,7 +73,7 @@ def _collect_image_ids(plugin):
     for r in roots:
         key = plugin._icon_images_key(r)
         if key:
-            found[r] = Images[key].ID
+            found[r] = domoticz_runtime.Images[key].ID
     return found
 
 def _try_create_icon_zip(plugin, fn):
@@ -150,7 +150,7 @@ def apply_images_to_devices(plugin):
     if not plugin.image_ids:
         return
     updated = 0
-    for unit, dev in Devices.items():
+    for unit, dev in domoticz_runtime.Devices.items():
         try:
             root = plugin.image_root(plugin.norm(dev.Name), getattr(dev, 'DeviceID', ''))
             img_id = plugin.image_ids.get(root)

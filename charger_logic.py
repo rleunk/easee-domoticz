@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import Domoticz
-from domoticz_runtime import Parameters
+import domoticz_runtime
 from easee_constants import OP_MODE_LABELS
 
 def session_energy_kwh(plugin, values, session):
@@ -21,9 +21,9 @@ def power_integrated_kwh(plugin, power_w):
 
 def custom_charger_name(plugin, index):
     if index == 0:
-        return plugin.clean_label(Parameters.get('Mode2', '') or '')
+        return plugin.clean_label(domoticz_runtime.Parameters.get('Mode2', '') or '')
     if index == 1:
-        return plugin.clean_label(Parameters.get('Mode3', '') or '')
+        return plugin.clean_label(domoticz_runtime.Parameters.get('Mode3', '') or '')
     extras = plugin.extra_charger_names()
     extra_index = index - 2
     if 0 <= extra_index < len(extras):
@@ -82,7 +82,7 @@ def compute_duration_text(plugin, start_ts):
 
 def discover_chargers(plugin):
     chargers = []
-    flt = Parameters.get('Mode5', '').strip().lower()
+    flt = domoticz_runtime.Parameters.get('Mode5', '').strip().lower()
     try:
         data = plugin.api_get('/chargers') or []
         if isinstance(data, list):

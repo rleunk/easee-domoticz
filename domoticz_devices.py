@@ -2,7 +2,7 @@
 
 import hashlib
 import Domoticz
-from domoticz_runtime import Devices
+import domoticz_runtime
 from easee_constants import DEVICE_TYPES, CORE_DEVICE_IDS, ULTRA_DEBUG
 
 def make_charger_device_id(plugin, cid, label_key):
@@ -20,7 +20,7 @@ def make_device_id(plugin, name):
 def rebuild_index(plugin):
     plugin.units_by_name = {}
     plugin.units_by_devid = {}
-    for unit, dev in Devices.items():
+    for unit, dev in domoticz_runtime.Devices.items():
         plugin.units_by_name[plugin.norm(dev.Name)] = unit
         devid = getattr(dev, 'DeviceID', '') or ''
         if devid:
@@ -53,17 +53,17 @@ def resolve_core_unit(plugin, label):
 def sync_device_name(plugin, unit, name):
     key = plugin.clean_label(name)
     try:
-        current = plugin.norm(Devices[unit].Name)
+        current = plugin.norm(domoticz_runtime.Devices[unit].Name)
         if current == key:
             return
-        Devices[unit].Name = key
+        domoticz_runtime.Devices[unit].Name = key
         plugin.rebuild_index()
     except Exception as e:
         plugin.debug(f'device rename failed unit {unit}: {e}')
 
 def next_free_unit(plugin):
     for unit in range(1, 256):
-        if unit not in Devices:
+        if unit not in domoticz_runtime.Devices:
             return unit
     plugin.error('Geen vrije Unit meer beschikbaar (1-255)')
     return None
@@ -117,54 +117,54 @@ def ensure_device_once(plugin, name, typename, device_id=None, legacy_names=None
 def update_core_text(plugin, label, value):
     u = plugin.resolve_core_unit(plugin.clean_label(label))
     if u is not None:
-        Devices[u].Update(nValue=0, sValue=str(value)[:4000])
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
 
 def update_core_custom(plugin, label, value):
     u = plugin.resolve_core_unit(plugin.clean_label(label))
     if u is not None:
-        Devices[u].Update(nValue=0, sValue=str(value))
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value))
 
 def update_core_energy(plugin, label, power_w, total_wh):
     u = plugin.resolve_core_unit(plugin.clean_label(label))
     if u is not None:
-        Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
 
 def update_core_sw(plugin, label, value):
     u = plugin.resolve_core_unit(plugin.clean_label(label))
     if u is not None:
         state = plugin.truthy(value)
-        Devices[u].Update(nValue=1 if state else 0, sValue='Aan' if state else 'Uit')
+        domoticz_runtime.Devices[u].Update(nValue=1 if state else 0, sValue='Aan' if state else 'Uit')
 
 def update_text(plugin, name, value):
     u = plugin.resolve_unit(name)
     if u is not None:
-        Devices[u].Update(nValue=0, sValue=str(value)[:4000])
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
 
 def update_custom(plugin, name, value):
     u = plugin.resolve_unit(name)
     if u is not None:
-        Devices[u].Update(nValue=0, sValue=str(value))
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value))
 
 def update_energy(plugin, name, power_w, total_wh):
     u = plugin.resolve_unit(name)
     if u is not None:
-        Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
 
 def update_sw(plugin, name, value):
     u = plugin.resolve_unit(name)
     if u is not None:
         state = plugin.truthy(value)
-        Devices[u].Update(nValue=1 if state else 0, sValue='Aan' if state else 'Uit')
+        domoticz_runtime.Devices[u].Update(nValue=1 if state else 0, sValue='Aan' if state else 'Uit')
 
 def update_charger_text(plugin, cid, label_key, value):
     u = plugin.resolve_charger_unit(cid, label_key)
     if u is not None:
-        Devices[u].Update(nValue=0, sValue=str(value)[:4000])
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
 
 def update_charger_custom(plugin, cid, label_key, value):
     u = plugin.resolve_charger_unit(cid, label_key)
     if u is not None:
-        Devices[u].Update(nValue=0, sValue=str(value))
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value))
 
 def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, session_active):
     u = plugin.resolve_charger_unit(cid, 'Kosten (Sessie/Dag)')
@@ -176,28 +176,28 @@ def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, sessi
     session_label = 'Sessie' if session_active else 'Laatste sessie'
     text = f'{price_emoji} {session_label}: €{plugin.euro_str(session_cost)} | Dag: €{plugin.euro_str(day_cost)}'
     try:
-        is_text = int(Devices[u].SubType) == DEVICE_TYPES['Text']['Subtype']
+        is_text = int(domoticz_runtime.Devices[u].SubType) == DEVICE_TYPES['Text']['Subtype']
     except Exception:
         is_text = False
     if is_text:
-        Devices[u].Update(nValue=0, sValue=text[:4000])
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=text[:4000])
     else:
-        Devices[u].Update(nValue=0, sValue=plugin.euro_str(session_cost))
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=plugin.euro_str(session_cost))
 
 def update_charger_energy(plugin, cid, label_key, power_w, total_wh):
     u = plugin.resolve_charger_unit(cid, label_key)
     if u is not None:
-        Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
 
 def update_equalizer_text(plugin, eid, label_key, value):
     u = plugin.resolve_equalizer_unit(eid, label_key)
     if u is not None:
-        Devices[u].Update(nValue=0, sValue=str(value)[:4000])
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
 
 def update_equalizer_energy(plugin, eid, label_key, power_w, total_wh=0):
     u = plugin.resolve_equalizer_unit(eid, label_key)
     if u is not None:
-        Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
+        domoticz_runtime.Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
 
     # ---- Easee API ----
 

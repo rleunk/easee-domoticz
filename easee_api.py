@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import Domoticz
-from domoticz_runtime import Parameters
+import domoticz_runtime
 from easee_constants import BASE_URL, LOGIN_URL, REFRESH_URL
 
 def login(plugin):
     try:
-        r = plugin.session.post(LOGIN_URL, json={'userName': Parameters.get('Username',''), 'password': Parameters.get('Password','')}, timeout=20)
+        r = plugin.session.post(LOGIN_URL, json={'userName': domoticz_runtime.Parameters.get('Username',''), 'password': domoticz_runtime.Parameters.get('Password','')}, timeout=20)
         if r.status_code == 200:
             data = r.json()
             plugin.access_token = data.get('accessToken','')
