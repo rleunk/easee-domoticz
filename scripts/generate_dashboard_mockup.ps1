@@ -182,7 +182,7 @@ function New-DashboardMockup {
 
     $headerFont = New-Object System.Drawing.Font ('Segoe UI', 14, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
     $headerBrush = New-Object System.Drawing.SolidBrush $TitleOrange
-    $g.DrawString('Easee - Domoticz dashboard (demo)', $headerFont, $headerBrush, [single]$pad, [single]($pad - 2))
+    $g.DrawString('Easee - Domoticz dashboard', $headerFont, $headerBrush, [single]$pad, [single]($pad - 2))
     $headerFont.Dispose(); $headerBrush.Dispose()
 
     $icons = @{
