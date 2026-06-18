@@ -86,12 +86,13 @@ EQUALIZER_POWER_ALIASES = {
     'activePowerImport': (
         'activePowerImport', 'ActivePowerImport', 'activePowerImport_kW',
         'activePowerImportKw', 'importPower', 'gridImportPower', 'consumptionPower',
-        'householdPower', 'totalImportPower', 'powerImport',
+        'householdPower', 'totalImportPower', 'powerImport', 'totalConsumption',
+        'activePower', 'currentPower', 'power',
     ),
     'activePowerExport': (
         'activePowerExport', 'ActivePowerExport', 'activePowerExport_kW',
         'activePowerExportKw', 'exportPower', 'gridExportPower', 'feedInPower',
-        'totalExportPower', 'powerExport',
+        'totalExportPower', 'powerExport', 'totalFeedIn', 'feedIn',
     ),
 }
 

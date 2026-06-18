@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.15] — 2026-06-18
+
+### Opgelost
+- **Equalizer Vermogen blijft 0/0/0** — Volledige observations-call miste verplichte `ids`-parameter (HTTP 400 → lege response → `beschikbare ids: geen`). State-power wordt nu direct na `/equalizers/{id}/state` geëxtraheerd via alias-scan (`activePowerImport`, `consumptionPower`, …); nul-waarden uit observations overschrijven niet langer ontbrekende power. Hergebruik state-payload in fallback (minder 429). INFO-log bij succes: `power via equalizer.state: import=…W`; bij 0: beschikbare state-keys + obs API-diagnostiek.
+
+### Fixed (EN)
+- Equalizer power: fix observations URL (required `ids`), alias-aware state merge, skip zero obs pollution, reuse cached state, diagnostic logging.
+
 ## [10.9.14] — 2026-06-18
 
 ### Opgelost
@@ -48,6 +56,7 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 | Versie | Hoofdthema |
 |--------|------------|
+| **10.9.15** | Equalizer Vermogen: obs ids-fix, state alias-merge, diagnostiek |
 | **10.9.14** | onHeartbeat unpack-fix in fase I×V fallback |
 | **10.9.13** | 429 fail-fast (geen thread-blok); ongoing sessions optioneel |
 | **10.9.12** | Equalizer Vermogen fallback-keten; 429 retry |
