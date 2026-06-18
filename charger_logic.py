@@ -45,6 +45,7 @@ def is_session_resume(plugin, st, session_active, session, power_w):
 
 def sync_day_energy(plugin, st, total_kwh, session_active, power_w):
     """Track today's kWh with a midnight baseline; integrate power when lifetimeEnergy is stale."""
+    skip_monotonic = bool(st.pop('day_energy_reset', False))
     if st.get('day_baseline_kwh') is None:
         st['day_baseline_kwh'] = total_kwh
         st['day_last_lifetime_kwh'] = total_kwh
@@ -69,7 +70,7 @@ def sync_day_energy(plugin, st, total_kwh, session_active, power_w):
 
     display_wh = int(round(baseline * 1000.0)) + int(round(easee_helpers.safe_float(plugin, st.get('day_kwh'), 0.0) * 1000.0))
     prev_display = easee_helpers.safe_int(plugin, st.get('display_wh'), 0)
-    if display_wh < prev_display:
+    if not skip_monotonic and display_wh < prev_display:
         display_wh = prev_display
     st['display_wh'] = display_wh
     return display_wh, easee_helpers.safe_float(plugin, st.get('day_kwh'), 0.0), day_delta

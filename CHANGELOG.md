@@ -6,6 +6,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.25] — 2026-06-19
+
+### Bugfix
+- **Vandaag kWh blijft gisteren tonen na middernacht** — Bij dagwisseling werd `display_wh` niet gereset; de monotonic guard blokkeerde een daling, waardoor *Vandaag* op de Laden-tegel het vorige dagtotaal bleef tonen (~1,8 kWh i.p.v. ~0). `display_wh` wordt nu bij middernacht opnieuw gezet en de monotonic guard wordt één poll overgeslagen.
+
 ## [10.9.24] — 2026-06-19
 
 ### Bugfix

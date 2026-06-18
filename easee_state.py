@@ -102,6 +102,8 @@ def charger_state(plugin, cid):
         st['day_baseline_kwh'] = None
         st['day_kwh'] = 0.0
         st['day_last_lifetime_kwh'] = None
+        st['display_wh'] = 0
+        st['day_energy_reset'] = True
     return st
 
 def equalizer_state(plugin, eid):
