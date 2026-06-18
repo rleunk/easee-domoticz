@@ -1,12 +1,12 @@
-# Easee Domoticz plugin v10.9.17
+# Easee Domoticz plugin v10.9.18
 
 **Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.9.17-blue)
+![Version](https://img.shields.io/badge/version-10.9.18-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** v10.9.17 — *stable testing* (pauze in actieve ontwikkeling). Getest met 2× Charge Lite, 1× Equalizer en Tibber. Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
+> **Status:** v10.9.18 — *stable testing* (pauze in actieve ontwikkeling). Getest met 2× Charge Lite, 1× Equalizer en Tibber. Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
 
 ## TL;DR — installeren in 2 minuten
 
@@ -16,7 +16,7 @@ git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.9.17** → Easee-gebruikersnaam + wachtwoord → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.9.18** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
 Optioneel: Tibber-token (Mode7), laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
@@ -48,29 +48,29 @@ Optioneel: Tibber-token (Mode7), laadpaalnamen (Mode2/3/4), Equalizer-naam (Addr
 | **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
 
-Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.9.17][LEVEL]…`.
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.9.18][LEVEL]…`.
 
 ## Screenshots
 
-> **Let op:** de afbeeldingen hieronder zijn **illustratieve mockups** — geen echte Domoticz-screenshots. Ze tonen ongeveer hoe tegels en iconen eruit kunnen zien. Vervang ze in je eigen fork door een screenshot van jouw dashboard (zie [INSTALL.md — Eigen screenshot](INSTALL.md#eigen-screenshot-toevoegen-fork)).
+> **Let op:** de afbeeldingen hieronder zijn **gesanitiseerde demo-mockups** — geen live Domoticz-data. Alle getallen zijn **0** / **€0.00**, tijden **00:00** en datums **2026-12-31**. Zo ziet een typisch dashboard eruit met 2 laadpalen (Garage, Voordeur), Equalizer (Meterkast) en Tibber. Opnieuw genereren: `scripts/generate_dashboard_mockup.ps1`.
 
-### Dashboard (illustratie)
+### Dashboard (15 tegels)
 
-![Illustratief dashboard-overzicht](docs/screenshot-dashboard.png)
+![Domoticz dashboard — gesanitiseerde demo](docs/screenshot-dashboard.png)
 
-*Illustratief — vervang door eigen Domoticz-screenshot. Mockup van globale tegels, laadpaal (Garage) en Equalizer (Meterkast).*
+*Demo-layout: globale tegels, Kosten/Beste laden (Tibber), laadpalen Garage + Voordeur, Equalizer Meterkast (Status + Vermogen). Custom iconen incl. combo op **Easee - Status** (v10.9.18).*
 
 ### Iconen (actuele referentie)
 
 ![Alle 13 iconensets — preview](docs/icon-preview-v2.png)
 
-*Actuele iconensets v10.9.17, inclusief `EaseeStatusGlobal` (combo) en `EaseeStatus` (laadpaal-only). Dit is een gegenereerde preview, geen Domoticz-capture.*
+*Actuele iconensets v10.9.18, inclusief `EaseeStatusGlobal` (combo: EQ linksonder, laadpaal rechtsboven) en `EaseeStatus` (laadpaal-only). Gegenereerde preview, geen Domoticz-capture.*
 
-### Equalizer-tegels (illustratie)
+### Equalizer & combo-icoon (demo)
 
-![Equalizer puck en laadpaal-iconen](docs/screenshot-equalizer.png)
+![Equalizer-tegels en StatusGlobal combo](docs/screenshot-equalizer.png)
 
-*Illustratief — vervang door eigen Domoticz-screenshot. Mockup van custom iconen met LED-kleuren en functie-badges.*
+*Close-up: v10.9.18 combo-icoon op globale Status, Meterkast Status (LB/fase/spanning) en Vermogen (import/terug/netto). Gesanitiseerde waarden.*
 
 ## Ondersteunde scenario's
 
@@ -161,12 +161,13 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 ## Changelog & release
 
 - Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md)
-- Laatste release: **[v10.9.17](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.17)** — fix Equalizer Vermogen sticky power + per-endpoint rate limit
+- Laatste release: **[v10.9.18](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.18)** — combo-icoon verfijnd (EQ groter linksonder, laadpaal kleiner rechtsboven)
 
 ### v10.9.x in het kort
 
 | Versie | Thema |
 |--------|-------|
+| **10.9.18** | `EaseeStatusGlobal` combo-icoon: EQ-puck iets groter linksonder, laadpaal iets kleiner rechtsboven; overlap + z-order ongewijzigd |
 | **10.9.17** | Equalizer Vermogen sticky power; per-endpoint rate limit (charger 429 blokkeert EQ niet) |
 | **10.9.16** | Discovery-throttle; equalizer vóór laders; observations URL-fix |
 | **10.9.15** | Equalizer Vermogen obs `ids`-fix; state alias-merge |
@@ -187,7 +188,7 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 | Geen Equalizer | Debug aan; handmatig ID in IP-veld |
 | Kosten 0 € | Tibber-token; tile verwijderen + hardware herstarten |
 | 429 rate limit in log | Poll interval (Mode1) op **60 sec** — [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md#http-429-rate-limit-easee-api)
-| Verkeerd icoon op tegel | Upgrade naar v10.9.17; zip opnieuw uploaden |
+| Verkeerd icoon op tegel | Upgrade naar v10.9.18; zip opnieuw uploaden |
 
 ## Module structuur
 
@@ -195,7 +196,7 @@ Sinds v10.6.0: 13 Python-modules naast `Easee_icons_v2.zip`. Overzicht: [docs/RE
 
 ## Problemen melden
 
-[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.9.17**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.9.18**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
 
 ## Support & credits
 
@@ -207,4 +208,4 @@ MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Versie 10.9.17** — Richard Leunk
+**Versie 10.9.18** — Richard Leunk

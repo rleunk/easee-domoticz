@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee Domoticz plugin v10.9.17
+# Installatiehandleiding — Easee Domoticz plugin v10.9.18
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,7 +8,7 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee Domoticz plugin v10.9.17 |
+| Plugin | Easee Domoticz plugin v10.9.18 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` (+ 12 Python-modules = 13 `.py`-bestanden sinds v10.6.0) |
@@ -104,7 +104,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee Domoticz plugin v10.9.17**
+4. Selecteer **Easee Domoticz plugin v10.9.18**
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
 7. Klik **Add**
@@ -287,11 +287,15 @@ Custom iconen uit `Easee_icons_v2.zip` worden bij start automatisch geladen en o
 - State migreert automatisch naar `easee_state.json` (atomisch opslaan sinds v10.6.1).
 - Upload **`Easee_icons_v2.zip` opnieuw** als badges/iconen niet veranderen (Domoticz cached iconen).
 
-### Specifiek: v10.9.17 (huidige release, stable testing)
+### Specifiek: v10.9.18 (huidige release, stable testing)
+
+- **`EaseeStatusGlobal` combo-icoon** — EQ-puck iets groter linksonder, laadpaal iets kleiner rechtsboven (v10.9.18). Upload **`Easee_icons_v2.zip` opnieuw** als het combo-icoon niet verandert.
+- Verder: sticky power + per-endpoint rate limit (v10.9.17); discovery-throttle, equalizer vóór laders (v10.9.11–v10.9.16).
+
+### Specifiek: v10.9.17
 
 - **Equalizer Vermogen sticky power** — laatste geldige import/export blijft op tegel bij mislukte poll; charger-429 blokkeert equalizer niet meer.
-- **429 rate limit** — bij herhaalde `HTTP 429`-waarschuwingen in het log: zet **Poll interval (Mode1)** op **60 seconden** via **Setup → Hardware → Easee → Poll interval (sec)**.
-- Verder: discovery-throttle, equalizer vóór laders, observations URL-fix (v10.9.11–v10.9.16).
+- **429 rate limit** — bij herhaalde `HTTP 429`-waarschuwingen in het log: zet **Poll interval (Mode1)** op **60 seconden**.
 
 ### Specifiek: v10.9.10 – v10.9.16
 
@@ -343,7 +347,7 @@ Controleer [CHANGELOG.md](CHANGELOG.md) voor wijzigingen per versie.
 
 ## Eigen screenshot toevoegen (fork)
 
-De README gebruikt **illustratieve mockups** in `docs/` — geen echte Domoticz-captures. Wil je in je eigen fork een echte screenshot tonen?
+De README gebruikt **gesanitiseerde demo-mockups** in `docs/` (geen live kWh/vermogen). Wil je in je eigen fork een echte screenshot tonen?
 
 1. Maak in Domoticz een screenshot van je dashboard (browser of OS-screenshot).
 2. Sla op als `docs/screenshot-dashboard.png` (overschrijf de mockup) of een nieuwe naam.
