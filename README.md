@@ -1,12 +1,12 @@
-# Easee Domoticz plugin v10.9.18
+# Easee Domoticz plugin v10.9.19
 
 **Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.9.18-blue)
+![Version](https://img.shields.io/badge/version-10.9.19-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** v10.9.18 — *stable testing* (pauze in actieve ontwikkeling). Getest met 2× Charge Lite, 1× Equalizer en Tibber. Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
+> **Status:** v10.9.19 — *stable testing* (pauze in actieve ontwikkeling). Getest met 2× Charge Lite, 1× Equalizer en Tibber. Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
 
 ## TL;DR — installeren in 2 minuten
 
@@ -52,13 +52,13 @@ Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestr
 
 ## Screenshots
 
-> **Let op:** de afbeeldingen hieronder zijn **gesanitiseerde demo-mockups** in echte Domoticz-tegelstijl (donker navy, blauwe header, witte body, footer-knoppen) — geen live Domoticz-data. Alle getallen zijn **0** / **€0.00**, tijden **00:00** en datums **2026-12-31**. De README-demo toont **11 tegels** met **één laadpaal** (*Lader 1*); een volledige installatie met 2 laadpalen heeft **15 tegels** (zie [CONFIGURATION.md](docs/CONFIGURATION.md)). Opnieuw genereren: `scripts/generate_dashboard_mockup.ps1`.
+> **Let op:** de afbeeldingen hieronder zijn **gesanitiseerde demo-mockups** in echte Domoticz-tegelstijl (lichtgrijze achtergrond, witte tegels, lichtblauwe header, footer-knoppen, grijze/gele favoriet-ster) — geen live Domoticz-data. Alle getallen zijn **0** / **€0.00**; kosten-tegels tonen **Laatste sessie** met oudere demo-timestamp (18:59) zoals in een echte setup na kort laden. De README-demo toont **12 tegels** met **één laadpaal** (*Lader 1*); een volledige installatie met 2 laadpalen heeft **15 tegels** (zie [CONFIGURATION.md](docs/CONFIGURATION.md)). Opnieuw genereren: `scripts/generate_dashboard_mockup.ps1`.
 
-### Dashboard (11 demo-tegels)
+### Dashboard (12 demo-tegels)
 
 ![Domoticz dashboard — gesanitiseerde demo](docs/screenshot-dashboard.png)
 
-*Demo-layout (3+3+3+2): 5 globale tegels, 4 laadpaal-tegels (*Easee - Lader 1*), 2 Equalizer-tegels (*Meterkast*). P-max foto-iconen; combo op **Easee - Status** (v10.9.18).*
+*Demo-layout (3×4): 6 globale tegels (incl. LoadBal), 4 laadpaal-tegels (*Easee - Lader 1*), 2 Equalizer-tegels (*Meterkast*). Grijze favoriet-ster; lichtblauwe header; kostentegels met 🔴 Laatste sessie / multi-line samenvatting. P-max foto-iconen; combo op **Easee - Status** (v10.9.19).*
 
 ### Iconen (actuele referentie)
 

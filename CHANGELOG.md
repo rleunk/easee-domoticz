@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.19] — 2026-06-18
+
+### Bugfix
+- **Kosten-tegel (legacy)** — oude per-lader tegels met naam *Kosten* (v9.x/v10.x) werden niet meer bijgewerkt na hernoeming naar *Kosten (Sessie/Dag)*; lookup valt nu terug op legacy namen.
+
+### Docs
+- README-dashboardmockup: grijze sterren, multi-line kostentegels, LoadBal-tegel, realistischere verhoudingen (12 demo-tegels).
+
 ## [10.9.18] — 2026-06-18
 
 ### Gewijzigd

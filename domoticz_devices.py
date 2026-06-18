@@ -63,8 +63,37 @@ def find_unit_by_devid(plugin, devid):
 def resolve_unit(plugin, name):
     return find_unit(plugin, name) or find_unit_by_devid(plugin, make_device_id(plugin, name))
 
+def _charger_legacy_names(plugin, display, label_key):
+    names = [
+        charger_logic.charger_dev_name(plugin, display, label_key),
+        easee_helpers.pref(plugin, f'{display} - {label_key}'),
+        f'Easee - {display} - {label_key}',
+        f'Easee - Easee - {display} - {label_key}',
+    ]
+    if label_key == 'Kosten (Sessie/Dag)':
+        names.extend([
+            charger_logic.charger_dev_name(plugin, display, 'Kosten'),
+            easee_helpers.pref(plugin, f'{display} - Kosten'),
+            f'Easee - {display} - Kosten',
+            f'Easee - Easee - {display} - Kosten',
+        ])
+    return names
+
 def resolve_charger_unit(plugin, cid, label_key):
-    return find_unit_by_devid(plugin, make_charger_device_id(plugin, cid, label_key))
+    unit = find_unit_by_devid(plugin, make_charger_device_id(plugin, cid, label_key))
+    if unit is not None:
+        return unit
+    cid_s = str(cid).strip()
+    for idx, charger in enumerate(getattr(plugin, 'chargers', []) or []):
+        if str(charger.get('id', '')).strip() != cid_s:
+            continue
+        display = charger_logic.charger_display_name(plugin, charger, idx)
+        for name in _charger_legacy_names(plugin, display, label_key):
+            unit = find_unit(plugin, name)
+            if unit is not None:
+                return unit
+        break
+    return None
 
 def resolve_equalizer_unit(plugin, eid, label_key):
     devid = make_equalizer_device_id(plugin, eid, label_key)
@@ -415,12 +444,8 @@ def ensure_charger_devices(plugin, charger, index):
     for typ, label_key in devices:
         name = charger_logic.charger_dev_name(plugin, display, label_key)
         devid = make_charger_device_id(plugin, cid, label_key)
-        legacy = [
-            easee_helpers.pref(plugin, f'{display} - {label_key}'),
-            f'Easee - {display} - {label_key}',
-            f'Easee - Easee - {display} - {label_key}',
-            f'{easee_helpers.short_id(plugin, cid)} {label_key}',
-        ]
+        legacy = list(_charger_legacy_names(plugin, display, label_key))
+        legacy.append(f'{easee_helpers.short_id(plugin, cid)} {label_key}')
         ensure_device_once(plugin, name, typ, device_id=devid, legacy_names=legacy)
 
 def _name_contains_import(plugin, name):
