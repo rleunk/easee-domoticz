@@ -6,6 +6,13 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.24] — 2026-06-19
+
+### Bugfix
+- **Vandaag kWh op Laden-tegel klopt niet (midnight / stale sessionEnergy)** — Domoticz berekende *Vandaag* uit `lifetimeEnergy`, dat tijdens een sessie vaak niet beweegt; bij herstart werd verouderde `sessionEnergy` (>0) ten onrechte gezien als “sessie hervatten”, waardoor laadtijd op 00:02 bleef staan terwijl *Vandaag* ~1,8 kWh toonde. De plugin houdt nu een middernacht-baseline bij (`day_baseline_kwh` + vermogensintegratie) en stuurt een dagcumulatief naar de Energy-tegel; *Vandaag* volgt daarmee het werkelijke dagverbruik.
+- **Kosten blijven €0,00 + verouderde timestamp op kosten-tegels** — `prev_session_kwh` werd elke poll op stale `sessionEnergy` gezet (delta=0); fallback via dag-tracking (`day_track`) en vermogen×tijd is aangescherpt. Kosten-tegels gebruiken `nValue` tijdens laden zodat Domoticz de timestamp ververst ook als het bedrag nog €0,00 toont (korte sessie / afronding op 2 decimalen).
+- **Sessie-hervatting** — alleen na echte plugin-herstart midden in een sessie (opgeslagen `session_start_ts` / kosten), niet op stale `sessionEnergy` alleen; laadtijd komt uit `firstEnergyTransferPeriodStart` / `sessionStart` van `/sessions/ongoing` wanneer beschikbaar.
+
 ## [10.9.23] — 2026-06-18
 
 ### Bugfix

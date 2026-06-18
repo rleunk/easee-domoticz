@@ -530,9 +530,9 @@ def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, sessi
     except Exception:
         is_text = False
     if is_text:
-        domoticz_runtime.Devices[u].Update(nValue=0, sValue=text[:4000])
+        domoticz_runtime.Devices[u].Update(nValue=1 if session_active else 0, sValue=text[:4000])
     else:
-        domoticz_runtime.Devices[u].Update(nValue=0, sValue=easee_helpers.euro_str(plugin, session_cost))
+        domoticz_runtime.Devices[u].Update(nValue=1 if session_active else 0, sValue=easee_helpers.euro_str(plugin, session_cost))
     if cid_key not in _COST_UPDATE_LOGGED:
         _COST_UPDATE_LOGGED.add(cid_key)
         easee_logging.info(

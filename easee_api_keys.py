@@ -121,6 +121,7 @@ CHARGER_KEYS = {
     'name': ('name', 'serialNumber', 'id'),
     'site': ('siteName', 'locationName', 'siteId'),
     'session_energy': ('sessionEnergy',),
+    'session_start': ('firstEnergyTransferPeriodStart', 'sessionStart'),
     'power': ('totalPower',),
     'lifetime_energy': ('lifetimeEnergy',),
     'online': ('isOnline',),

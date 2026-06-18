@@ -85,12 +85,23 @@ def charger_state(plugin, cid):
         'day_cost_total': 0.0,
         'day_cost_energy': 0.0,
         'day_cost_tax': 0.0,
+        'day_energy_key': today_key(plugin),
+        'day_baseline_kwh': None,
+        'day_kwh': 0.0,
+        'day_last_lifetime_kwh': None,
+        'display_wh': 0,
     })
-    if st.get('day_key') != today_key(plugin):
-        st['day_key'] = today_key(plugin)
+    tk = today_key(plugin)
+    if st.get('day_key') != tk:
+        st['day_key'] = tk
         st['day_cost_total'] = 0.0
         st['day_cost_energy'] = 0.0
         st['day_cost_tax'] = 0.0
+    if st.get('day_energy_key') != tk:
+        st['day_energy_key'] = tk
+        st['day_baseline_kwh'] = None
+        st['day_kwh'] = 0.0
+        st['day_last_lifetime_kwh'] = None
     return st
 
 def equalizer_state(plugin, eid):
