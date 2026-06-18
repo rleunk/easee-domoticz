@@ -77,6 +77,8 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 | Versie | Hoofdthema |
 |--------|------------|
+| **10.9.17** | Sticky power; per-endpoint rate limit (charger 429 ≠ equalizer blok) |
+| **10.9.16** | Discovery-throttle; equalizer vóór laders; observations URL-fix |
 | **10.9.15** | Equalizer Vermogen: obs ids-fix, state alias-merge, diagnostiek |
 | **10.9.14** | onHeartbeat unpack-fix in fase I×V fallback |
 | **10.9.13** | 429 fail-fast (geen thread-blok); ongoing sessions optioneel |

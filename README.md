@@ -16,7 +16,7 @@ git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.9.10** → Easee-gebruikersnaam + wachtwoord → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.9.17** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
 Optioneel: Tibber-token (Mode7), laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
@@ -48,27 +48,29 @@ Optioneel: Tibber-token (Mode7), laadpaalnamen (Mode2/3/4), Equalizer-naam (Addr
 | **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
 
-Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.9.10][LEVEL]…`.
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.9.17][LEVEL]…`.
 
 ## Screenshots
+
+> **Let op:** de afbeeldingen hieronder zijn **illustratieve mockups** — geen echte Domoticz-screenshots. Ze tonen ongeveer hoe tegels en iconen eruit kunnen zien. Vervang ze in je eigen fork door een screenshot van jouw dashboard (zie [INSTALL.md — Eigen screenshot](INSTALL.md#eigen-screenshot-toevoegen-fork)).
 
 ### Dashboard (illustratie)
 
 ![Illustratief dashboard-overzicht](docs/screenshot-dashboard.png)
 
-*Illustratief tegeloverzicht — geen echte Domoticz-screenshot. Toont globale tegels, laadpaal (Garage) en Equalizer (Meterkast).*
+*Illustratief — vervang door eigen Domoticz-screenshot. Mockup van globale tegels, laadpaal (Garage) en Equalizer (Meterkast).*
 
 ### Iconen (actuele referentie)
 
 ![Alle 13 iconensets — preview](docs/icon-preview-v2.png)
 
-*Actuele iconensets v10.9.10, inclusief `EaseeStatusGlobal` (combo) en `EaseeStatus` (laadpaal-only).*
+*Actuele iconensets v10.9.17, inclusief `EaseeStatusGlobal` (combo) en `EaseeStatus` (laadpaal-only). Dit is een gegenereerde preview, geen Domoticz-capture.*
 
 ### Equalizer-tegels (illustratie)
 
 ![Equalizer puck en laadpaal-iconen](docs/screenshot-equalizer.png)
 
-*Illustratie van custom iconen met LED-kleuren en functie-badges — geen live Domoticz-capture.*
+*Illustratief — vervang door eigen Domoticz-screenshot. Mockup van custom iconen met LED-kleuren en functie-badges.*
 
 ## Ondersteunde scenario's
 
@@ -134,7 +136,7 @@ Volledige LED/badge-tabel: [INSTALL.md — Custom iconen](INSTALL.md#custom-icon
 | Parameter | Standaard | Omschrijving |
 |-----------|-----------|--------------|
 | Username / Password | — | Easee-inlog (verplicht) |
-| Poll interval (Mode1) | 30 sec | API-interval |
+| Poll interval (Mode1) | 30 sec | API-interval; zet op **60 sec** bij 429-waarschuwingen (zie [CONFIGURATION.md](docs/CONFIGURATION.md)) |
 | Debug (Mode6) | Normal | Zet op *Debug* bij problemen |
 | Mode2 / Mode3 / Mode4 | — | Laadpaalnamen 1 / 2 / 3+ |
 | Address / IP | — | Equalizer-naam / handmatig ID |
@@ -165,11 +167,14 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 
 | Versie | Thema |
 |--------|-------|
+| **10.9.17** | Equalizer Vermogen sticky power; per-endpoint rate limit (charger 429 blokkeert EQ niet) |
+| **10.9.16** | Discovery-throttle; equalizer vóór laders; observations URL-fix |
+| **10.9.15** | Equalizer Vermogen obs `ids`-fix; state alias-merge |
+| **10.9.13–10.9.14** | 429 fail-fast (geen thread-blok); onHeartbeat unpack-fix |
+| **10.9.11–10.9.12** | Equalizer poll na herstart; Vermogen fallback-keten |
 | **10.9.10** | Combo-icoon alleen op *Easee - Status*; `EaseeStatusGlobal` |
-| **10.9.9** | Combo-icoon op Status (later gesplitst in 10.9.10) |
-| **10.9.8** | Icon mapping: laadpaal Status → `EaseeStatus`; EQ Vermogen → `EaseeEqualizer` |
-| **10.9.3–10.9.7** | Icon laden/toepassen fixes (zip-pad, plugin-key prefix, `Device.Update`) |
-| **10.9.1** | Equalizer: 2 tegels (Status + Vermogen) |
+| **10.9.8–10.9.9** | Icon mapping + combo-icoon iteratie |
+| **10.9.1–10.9.7** | Equalizer 2 tegels; icon laden/toepassen fixes |
 | **10.9.0** | Equalizer geconsolideerd (was 6 tegels in v10.8) |
 
 ## Troubleshooting (snel)
@@ -181,7 +186,8 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 | Login mislukt | Credentials + rate limit (5–10 min wachten) |
 | Geen Equalizer | Debug aan; handmatig ID in IP-veld |
 | Kosten 0 € | Tibber-token; tile verwijderen + hardware herstarten |
-| Verkeerd icoon op tegel | Upgrade naar v10.9.10+; zip opnieuw uploaden |
+| 429 rate limit in log | Poll interval (Mode1) op **60 sec** — [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md#http-429-rate-limit-easee-api)
+| Verkeerd icoon op tegel | Upgrade naar v10.9.17; zip opnieuw uploaden |
 
 ## Module structuur
 
@@ -189,7 +195,7 @@ Sinds v10.6.0: 13 Python-modules naast `Easee_icons_v2.zip`. Overzicht: [docs/RE
 
 ## Problemen melden
 
-[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.9.10**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.9.17**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
 
 ## Support & credits
 
@@ -201,4 +207,4 @@ MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Versie 10.9.10** — Richard Leunk
+**Versie 10.9.17** — Richard Leunk

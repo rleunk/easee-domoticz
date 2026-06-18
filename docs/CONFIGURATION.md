@@ -23,8 +23,11 @@
 **Omschrijving**: Hoe vaak de plugin Easee API raadpleegt  
 **Aanbeveling**:
 - 30 sec = normaal gebruik (default)
+- **60 sec = aanbevolen bij HTTP 429 rate limit** — minder API-druk; zie [TROUBLESHOOTING.md](TROUBLESHOOTING.md#http-429-rate-limit)
 - 60 sec = lager CPU gebruik
-- 10 sec = realtime updates (meer CPU)
+- 10 sec = realtime updates (meer CPU, meer kans op 429)
+
+**Instellen in Domoticz:** **Setup → Hardware** → klik je Easee hardware-item → **Poll interval (sec)** → wijzig naar `60` → **Save**.
 
 ### Device Prefix (hardwarenaam)
 
@@ -116,7 +119,7 @@ Gegroepeerde weergave op één teksttegel:
 
 **Huisvermogen staat niet op Status** — zie Vermogen-tegel.
 
-### Equalizer tegels (v10.9.1+, huidige release v10.9.10)
+### Equalizer tegels (v10.9.1+, huidige release v10.9.17)
 
 | Tegel | Type | Icoon | Weergave |
 |-------|------|-------|----------|
@@ -125,7 +128,30 @@ Gegroepeerde weergave op één teksttegel:
 
 Core **LoadBal**-schakelaar (site-wide) blijft ongewijzigd; icoon `EaseeLoadBal`.
 
-Legacy: *Import*, *Terug & netto*, *Netto*, *Teruglevering* → *Vermogen*. Wees-tegels uit v10.8.0/v10.9.0 handmatig verwijderen.
+Legacy: *Import*, *Terug & netto*, *Netto*, *Teruglevering*, *Spanning*, *Load balancing* (losse EQ-tegel) — **niet meer aangemaakt** sinds v10.9.1. Wees-tegels uit v10.8.0/v10.9.0 handmatig verwijderen als die nog bestaan.
+
+## Verwachte tegels (referentie)
+
+Bij **2 laadpalen + 1 Equalizer + Tibber** hoort de plugin **exact 15 tegels** aan te maken (prefix `[PREFIX]` = jouw hardwarenaam, bijv. `Easee`):
+
+| # | Tegel |
+|---|-------|
+| 1 | `[PREFIX] - Status` |
+| 2 | `[PREFIX] - Totaal Laden` |
+| 3 | `[PREFIX] - Totaal kWh` |
+| 4 | `[PREFIX] - LoadBal` |
+| 5 | `[PREFIX] - Kosten & Samenvatting` |
+| 6 | `[PREFIX] - Beste laden` |
+| 7 | `[PREFIX] - [EQ-naam] - Status` |
+| 8 | `[PREFIX] - [EQ-naam] - Vermogen` |
+| 9–12 | Per laadpaal 1: `[PREFIX] - [Naam] - Laden`, `Totaal & Sessie`, `Status`, `Kosten (Sessie/Dag)` |
+| 13–15 | Idem laadpaal 2 |
+
+**Geen Tibber?** Dan ontbreken tegels 5, 6 en de Kosten-tegels per laadpaal (minder dan 15).
+
+**Geen Equalizer?** Dan ontbreken tegels 7 en 8.
+
+**Legacy-tegels die er níet horen:** *Import*, *Spanning*, *Terug & netto*, *Netto*, *Teruglevering*, losse *Load balancing* (EQ). Die komen uit v10.8.0 of v10.9.0 — verwijder ze handmatig in Domoticz als ze nog bestaan.
 
 ### Equalizer tegels (v10.9.0, vervangen door 2 tegels in v10.9.1)
 
@@ -232,7 +258,7 @@ Devices krijgen automatisch deze namen:
 [PREFIX] - [NAAM] - Kosten (Sessie/Dag) (Tibber)
 ```
 
-## Custom iconen (v10.9.10)
+## Custom iconen (v10.9.17)
 
 13 sets in `Easee_icons_v2.zip`. Belangrijkste mapping:
 
