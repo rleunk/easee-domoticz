@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.10" author="Richard Leunk" version="10.9.10"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.11" author="Richard Leunk" version="10.9.11"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.10</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.11</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -67,6 +67,7 @@ class BasePlugin:
         self.refresh_token = ''
         self.started = False
         self.sync_done = False
+        self.initial_sync_done = False
         self.startup_at = 0
         self.startup_min_delay = 3
         self.startup_force_after = 60
@@ -129,11 +130,21 @@ class BasePlugin:
 
     def handle_startup_sync(self):
         elapsed = time.time() - self.startup_at
+        if self.initial_sync_done:
+            if not self.sync_done:
+                easee_logging.warning(
+                    'plugin',
+                    'Initiële sync was voltooid maar sync_done ontbrak — poll wordt hervat',
+                    'startup',
+                )
+                self.sync_done = True
+            return
+
         if elapsed < self.startup_min_delay:
-            easee_logging.debug(
+            easee_logging.info(
                 'plugin',
-                f'Startup-sync wacht op minimale vertraging ({elapsed:.1f}/{self.startup_min_delay}s)',
-                'startup',
+                f'Poll overgeslagen: startup-sync wacht op minimale vertraging ({elapsed:.1f}/{self.startup_min_delay}s)',
+                'poll',
             )
             return
 
@@ -141,10 +152,10 @@ class BasePlugin:
         force = elapsed >= self.startup_force_after
 
         if not ready and not force:
-            easee_logging.debug(
+            easee_logging.info(
                 'plugin',
-                f'Startup-sync wacht: {reason} (elapsed={elapsed:.1f}s)',
-                'startup',
+                f'Poll overgeslagen: startup-sync wacht op Devices ({reason}, elapsed={elapsed:.1f}s)',
+                'poll',
             )
             return
 
@@ -161,13 +172,36 @@ class BasePlugin:
             f'Initiële sync start ({reason}, elapsed={elapsed:.1f}s)',
             'startup',
         )
-        domoticz_devices.rebuild_index(self)
-        domoticz_icons.load_custom_images(self, plugin_globals=globals())
-        self.initial_sync()
-        domoticz_icons.apply_images_to_devices(self, force=True)
-        self.icon_reapply_remaining = 3
-        self.sync_done = True
-        easee_state.save_state(self)
+        try:
+            domoticz_devices.rebuild_index(self)
+            domoticz_icons.load_custom_images(self, plugin_globals=globals())
+            self.initial_sync()
+            self.initial_sync_done = True
+            self.sync_done = True
+            easee_logging.info(
+                'plugin',
+                f'Initiële sync voltooid ({len(self.chargers)} lader(s), {len(self.equalizers)} EQ) — poll start',
+                'startup',
+            )
+        except Exception as e:
+            easee_logging.error('plugin', f'Initiële sync mislukt: {e}', 'startup')
+            return
+
+        try:
+            domoticz_icons.apply_images_to_devices(self, force=True)
+            self.icon_reapply_remaining = 3
+        except Exception as e:
+            easee_logging.warning(
+                'plugin',
+                f'Iconen na initiële sync mislukt (poll gaat door): {e}',
+                'startup',
+            )
+            self.icon_reapply_remaining = 0
+
+        try:
+            easee_state.save_state(self)
+        except Exception as e:
+            easee_logging.warning('plugin', f'State opslaan na initiële sync mislukt: {e}', 'startup')
 
     def initial_sync(self):
         self.discover_entities()
@@ -231,6 +265,12 @@ class BasePlugin:
         self.latest_chargers = {}
         self.latest_equalizers = {}
         self.site_fuse_cache = {}
+        if not self.equalizers:
+            easee_logging.info(
+                'plugin',
+                'Equalizer poll overgeslagen: geen equalizer(s) in cache (discovery vond er geen)',
+                'poll',
+            )
         refreshed = easee_helpers.safe_int(self, self.state.get('price_cache_refreshed', 0), 0)
         if easee_helpers.tibber_enabled(self) and ((easee_state.now_ts(self) - refreshed) > 900 or not (self.state.get('price_cache') or {})):
             tibber_pricing.refresh_tibber_prices(self)
@@ -304,6 +344,7 @@ class BasePlugin:
         domoticz_icons.apply_images_to_devices(self)
         easee_state.load_state(self)
         self.sync_done = False
+        self.initial_sync_done = False
         self.icon_reapply_remaining = 0
         self.startup_at = time.time()
         self.startup_min_delay = 3
@@ -329,16 +370,24 @@ class BasePlugin:
         try:
             if not self.access_token and not easee_api.login(self):
                 domoticz_devices.update_core_text(self, 'Status', 'Login mislukt')
+                easee_logging.info('plugin', 'Poll overgeslagen: login mislukt', 'poll')
                 return
             if not self.sync_done:
                 self.handle_startup_sync()
-                return
+                if not self.sync_done:
+                    return
             if self.icon_reapply_remaining > 0:
                 domoticz_icons.load_custom_images(self, plugin_globals=globals())
                 domoticz_icons.apply_images_to_devices(self, force=True)
                 self.icon_reapply_remaining -= 1
             interval = max(10, easee_helpers.safe_int(self, Parameters.get('Mode1', '30'), 30))
-            if time.time() - self.last_poll < interval:
+            since_poll = time.time() - self.last_poll
+            if since_poll < interval:
+                easee_logging.debug(
+                    'plugin',
+                    f'Poll overgeslagen: interval ({since_poll:.1f}/{interval}s)',
+                    'poll',
+                )
                 return
             self.last_poll = time.time()
             self.refresh_entity_cache_only()

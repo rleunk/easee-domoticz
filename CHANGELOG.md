@@ -6,10 +6,20 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.11] — 2026-06-18
+
+### Opgelost
+- **Equalizer poll na Domoticz-herstart** — Als `initial_sync()` slaagde maar icon-apply of state-save daarna faalde, bleef `sync_done` onwaar. Elke heartbeat herhaalde discovery (charger + equalizer INFO-regels) zonder ooit `poll_all()` te draaien; Vermogen bleef op 0/0/0 tot hardware-item herstart. `sync_done` wordt nu gezet direct na geslaagde `initial_sync()`; icon-apply/state-save blokkeren poll niet meer. `initial_sync_done` voorkomt herhaalde volledige sync-loops.
+- **Equalizer power observations** — Fallback naar volledige `/state/{id}/observations` wanneer gefilterde query obs 40/41 (import/export) mist; INFO-log per poll-cycle en bij ontbrekende power-data.
+
+### Fixed (EN)
+- Equalizer poll blocked after Domoticz restart when post-initial-sync steps failed before `sync_done=True`; decouple poll gate from icon apply; observation power fallback.
+
 ## v10.9.x overzicht (stable testing line)
 
 | Versie | Hoofdthema |
 |--------|------------|
+| **10.9.11** | Equalizer poll na Domoticz-herstart; obs 40/41 fallback |
 | **10.9.10** | Status combo-icoon alleen globaal; `EaseeStatusGlobal` (13 sets) |
 | **10.9.9** | Combo-icoon op Status (later gesplitst in 10.9.10) |
 | **10.9.8** | Icon mapping: laadpaal Status → `EaseeStatus`, EQ Vermogen → `EaseeEqualizer` |

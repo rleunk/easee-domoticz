@@ -1133,6 +1133,41 @@ def parse_equalizer_observations(plugin, obs):
             values[field] = obs_val
     return values
 
+def fetch_equalizer_observations(plugin, eid, values):
+    """Haal equalizer observations op; fallback naar volledige lijst als power-obs ontbreken."""
+    query_path = f'/state/{eid}/observations?ids={OBSERVATION_KEYS["query_ids"]}'
+    obs = easee_api.api_get_optional(plugin, query_path)
+    parsed = parse_equalizer_observations(plugin, obs)
+    values.update(parsed)
+    need_power = (
+        first_power_value(values) is None
+        or first_export_power_value(values) is None
+    )
+    if not need_power:
+        return parsed
+    full_path = f'/state/{eid}/observations'
+    full_obs = easee_api.api_get_optional(plugin, full_path)
+    full_parsed = parse_equalizer_observations(plugin, full_obs)
+    added = []
+    for key, val in full_parsed.items():
+        if key not in values or values.get(key) in (None, ''):
+            values[key] = val
+            if key in ('activePowerImport', 'activePowerExport', 'currentPower', 'power'):
+                added.append(key)
+    if added:
+        easee_logging.info(
+            'equalizer_logic',
+            f'Equalizer {eid}: power-obs fallback via volledige observations ({", ".join(added)})',
+            'poll',
+        )
+    elif need_power:
+        easee_logging.info(
+            'equalizer_logic',
+            f'Equalizer {eid}: geen import/export power in observations (obs 40/41 ontbreken)',
+            'poll',
+        )
+    return parsed
+
     # ---- Tibber API ----
 
 def custom_equalizer_name(plugin):
@@ -1506,8 +1541,7 @@ def poll_equalizer(plugin, equalizer):
             if not site_id:
                 site_id = data.get('siteId')
 
-    obs = easee_api.api_get_optional(plugin, f'/state/{eid}/observations?ids={OBSERVATION_KEYS["query_ids"]}')
-    values.update(parse_equalizer_observations(plugin, obs))
+    fetch_equalizer_observations(plugin, eid, values)
 
     site_info = fetch_site_fuse_info(plugin, 
         site_id,
@@ -1520,6 +1554,13 @@ def poll_equalizer(plugin, equalizer):
     power_w = _import_power_w(plugin, values)
     export_w = _export_power_w(plugin, values)
     net_w = power_w - export_w
+
+    easee_logging.info(
+        'equalizer_logic',
+        f'Equalizer poll {eid}: import={int(power_w)}W export={int(export_w)}W net={int(net_w)}W '
+        f'(site={site_id or "—"})',
+        'poll',
+    )
 
     online = values.get(EQUALIZER_KEYS['online'][0])
     if online is None:

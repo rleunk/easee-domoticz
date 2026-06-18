@@ -1,12 +1,12 @@
-# Easee Domoticz plugin v10.9.10
+# Easee Domoticz plugin v10.9.11
 
 **Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.9.10-blue)
+![Version](https://img.shields.io/badge/version-10.9.11-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** v10.9.10 — *stable testing* (pauze in actieve ontwikkeling). Getest met 2× Charge Lite, 1× Equalizer en Tibber. Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
+> **Status:** v10.9.11 — *stable testing* (pauze in actieve ontwikkeling). Getest met 2× Charge Lite, 1× Equalizer en Tibber. Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
 
 ## TL;DR — installeren in 2 minuten
 
@@ -159,7 +159,7 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 ## Changelog & release
 
 - Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md)
-- Laatste release: **[v10.9.10](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.10)** — status combo-icoon alleen op globale Status; laadpaal Status weer charger-only; icon mapping fixes v10.9.8–10.9.10
+- Laatste release: **[v10.9.11](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.11)** — Equalizer poll na Domoticz-herstart; obs 40/41 fallback
 
 ### v10.9.x in het kort
 
