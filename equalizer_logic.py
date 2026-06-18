@@ -894,7 +894,7 @@ def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, 
         if rf > 0 and (root_fuse <= 0 or rf >= root_fuse):
             root_fuse, root_source = rf, rs
 
-    skip_api = lightweight or easee_api.is_rate_limited(plugin)
+    skip_api = lightweight or easee_api.is_equalizer_rate_limited(plugin)
 
     if site_structure is not None:
         probes.append('equalizer.observations.siteStructure')
@@ -1425,7 +1425,7 @@ def _apply_power_fallback_chain(plugin, eid, values, site_id=None, state_payload
         if _apply_state_power(plugin, eid, values, state_data, 'equalizer.state'):
             sources.append('equalizer.state')
 
-    if not skip_obs_api and not easee_api.is_rate_limited(plugin):
+    if not skip_obs_api and not easee_api.is_equalizer_rate_limited(plugin):
         power_obs = easee_api.api_get_optional(
             plugin, f'/state/{eid}/observations?ids={OBSERVATION_KEYS["power_query_ids"]}',
         )
@@ -1443,7 +1443,7 @@ def _apply_power_fallback_chain(plugin, eid, values, site_id=None, state_payload
             if _merge_power_fields(plugin, values, scanned, src):
                 sources.append(src)
 
-    if site_id and not skip_obs_api and not easee_api.is_rate_limited(plugin):
+    if site_id and not skip_obs_api and not easee_api.is_equalizer_rate_limited(plugin):
         site_state = easee_api.api_get_optional(plugin, f'/sites/{site_id}/state')
         if isinstance(site_state, dict):
             scanned = _deep_scan_power_fields(plugin, site_state)
@@ -1483,11 +1483,11 @@ def fetch_equalizer_observations(plugin, eid, values, site_id=None, state_payloa
     obs_samples = []
     obs_failures = []
 
-    if skip_obs_api or easee_api.is_rate_limited(plugin):
+    if skip_obs_api or easee_api.is_equalizer_rate_limited(plugin):
         if skip_obs_api:
             obs_failures.append('overgeslagen (state 429 in deze poll)')
         else:
-            obs_failures.append('overgeslagen (rate limit actief)')
+            obs_failures.append('overgeslagen (equalizer rate limit actief)')
         sources = _apply_power_fallback_chain(
             plugin, eid, values, site_id=site_id or values.get('siteId'),
             state_payload=state_payload, skip_obs_api=True,
@@ -1528,7 +1528,7 @@ def fetch_equalizer_observations(plugin, eid, values, site_id=None, state_payloa
         return parsed
 
     full_path = f'/state/{eid}/observations?ids={OBSERVATION_KEYS["power_query_ids"]}'
-    if not easee_api.is_rate_limited(plugin):
+    if not easee_api.is_equalizer_rate_limited(plugin):
         full_obs = easee_api.api_get_optional(plugin, full_path)
         if full_obs is not None:
             obs_samples.append(full_obs)
@@ -1538,7 +1538,7 @@ def fetch_equalizer_observations(plugin, eid, values, site_id=None, state_payloa
             else:
                 obs_failures.append('full=geen response')
     else:
-        obs_failures.append('full=overgeslagen (rate limit)')
+        obs_failures.append('full=overgeslagen (equalizer rate limit)')
         full_obs = None
     full_parsed = parse_equalizer_observations(plugin, full_obs)
     _merge_power_fields(plugin, values, full_parsed, 'obs.full')
@@ -1933,6 +1933,19 @@ def discover_equalizers(plugin):
     easee_logging.info('equalizer_logic', f'Equalizer discovery: {len(equalizers)} via {plugin.equalizer_source}', 'discovery')
     return equalizers
 
+def _equalizer_state_denied(plugin, eid):
+    denied = getattr(plugin, 'equalizer_state_denied_until', {})
+    return easee_state.now_ts(plugin) < easee_helpers.safe_float(plugin, denied.get(eid), 0)
+
+
+def _mark_equalizer_state_denied(plugin, eid, ttl_sec=300):
+    denied = getattr(plugin, 'equalizer_state_denied_until', None)
+    if denied is None:
+        denied = {}
+        plugin.equalizer_state_denied_until = denied
+    denied[eid] = easee_state.now_ts(plugin) + ttl_sec
+
+
 def poll_equalizer(plugin, equalizer):
     eid = equalizer['id']
     site_id = equalizer.get('siteId')
@@ -1941,7 +1954,17 @@ def poll_equalizer(plugin, equalizer):
     state_failed_429 = False
 
     state_path = f'/equalizers/{eid}/state'
-    state_data = easee_api.api_get_optional(plugin, state_path, skip_if_rate_limited=False)
+    if _equalizer_state_denied(plugin, eid):
+        state_data = None
+        easee_logging.debug(
+            'equalizer_logic',
+            f'Equalizer {eid}: state overgeslagen (403-cache actief)',
+            'poll',
+        )
+    else:
+        state_data = easee_api.api_get_optional(plugin, state_path, skip_if_rate_limited=False)
+        if not isinstance(state_data, dict) and easee_api.last_request_status(plugin) == 403:
+            _mark_equalizer_state_denied(plugin, eid)
     if isinstance(state_data, dict):
         state_payload = state_data
         _flatten_equalizer_payload(plugin, state_data, values)
@@ -1951,7 +1974,7 @@ def poll_equalizer(plugin, equalizer):
     elif easee_api.last_request_was_rate_limited(plugin):
         state_failed_429 = True
 
-    if not easee_api.is_rate_limited(plugin):
+    if not easee_api.is_equalizer_rate_limited(plugin):
         for path in (f'/equalizers/{eid}', f'/equalizers/{eid}/config'):
             data = easee_api.api_get_optional(plugin, path)
             if isinstance(data, dict):
@@ -1970,17 +1993,40 @@ def poll_equalizer(plugin, equalizer):
         site_structure=values.get(ak.SITE_STRUCTURE_KEYS['root']),
         equalizer_values=values,
         equalizer_id=eid,
-        lightweight=easee_api.is_rate_limited(plugin),
+        lightweight=easee_api.is_equalizer_rate_limited(plugin),
     )
 
     power_w = _import_power_w(plugin, values)
     export_w = _export_power_w(plugin, values)
     net_w = power_w - export_w
 
+    eq_st = easee_state.equalizer_state(plugin, eid)
+    power_stale = False
+    if power_w > 0 or export_w > 0:
+        eq_st['last_import_w'] = int(power_w)
+        eq_st['last_export_w'] = int(export_w)
+        eq_st['last_power_ts'] = easee_state.now_ts(plugin)
+    else:
+        last_imp = eq_st.get('last_import_w')
+        last_exp = eq_st.get('last_export_w')
+        if last_imp is not None or last_exp is not None:
+            power_w = int(last_imp or 0)
+            export_w = int(last_exp or 0)
+            net_w = power_w - export_w
+            power_stale = True
+            if domoticz_runtime.Parameters.get('Mode6') == 'Debug':
+                age_s = int(easee_state.now_ts(plugin) - easee_helpers.safe_float(plugin, eq_st.get('last_power_ts'), 0))
+                easee_logging.debug(
+                    'equalizer_logic',
+                    f'Equalizer {eid}: sticky power ({age_s}s oud): '
+                    f'import={power_w}W export={export_w}W net={net_w}W',
+                    'poll',
+                )
+
     easee_logging.info(
         'equalizer_logic',
         f'Equalizer poll {eid}: import={int(power_w)}W export={int(export_w)}W net={int(net_w)}W '
-        f'(site={site_id or "—"})',
+        f'(site={site_id or "—"}{", sticky" if power_stale else ""})',
         'poll',
     )
 

@@ -6,6 +6,15 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.17] — 2026-06-18
+
+### Opgelost
+- **Equalizer Vermogen werkt één poll, daarna 0** — Charger-429 op `/sessions/ongoing` zette een globale rate-limit vlag waardoor equalizer observations (`/state/{id}/observations?ids=40,41`) op volgende polls werden overgeslagen terwijl `/equalizers/{id}/state` HTTP 403 blijft (normaal voor dit account). Fix: aparte rate-limit timers per categorie (`charger_rate_limited_until` vs `equalizer_rate_limited_until`); observations draaien tenzij equalizer zelf 429 kreeg. **Sticky power**: laatste geldige import/export blijft op tegel staan bij mislukte poll (DEBUG toont leeftijd).
+- **Geen 0 overschrijven** — Mislukte poll (403 state + overgeslagen obs) reset Vermogen niet meer naar 0/0/0 als eerdere poll geldige waarden had.
+
+### Fixed (EN)
+- Equalizer power intermittent zero: per-category rate limits (charger 429 no longer blocks equalizer obs); sticky last-good import/export on failed polls; obs always attempted unless equalizer-specific 429.
+
 ## [10.9.16] — 2026-06-18
 
 ### Opgelost

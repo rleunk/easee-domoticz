@@ -95,4 +95,9 @@ def charger_state(plugin, cid):
 
 def equalizer_state(plugin, eid):
     store = plugin.state.setdefault('equalizers', {})
-    return store.setdefault(eid, {'integrated_kwh': 0.0})
+    return store.setdefault(eid, {
+        'integrated_kwh': 0.0,
+        'last_import_w': None,
+        'last_export_w': None,
+        'last_power_ts': None,
+    })

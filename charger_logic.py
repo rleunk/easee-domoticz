@@ -115,7 +115,7 @@ def poll_charger(plugin, charger):
             values.update(state)
     except Exception as e:
         easee_logging.error('charger_logic', f'State ophalen mislukt voor lader {cid}: {e}', 'poll')
-    if not easee_api.is_rate_limited(plugin):
+    if not easee_api.is_charger_rate_limited(plugin):
         cfg = easee_api.api_get_optional(plugin, f'/chargers/{cid}/config') or {}
         if isinstance(cfg, dict):
             values.update(cfg)

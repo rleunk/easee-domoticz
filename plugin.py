@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.16" author="Richard Leunk" version="10.9.16"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.17" author="Richard Leunk" version="10.9.17"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.16</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.17</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -75,8 +75,11 @@ class BasePlugin:
         self.last_devices_count = -1
         self.last_poll = 0
         self.last_discovery = 0
-        self.rate_limited_until = 0
+        self.charger_rate_limited_until = 0
+        self.equalizer_rate_limited_until = 0
+        self.general_rate_limited_until = 0
         self.ongoing_skip_until = 0
+        self.equalizer_state_denied_until = {}
         self.units_by_name = {}
         self.units_by_devid = {}
         self.image_ids = {}

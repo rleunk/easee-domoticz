@@ -16,25 +16,82 @@ def _parse_retry_after(header_val):
         return 90
 
 
+def _rate_limit_category(path):
+    path = str(path or '')
+    if '/chargers/' in path or '/sessions/' in path:
+        return 'charger'
+    if path.startswith('/state/') or '/equalizers/' in path:
+        return 'equalizer'
+    return 'general'
+
+
+def _category_until_attr(category):
+    if category == 'charger':
+        return 'charger_rate_limited_until'
+    if category == 'equalizer':
+        return 'equalizer_rate_limited_until'
+    return 'general_rate_limited_until'
+
+
+def _category_until(plugin, category):
+    return getattr(plugin, _category_until_attr(category), 0)
+
+
+def _set_category_until(plugin, category, until):
+    attr = _category_until_attr(category)
+    prev = getattr(plugin, attr, 0)
+    setattr(plugin, attr, max(prev, until))
+
+
 def mark_rate_limited(plugin, retry_after_header=None):
+    path = str(getattr(plugin, '_last_api_path', ''))
     secs = _parse_retry_after(retry_after_header)
     until = time.time() + secs
-    prev = getattr(plugin, 'rate_limited_until', 0)
-    plugin.rate_limited_until = max(prev, until)
-    if '/sessions/ongoing' in str(getattr(plugin, '_last_api_path', '')):
+    category = _rate_limit_category(path)
+    _set_category_until(plugin, category, until)
+    if category == 'charger' and '/sessions/ongoing' in path:
         plugin.ongoing_skip_until = max(getattr(plugin, 'ongoing_skip_until', 0), until)
+    easee_logging.debug(
+        'easee_api',
+        f'Rate limit ({category}) tot +{secs}s na GET {path}',
+        'api',
+    )
+
+
+def is_charger_rate_limited(plugin):
+    return time.time() < _category_until(plugin, 'charger')
+
+
+def is_equalizer_rate_limited(plugin):
+    return time.time() < _category_until(plugin, 'equalizer')
+
+
+def is_general_rate_limited(plugin):
+    return time.time() < _category_until(plugin, 'general')
 
 
 def is_rate_limited(plugin):
-    return time.time() < getattr(plugin, 'rate_limited_until', 0)
+    """True when any API category is rate-limited (legacy helper)."""
+    return (
+        is_charger_rate_limited(plugin)
+        or is_equalizer_rate_limited(plugin)
+        or is_general_rate_limited(plugin)
+    )
 
 
 def should_skip_ongoing(plugin):
-    return is_rate_limited(plugin) or time.time() < getattr(plugin, 'ongoing_skip_until', 0)
+    return is_charger_rate_limited(plugin) or time.time() < getattr(plugin, 'ongoing_skip_until', 0)
 
 
 def _is_priority_path(path):
     return '/equalizers/' in path and path.endswith('/state')
+
+
+def _is_rate_limited_for_path(plugin, path):
+    if _is_priority_path(path):
+        return False
+    category = _rate_limit_category(path)
+    return time.time() < _category_until(plugin, category)
 
 
 def _request_base_url(path):
@@ -98,7 +155,7 @@ def api_get(plugin, path, retry=True):
         mark_rate_limited(plugin, retry_after)
         easee_logging.warning(
             'easee_api',
-            f'GET {path} rate limit (429), Retry-After={retry_after} — overslaan tot volgende poll',
+            f'GET {path} rate limit (429, {_rate_limit_category(path)}), Retry-After={retry_after} — overslaan tot volgende poll',
             'api',
         )
         return None
@@ -106,10 +163,12 @@ def api_get(plugin, path, retry=True):
     return r.json() if r.text else None
 
 def api_get_optional(plugin, path, skip_if_rate_limited=True):
-    if skip_if_rate_limited and is_rate_limited(plugin) and not _is_priority_path(path):
+    if skip_if_rate_limited and _is_rate_limited_for_path(plugin, path):
+        category = _rate_limit_category(path)
+        remaining = int(_category_until(plugin, category) - time.time())
         easee_logging.debug(
             'easee_api',
-            f'GET {path} overgeslagen (rate limit actief tot {int(plugin.rate_limited_until - time.time())}s)',
+            f'GET {path} overgeslagen ({category} rate limit actief, nog ~{max(0, remaining)}s)',
             'api',
         )
         return None
@@ -120,7 +179,7 @@ def api_get_optional(plugin, path, skip_if_rate_limited=True):
             if status == 429:
                 easee_logging.warning(
                     'easee_api',
-                    f'GET {path} optioneel: rate limit (429) — geen data',
+                    f'GET {path} optioneel: rate limit (429, {_rate_limit_category(path)}) — geen data',
                     'api',
                 )
             elif status:
@@ -146,3 +205,6 @@ def api_get_optional(plugin, path, skip_if_rate_limited=True):
 
 def last_request_was_rate_limited(plugin):
     return getattr(plugin, '_last_http_status', None) == 429
+
+def last_request_status(plugin):
+    return getattr(plugin, '_last_http_status', None)
