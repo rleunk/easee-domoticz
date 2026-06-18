@@ -74,7 +74,7 @@ def _charger_legacy_device_ids(plugin, cid, label_key):
         for legacy_key in _charger_legacy_label_keys(label_key)
     ]
 
-def _charger_legacy_names(plugin, display, label_key):
+def _charger_legacy_names(plugin, display, label_key, cid=None):
     names = [
         charger_logic.charger_dev_name(plugin, display, label_key),
         easee_helpers.pref(plugin, f'{display} - {label_key}'),
@@ -88,27 +88,112 @@ def _charger_legacy_names(plugin, display, label_key):
             f'Easee - {display} - {legacy_key}',
             f'Easee - Easee - {display} - {legacy_key}',
         ])
+    if cid:
+        sid = easee_helpers.short_id(plugin, cid)
+        names.append(f'{sid} {label_key}')
+        for legacy_key in _charger_legacy_label_keys(label_key):
+            names.append(f'{sid} {legacy_key}')
     return names
 
-def resolve_charger_unit(plugin, cid, label_key):
-    unit = find_unit_by_devid(plugin, make_charger_device_id(plugin, cid, label_key))
-    if unit is not None:
-        return unit
-    for leg_devid in _charger_legacy_device_ids(plugin, cid, label_key):
-        unit = find_unit_by_devid(plugin, leg_devid)
-        if unit is not None:
-            return unit
+def _charger_display_for_cid(plugin, cid):
     cid_s = str(cid).strip()
     for idx, charger in enumerate(getattr(plugin, 'chargers', []) or []):
-        if str(charger.get('id', '')).strip() != cid_s:
-            continue
-        display = charger_logic.charger_display_name(plugin, charger, idx)
-        for name in _charger_legacy_names(plugin, display, label_key):
-            unit = find_unit(plugin, name)
-            if unit is not None:
-                return unit
-        break
+        if str(charger.get('id', '')).strip() == cid_s:
+            return charger_logic.charger_display_name(plugin, charger, idx)
     return None
+
+def _find_unit_by_name_variants(plugin, names):
+    for name in names:
+        unit = find_unit(plugin, name)
+        if unit is not None:
+            return unit, f'name:{name}'
+        key = easee_helpers.clean_label(plugin, name)
+        unit = find_unit_by_devid(plugin, make_device_id(plugin, key))
+        if unit is not None:
+            return unit, f'devid:{make_device_id(plugin, key)}'
+    return None, None
+
+def _charger_label_suffixes(label_key):
+    suffixes = {label_key.lower()}
+    for legacy_key in _charger_legacy_label_keys(label_key):
+        suffixes.add(legacy_key.lower())
+    if label_key == 'Kosten (Sessie/Dag)':
+        suffixes.update(('kosten (sessie/dag)', 'kosten'))
+    return suffixes
+
+def _find_charger_unit_by_name_scan(plugin, cid, display, label_key):
+    display_key = easee_helpers.clean_label(plugin, display).lower()
+    cid_s = str(cid).strip().lower()
+    short = easee_helpers.short_id(plugin, cid).lower()
+    suffixes = _charger_label_suffixes(label_key)
+    for unit, dev in domoticz_runtime.Devices.items():
+        devid = str(getattr(dev, 'DeviceID', '') or '')
+        name = easee_helpers.clean_label(plugin, dev.Name).lower()
+        if not (devid.startswith('EASEE_CHG_') or devid.startswith('EASEE_') or 'easee' in name):
+            continue
+        if display_key not in name and cid_s not in name and short not in name:
+            continue
+        suffix = name.split(' - ')[-1].strip() if ' - ' in name else name
+        if any(suffix == s or s in suffix for s in suffixes):
+            return unit, f'scan:{dev.Name}'
+    return None, None
+
+def resolve_charger_unit(plugin, cid, label_key, tried=None):
+    """Resolve charger tegel. Naam/hash vóór DeviceID-hash om ghost-tegels te vermijden."""
+    cid_s = str(cid).strip()
+    current_devid = make_charger_device_id(plugin, cid, label_key)
+    legacy_devids = _charger_legacy_device_ids(plugin, cid, label_key)
+    display = _charger_display_for_cid(plugin, cid)
+
+    def _note(item):
+        if tried is not None:
+            tried.append(item)
+
+    _note(f'cid|{label_key}={current_devid}')
+    for leg in legacy_devids:
+        _note(f'legacy_cid|={leg}')
+
+    if display is not None:
+        legacy_names = _charger_legacy_names(plugin, display, label_key, cid=cid)
+        for name in legacy_names:
+            _note(f'name={name}')
+            key = easee_helpers.clean_label(plugin, name)
+            _note(f'name_hash={make_device_id(plugin, key)}')
+        unit, via = _find_unit_by_name_variants(plugin, legacy_names)
+        if unit is not None:
+            if via:
+                _note(f'hit:{via}')
+            return unit
+        unit, via = _find_charger_unit_by_name_scan(plugin, cid, display, label_key)
+        if unit is not None:
+            if via:
+                _note(f'hit:{via}')
+            return unit
+
+    unit = find_unit_by_devid(plugin, current_devid)
+    if unit is not None:
+        _note(f'hit:devid:{current_devid}')
+        return unit
+    for leg_devid in legacy_devids:
+        unit = find_unit_by_devid(plugin, leg_devid)
+        if unit is not None:
+            _note(f'hit:legacy_devid:{leg_devid}')
+            return unit
+    return None
+
+_COST_LOOKUP_WARNED = set()
+_COST_UPDATE_LOGGED = set()
+_CORE_COST_LOOKUP_WARNED = set()
+_CORE_COST_UPDATE_LOGGED = set()
+
+def _core_legacy_names(plugin, label):
+    label = easee_helpers.clean_label(plugin, label)
+    return [
+        label,
+        easee_helpers.pref(plugin, label),
+        f'Easee - {label}',
+        f'Easee - Easee - {label}',
+    ]
 
 def resolve_equalizer_unit(plugin, eid, label_key):
     devid = make_equalizer_device_id(plugin, eid, label_key)
@@ -122,14 +207,43 @@ def resolve_equalizer_unit(plugin, eid, label_key):
                 return unit
     return None
 
-def resolve_core_unit(plugin, label):
+def resolve_core_unit(plugin, label, tried=None):
     label = easee_helpers.clean_label(plugin, label)
     devid = CORE_DEVICE_IDS.get(label)
+
+    def _note(item):
+        if tried is not None:
+            tried.append(item)
+
+    for name in _core_legacy_names(plugin, label):
+        _note(f'name={name}')
+        u = find_unit(plugin, name)
+        if u is not None:
+            _note(f'hit:name:{name}')
+            return u
+        key = easee_helpers.clean_label(plugin, name)
+        name_devid = make_device_id(plugin, key)
+        _note(f'name_hash={name_devid}')
+        u = find_unit_by_devid(plugin, name_devid)
+        if u is not None:
+            _note(f'hit:name_hash:{name_devid}')
+            return u
+
     if devid:
+        _note(f'core={devid}')
         u = find_unit_by_devid(plugin, devid)
         if u is not None:
+            _note(f'hit:{devid}')
             return u
-    return find_unit(plugin, label)
+
+    label_lower = label.lower()
+    if 'kosten' in label_lower or 'beste laden' in label_lower:
+        for unit, dev in domoticz_runtime.Devices.items():
+            name = easee_helpers.norm(plugin, dev.Name).lower()
+            if label_lower in name:
+                _note(f'hit:scan:{dev.Name}')
+                return unit
+    return None
 
 def sync_device_name(plugin, unit, name):
     key = easee_helpers.clean_label(plugin, name)
@@ -321,9 +435,24 @@ def ensure_device_once(plugin, name, typename, device_id=None, legacy_names=None
     return resolve_unit(plugin, key)
 
 def update_core_text(plugin, label, value):
-    u = resolve_core_unit(plugin, easee_helpers.clean_label(plugin, label))
-    if u is not None:
-        domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
+    clean = easee_helpers.clean_label(plugin, label)
+    tried = []
+    u = resolve_core_unit(plugin, clean, tried=tried)
+    if u is None:
+        if clean in ('Kosten & Samenvatting', 'Beste laden') and clean not in _CORE_COST_LOOKUP_WARNED:
+            _CORE_COST_LOOKUP_WARNED.add(clean)
+            easee_logging.warning(
+                'domoticz_devices',
+                f'Kern-tegel niet gevonden: {clean} | geprobeerd: {", ".join(tried)}',
+            )
+        return
+    domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
+    if clean in ('Kosten & Samenvatting', 'Beste laden') and clean not in _CORE_COST_UPDATE_LOGGED:
+        _CORE_COST_UPDATE_LOGGED.add(clean)
+        easee_logging.info(
+            'domoticz_devices',
+            f'Kern-tegel bijgewerkt: {clean} (unit {u})',
+        )
 
 def update_core_custom(plugin, label, value):
     u = resolve_core_unit(plugin, easee_helpers.clean_label(plugin, label))
@@ -373,8 +502,16 @@ def update_charger_custom(plugin, cid, label_key, value):
         domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value))
 
 def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, session_active):
-    u = resolve_charger_unit(plugin, cid, 'Kosten (Sessie/Dag)')
+    tried = []
+    u = resolve_charger_unit(plugin, cid, 'Kosten (Sessie/Dag)', tried=tried)
+    cid_key = str(cid).strip()
     if u is None:
+        if cid_key not in _COST_LOOKUP_WARNED:
+            _COST_LOOKUP_WARNED.add(cid_key)
+            easee_logging.warning(
+                'domoticz_devices',
+                f'Kosten-tegel niet gevonden lader {cid_key} | geprobeerd: {", ".join(tried)}',
+            )
         return
     tibber_rate = easee_helpers.safe_float(plugin, tibber_pricing.current_tibber_price(plugin).get('total'), 0.0)
     rate = session_cost / session_kwh if session_kwh > 0 else tibber_rate
@@ -389,6 +526,12 @@ def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, sessi
         domoticz_runtime.Devices[u].Update(nValue=0, sValue=text[:4000])
     else:
         domoticz_runtime.Devices[u].Update(nValue=0, sValue=easee_helpers.euro_str(plugin, session_cost))
+    if cid_key not in _COST_UPDATE_LOGGED:
+        _COST_UPDATE_LOGGED.add(cid_key)
+        easee_logging.info(
+            'domoticz_devices',
+            f'Kosten-tegel bijgewerkt lader {cid_key} unit {u}: {text[:120]}',
+        )
 
 def update_charger_energy(plugin, cid, label_key, power_w, total_wh):
     u = resolve_charger_unit(plugin, cid, label_key)
@@ -464,8 +607,7 @@ def ensure_charger_devices(plugin, charger, index):
     for typ, label_key in devices:
         name = charger_logic.charger_dev_name(plugin, display, label_key)
         devid = make_charger_device_id(plugin, cid, label_key)
-        legacy = list(_charger_legacy_names(plugin, display, label_key))
-        legacy.append(f'{easee_helpers.short_id(plugin, cid)} {label_key}')
+        legacy = list(_charger_legacy_names(plugin, display, label_key, cid=cid))
         legacy_devids = _charger_legacy_device_ids(plugin, cid, label_key)
         ensure_device_once(plugin, name, typ, device_id=devid, legacy_names=legacy, legacy_device_ids=legacy_devids)
 

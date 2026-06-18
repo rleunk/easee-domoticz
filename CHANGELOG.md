@@ -6,6 +6,12 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.21] — 2026-06-18
+
+### Bugfix
+- **Kosten-tegels vast (legacy DeviceID)** — v10.9.20 zocht alleen op `cid|label`-hash; oude tegels met naam-gebaseerde DeviceID (`make_device_id`) of hernoemde tegels werden gemist of een ghost-unit kreeg updates. Lookup probeert nu eerst naam/hash-varianten (incl. `short_id Kosten`), daarna pas `EASEE_CHG_`-hash; Tibber-kern-tegels idem.
+- **Diagnostiek kosten** — eenmalige INFO/WARNING per sessie wanneer kosten-tegel wordt bijgewerkt of lookup faalt (met lijst geprobeerde DeviceIDs).
+
 ## [10.9.20] — 2026-06-18
 
 ### Bugfix
