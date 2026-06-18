@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-BASE_URL = 'https://api.easee.com/api'
+API_HOST = 'https://api.easee.com'
+BASE_URL = API_HOST + '/api'
+# Observations live at /state/{id}/observations (no /api prefix) — see Easee Get Observations API
+DEVICE_STATE_URL = API_HOST
 LOGIN_URL = BASE_URL + '/accounts/login'
 REFRESH_URL = BASE_URL + '/accounts/refresh_token'
 TIBBER_GQL = 'https://api.tibber.com/v1-beta/gql'

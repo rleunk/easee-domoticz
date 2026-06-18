@@ -3,7 +3,7 @@
 import time
 
 import domoticz_runtime
-from easee_constants import BASE_URL, LOGIN_URL, REFRESH_URL
+from easee_constants import BASE_URL, DEVICE_STATE_URL, LOGIN_URL, REFRESH_URL
 import easee_logging
 
 
@@ -35,6 +35,13 @@ def should_skip_ongoing(plugin):
 
 def _is_priority_path(path):
     return '/equalizers/' in path and path.endswith('/state')
+
+
+def _request_base_url(path):
+    """Route observations to https://api.easee.com/state/… (not /api/state/…)."""
+    if path.startswith('/state/'):
+        return DEVICE_STATE_URL
+    return BASE_URL
 
 
 def login(plugin):
@@ -74,7 +81,11 @@ def api_get(plugin, path, retry=True):
     plugin._last_api_path = path
     plugin._last_http_status = None
     started = time.time()
-    r = plugin.session.get(BASE_URL + path, headers={'Authorization': f'Bearer {plugin.access_token}'}, timeout=20)
+    r = plugin.session.get(
+        _request_base_url(path) + path,
+        headers={'Authorization': f'Bearer {plugin.access_token}'},
+        timeout=20,
+    )
     plugin._last_http_status = r.status_code
     elapsed = time.time() - started
     if elapsed > 5:
