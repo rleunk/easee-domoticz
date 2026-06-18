@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.13" author="Richard Leunk" version="10.9.13"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.14" author="Richard Leunk" version="10.9.14"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.13</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.14</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -39,7 +39,7 @@
 
 
 import Domoticz
-import os, json, time
+import os, json, time, traceback
 try:
     import requests
 except Exception:
@@ -395,7 +395,7 @@ class BasePlugin:
             self.update_combined()
             easee_state.save_state(self)
         except Exception as e:
-            easee_logging.error('plugin', f'onHeartbeat fout: {e}')
+            easee_logging.error('plugin', f'onHeartbeat fout: {e}\n{traceback.format_exc()}')
             domoticz_devices.update_core_text(self, 'Status', f'Fout: {e}')
 
 

@@ -1230,8 +1230,8 @@ def _power_from_phases(plugin, values):
     import_w = 0.0
     export_w = 0.0
     any_phase = False
-    for curr_keys, volt_keys in phase_voltage_keys():
-        current = easee_helpers.first_dict_value(plugin, values, curr_keys)
+    for curr_key, volt_keys in zip(EQUALIZER_KEYS['phase_current'], phase_voltage_keys()):
+        current = easee_helpers.first_dict_value(plugin, values, (curr_key,))
         voltage = easee_helpers.first_dict_value(plugin, values, volt_keys)
         if current is None or voltage is None:
             continue

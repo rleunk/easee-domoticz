@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.14] — 2026-06-18
+
+### Opgelost
+- **onHeartbeat crash** — `_power_from_phases` unpackte `phase_voltage_keys()` (3 voltage-aliassen per fase) als `(curr, volt)` paar; nu `zip(phase_current, phase_voltage_keys())`. Traceback toegevoegd aan onHeartbeat-foutlog.
+
+### Fixed (EN)
+- Heartbeat unpack regression in phase I×V power fallback; onHeartbeat logs full traceback on error.
+
 ## [10.9.13] — 2026-06-18
 
 ### Opgelost
@@ -40,6 +48,7 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 | Versie | Hoofdthema |
 |--------|------------|
+| **10.9.14** | onHeartbeat unpack-fix in fase I×V fallback |
 | **10.9.13** | 429 fail-fast (geen thread-blok); ongoing sessions optioneel |
 | **10.9.12** | Equalizer Vermogen fallback-keten; 429 retry |
 | **10.9.11** | Equalizer poll na Domoticz-herstart; obs 40/41 fallback |
