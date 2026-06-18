@@ -115,18 +115,12 @@ def poll_charger(plugin, charger):
             values.update(state)
     except Exception as e:
         easee_logging.error('charger_logic', f'State ophalen mislukt voor lader {cid}: {e}', 'poll')
-    try:
-        cfg = easee_api.api_get(plugin, f'/chargers/{cid}/config') or {}
-        if isinstance(cfg, dict):
-            values.update(cfg)
-    except Exception:
-        pass
-    try:
-        sess = easee_api.api_get(plugin, f'/chargers/{cid}/sessions/ongoing') or {}
-        if isinstance(sess, dict):
-            session = sess
-    except Exception:
-        pass
+    cfg = easee_api.api_get_optional(plugin, f'/chargers/{cid}/config') or {}
+    if isinstance(cfg, dict):
+        values.update(cfg)
+    sess = easee_api.api_get_optional(plugin, f'/chargers/{cid}/sessions/ongoing') or {}
+    if isinstance(sess, dict):
+        session = sess
 
     power_w = easee_helpers.power_watts(plugin, values.get(CHARGER_KEYS['power'][0]))
     total_kwh = easee_helpers.kwh_value(plugin, values.get(CHARGER_KEYS['lifetime_energy'][0]))

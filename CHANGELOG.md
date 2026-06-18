@@ -6,6 +6,15 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.13] — 2026-06-18
+
+### Opgelost
+- **429 rate limit blokkeerde hardware-thread** — v10.9.12 sliep tot 283s (Easee `Retry-After` header) in `api_get`, waardoor Domoticz meldde *thread ended unexpectedly*. Bij 429 nu fail-fast: WARNING-log en `None`; volgende poll (±30s) probeert opnieuw. Geen `time.sleep` meer in de heartbeat-pad.
+- **Ongoing sessions optioneel** — `/chargers/{id}/sessions/ongoing` en config via `api_get_optional`; 429 op die endpoints blokkeert equalizer/charger poll niet meer.
+
+### Fixed (EN)
+- HTTP 429 no longer blocks the plugin thread with Retry-After sleep; defer to next heartbeat. Ongoing session endpoint treated as optional.
+
 ## [10.9.12] — 2026-06-18
 
 ### Opgelost
@@ -31,6 +40,7 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 | Versie | Hoofdthema |
 |--------|------------|
+| **10.9.13** | 429 fail-fast (geen thread-blok); ongoing sessions optioneel |
 | **10.9.12** | Equalizer Vermogen fallback-keten; 429 retry |
 | **10.9.11** | Equalizer poll na Domoticz-herstart; obs 40/41 fallback |
 | **10.9.10** | Status combo-icoon alleen globaal; `EaseeStatusGlobal` (13 sets) |

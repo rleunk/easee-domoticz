@@ -39,16 +39,7 @@ def refresh(plugin):
         easee_logging.debug('easee_api', f'Token refresh mislukt, opnieuw inloggen: {e}', 'login')
     return login(plugin)
 
-def _rate_limit_wait(plugin, response, attempt):
-    retry_after = response.headers.get('Retry-After')
-    if retry_after:
-        try:
-            return max(1, int(retry_after))
-        except ValueError:
-            pass
-    return min(30, 2 ** attempt + 1)
-
-def api_get(plugin, path, retry=True, rate_limit_attempt=0):
+def api_get(plugin, path, retry=True):
     started = time.time()
     r = plugin.session.get(BASE_URL + path, headers={'Authorization': f'Bearer {plugin.access_token}'}, timeout=20)
     elapsed = time.time() - started
@@ -56,16 +47,15 @@ def api_get(plugin, path, retry=True, rate_limit_attempt=0):
         easee_logging.warning('easee_api', f'GET {path} duurde {elapsed:.1f}s', 'api')
     if r.status_code == 401 and retry:
         if refresh(plugin):
-            return api_get(plugin, path, False, rate_limit_attempt)
-    if r.status_code == 429 and rate_limit_attempt < 3:
-        wait = _rate_limit_wait(plugin, r, rate_limit_attempt)
+            return api_get(plugin, path, False)
+    if r.status_code == 429:
+        retry_after = r.headers.get('Retry-After', 'onbekend')
         easee_logging.warning(
             'easee_api',
-            f'GET {path} rate limit (429), retry {rate_limit_attempt + 1}/3 na {wait}s',
+            f'GET {path} rate limit (429), Retry-After={retry_after} — overslaan tot volgende poll',
             'api',
         )
-        time.sleep(wait)
-        return api_get(plugin, path, retry, rate_limit_attempt + 1)
+        return None
     r.raise_for_status()
     return r.json() if r.text else None
 
