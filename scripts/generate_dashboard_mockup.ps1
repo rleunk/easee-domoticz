@@ -1,5 +1,6 @@
 # Generate sanitized Domoticz dashboard mockups for README (no real user data).
-# Uses actual plugin icon PNGs from icons/*.zip (same assets as domoticz_icons.py).
+# Uses P-max photo icons from icons/*.zip — same 48px assets as Easee_icons_v2.zip / domoticz_icons.py.
+# Run generate_photo_icon_variants.ps1 first (invoked automatically below) so zips match production.
 # Output: docs/screenshot-dashboard.png, docs/screenshot-equalizer.png
 
 $ErrorActionPreference = 'Stop'
@@ -10,6 +11,8 @@ $RepoRoot = Split-Path $PSScriptRoot -Parent
 $DashboardPath = Join-Path $RepoRoot 'docs\screenshot-dashboard.png'
 $EqualizerPath = Join-Path $RepoRoot 'docs\screenshot-equalizer.png'
 $IconsDir = Join-Path $RepoRoot 'icons'
+$MasterZip = Join-Path $RepoRoot 'Easee_icons_v2.zip'
+$PhotoScript = Join-Path $PSScriptRoot 'generate_photo_icon_variants.ps1'
 $PluginKey = 'EaseeCloudAutoDiscoveryV1000'
 
 $TileBlue = [Drawing.Color]::FromArgb(255, 44, 151, 222)
@@ -22,6 +25,17 @@ $TextWhite = [Drawing.Color]::FromArgb(255, 245, 246, 247)
 $TextMuted = [Drawing.Color]::FromArgb(255, 210, 214, 220)
 $ValueGreen = [Drawing.Color]::FromArgb(255, 120, 220, 120)
 
+# README tiles: upscale 48px Domoticz assets for clearer photo detail (native Domoticz uses 48px).
+$MockupIconDisplayPx = 72
+$EqualizerIconDisplayPx = 80
+
+Write-Host 'Refreshing icon zips via generate_photo_icon_variants.ps1 ...'
+& $PhotoScript | Out-Host
+
+if (-not (Test-Path $MasterZip)) {
+    throw "Missing master icon zip after refresh: $MasterZip"
+}
+
 $script:EaseeIconCache = @{}
 
 function Get-EaseeIconBitmap([string]$Root, [bool]$On = $true) {
@@ -29,7 +43,7 @@ function Get-EaseeIconBitmap([string]$Root, [bool]$On = $true) {
     if (-not $script:EaseeIconCache.ContainsKey($cacheKey)) {
         $zipPath = Join-Path $IconsDir "$Root.zip"
         if (-not (Test-Path $zipPath)) {
-            throw "Missing icon zip: $zipPath"
+            throw "Missing icon zip: $zipPath (run generate_photo_icon_variants.ps1)"
         }
         $suffix = if ($On) { '48_On' } else { '48_Off' }
         $entryLeaf = "${PluginKey}${Root}${suffix}.png"
@@ -47,6 +61,7 @@ function Get-EaseeIconBitmap([string]$Root, [bool]$On = $true) {
             $ms.Position = 0
             $script:EaseeIconCache[$cacheKey] = [Drawing.Bitmap]::FromStream($ms)
             $ms.Dispose()
+            Write-Verbose "Loaded $entryLeaf from icons/$Root.zip ($($script:EaseeIconCache[$cacheKey].Width)px)"
         } finally {
             $zip.Dispose()
         }
@@ -67,20 +82,21 @@ function Draw-DomoticzTile(
     [Drawing.Bitmap]$Icon,
     [string]$Title,
     [string]$Value,
-    [string]$Mode = 'large'
+    [string]$Mode = 'large',
+    [int]$IconDisplayPx = $MockupIconDisplayPx
 ) {
     $tileBrush = New-Object System.Drawing.SolidBrush $Bg
     $G.FillRectangle($tileBrush, $X, $Y, $W, $H)
     $tileBrush.Dispose()
 
-    $iconSize = [math]::Min(52, [int]($W * 0.28))
+    $iconSize = [math]::Min($IconDisplayPx, [int]($W * 0.36))
     $iconX = $X + [int](($W - $iconSize) / 2)
-    $iconY = $Y + [int]($H * 0.08)
+    $iconY = $Y + [int]($H * 0.06)
     $G.DrawImage($Icon, $iconX, $iconY, $iconSize, $iconSize)
 
     $titleFont = New-Object System.Drawing.Font ('Segoe UI', 8.5, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
     $titleBrush = New-Object System.Drawing.SolidBrush $TextMuted
-    $titleRect = New-Object System.Drawing.RectangleF ([single]($X + 6)), ([single]($Y + $H * 0.42)), ([single]($W - 12)), ([single]($H * 0.14))
+    $titleRect = New-Object System.Drawing.RectangleF ([single]($X + 6)), ([single]($Y + $H * 0.44)), ([single]($W - 12)), ([single]($H * 0.14))
     $titleSf = New-Object System.Drawing.StringFormat
     $titleSf.Alignment = [Drawing.StringAlignment]::Center
     $titleSf.LineAlignment = [Drawing.StringAlignment]::Near
@@ -91,7 +107,7 @@ function Draw-DomoticzTile(
     if ($Mode -eq 'multiline') {
         $valueFont = New-Object System.Drawing.Font ('Segoe UI', 7.2, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
         $valueBrush = New-Object System.Drawing.SolidBrush $ValueGreen
-        $valueRect = New-Object System.Drawing.RectangleF ([single]($X + 5)), ([single]($Y + $H * 0.56)), ([single]($W - 10)), ([single]($H * 0.40))
+        $valueRect = New-Object System.Drawing.RectangleF ([single]($X + 5)), ([single]($Y + $H * 0.58)), ([single]($W - 10)), ([single]($H * 0.40))
         $valueSf = New-Object System.Drawing.StringFormat
         $valueSf.Alignment = [Drawing.StringAlignment]::Near
         $valueSf.LineAlignment = [Drawing.StringAlignment]::Near
@@ -100,7 +116,7 @@ function Draw-DomoticzTile(
     } else {
         $valueFont = New-Object System.Drawing.Font ('Segoe UI', 15, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
         $valueBrush = New-Object System.Drawing.SolidBrush $TextWhite
-        $valueRect = New-Object System.Drawing.RectangleF ([single]($X + 4)), ([single]($Y + $H * 0.62)), ([single]($W - 8)), ([single]($H * 0.30))
+        $valueRect = New-Object System.Drawing.RectangleF ([single]($X + 4)), ([single]($Y + $H * 0.64)), ([single]($W - 8)), ([single]($H * 0.28))
         $valueSf = New-Object System.Drawing.StringFormat
         $valueSf.Alignment = [Drawing.StringAlignment]::Center
         $valueSf.LineAlignment = [Drawing.StringAlignment]::Near
@@ -126,6 +142,8 @@ function New-DashboardMockup {
     $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $g.TextRenderingHint = [Drawing.Text.TextRenderingHint]::ClearTypeGridFit
     $g.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.PixelOffsetMode = [Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+    $g.CompositingQuality = [Drawing.Drawing2D.CompositingQuality]::HighQuality
     $g.Clear($BgDark)
 
     $headerFont = New-Object System.Drawing.Font ('Segoe UI', 14, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
@@ -191,7 +209,7 @@ function New-DashboardMockup {
 function New-EqualizerCloseupMockup {
     $pad = 18
     $rowH = 92
-    $iconSize = 64
+    $iconSize = $EqualizerIconDisplayPx
     $canvasW = 760
     $canvasH = $pad + 36 + 3 * $rowH + $pad
 
@@ -200,6 +218,8 @@ function New-EqualizerCloseupMockup {
     $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $g.TextRenderingHint = [Drawing.Text.TextRenderingHint]::ClearTypeGridFit
     $g.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.PixelOffsetMode = [Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+    $g.CompositingQuality = [Drawing.Drawing2D.CompositingQuality]::HighQuality
     $g.Clear($BgDark)
 
     $headerFont = New-Object System.Drawing.Font ('Segoe UI', 14, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)

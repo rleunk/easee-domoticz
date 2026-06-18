@@ -684,6 +684,7 @@ function Draw-IconOnTile([Drawing.Graphics]$G, [Drawing.Bitmap]$Icon, [int]$Tile
 }
 
 # --- Ensure source photos ---
+if ($MyInvocation.InvocationName -ne '.' -and -not $global:EaseePhotoIconsDotSourceOnly) {
 if (-not (Test-Path $SourceDir)) { New-Item -ItemType Directory -Path $SourceDir -Force | Out-Null }
 
 $SourceDownloads = @{
@@ -1099,4 +1100,5 @@ if ($IncludeVariants) {
     Write-Output "Shape check (shoulder/top >= 0.88 + breedte@58% >= 85% top = plat top, geen V):"
     $shapeReport | ForEach-Object { Write-Output "  $_" }
     Write-Output "Created variant-P/ through variant-U/ under $OutRoot"
+}
 }
