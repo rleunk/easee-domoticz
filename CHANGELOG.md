@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.18] — 2026-06-18
+
+### Gewijzigd
+- **EaseeStatusGlobal combo-icoon** — Equalizer-puck iets groter linksonder (46%/50% schaal @48/16 px); laadpaal iets kleiner rechtsboven (70%/72% schaal); overlap behouden met laadpaal bovenop (z-order); **i**-badge ongewijzigd.
+
+### Changed (EN)
+- EaseeStatusGlobal combo icon: larger equalizer puck bottom-left, smaller charger top-right, overlap preserved with charger on top; info badge unchanged.
+
 ## [10.9.17] — 2026-06-18
 
 ### Opgelost

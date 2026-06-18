@@ -361,9 +361,15 @@ function Get-DimAccentColor([Drawing.Color]$Color) {
 }
 
 function Get-EqualizerPuckOverlayScale([int]$Size) {
-    if ($Size -le 16) { return 0.44 }
-    if ($Size -le 48) { return 0.40 }
-    return 0.38
+    if ($Size -le 16) { return 0.50 }
+    if ($Size -le 48) { return 0.46 }
+    return 0.44
+}
+
+function Get-StatusGlobalChargerOverlayScale([int]$Size) {
+    if ($Size -le 16) { return 0.72 }
+    if ($Size -le 48) { return 0.70 }
+    return 0.68
 }
 
 function Add-EqualizerPuckOverlay([Drawing.Bitmap]$Src, [Drawing.Color]$EqColor, [bool]$Dim) {
@@ -403,6 +409,64 @@ function Add-EqualizerPuckOverlay([Drawing.Bitmap]$Src, [Drawing.Color]$EqColor,
     $g.DrawImage($eqIcon, $ex, $ey, $eqSize, $eqSize)
 
     $shadowPath.Dispose(); $shadowBrush.Dispose(); $g.Dispose(); $eqIcon.Dispose()
+    return $out
+}
+
+function New-StatusGlobalComboIcon(
+    [int]$Size,
+    [bool]$Dim,
+    [Drawing.Color]$LedColor,
+    [Drawing.Bitmap]$DarkCrop,
+    [Drawing.Bitmap]$RedCrop,
+    [Drawing.Bitmap]$DarkCropMax
+) {
+    $out = New-Object System.Drawing.Bitmap $Size, $Size, ([Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $g = [Drawing.Graphics]::FromImage($out)
+    $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $g.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.CompositingMode = [Drawing.Drawing2D.CompositingMode]::SourceOver
+    $g.CompositingQuality = [Drawing.Drawing2D.CompositingQuality]::HighQuality
+    $g.Clear([Drawing.Color]::Transparent)
+
+    $margin = if ($Size -le 16) { 0 } else { 1 }
+
+    # Layer 1: Equalizer puck — bottom-left (slightly larger than v10.9.17)
+    $eqScale = Get-EqualizerPuckOverlayScale $Size
+    $eqSize = [math]::Max(6, [int][math]::Round($Size * $eqScale))
+    $eqIcon = New-EaseeIconV2 $eqSize $EqualizerColor 'equalizer' $Dim $true
+    $ex = $margin
+    $ey = $Size - $eqSize - $margin
+
+    $shadowPad = if ($Size -le 16) { 0.5 } else { 1.0 }
+    $shadowAlpha = if ($Dim) { 90 } else { 140 }
+    $shadowBrush = New-Object System.Drawing.SolidBrush ([Drawing.Color]::FromArgb($shadowAlpha, 8, 10, 14))
+    $shadowRect = New-Object System.Drawing.RectangleF (
+        ([single]($ex - $shadowPad)),
+        ([single]($ey - $shadowPad)),
+        ([single]($eqSize + 2 * $shadowPad)),
+        ([single]($eqSize + 2 * $shadowPad))
+    )
+    $shadowRadius = if ($Size -le 16) { 1.5 } else { 3.0 }
+    $shadowPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $shadowPath.AddArc($shadowRect.X, $shadowRect.Y, $shadowRadius * 2, $shadowRadius * 2, 180, 90)
+    $shadowPath.AddArc($shadowRect.Right - $shadowRadius * 2, $shadowRect.Y, $shadowRadius * 2, $shadowRadius * 2, 270, 90)
+    $shadowPath.AddArc($shadowRect.Right - $shadowRadius * 2, $shadowRect.Bottom - $shadowRadius * 2, $shadowRadius * 2, $shadowRadius * 2, 0, 90)
+    $shadowPath.AddArc($shadowRect.X, $shadowRect.Bottom - $shadowRadius * 2, $shadowRadius * 2, $shadowRadius * 2, 90, 90)
+    $shadowPath.CloseFigure()
+    $g.FillPath($shadowBrush, $shadowPath)
+    $g.DrawImage($eqIcon, $ex, $ey, $eqSize, $eqSize)
+    $shadowPath.Dispose(); $shadowBrush.Dispose(); $eqIcon.Dispose()
+
+    # Layer 2: Charger photo — smaller, top-right, on top of EQ overlap
+    $chargerScale = Get-StatusGlobalChargerOverlayScale $Size
+    $chargerSize = [math]::Max(6, [int][math]::Round($Size * $chargerScale))
+    $chargerIcon = New-PhotoVariantIcon $DarkCrop $RedCrop 'photo-max' $chargerSize $Dim $LedColor $DarkCropMax 'charger' $false
+    $cx = $Size - $chargerSize - $margin
+    $cy = $margin
+    $g.DrawImage($chargerIcon, $cx, $cy, $chargerSize, $chargerSize)
+    $chargerIcon.Dispose()
+
+    $g.Dispose()
     return $out
 }
 
@@ -586,9 +650,7 @@ function New-ProductionIcon([hashtable]$Set, [int]$Size, [bool]$Dim, [Drawing.Bi
         return New-PhotoVariantIcon $DarkCrop $RedCrop 'photo-max' $Size $Dim $Set.Color $DarkCropMax 'status' $true
     }
     if ($Set.Kind -eq 'status') {
-        $icon = New-PhotoVariantIcon $DarkCrop $RedCrop 'photo-max' $Size $Dim $Set.Color $DarkCropMax $Set.Kind $false
-        $combo = Add-EqualizerPuckOverlay $icon $EqualizerColor $Dim
-        $icon.Dispose()
+        $combo = New-StatusGlobalComboIcon $Size $Dim $Set.Color $DarkCrop $RedCrop $DarkCropMax
         $hinted = Add-FunctionHintOverlay $combo 'status' $Set.Color $Dim
         $combo.Dispose()
         return $hinted
