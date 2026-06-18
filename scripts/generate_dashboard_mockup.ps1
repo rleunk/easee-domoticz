@@ -1,7 +1,9 @@
 # Generate sanitized Domoticz dashboard mockups for README (no real user data).
+# Domoticz-faithful tile chrome: navy page, light-blue header bar, white body (icon left / text right),
+# footer buttons [Log] [Aanpassen] [Notificaties], yellow favourite star bottom-left.
 # Uses P-max photo icons from icons/*.zip — same 48px assets as Easee_icons_v2.zip / domoticz_icons.py.
-# Run generate_photo_icon_variants.ps1 first (invoked automatically below) so zips match production.
-# Output: docs/screenshot-dashboard.png, docs/screenshot-equalizer.png
+# Run generate_photo_icon_variants.ps1 first (invoked automatically below).
+# Output: docs/screenshot-dashboard.png (11 tiles), docs/screenshot-equalizer.png
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -15,19 +17,22 @@ $MasterZip = Join-Path $RepoRoot 'Easee_icons_v2.zip'
 $PhotoScript = Join-Path $PSScriptRoot 'generate_photo_icon_variants.ps1'
 $PluginKey = 'EaseeCloudAutoDiscoveryV1000'
 
-$TileBlue = [Drawing.Color]::FromArgb(255, 44, 151, 222)
-$TileGreen = [Drawing.Color]::FromArgb(255, 22, 160, 133)
-$TileOrange = [Drawing.Color]::FromArgb(255, 243, 156, 18)
-$TileTeal = [Drawing.Color]::FromArgb(255, 0, 150, 136)
-$BgDark = [Drawing.Color]::FromArgb(255, 26, 28, 32)
-$TitleOrange = [Drawing.Color]::FromArgb(255, 230, 126, 34)
-$TextWhite = [Drawing.Color]::FromArgb(255, 245, 246, 247)
-$TextMuted = [Drawing.Color]::FromArgb(255, 210, 214, 220)
-$ValueGreen = [Drawing.Color]::FromArgb(255, 120, 220, 120)
+# Domoticz dark-theme palette
+$BgNavy = [Drawing.Color]::FromArgb(255, 35, 44, 54)
+$TileBorder = [Drawing.Color]::FromArgb(255, 60, 68, 78)
+$HeaderBlue = [Drawing.Color]::FromArgb(255, 72, 158, 214)
+$HeaderBlueDark = [Drawing.Color]::FromArgb(255, 58, 138, 196)
+$BodyWhite = [Drawing.Color]::FromArgb(255, 248, 248, 248)
+$BodyTextColor = [Drawing.Color]::FromArgb(255, 55, 58, 62)
+$BodyTextMuted = [Drawing.Color]::FromArgb(255, 100, 105, 112)
+$ButtonBlue = [Drawing.Color]::FromArgb(255, 51, 122, 183)
+$ButtonBlueHover = [Drawing.Color]::FromArgb(255, 40, 96, 144)
+$ButtonText = [Drawing.Color]::FromArgb(255, 255, 255, 255)
+$StarYellow = [Drawing.Color]::FromArgb(255, 255, 193, 7)
+$StarOutline = [Drawing.Color]::FromArgb(255, 200, 150, 0)
 
-# README tiles: upscale 48px Domoticz assets for clearer photo detail (native Domoticz uses 48px).
-$MockupIconDisplayPx = 72
-$EqualizerIconDisplayPx = 80
+$TileIconDisplayPx = 56
+$EqualizerIconDisplayPx = 56
 
 Write-Host 'Refreshing icon zips via generate_photo_icon_variants.ps1 ...'
 & $PhotoScript | Out-Host
@@ -61,7 +66,6 @@ function Get-EaseeIconBitmap([string]$Root, [bool]$On = $true) {
             $ms.Position = 0
             $script:EaseeIconCache[$cacheKey] = [Drawing.Bitmap]::FromStream($ms)
             $ms.Dispose()
-            Write-Verbose "Loaded $entryLeaf from icons/$Root.zip ($($script:EaseeIconCache[$cacheKey].Width)px)"
         } finally {
             $zip.Dispose()
         }
@@ -75,67 +79,160 @@ function Save-Png([Drawing.Bitmap]$Bmp, [string]$Path) {
     $Bmp.Save($Path, [Drawing.Imaging.ImageFormat]::Png)
 }
 
+function Draw-RoundedRect([Drawing.Graphics]$G, [Drawing.Brush]$Brush, [single]$X, [single]$Y, [single]$W, [single]$H, [single]$R) {
+    $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $path.AddArc($X, $Y, $R * 2, $R * 2, 180, 90)
+    $path.AddArc($X + $W - $R * 2, $Y, $R * 2, $R * 2, 270, 90)
+    $path.AddArc($X + $W - $R * 2, $Y + $H - $R * 2, $R * 2, $R * 2, 0, 90)
+    $path.AddArc($X, $Y + $H - $R * 2, $R * 2, $R * 2, 90, 90)
+    $path.CloseFigure()
+    $G.FillPath($Brush, $path)
+    $path.Dispose()
+}
+
+function Draw-Star([Drawing.Graphics]$G, [single]$Cx, [single]$Cy, [single]$OuterR, [Drawing.Color]$Fill, [Drawing.Color]$Outline) {
+    $points = New-Object System.Drawing.PointF[] 10
+    for ($i = 0; $i -lt 10; $i++) {
+        $angle = [math]::PI / 2 + $i * [math]::PI / 5
+        $r = if ($i % 2 -eq 0) { $OuterR } else { $OuterR * 0.42 }
+        $points[$i] = [Drawing.PointF]::new(
+            $Cx + [single]([math]::Cos($angle) * $r),
+            $Cy - [single]([math]::Sin($angle) * $r)
+        )
+    }
+    $fillBrush = New-Object System.Drawing.SolidBrush $Fill
+    $outlinePen = New-Object System.Drawing.Pen $Outline, 0.8
+    $G.FillPolygon($fillBrush, $points)
+    $G.DrawPolygon($outlinePen, $points)
+    $fillBrush.Dispose(); $outlinePen.Dispose()
+}
+
+function Draw-DomoticzFooterButton(
+    [Drawing.Graphics]$G,
+    [single]$X, [single]$Y, [single]$W, [single]$H,
+    [string]$Label
+) {
+    $brush = New-Object System.Drawing.SolidBrush $ButtonBlue
+    Draw-RoundedRect $G $brush $X $Y $W $H 2.5
+    $brush.Dispose()
+
+    $font = New-Object System.Drawing.Font ('Segoe UI', 7.5, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
+    $textBrush = New-Object System.Drawing.SolidBrush $ButtonText
+    $sf = New-Object System.Drawing.StringFormat
+    $sf.Alignment = [Drawing.StringAlignment]::Center
+    $sf.LineAlignment = [Drawing.StringAlignment]::Center
+    $rect = New-Object System.Drawing.RectangleF $X, $Y, $W, $H
+    $G.DrawString($Label, $font, $textBrush, $rect, $sf)
+    $font.Dispose(); $textBrush.Dispose(); $sf.Dispose()
+}
+
 function Draw-DomoticzTile(
     [Drawing.Graphics]$G,
     [int]$X, [int]$Y, [int]$W, [int]$H,
-    [Drawing.Color]$Bg,
     [Drawing.Bitmap]$Icon,
     [string]$Title,
-    [string]$Value,
-    [string]$Mode = 'large',
-    [int]$IconDisplayPx = $MockupIconDisplayPx
+    [string]$HeaderValue,
+    [string]$BodyText,
+    [string[]]$FooterButtons = @('Log', 'Aanpassen'),
+    [bool]$ShowStar = $true,
+    [int]$IconDisplayPx = $TileIconDisplayPx
 ) {
-    $tileBrush = New-Object System.Drawing.SolidBrush $Bg
-    $G.FillRectangle($tileBrush, $X, $Y, $W, $H)
-    $tileBrush.Dispose()
+    $headerH = 28
+    $footerH = 26
+    $bodyH = $H - $headerH - $footerH
+    $radius = 3.0
 
-    $iconSize = [math]::Min($IconDisplayPx, [int]($W * 0.36))
-    $iconX = $X + [int](($W - $iconSize) / 2)
-    $iconY = $Y + [int]($H * 0.06)
+    # Tile shadow / border
+    $borderPen = New-Object System.Drawing.Pen $TileBorder, 1.0
+    $G.DrawRectangle($borderPen, $X, $Y, $W - 1, $H - 1)
+    $borderPen.Dispose()
+
+    # Header bar (light blue)
+    $headerBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+        (New-Object System.Drawing.Rectangle $X, $Y, $W, $headerH),
+        $HeaderBlue,
+        $HeaderBlueDark,
+        [Drawing.Drawing2D.LinearGradientMode]::Vertical
+    )
+    $G.FillRectangle($headerBrush, $X, $Y, $W, $headerH)
+    $headerBrush.Dispose()
+
+    $headerFont = New-Object System.Drawing.Font ('Segoe UI', 8.5, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
+    $headerValueFont = New-Object System.Drawing.Font ('Segoe UI', 8.5, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
+    $headerBrush2 = New-Object System.Drawing.SolidBrush $ButtonText
+    $pad = 8
+
+    $titleRect = New-Object System.Drawing.RectangleF ([single]($X + $pad)), ([single]($Y + 5)), ([single]($W * 0.58)), ([single]18)
+    $titleSf = New-Object System.Drawing.StringFormat
+    $titleSf.Trimming = [Drawing.StringTrimming]::EllipsisCharacter
+    $G.DrawString($Title, $headerFont, $headerBrush2, $titleRect, $titleSf)
+
+    if ($HeaderValue) {
+        $valueRect = New-Object System.Drawing.RectangleF ([single]($X + $W * 0.38)), ([single]($Y + 5)), ([single]($W * 0.58 - $pad)), ([single]18)
+        $valueSf = New-Object System.Drawing.StringFormat
+        $valueSf.Alignment = [Drawing.StringAlignment]::Far
+        $valueSf.Trimming = [Drawing.StringTrimming]::EllipsisCharacter
+        $G.DrawString($HeaderValue, $headerValueFont, $headerBrush2, $valueRect, $valueSf)
+        $valueSf.Dispose()
+    }
+
+    $headerFont.Dispose(); $headerValueFont.Dispose(); $headerBrush2.Dispose(); $titleSf.Dispose()
+
+    # Body (white, icon left, text right)
+    $bodyY = $Y + $headerH
+    $bodyBrush = New-Object System.Drawing.SolidBrush $BodyWhite
+    $G.FillRectangle($bodyBrush, $X, $bodyY, $W, $bodyH)
+    $bodyBrush.Dispose()
+
+    $iconSize = [math]::Min($IconDisplayPx, [int]($bodyH - 12))
+    $iconX = $X + 10
+    $iconY = $bodyY + [int](($bodyH - $iconSize) / 2)
     $G.DrawImage($Icon, $iconX, $iconY, $iconSize, $iconSize)
 
-    $titleFont = New-Object System.Drawing.Font ('Segoe UI', 8.5, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
-    $titleBrush = New-Object System.Drawing.SolidBrush $TextMuted
-    $titleRect = New-Object System.Drawing.RectangleF ([single]($X + 6)), ([single]($Y + $H * 0.44)), ([single]($W - 12)), ([single]($H * 0.14))
-    $titleSf = New-Object System.Drawing.StringFormat
-    $titleSf.Alignment = [Drawing.StringAlignment]::Center
-    $titleSf.LineAlignment = [Drawing.StringAlignment]::Near
-    $titleSf.Trimming = [Drawing.StringTrimming]::EllipsisCharacter
-    $G.DrawString($Title, $titleFont, $titleBrush, $titleRect, $titleSf)
-    $titleFont.Dispose(); $titleBrush.Dispose(); $titleSf.Dispose()
+    $textX = $iconX + $iconSize + 8
+    $textW = $W - ($textX - $X) - 8
+    $bodyFont = New-Object System.Drawing.Font ('Segoe UI', 8.0, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
+    $bodyBrush2 = New-Object System.Drawing.SolidBrush $BodyTextColor
+    $textRect = New-Object System.Drawing.RectangleF ([single]$textX), ([single]($bodyY + 6)), ([single]$textW), ([single]($bodyH - 10))
+    $textSf = New-Object System.Drawing.StringFormat
+    $textSf.Alignment = [Drawing.StringAlignment]::Near
+    $textSf.LineAlignment = [Drawing.StringAlignment]::Near
+    $G.DrawString($BodyText, $bodyFont, $bodyBrush2, $textRect, $textSf)
+    $bodyFont.Dispose(); $bodyBrush2.Dispose(); $textSf.Dispose()
 
-    if ($Mode -eq 'multiline') {
-        $valueFont = New-Object System.Drawing.Font ('Segoe UI', 7.2, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
-        $valueBrush = New-Object System.Drawing.SolidBrush $ValueGreen
-        $valueRect = New-Object System.Drawing.RectangleF ([single]($X + 5)), ([single]($Y + $H * 0.58)), ([single]($W - 10)), ([single]($H * 0.40))
-        $valueSf = New-Object System.Drawing.StringFormat
-        $valueSf.Alignment = [Drawing.StringAlignment]::Near
-        $valueSf.LineAlignment = [Drawing.StringAlignment]::Near
-        $G.DrawString($Value, $valueFont, $valueBrush, $valueRect, $valueSf)
-        $valueFont.Dispose(); $valueBrush.Dispose(); $valueSf.Dispose()
-    } else {
-        $valueFont = New-Object System.Drawing.Font ('Segoe UI', 15, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
-        $valueBrush = New-Object System.Drawing.SolidBrush $TextWhite
-        $valueRect = New-Object System.Drawing.RectangleF ([single]($X + 4)), ([single]($Y + $H * 0.64)), ([single]($W - 8)), ([single]($H * 0.28))
-        $valueSf = New-Object System.Drawing.StringFormat
-        $valueSf.Alignment = [Drawing.StringAlignment]::Center
-        $valueSf.LineAlignment = [Drawing.StringAlignment]::Near
-        $valueSf.Trimming = [Drawing.StringTrimming]::EllipsisCharacter
-        $G.DrawString($Value, $valueFont, $valueBrush, $valueRect, $valueSf)
-        $valueFont.Dispose(); $valueBrush.Dispose(); $valueSf.Dispose()
+    # Footer button row
+    $footerY = $bodyY + $bodyH
+    $footerBg = New-Object System.Drawing.SolidBrush ([Drawing.Color]::FromArgb(255, 235, 237, 240))
+    $G.FillRectangle($footerBg, $X, $footerY, $W, $footerH)
+    $footerBg.Dispose()
+
+    $btnGap = 4
+    $btnPad = 6
+    $btnCount = $FooterButtons.Count
+    $btnW = [single](($W - 2 * $btnPad - ($btnCount - 1) * $btnGap) / $btnCount)
+    $btnH = [single]($footerH - 8)
+    for ($bi = 0; $bi -lt $btnCount; $bi++) {
+        $bx = [single]($X + $btnPad + $bi * ($btnW + $btnGap))
+        $by = [single]($footerY + 4)
+        Draw-DomoticzFooterButton $G $bx $by $btnW $btnH $FooterButtons[$bi]
+    }
+
+    # Yellow favourite star (bottom-left of tile)
+    if ($ShowStar) {
+        Draw-Star $G ([single]($X + 11)) ([single]($Y + $H - 9)) 5.5 $StarYellow $StarOutline
     }
 }
 
 function New-DashboardMockup {
-    $tileW = 210
-    $tileH = 168
+    # Grid: 4 rows × 3 columns = 11 tiles (3+3+3+2)
+    $tileW = 272
+    $tileH = 178
     $cols = 3
-    $rows = 5
-    $gap = 10
-    $pad = 18
-    $headerH = 42
+    $rows = 4
+    $gap = 8
+    $pad = 12
     $canvasW = $pad * 2 + $cols * $tileW + ($cols - 1) * $gap
-    $canvasH = $pad + $headerH + $rows * $tileH + ($rows - 1) * $gap + $pad
+    $canvasH = $pad * 2 + $rows * $tileH + ($rows - 1) * $gap
 
     $bmp = New-Object System.Drawing.Bitmap $canvasW, $canvasH
     $g = [Drawing.Graphics]::FromImage($bmp)
@@ -144,12 +241,7 @@ function New-DashboardMockup {
     $g.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
     $g.PixelOffsetMode = [Drawing.Drawing2D.PixelOffsetMode]::HighQuality
     $g.CompositingQuality = [Drawing.Drawing2D.CompositingQuality]::HighQuality
-    $g.Clear($BgDark)
-
-    $headerFont = New-Object System.Drawing.Font ('Segoe UI', 14, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
-    $headerBrush = New-Object System.Drawing.SolidBrush $TitleOrange
-    $g.DrawString('Easee - Domoticz dashboard', $headerFont, $headerBrush, [single]$pad, [single]($pad - 2))
-    $headerFont.Dispose(); $headerBrush.Dispose()
+    $g.Clear($BgNavy)
 
     # Icon roots match domoticz_icons.image_root() for each tile name/device type.
     $icons = @{
@@ -165,40 +257,75 @@ function New-DashboardMockup {
 
     $Euro = [char]0x20AC
     $Dash = [char]0x2014
+    $NL = [Environment]::NewLine
+    $stdButtons = @('Log', 'Aanpassen', 'Notificaties')
+    $basicButtons = @('Log', 'Aanpassen')
+
     $tiles = @(
-        @{ Title = 'Easee - Status'; Value = ('Online | EQ: 1 | LB actief | Tibber actief' + [Environment]::NewLine + '2026-12-31 00:00:00'); Bg = $TileBlue; Icon = $icons.statusGlobal; Mode = 'multiline' }
-        @{ Title = 'Easee - Totaal Laden'; Value = '0 W'; Bg = $TileBlue; Icon = $icons.power; Mode = 'large'; Sub = 'Vandaag: 0.000 kWh' }
-        @{ Title = 'Easee - Totaal kWh'; Value = '0 kWh'; Bg = $TileGreen; Icon = $icons.power; Mode = 'large' }
-        @{ Title = 'Kosten & Samenvatting'; Value = ('EUR' + [Environment]::NewLine + ('Kosten: {0}0.00 | Tarief: {0}0.00/kWh' -f $Euro) + [Environment]::NewLine + ('Energy: {0}0.00 | Belasting: {0}0.00' -f $Euro)); Bg = $TileOrange; Icon = $icons.cost; Mode = 'multiline' }
-        @{ Title = 'Beste laden'; Value = ('00:00 - 00:00 | {0}0.00/kWh' -f $Euro); Bg = $TileTeal; Icon = $icons.overview; Mode = 'multiline' }
-        @{ Title = 'Garage - Laden'; Value = '0 W'; Bg = $TileBlue; Icon = $icons.charger; Mode = 'large'; Sub = 'Vandaag: 0.000 kWh' }
-        @{ Title = 'Garage - Totaal & Sessie'; Value = '0 kWh | Sessie: 0 kWh'; Bg = $TileGreen; Icon = $icons.power; Mode = 'multiline' }
-        @{ Title = 'Garage - Status'; Value = 'Geen auto | 00:00'; Bg = $TileBlue; Icon = $icons.chStatus; Mode = 'multiline' }
-        @{ Title = 'Garage - Kosten (Sessie/Dag)'; Value = ('Sessie: {0}0.00 | Dag: {0}0.00' -f $Euro); Bg = $TileOrange; Icon = $icons.chCost; Mode = 'multiline' }
-        @{ Title = 'Voordeur - Laden'; Value = '0 W'; Bg = $TileBlue; Icon = $icons.charger; Mode = 'large'; Sub = 'Vandaag: 0.000 kWh' }
-        @{ Title = 'Voordeur - Totaal & Sessie'; Value = '0 kWh | Sessie: 0 kWh'; Bg = $TileGreen; Icon = $icons.power; Mode = 'multiline' }
-        @{ Title = 'Voordeur - Status'; Value = 'Geen auto | 00:00'; Bg = $TileBlue; Icon = $icons.chStatus; Mode = 'multiline' }
-        @{ Title = 'Voordeur - Kosten (Sessie/Dag)'; Value = ('Sessie: {0}0.00 | Dag: {0}0.00' -f $Euro); Bg = $TileOrange; Icon = $icons.chCost; Mode = 'multiline' }
-        @{ Title = 'Meterkast - Status'; Value = ('Equalizer online' + [Environment]::NewLine + 'Load balancing: Uit' + [Environment]::NewLine + ('   Vrij: {0} / {0} / {0} A  |  Laad: {0} / {0} / {0} A' -f $Dash) + [Environment]::NewLine + 'eMobility: 0 A | Hoofd: 0 A | Limiet: 0 A' + [Environment]::NewLine + 'Spanning L1/L2/L3: 0 V / 0 V / 0 V'); Bg = $TileBlue; Icon = $icons.eqEqualizer; Mode = 'multiline' }
-        @{ Title = 'Meterkast - Vermogen'; Value = ('Import: 0 W | Terug: 0 W' + [Environment]::NewLine + 'Netto: 0 W' + [Environment]::NewLine + 'Vandaag import: 0.000 kWh | netto: +0.000 kWh'); Bg = $TileBlue; Icon = $icons.eqEqualizer; Mode = 'multiline' }
+        @{
+            Title = 'Easee - Status'; HeaderValue = ''; Icon = $icons.statusGlobal
+            Body = "Online | EQ: 1${NL}2026-12-31 00:00:00"
+            Buttons = $stdButtons
+        }
+        @{
+            Title = 'Easee - Totaal Laden'; HeaderValue = '0 Watt'; Icon = $icons.power
+            Body = "Vandaag: 0.000 kWh"
+            Buttons = $basicButtons
+        }
+        @{
+            Title = 'Easee - Totaal kWh'; HeaderValue = '0 kWh'; Icon = $icons.power
+            Body = '0.000 kWh vandaag'
+            Buttons = $basicButtons
+        }
+        @{
+            Title = 'Easee - Kosten & Samenvatting'; HeaderValue = ''; Icon = $icons.cost
+            Body = "Kosten: ${Euro}0.00 | Tarief: ${Euro}0.00/kWh${NL}Energy: ${Euro}0.00 | Belasting: ${Euro}0.00"
+            Buttons = $basicButtons
+        }
+        @{
+            Title = 'Easee - Beste laden'; HeaderValue = ''; Icon = $icons.overview
+            Body = "00:00 - 00:00 | ${Euro}0.00/kWh"
+            Buttons = $basicButtons
+        }
+        @{
+            Title = 'Easee - Lader 1 - Laden'; HeaderValue = '0 Watt'; Icon = $icons.charger
+            Body = "Vandaag: 0.000 kWh"
+            Buttons = $basicButtons
+        }
+        @{
+            Title = 'Easee - Lader 1 - Totaal & Sessie'; HeaderValue = '0 kWh'; Icon = $icons.power
+            Body = "Sessie: 0.000 kWh"
+            Buttons = $basicButtons
+        }
+        @{
+            Title = 'Easee - Lader 1 - Status'; HeaderValue = ''; Icon = $icons.chStatus
+            Body = "Geen auto | 00:00"
+            Buttons = $stdButtons
+        }
+        @{
+            Title = 'Easee - Lader 1 - Kosten (Sessie/Dag)'; HeaderValue = ''; Icon = $icons.chCost
+            Body = "Sessie: ${Euro}0.00 | Dag: ${Euro}0.00"
+            Buttons = $basicButtons
+        }
+        @{
+            Title = 'Easee - Meterkast - Status'; HeaderValue = ''; Icon = $icons.eqEqualizer
+            Body = "Equalizer online${NL}Load balancing: Uit${NL}Vrij/Laad: ${Dash} / ${Dash} / ${Dash} A${NL}Spanning L1/L2/L3: 0 V / 0 V / 0 V"
+            Buttons = $stdButtons
+        }
+        @{
+            Title = 'Easee - Meterkast - Vermogen'; HeaderValue = '0 Watt'; Icon = $icons.eqEqualizer
+            Body = "Import: 0 W | Terug: 0 W${NL}Netto: 0 W${NL}Vandaag import: 0.000 kWh | netto: +0.000 kWh"
+            Buttons = $basicButtons
+        }
     )
 
     for ($i = 0; $i -lt $tiles.Count; $i++) {
         $col = $i % $cols
         $row = [math]::Floor($i / $cols)
         $x = $pad + $col * ($tileW + $gap)
-        $y = $pad + $headerH + $row * ($tileH + $gap)
+        $y = $pad + $row * ($tileH + $gap)
         $tile = $tiles[$i]
-        Draw-DomoticzTile $g $x $y $tileW $tileH $tile.Bg $tile.Icon $tile.Title $tile.Value $tile.Mode
-        if ($tile.Sub -and $tile.Mode -eq 'large') {
-            $subFont = New-Object System.Drawing.Font ('Segoe UI', 8, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
-            $subBrush = New-Object System.Drawing.SolidBrush $ValueGreen
-            $subRect = New-Object System.Drawing.RectangleF ([single]($x + 4)), ([single]($y + $tileH - 28)), ([single]($tileW - 8)), ([single]20)
-            $subSf = New-Object System.Drawing.StringFormat
-            $subSf.Alignment = [Drawing.StringAlignment]::Center
-            $g.DrawString($tile.Sub, $subFont, $subBrush, $subRect, $subSf)
-            $subFont.Dispose(); $subBrush.Dispose(); $subSf.Dispose()
-        }
+        Draw-DomoticzTile $g $x $y $tileW $tileH $tile.Icon $tile.Title $tile.HeaderValue $tile.Body $tile.Buttons
     }
 
     foreach ($icon in $icons.Values) { $icon.Dispose() }
@@ -207,11 +334,12 @@ function New-DashboardMockup {
 }
 
 function New-EqualizerCloseupMockup {
-    $pad = 18
-    $rowH = 92
-    $iconSize = $EqualizerIconDisplayPx
-    $canvasW = 760
-    $canvasH = $pad + 36 + 3 * $rowH + $pad
+    $tileW = 520
+    $tileH = 178
+    $gap = 10
+    $pad = 14
+    $canvasW = $pad * 2 + $tileW
+    $canvasH = $pad * 2 + 3 * $tileH + 2 * $gap
 
     $bmp = New-Object System.Drawing.Bitmap $canvasW, $canvasH
     $g = [Drawing.Graphics]::FromImage($bmp)
@@ -220,52 +348,37 @@ function New-EqualizerCloseupMockup {
     $g.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
     $g.PixelOffsetMode = [Drawing.Drawing2D.PixelOffsetMode]::HighQuality
     $g.CompositingQuality = [Drawing.Drawing2D.CompositingQuality]::HighQuality
-    $g.Clear($BgDark)
-
-    $headerFont = New-Object System.Drawing.Font ('Segoe UI', 14, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
-    $headerBrush = New-Object System.Drawing.SolidBrush $TitleOrange
-    $g.DrawString('Equalizer & Status-iconen (demo)', $headerFont, $headerBrush, [single]$pad, [single]($pad - 2))
-    $headerFont.Dispose(); $headerBrush.Dispose()
+    $g.Clear($BgNavy)
 
     $Dash = [char]0x2014
-    $rows = @(
+    $NL = [Environment]::NewLine
+    $stdButtons = @('Log', 'Aanpassen', 'Notificaties')
+    $basicButtons = @('Log', 'Aanpassen')
+
+    $tiles = @(
         @{
-            Label = 'EaseeStatusGlobal - combo v10.9.18 (EQ linksonder, laadpaal rechtsboven, badge i)'
-            Icon = Get-EaseeIconBitmap 'EaseeStatusGlobal'
-            Value = 'Online | EQ: 1 | 2026-12-31 00:00:00'
+            Title = 'Easee - Status'; HeaderValue = ''; Icon = Get-EaseeIconBitmap 'EaseeStatusGlobal'
+            Body = "Online | EQ: 1${NL}2026-12-31 00:00:00"
+            Buttons = $stdButtons
         }
         @{
-            Label = 'Meterkast - Status - load balancing uit, fase-detail'
-            Icon = Get-EaseeIconBitmap 'EaseeEqualizer'
-            Value = ('Load balancing: Uit | Vrij/Laad: {0} / {0} / {0}' -f $Dash) + [Environment]::NewLine + 'Spanning: 0 V / 0 V / 0 V'
+            Title = 'Easee - Meterkast - Status'; HeaderValue = ''; Icon = Get-EaseeIconBitmap 'EaseeEqualizer'
+            Body = "Equalizer online${NL}Load balancing: Uit${NL}Vrij/Laad: ${Dash} / ${Dash} / ${Dash} A${NL}Spanning L1/L2/L3: 0 V / 0 V / 0 V"
+            Buttons = $stdButtons
         }
         @{
-            Label = 'Meterkast - Vermogen - import/terug/netto W + vandaag kWh'
-            Icon = Get-EaseeIconBitmap 'EaseeEqualizer'
-            Value = 'Import: 0 W | Terug: 0 W | Netto: 0 W' + [Environment]::NewLine + 'Vandaag import: 0.000 kWh | netto: +0.000 kWh'
+            Title = 'Easee - Meterkast - Vermogen'; HeaderValue = '0 Watt'; Icon = Get-EaseeIconBitmap 'EaseeEqualizer'
+            Body = "Import: 0 W | Terug: 0 W${NL}Netto: 0 W${NL}Vandaag import: 0.000 kWh | netto: +0.000 kWh"
+            Buttons = $basicButtons
         }
     )
 
-    $labelFont = New-Object System.Drawing.Font ('Segoe UI', 9.5, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
-    $valueFont = New-Object System.Drawing.Font ('Segoe UI', 8.5, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
-    $labelBrush = New-Object System.Drawing.SolidBrush $TextMuted
-    $valueBrush = New-Object System.Drawing.SolidBrush $ValueGreen
-
-    for ($i = 0; $i -lt $rows.Count; $i++) {
-        $y = $pad + 36 + $i * $rowH
-        $tileBrush = New-Object System.Drawing.SolidBrush $TileBlue
-        $g.FillRectangle($tileBrush, $pad, $y, $iconSize + 8, $iconSize + 8)
-        $tileBrush.Dispose()
-        $g.DrawImage($rows[$i].Icon, $pad + 4, $y + 4, $iconSize, $iconSize)
-
-        $textX = $pad + $iconSize + 24
-        $g.DrawString($rows[$i].Label, $labelFont, $labelBrush, [single]$textX, [single]($y + 4))
-        $valueRect = New-Object System.Drawing.RectangleF ([single]$textX), ([single]($y + 28)), ([single]($canvasW - $textX - $pad)), ([single]($rowH - 30))
-        $g.DrawString($rows[$i].Value, $valueFont, $valueBrush, $valueRect)
-        $rows[$i].Icon.Dispose()
+    for ($i = 0; $i -lt $tiles.Count; $i++) {
+        $y = $pad + $i * ($tileH + $gap)
+        Draw-DomoticzTile $g $pad $y $tileW $tileH $tiles[$i].Icon $tiles[$i].Title $tiles[$i].HeaderValue $tiles[$i].Body $tiles[$i].Buttons $true $EqualizerIconDisplayPx
+        $tiles[$i].Icon.Dispose()
     }
 
-    $labelFont.Dispose(); $valueFont.Dispose(); $labelBrush.Dispose(); $valueBrush.Dispose()
     $g.Dispose()
     return $bmp
 }
@@ -280,5 +393,5 @@ $equalizer.Dispose()
 
 foreach ($cached in $script:EaseeIconCache.Values) { $cached.Dispose() }
 
-Write-Output "Created $DashboardPath"
+Write-Output "Created $DashboardPath (11 tiles, grid 3+3+3+2)"
 Write-Output "Created $EqualizerPath"

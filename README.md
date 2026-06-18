@@ -52,13 +52,13 @@ Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestr
 
 ## Screenshots
 
-> **Let op:** de afbeeldingen hieronder zijn **gesanitiseerde demo-mockups** — geen live Domoticz-data. Alle getallen zijn **0** / **€0.00**, tijden **00:00** en datums **2026-12-31**. Zo ziet een typisch dashboard eruit met 2 laadpalen (Garage, Voordeur), Equalizer (Meterkast) en Tibber. Opnieuw genereren: `scripts/generate_dashboard_mockup.ps1`.
+> **Let op:** de afbeeldingen hieronder zijn **gesanitiseerde demo-mockups** in echte Domoticz-tegelstijl (donker navy, blauwe header, witte body, footer-knoppen) — geen live Domoticz-data. Alle getallen zijn **0** / **€0.00**, tijden **00:00** en datums **2026-12-31**. De README-demo toont **11 tegels** met **één laadpaal** (*Lader 1*); een volledige installatie met 2 laadpalen heeft **15 tegels** (zie [CONFIGURATION.md](docs/CONFIGURATION.md)). Opnieuw genereren: `scripts/generate_dashboard_mockup.ps1`.
 
-### Dashboard (15 tegels)
+### Dashboard (11 demo-tegels)
 
 ![Domoticz dashboard — gesanitiseerde demo](docs/screenshot-dashboard.png)
 
-*Demo-layout: globale tegels, Kosten/Beste laden (Tibber), laadpalen Garage + Voordeur, Equalizer Meterkast (Status + Vermogen). Custom iconen incl. combo op **Easee - Status** (v10.9.18).*
+*Demo-layout (3+3+3+2): 5 globale tegels, 4 laadpaal-tegels (*Easee - Lader 1*), 2 Equalizer-tegels (*Meterkast*). P-max foto-iconen; combo op **Easee - Status** (v10.9.18).*
 
 ### Iconen (actuele referentie)
 
@@ -70,7 +70,7 @@ Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestr
 
 ![Equalizer-tegels en StatusGlobal combo](docs/screenshot-equalizer.png)
 
-*Close-up: v10.9.18 combo-icoon op globale Status, Meterkast Status (LB/fase/spanning) en Vermogen (import/terug/netto). Gesanitiseerde waarden.*
+*Close-up in Domoticz-tegelstijl: combo-icoon op globale Status, Meterkast Status (LB/fase/spanning) en Vermogen (import/terug/netto). Gesanitiseerde waarden.*
 
 ## Ondersteunde scenario's
 

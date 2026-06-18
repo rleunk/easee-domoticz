@@ -132,6 +132,8 @@ Legacy: *Import*, *Terug & netto*, *Netto*, *Teruglevering*, *Spanning*, *Load b
 
 ## Verwachte tegels (referentie)
 
+> **README-demo:** de gesanitiseerde screenshot in [README.md](../README.md) toont **11 tegels** met **één laadpaal** (*Lader 1*) en dezelfde globale + Equalizer-tegels — geen tweede laadpaal-sectie. Dat is alleen voor de documentatie-preview; de plugin maakt per geconfigureerde laadpaal eigen tegels aan.
+
 Bij **2 laadpalen + 1 Equalizer + Tibber** hoort de plugin **exact 15 tegels** aan te maken (prefix `[PREFIX]` = jouw hardwarenaam, bijv. `Easee`):
 
 | # | Tegel |
