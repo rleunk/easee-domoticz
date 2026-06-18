@@ -118,7 +118,7 @@ Verwacht in log: `Custom icons geladen: 13 sets` of `Custom icons uit Domoticz (
 | Iconenset | Tegel(s) |
 |-----------|----------|
 | **EaseeStatusGlobal** | Alleen globale **Easee - Status** (laadpaal + EQ-puck + **i**) |
-| **EaseeStatus** | Laadpaal **Status** per locatie (bijv. Garage, Voordeur) — laadpaal + **i**, geen EQ |
+| **EaseeStatus** | Laadpaal **Status** per locatie (bijv. Lader 1, Garage, Voordeur) — laadpaal + **i**, geen EQ |
 | **EaseeEqualizer** | Equalizer **Status** en **Vermogen** (Meterkast) |
 | **EaseeCharger** | Laadpaal **Laden** |
 | **EaseePower** | **Totaal Laden**, laadpaal **Totaal & Sessie** |
