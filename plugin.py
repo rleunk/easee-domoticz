@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.21" author="Richard Leunk" version="10.9.21"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.23" author="Richard Leunk" version="10.9.23"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.21</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.23</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -298,9 +298,9 @@ class BasePlugin:
             charger_logic.poll_charger(self, c)
         total_power = sum(v.get('power', 0) for v in self.latest_chargers.values())
         online = sum(1 for v in self.latest_chargers.values() if v.get('online'))
-        easee_logging.debug(
+        easee_logging.info(
             'plugin',
-            f'Poll klaar: {len(self.chargers)} lader(s), {len(self.equalizers)} EQ, '
+            f'Poll voltooid: {len(self.chargers)} lader(s), {len(self.equalizers)} EQ, '
             f'{online}/{len(self.chargers)} online, totaal {total_power} W',
             'poll',
         )
@@ -359,6 +359,7 @@ class BasePlugin:
         self.session.headers.update({'accept': 'application/json'})
         domoticz_icons.load_custom_images(self, plugin_globals=globals())
         domoticz_devices.rebuild_index(self)
+        domoticz_devices.reset_cost_diagnostics()
         domoticz_icons.apply_images_to_devices(self)
         easee_state.load_state(self)
         self.sync_done = False
@@ -371,7 +372,14 @@ class BasePlugin:
         self.last_devices_count = -1
         easee_api.login(self)
         self.started = True
-        easee_logging.info('plugin', 'Plugin gestart (initiële sync wacht op Domoticz Devices-readiness)')
+        if easee_helpers.tibber_enabled(self):
+            easee_logging.info('plugin', 'Plugin gestart — Tibber actief (kosten-tegels worden bijgewerkt na eerste poll)')
+        else:
+            easee_logging.info(
+                'plugin',
+                'Plugin gestart — Tibber uit (Mode7 leeg); per-lader kosten-tegels worden niet bijgewerkt',
+            )
+        easee_logging.info('plugin', 'Initiële sync wacht op Domoticz Devices-readiness')
 
     def onStop(self):
         easee_state.save_state(self)

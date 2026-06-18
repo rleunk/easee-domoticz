@@ -6,6 +6,21 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.23] — 2026-06-18
+
+### Bugfix
+- **Kosten blijven €0,00 tijdens laden (429 / herstart)** — `sessionEnergy` in `/state` kan verouderd blijven als `/sessions/ongoing` 429 geeft; de plugin gebruikte dan alleen die delta (0) en sloeg `lifetimeEnergy`- en vermogensintegratie-fallback over. Kostenaccumulatie probeert nu achtereenvolgens sessionEnergy → lifetimeEnergy → vermogen×tijd. Bij herstart midden in een sessie worden bestaande sessiekosten behouden en wordt `prev_session_kwh` niet meer op de huidige waarde gezet (geen eeuwig delta=0).
+- **Totaal & Sessie toont 0 kWh sessie** — sessie-kWh onder 0,5 kWh werd afgerond naar 0; weergave gebruikt nu 3 decimalen (bijv. `Sessie: 0.310 kWh`).
+
+## [10.9.22] — 2026-06-18
+
+### Bugfix
+- **Kosten-diagnostiek na hardware-herstart** — `_COST_*`-sets werden niet gereset bij `onStart()`; na hardware-herstart (zonder volledige Domoticz-restart) verschenen *Kosten-tegel bijgewerkt* / *niet gevonden* niet opnieuw. Sets worden nu gewist bij elke plugin-start.
+- **Poll-zichtbaarheid** — `Poll voltooid` is INFO i.p.v. DEBUG, zodat je in normale logs ziet wanneer een poll-cyclus klaar is (handig met 16 laders).
+
+### Gewijzigd
+- **Tibber-status bij start** — INFO-regel of Tibber actief is (Mode7) of uit; zonder Tibber worden per-lader kosten-tegels niet bijgewerkt en verschijnen er geen kosten-diagnostiekregels.
+
 ## [10.9.21] — 2026-06-18
 
 ### Bugfix

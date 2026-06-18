@@ -186,6 +186,13 @@ _COST_UPDATE_LOGGED = set()
 _CORE_COST_LOOKUP_WARNED = set()
 _CORE_COST_UPDATE_LOGGED = set()
 
+def reset_cost_diagnostics():
+    """Reset eenmalige kosten-diagnostiek na plugin-herstart (hardware of Domoticz)."""
+    _COST_LOOKUP_WARNED.clear()
+    _COST_UPDATE_LOGGED.clear()
+    _CORE_COST_LOOKUP_WARNED.clear()
+    _CORE_COST_UPDATE_LOGGED.clear()
+
 def _core_legacy_names(plugin, label):
     label = easee_helpers.clean_label(plugin, label)
     return [
