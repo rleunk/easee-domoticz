@@ -1,15 +1,16 @@
 # Generate sanitized Domoticz dashboard mockups for README (no real user data).
+# Uses actual plugin icon PNGs from icons/*.zip (same assets as domoticz_icons.py).
 # Output: docs/screenshot-dashboard.png, docs/screenshot-equalizer.png
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $RepoRoot = Split-Path $PSScriptRoot -Parent
 $DashboardPath = Join-Path $RepoRoot 'docs\screenshot-dashboard.png'
 $EqualizerPath = Join-Path $RepoRoot 'docs\screenshot-equalizer.png'
-
-$global:EaseeIconsDotSourceOnly = $true
-. (Join-Path $PSScriptRoot 'generate_icons.ps1')
+$IconsDir = Join-Path $RepoRoot 'icons'
+$PluginKey = 'EaseeCloudAutoDiscoveryV1000'
 
 $TileBlue = [Drawing.Color]::FromArgb(255, 44, 151, 222)
 $TileGreen = [Drawing.Color]::FromArgb(255, 22, 160, 133)
@@ -21,96 +22,42 @@ $TextWhite = [Drawing.Color]::FromArgb(255, 245, 246, 247)
 $TextMuted = [Drawing.Color]::FromArgb(255, 210, 214, 220)
 $ValueGreen = [Drawing.Color]::FromArgb(255, 120, 220, 120)
 
-$BlueAccent = [Drawing.Color]::FromArgb(255, 33, 150, 243)
-$GreenAccent = [Drawing.Color]::FromArgb(255, 46, 160, 67)
-$YellowAccent = [Drawing.Color]::FromArgb(255, 255, 193, 7)
-$OrangeAccent = [Drawing.Color]::FromArgb(255, 255, 152, 0)
-$TealAccent = [Drawing.Color]::FromArgb(255, 0, 150, 136)
+$script:EaseeIconCache = @{}
 
-function Get-StatusGlobalChargerOverlayScale([int]$Size) {
-    if ($Size -le 16) { return 0.72 }
-    if ($Size -le 48) { return 0.70 }
-    return 0.68
-}
-
-function Get-EqualizerPuckOverlayScale([int]$Size) {
-    if ($Size -le 16) { return 0.50 }
-    if ($Size -le 48) { return 0.46 }
-    return 0.44
-}
-
-function Add-FunctionBadge([Drawing.Graphics]$G, [int]$Size, [string]$Glyph, [Drawing.Color]$Accent, [bool]$Dim) {
-    $badge = if ($Size -le 16) { 8 } else { 17 }
-    $margin = if ($Size -le 16) { 0 } else { 1 }
-    $bx = $Size - $badge - $margin
-    $by = $Size - $badge - $margin
-    $fill = if ($Dim) {
-        [Drawing.Color]::FromArgb(220, [math]::Max(0, [int]($Accent.R * 0.55 + 40)), [math]::Max(0, [int]($Accent.G * 0.55 + 40)), [math]::Max(0, [int]($Accent.B * 0.55 + 40)))
-    } else { $Accent }
-    $brush = New-Object System.Drawing.SolidBrush $fill
-    $G.FillEllipse($brush, $bx, $by, $badge, $badge)
-    $brush.Dispose()
-    $fontSize = if ($Size -le 16) { 5.5 } else { 11.0 }
-    $font = New-Object System.Drawing.Font ('Segoe UI', [single]$fontSize, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
-    $textBrush = New-Object System.Drawing.SolidBrush ([Drawing.Color]::White)
-    $sf = New-Object System.Drawing.StringFormat
-    $sf.Alignment = [Drawing.StringAlignment]::Center
-    $sf.LineAlignment = [Drawing.StringAlignment]::Center
-    $rect = New-Object System.Drawing.RectangleF ([single]$bx), ([single]$by), ([single]$badge), ([single]$badge)
-    $G.DrawString($Glyph, $font, $textBrush, $rect, $sf)
-    $font.Dispose(); $textBrush.Dispose(); $sf.Dispose()
-}
-
-function New-StatusGlobalComboIcon([int]$Size, [bool]$Dim = $false) {
-    $bmp = New-Object System.Drawing.Bitmap $Size, $Size, ([Drawing.Imaging.PixelFormat]::Format32bppArgb)
-    $g = [Drawing.Graphics]::FromImage($bmp)
-    $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::HighQuality
-    $g.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-    $g.Clear([Drawing.Color]::Transparent)
-
-    $margin = if ($Size -le 16) { 0 } else { 1 }
-    $eqSize = [math]::Max(6, [int][math]::Round($Size * (Get-EqualizerPuckOverlayScale $Size)))
-    $eqIcon = New-EaseeIconV2 $eqSize $BlueAccent 'equalizer' $Dim $true
-    $g.DrawImage($eqIcon, $margin, $Size - $eqSize - $margin, $eqSize, $eqSize)
-    $eqIcon.Dispose()
-
-    $chSize = [math]::Max(6, [int][math]::Round($Size * (Get-StatusGlobalChargerOverlayScale $Size)))
-    $chIcon = New-EaseeIconV2 $chSize $BlueAccent 'status' $Dim
-    $g.DrawImage($chIcon, $Size - $chSize - $margin, $margin, $chSize, $chSize)
-    $chIcon.Dispose()
-
-    Add-FunctionBadge $g $Size 'i' $BlueAccent $Dim | Out-Null
-    $g.Dispose()
-    return $bmp
-}
-
-function New-ChargerStatusIcon([int]$Size, [bool]$Dim = $false) {
-    $bmp = New-EaseeIconV2 $Size $BlueAccent 'status' $Dim
-    $out = $bmp.Clone()
-    $bmp.Dispose()
-    $g = [Drawing.Graphics]::FromImage($out)
-    $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
-    Add-FunctionBadge $g $Size 'i' $BlueAccent $Dim | Out-Null
-    $g.Dispose()
-    return $out
-}
-
-function New-BadgedIcon([int]$Size, [string]$Kind, [Drawing.Color]$Color, [string]$Badge, [bool]$Dim = $false, [bool]$EqMax = $false) {
-    $bmp = New-EaseeIconV2 $Size $Color $Kind $Dim $EqMax
-    $out = $bmp.Clone()
-    $bmp.Dispose()
-    if ($Badge) {
-        $g = [Drawing.Graphics]::FromImage($out)
-        $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
-        Add-FunctionBadge $g $Size $Badge $Color $Dim | Out-Null
-        $g.Dispose()
+function Get-EaseeIconBitmap([string]$Root, [bool]$On = $true) {
+    $cacheKey = "${Root}|$On"
+    if (-not $script:EaseeIconCache.ContainsKey($cacheKey)) {
+        $zipPath = Join-Path $IconsDir "$Root.zip"
+        if (-not (Test-Path $zipPath)) {
+            throw "Missing icon zip: $zipPath"
+        }
+        $suffix = if ($On) { '48_On' } else { '48_Off' }
+        $entryLeaf = "${PluginKey}${Root}${suffix}.png"
+        $zip = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+        try {
+            $entry = $zip.Entries | Where-Object {
+                $_.FullName -eq $entryLeaf -or $_.Name -eq $entryLeaf
+            } | Select-Object -First 1
+            if (-not $entry) {
+                throw "Entry not found in ${Root}.zip: $entryLeaf"
+            }
+            $ms = New-Object System.IO.MemoryStream
+            $stream = $entry.Open()
+            try { $stream.CopyTo($ms) } finally { $stream.Dispose() }
+            $ms.Position = 0
+            $script:EaseeIconCache[$cacheKey] = [Drawing.Bitmap]::FromStream($ms)
+            $ms.Dispose()
+        } finally {
+            $zip.Dispose()
+        }
     }
-    return $out
+    return $script:EaseeIconCache[$cacheKey].Clone()
 }
 
-function Measure-TextBlock([Drawing.Graphics]$G, [string]$Text, [Drawing.Font]$Font, [int]$MaxWidth) {
-    $sizeF = New-Object System.Drawing.SizeF $MaxWidth, 10000
-    return $G.MeasureString($Text, $Font, $sizeF)
+function Save-Png([Drawing.Bitmap]$Bmp, [string]$Path) {
+    $dir = Split-Path $Path -Parent
+    if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    $Bmp.Save($Path, [Drawing.Imaging.ImageFormat]::Png)
 }
 
 function Draw-DomoticzTile(
@@ -178,6 +125,7 @@ function New-DashboardMockup {
     $g = [Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $g.TextRenderingHint = [Drawing.Text.TextRenderingHint]::ClearTypeGridFit
+    $g.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
     $g.Clear($BgDark)
 
     $headerFont = New-Object System.Drawing.Font ('Segoe UI', 14, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
@@ -185,17 +133,16 @@ function New-DashboardMockup {
     $g.DrawString('Easee - Domoticz dashboard', $headerFont, $headerBrush, [single]$pad, [single]($pad - 2))
     $headerFont.Dispose(); $headerBrush.Dispose()
 
+    # Icon roots match domoticz_icons.image_root() for each tile name/device type.
     $icons = @{
-        statusGlobal = New-StatusGlobalComboIcon 48 $false
-        power        = New-BadgedIcon 48 'power' $YellowAccent 'W'
-        overview     = New-BadgedIcon 48 'overview' $TealAccent ([char]0x03A3)
-        cost         = New-BadgedIcon 48 'cost' $OrangeAccent ([char]0x20AC)
-        best         = New-BadgedIcon 48 'overview' $TealAccent ([char]0x03A3)
-        charger      = New-EaseeIconV2 48 $GreenAccent 'charger' $false
-        chStatus     = New-ChargerStatusIcon 48 $false
-        chCost       = New-BadgedIcon 48 'cost' $OrangeAccent ([char]0x20AC)
-        eqStatus     = New-BadgedIcon 48 'equalizer' $BlueAccent 'E' $false $true
-        eqPower      = New-BadgedIcon 48 'equalizer' $BlueAccent 'E' $false $true
+        statusGlobal = Get-EaseeIconBitmap 'EaseeStatusGlobal'
+        power        = Get-EaseeIconBitmap 'EaseePower'
+        cost         = Get-EaseeIconBitmap 'EaseeCost'
+        overview     = Get-EaseeIconBitmap 'EaseeOverview'
+        charger      = Get-EaseeIconBitmap 'EaseeCharger'
+        chStatus     = Get-EaseeIconBitmap 'EaseeStatus'
+        chCost       = Get-EaseeIconBitmap 'EaseeCost'
+        eqEqualizer  = Get-EaseeIconBitmap 'EaseeEqualizer'
     }
 
     $Euro = [char]0x20AC
@@ -203,9 +150,9 @@ function New-DashboardMockup {
     $tiles = @(
         @{ Title = 'Easee - Status'; Value = ('Online | EQ: 1 | LB actief | Tibber actief' + [Environment]::NewLine + '2026-12-31 00:00:00'); Bg = $TileBlue; Icon = $icons.statusGlobal; Mode = 'multiline' }
         @{ Title = 'Easee - Totaal Laden'; Value = '0 W'; Bg = $TileBlue; Icon = $icons.power; Mode = 'large'; Sub = 'Vandaag: 0.000 kWh' }
-        @{ Title = 'Easee - Totaal kWh'; Value = '0 kWh'; Bg = $TileGreen; Icon = $icons.overview; Mode = 'large' }
+        @{ Title = 'Easee - Totaal kWh'; Value = '0 kWh'; Bg = $TileGreen; Icon = $icons.power; Mode = 'large' }
         @{ Title = 'Kosten & Samenvatting'; Value = ('EUR' + [Environment]::NewLine + ('Kosten: {0}0.00 | Tarief: {0}0.00/kWh' -f $Euro) + [Environment]::NewLine + ('Energy: {0}0.00 | Belasting: {0}0.00' -f $Euro)); Bg = $TileOrange; Icon = $icons.cost; Mode = 'multiline' }
-        @{ Title = 'Beste laden'; Value = ('00:00 - 00:00 | {0}0.00/kWh' -f $Euro); Bg = $TileTeal; Icon = $icons.best; Mode = 'multiline' }
+        @{ Title = 'Beste laden'; Value = ('00:00 - 00:00 | {0}0.00/kWh' -f $Euro); Bg = $TileTeal; Icon = $icons.overview; Mode = 'multiline' }
         @{ Title = 'Garage - Laden'; Value = '0 W'; Bg = $TileBlue; Icon = $icons.charger; Mode = 'large'; Sub = 'Vandaag: 0.000 kWh' }
         @{ Title = 'Garage - Totaal & Sessie'; Value = '0 kWh | Sessie: 0 kWh'; Bg = $TileGreen; Icon = $icons.power; Mode = 'multiline' }
         @{ Title = 'Garage - Status'; Value = 'Geen auto | 00:00'; Bg = $TileBlue; Icon = $icons.chStatus; Mode = 'multiline' }
@@ -214,8 +161,8 @@ function New-DashboardMockup {
         @{ Title = 'Voordeur - Totaal & Sessie'; Value = '0 kWh | Sessie: 0 kWh'; Bg = $TileGreen; Icon = $icons.power; Mode = 'multiline' }
         @{ Title = 'Voordeur - Status'; Value = 'Geen auto | 00:00'; Bg = $TileBlue; Icon = $icons.chStatus; Mode = 'multiline' }
         @{ Title = 'Voordeur - Kosten (Sessie/Dag)'; Value = ('Sessie: {0}0.00 | Dag: {0}0.00' -f $Euro); Bg = $TileOrange; Icon = $icons.chCost; Mode = 'multiline' }
-        @{ Title = 'Meterkast - Status'; Value = ('Equalizer online' + [Environment]::NewLine + 'Load balancing: Uit' + [Environment]::NewLine + ('   Vrij: {0} / {0} / {0} A  |  Laad: {0} / {0} / {0} A' -f $Dash) + [Environment]::NewLine + 'eMobility: 0 A | Hoofd: 0 A | Limiet: 0 A' + [Environment]::NewLine + 'Spanning L1/L2/L3: 0 V / 0 V / 0 V'); Bg = $TileBlue; Icon = $icons.eqStatus; Mode = 'multiline' }
-        @{ Title = 'Meterkast - Vermogen'; Value = ('Import: 0 W | Terug: 0 W' + [Environment]::NewLine + 'Netto: 0 W' + [Environment]::NewLine + 'Vandaag import: 0.000 kWh | netto: +0.000 kWh'); Bg = $TileBlue; Icon = $icons.eqPower; Mode = 'multiline' }
+        @{ Title = 'Meterkast - Status'; Value = ('Equalizer online' + [Environment]::NewLine + 'Load balancing: Uit' + [Environment]::NewLine + ('   Vrij: {0} / {0} / {0} A  |  Laad: {0} / {0} / {0} A' -f $Dash) + [Environment]::NewLine + 'eMobility: 0 A | Hoofd: 0 A | Limiet: 0 A' + [Environment]::NewLine + 'Spanning L1/L2/L3: 0 V / 0 V / 0 V'); Bg = $TileBlue; Icon = $icons.eqEqualizer; Mode = 'multiline' }
+        @{ Title = 'Meterkast - Vermogen'; Value = ('Import: 0 W | Terug: 0 W' + [Environment]::NewLine + 'Netto: 0 W' + [Environment]::NewLine + 'Vandaag import: 0.000 kWh | netto: +0.000 kWh'); Bg = $TileBlue; Icon = $icons.eqEqualizer; Mode = 'multiline' }
     )
 
     for ($i = 0; $i -lt $tiles.Count; $i++) {
@@ -252,6 +199,7 @@ function New-EqualizerCloseupMockup {
     $g = [Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $g.TextRenderingHint = [Drawing.Text.TextRenderingHint]::ClearTypeGridFit
+    $g.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
     $g.Clear($BgDark)
 
     $headerFont = New-Object System.Drawing.Font ('Segoe UI', 14, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
@@ -263,17 +211,17 @@ function New-EqualizerCloseupMockup {
     $rows = @(
         @{
             Label = 'EaseeStatusGlobal - combo v10.9.18 (EQ linksonder, laadpaal rechtsboven, badge i)'
-            Icon = New-StatusGlobalComboIcon 48 $false
+            Icon = Get-EaseeIconBitmap 'EaseeStatusGlobal'
             Value = 'Online | EQ: 1 | 2026-12-31 00:00:00'
         }
         @{
             Label = 'Meterkast - Status - load balancing uit, fase-detail'
-            Icon = New-BadgedIcon 48 'equalizer' $BlueAccent 'E' $false $true
+            Icon = Get-EaseeIconBitmap 'EaseeEqualizer'
             Value = ('Load balancing: Uit | Vrij/Laad: {0} / {0} / {0}' -f $Dash) + [Environment]::NewLine + 'Spanning: 0 V / 0 V / 0 V'
         }
         @{
             Label = 'Meterkast - Vermogen - import/terug/netto W + vandaag kWh'
-            Icon = New-BadgedIcon 48 'equalizer' $BlueAccent 'E' $false $true
+            Icon = Get-EaseeIconBitmap 'EaseeEqualizer'
             Value = 'Import: 0 W | Terug: 0 W | Netto: 0 W' + [Environment]::NewLine + 'Vandaag import: 0.000 kWh | netto: +0.000 kWh'
         }
     )
@@ -309,6 +257,8 @@ $dashboard.Dispose()
 $equalizer = New-EqualizerCloseupMockup
 Save-Png $equalizer $EqualizerPath
 $equalizer.Dispose()
+
+foreach ($cached in $script:EaseeIconCache.Values) { $cached.Dispose() }
 
 Write-Output "Created $DashboardPath"
 Write-Output "Created $EqualizerPath"
