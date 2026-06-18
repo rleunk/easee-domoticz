@@ -225,7 +225,7 @@ def poll_charger(plugin, charger):
     
     if easee_helpers.tibber_enabled(plugin):
         day_cost = easee_helpers.safe_float(plugin, st.get('day_cost_total', 0.0), 0.0)
-        domoticz_devices.update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, bool(st.get('session_active')))
+        domoticz_devices.update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, session_active)
     
     plugin.latest_chargers[cid] = {
         'power': power_w,

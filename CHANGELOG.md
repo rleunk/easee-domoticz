@@ -6,6 +6,12 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.20] — 2026-06-18
+
+### Bugfix
+- **Kosten-tegel DeviceID (legacy)** — tegels met naam *Kosten (Sessie/Dag)* maar oude DeviceID uit *Kosten* (v9.x/v10.x) werden door v10.9.19 nog niet gevonden als de naam al was hernoemd; lookup probeert nu ook het legacy DeviceID vóór naamlfallback.
+- **Kosten-label tijdens laden** — sessielabel op de kosten-tegel gebruikt nu dezelfde `session_active`-logica als Status (vermogen > 50 W), niet alleen de opgeslagen state-vlag.
+
 ## [10.9.19] — 2026-06-18
 
 ### Bugfix

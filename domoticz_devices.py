@@ -63,6 +63,17 @@ def find_unit_by_devid(plugin, devid):
 def resolve_unit(plugin, name):
     return find_unit(plugin, name) or find_unit_by_devid(plugin, make_device_id(plugin, name))
 
+def _charger_legacy_label_keys(label_key):
+    if label_key == 'Kosten (Sessie/Dag)':
+        return ('Kosten',)
+    return ()
+
+def _charger_legacy_device_ids(plugin, cid, label_key):
+    return [
+        make_charger_device_id(plugin, cid, legacy_key)
+        for legacy_key in _charger_legacy_label_keys(label_key)
+    ]
+
 def _charger_legacy_names(plugin, display, label_key):
     names = [
         charger_logic.charger_dev_name(plugin, display, label_key),
@@ -70,12 +81,12 @@ def _charger_legacy_names(plugin, display, label_key):
         f'Easee - {display} - {label_key}',
         f'Easee - Easee - {display} - {label_key}',
     ]
-    if label_key == 'Kosten (Sessie/Dag)':
+    for legacy_key in _charger_legacy_label_keys(label_key):
         names.extend([
-            charger_logic.charger_dev_name(plugin, display, 'Kosten'),
-            easee_helpers.pref(plugin, f'{display} - Kosten'),
-            f'Easee - {display} - Kosten',
-            f'Easee - Easee - {display} - Kosten',
+            charger_logic.charger_dev_name(plugin, display, legacy_key),
+            easee_helpers.pref(plugin, f'{display} - {legacy_key}'),
+            f'Easee - {display} - {legacy_key}',
+            f'Easee - Easee - {display} - {legacy_key}',
         ])
     return names
 
@@ -83,6 +94,10 @@ def resolve_charger_unit(plugin, cid, label_key):
     unit = find_unit_by_devid(plugin, make_charger_device_id(plugin, cid, label_key))
     if unit is not None:
         return unit
+    for leg_devid in _charger_legacy_device_ids(plugin, cid, label_key):
+        unit = find_unit_by_devid(plugin, leg_devid)
+        if unit is not None:
+            return unit
     cid_s = str(cid).strip()
     for idx, charger in enumerate(getattr(plugin, 'chargers', []) or []):
         if str(charger.get('id', '')).strip() != cid_s:
@@ -239,10 +254,15 @@ def next_free_unit(plugin):
 
     # ---- images ----
 
-def ensure_device_once(plugin, name, typename, device_id=None, legacy_names=None):
+def ensure_device_once(plugin, name, typename, device_id=None, legacy_names=None, legacy_device_ids=None):
     key = easee_helpers.clean_label(plugin, name)
     devid = device_id or make_device_id(plugin, key)
     unit = find_unit_by_devid(plugin, devid) if device_id else None
+    if unit is None and legacy_device_ids:
+        for leg_devid in legacy_device_ids:
+            unit = find_unit_by_devid(plugin, leg_devid)
+            if unit is not None:
+                break
     if unit is None:
         for legacy in (legacy_names or []):
             legacy_key = easee_helpers.clean_label(plugin, legacy)
@@ -446,7 +466,8 @@ def ensure_charger_devices(plugin, charger, index):
         devid = make_charger_device_id(plugin, cid, label_key)
         legacy = list(_charger_legacy_names(plugin, display, label_key))
         legacy.append(f'{easee_helpers.short_id(plugin, cid)} {label_key}')
-        ensure_device_once(plugin, name, typ, device_id=devid, legacy_names=legacy)
+        legacy_devids = _charger_legacy_device_ids(plugin, cid, label_key)
+        ensure_device_once(plugin, name, typ, device_id=devid, legacy_names=legacy, legacy_device_ids=legacy_devids)
 
 def _name_contains_import(plugin, name):
     label = easee_helpers.clean_label(plugin, name).lower()
