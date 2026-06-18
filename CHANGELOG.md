@@ -6,6 +6,17 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.16] — 2026-06-18
+
+### Opgelost
+- **Equalizer Vermogen 0 door API-druk (429)** — Elke heartbeat deed volledige discovery (~6 calls) vóór poll; daarna 2× lader (state+config+ongoing) vóór equalizer state/obs. Bij 429 op `/sessions/ongoing` (Retry-After 110–180s) faalden `/equalizers/{id}/state` en observations stil (`api_get_optional` → `None`). Fix: discovery max 1× per 5 min (10× poll-interval); equalizer vóór laders; state als eerste call; obs overgeslagen na state-429; ongoing/config overgeslagen tijdens rate limit; fuse-probes lichtgewicht via `siteStructure` cache. `api_get_optional` logt nu WARNING met HTTP-status (incl. 429).
+
+### Gewijzigd
+- Poll-volgorde: equalizer → laders (state/obs krijgen voorrang boven optionele charger-endpoints).
+
+### Fixed (EN)
+- Equalizer power 0 from API rate pressure: throttle discovery, poll equalizer before chargers, prioritize state, skip obs after 429, defer ongoing/config; WARNING logs on optional HTTP failures.
+
 ## [10.9.15] — 2026-06-18
 
 ### Opgelost

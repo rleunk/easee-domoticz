@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.15" author="Richard Leunk" version="10.9.15"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.16" author="Richard Leunk" version="10.9.16"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.15</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.16</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -74,6 +74,9 @@ class BasePlugin:
         self.devices_stable_count = 0
         self.last_devices_count = -1
         self.last_poll = 0
+        self.last_discovery = 0
+        self.rate_limited_until = 0
+        self.ongoing_skip_until = 0
         self.units_by_name = {}
         self.units_by_devid = {}
         self.image_ids = {}
@@ -205,6 +208,7 @@ class BasePlugin:
 
     def initial_sync(self):
         self.discover_entities()
+        self.last_discovery = time.time()
         self.charger_names = {}
         self.equalizer_names = {}
         domoticz_devices.ensure_core_devices(self)
@@ -228,9 +232,20 @@ class BasePlugin:
         self.write_debug(True)
 
     def refresh_entity_cache_only(self):
+        poll_interval = max(10, easee_helpers.safe_int(self, Parameters.get('Mode1', '30'), 30))
+        discovery_interval = max(300, poll_interval * 10)
+        since_discovery = time.time() - self.last_discovery
+        if self.last_discovery > 0 and since_discovery < discovery_interval:
+            easee_logging.debug(
+                'plugin',
+                f'Discovery overgeslagen ({since_discovery:.0f}/{discovery_interval}s)',
+                'discovery',
+            )
+            return
         old_eq_ids = {e['id'] for e in self.equalizers}
         old_charger_ids = {c['id'] for c in self.chargers}
         self.discover_entities()
+        self.last_discovery = time.time()
         self.charger_names = {c['id']: charger_logic.charger_display_name(self, c, i) for i, c in enumerate(self.chargers)}
         self.equalizer_names = {e['id']: equalizer_logic.equalizer_display_name(self, e, i) for i, e in enumerate(self.equalizers)}
         created = False
@@ -274,10 +289,10 @@ class BasePlugin:
         refreshed = easee_helpers.safe_int(self, self.state.get('price_cache_refreshed', 0), 0)
         if easee_helpers.tibber_enabled(self) and ((easee_state.now_ts(self) - refreshed) > 900 or not (self.state.get('price_cache') or {})):
             tibber_pricing.refresh_tibber_prices(self)
-        for c in self.chargers:
-            charger_logic.poll_charger(self, c)
         for eq in self.equalizers:
             equalizer_logic.poll_equalizer(self, eq)
+        for c in self.chargers:
+            charger_logic.poll_charger(self, c)
         total_power = sum(v.get('power', 0) for v in self.latest_chargers.values())
         online = sum(1 for v in self.latest_chargers.values() if v.get('online'))
         easee_logging.debug(

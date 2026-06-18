@@ -872,7 +872,7 @@ def log_fuse_probe_debug(plugin, site_id, info, debug_hits, candidates=None, sit
             parts.append('siteStructure keys=' + ', '.join(keys))
     easee_logging.debug('equalizer_logic', 'Fuse probes: ' + ' | '.join(parts))
 
-def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, equalizer_values=None, equalizer_id=None):
+def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, equalizer_values=None, equalizer_id=None, lightweight=False):
     if not site_id:
         return {}
     cache_key = f'{site_id}:{circuit_id or ""}'
@@ -893,6 +893,40 @@ def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, 
         nonlocal root_fuse, root_source
         if rf > 0 and (root_fuse <= 0 or rf >= root_fuse):
             root_fuse, root_source = rf, rs
+
+    skip_api = lightweight or easee_api.is_rate_limited(plugin)
+
+    if site_structure is not None:
+        probes.append('equalizer.observations.siteStructure')
+        debug_hits.extend(collect_fuse_debug(plugin, parse_site_structure_json(plugin, site_structure), ak.SITE_STRUCTURE_KEYS['root']))
+        fuse_limit_from_site_structure(plugin, 
+            site_structure, main_fuse_a=main_fuse_a, candidates=candidates)
+        emob = emobility_from_site_structure(plugin, site_structure)
+        if emob > 0:
+            set_emobility(plugin, info, emob, SITE_STATE_PATHS['site_structure_mac'])
+        log_site_structure_once(plugin, site_id, site_structure, candidates)
+        if isinstance(site_structure, dict):
+            rated = amp_value(plugin, site_structure.get(ak.SITE_STRUCTURE_KEYS['rated_current']))
+            if rated > 0:
+                main_fuse_a = rated
+                info['main_fuse_a'] = main_fuse_a
+
+    if skip_api:
+        if equalizer_values:
+            debug_hits.extend(collect_fuse_debug(plugin, equalizer_values, 'equalizer'))
+            collect_fuse_from_dict(plugin, 
+                equalizer_values, 'equalizer', candidates, main_fuse_a=main_fuse_a, rejected=rejected)
+        limit_a, limit_src = select_main_fuse_limit(plugin, 
+            candidates, main_fuse_a=main_fuse_a,
+            root_fuse=root_fuse, root_source=root_source)
+        if limit_a > 0:
+            info['main_fuse_limit_a'] = limit_a
+            info['main_fuse_limit_source'] = limit_src
+        info['fuse_raw_hits'] = raw_hits
+        info['fuse_rejected'] = rejected
+        info['fuse_debug_hits'] = debug_hits
+        plugin.site_fuse_cache[cache_key] = info
+        return info
 
     state_path = f'/sites/{site_id}/state'
     probes.append(state_path)
@@ -963,16 +997,6 @@ def fetch_site_fuse_info(plugin, site_id, circuit_id=None, site_structure=None, 
                     add_fuse_candidate(plugin, 
                         candidates, fuse_a, f'circuitStates.{src}',
                         main_fuse_a=main_fuse_a, rejected=rejected)
-
-    if site_structure is not None:
-        probes.append('equalizer.observations.siteStructure')
-        debug_hits.extend(collect_fuse_debug(plugin, parse_site_structure_json(plugin, site_structure), ak.SITE_STRUCTURE_KEYS['root']))
-        fuse_limit_from_site_structure(plugin, 
-            site_structure, main_fuse_a=main_fuse_a, candidates=candidates)
-        emob = emobility_from_site_structure(plugin, site_structure)
-        if emob > 0:
-            set_emobility(plugin, info, emob, SITE_STATE_PATHS['site_structure_mac'])
-        log_site_structure_once(plugin, site_id, site_structure, candidates)
 
     site_path = f'/sites/{site_id}'
     probes.append(site_path)
@@ -1390,24 +1414,25 @@ def _apply_state_power(plugin, eid, values, state_data, source='equalizer.state'
         return True
     return bool(merged)
 
-def _apply_power_fallback_chain(plugin, eid, values, site_id=None, state_payload=None):
+def _apply_power_fallback_chain(plugin, eid, values, site_id=None, state_payload=None, skip_obs_api=False):
     """Vul activePowerImport/Export aan via state, site en fase-berekening."""
     sources = []
 
     state_data = state_payload if isinstance(state_payload, dict) else None
-    if state_data is None:
-        state_data = easee_api.api_get_optional(plugin, f'/equalizers/{eid}/state')
+    if state_data is None and not skip_obs_api:
+        state_data = easee_api.api_get_optional(plugin, f'/equalizers/{eid}/state', skip_if_rate_limited=False)
     if isinstance(state_data, dict):
         if _apply_state_power(plugin, eid, values, state_data, 'equalizer.state'):
             sources.append('equalizer.state')
 
-    power_obs = easee_api.api_get_optional(
-        plugin, f'/state/{eid}/observations?ids={OBSERVATION_KEYS["power_query_ids"]}',
-    )
-    if isinstance(power_obs, dict):
-        parsed = parse_equalizer_observations(plugin, power_obs)
-        if _merge_power_fields(plugin, values, parsed, 'obs.power'):
-            sources.append('obs.40/41')
+    if not skip_obs_api and not easee_api.is_rate_limited(plugin):
+        power_obs = easee_api.api_get_optional(
+            plugin, f'/state/{eid}/observations?ids={OBSERVATION_KEYS["power_query_ids"]}',
+        )
+        if isinstance(power_obs, dict):
+            parsed = parse_equalizer_observations(plugin, power_obs)
+            if _merge_power_fields(plugin, values, parsed, 'obs.power'):
+                sources.append('obs.40/41')
 
     for scan_obj, src in (
         (values, 'values'),
@@ -1418,7 +1443,7 @@ def _apply_power_fallback_chain(plugin, eid, values, site_id=None, state_payload
             if _merge_power_fields(plugin, values, scanned, src):
                 sources.append(src)
 
-    if site_id:
+    if site_id and not skip_obs_api and not easee_api.is_rate_limited(plugin):
         site_state = easee_api.api_get_optional(plugin, f'/sites/{site_id}/state')
         if isinstance(site_state, dict):
             scanned = _deep_scan_power_fields(plugin, site_state)
@@ -1453,16 +1478,42 @@ def _apply_power_fallback_chain(plugin, eid, values, site_id=None, state_payload
         _log_state_keys_when_zero(plugin, eid, state_data)
     return sources
 
-def fetch_equalizer_observations(plugin, eid, values, site_id=None, state_payload=None):
+def fetch_equalizer_observations(plugin, eid, values, site_id=None, state_payload=None, skip_obs_api=False):
     """Haal equalizer observations op; robuuste fallback voor import/export power."""
     obs_samples = []
     obs_failures = []
+
+    if skip_obs_api or easee_api.is_rate_limited(plugin):
+        if skip_obs_api:
+            obs_failures.append('overgeslagen (state 429 in deze poll)')
+        else:
+            obs_failures.append('overgeslagen (rate limit actief)')
+        sources = _apply_power_fallback_chain(
+            plugin, eid, values, site_id=site_id or values.get('siteId'),
+            state_payload=state_payload, skip_obs_api=True,
+        )
+        need_import = _import_power_w(plugin, values) <= 0 and not _power_field_present(values, 'activePowerImport')
+        need_export = _export_power_w(plugin, values) <= 0 and not _power_field_present(values, 'activePowerExport')
+        if sources:
+            easee_logging.info(
+                'equalizer_logic',
+                f'Equalizer {eid}: power fallback (zonder obs) via {", ".join(sources)} '
+                f'(import={_import_power_w(plugin, values)}W export={_export_power_w(plugin, values)}W)',
+                'poll',
+            )
+        if need_import or need_export:
+            _log_missing_power_observations(plugin, eid, obs_samples, obs_failures=obs_failures)
+        return {}
+
     query_path = f'/state/{eid}/observations?ids={OBSERVATION_KEYS["query_ids"]}'
     obs = easee_api.api_get_optional(plugin, query_path)
     if obs is not None:
         obs_samples.append(obs)
     else:
-        obs_failures.append('filtered=geen response')
+        if easee_api.last_request_was_rate_limited(plugin):
+            obs_failures.append('filtered=429 rate limit')
+        else:
+            obs_failures.append('filtered=geen response')
     parsed = parse_equalizer_observations(plugin, obs)
     _merge_power_fields(plugin, values, parsed, 'obs.filtered')
     for key, val in parsed.items():
@@ -1477,11 +1528,18 @@ def fetch_equalizer_observations(plugin, eid, values, site_id=None, state_payloa
         return parsed
 
     full_path = f'/state/{eid}/observations?ids={OBSERVATION_KEYS["power_query_ids"]}'
-    full_obs = easee_api.api_get_optional(plugin, full_path)
-    if full_obs is not None:
-        obs_samples.append(full_obs)
+    if not easee_api.is_rate_limited(plugin):
+        full_obs = easee_api.api_get_optional(plugin, full_path)
+        if full_obs is not None:
+            obs_samples.append(full_obs)
+        else:
+            if easee_api.last_request_was_rate_limited(plugin):
+                obs_failures.append('full=429 rate limit')
+            else:
+                obs_failures.append('full=geen response')
     else:
-        obs_failures.append('full=geen response')
+        obs_failures.append('full=overgeslagen (rate limit)')
+        full_obs = None
     full_parsed = parse_equalizer_observations(plugin, full_obs)
     _merge_power_fields(plugin, values, full_parsed, 'obs.full')
     for key, val in full_parsed.items():
@@ -1880,19 +1938,31 @@ def poll_equalizer(plugin, equalizer):
     site_id = equalizer.get('siteId')
     values = {}
     state_payload = None
-    for path in (f'/equalizers/{eid}', f'/equalizers/{eid}/state', f'/equalizers/{eid}/config'):
-        data = easee_api.api_get_optional(plugin, path)
-        if isinstance(data, dict):
-            if path.endswith('/state'):
-                state_payload = data
-                _flatten_equalizer_payload(plugin, data, values)
-                _apply_state_power(plugin, eid, values, data, 'equalizer.state(poll)')
-            else:
-                values.update(data)
-            if not site_id:
-                site_id = data.get('siteId')
+    state_failed_429 = False
 
-    fetch_equalizer_observations(plugin, eid, values, site_id=site_id, state_payload=state_payload)
+    state_path = f'/equalizers/{eid}/state'
+    state_data = easee_api.api_get_optional(plugin, state_path, skip_if_rate_limited=False)
+    if isinstance(state_data, dict):
+        state_payload = state_data
+        _flatten_equalizer_payload(plugin, state_data, values)
+        _apply_state_power(plugin, eid, values, state_data, 'equalizer.state(poll)')
+        if not site_id:
+            site_id = state_data.get('siteId')
+    elif easee_api.last_request_was_rate_limited(plugin):
+        state_failed_429 = True
+
+    if not easee_api.is_rate_limited(plugin):
+        for path in (f'/equalizers/{eid}', f'/equalizers/{eid}/config'):
+            data = easee_api.api_get_optional(plugin, path)
+            if isinstance(data, dict):
+                values.update(data)
+                if not site_id:
+                    site_id = data.get('siteId')
+
+    fetch_equalizer_observations(
+        plugin, eid, values, site_id=site_id, state_payload=state_payload,
+        skip_obs_api=state_failed_429,
+    )
 
     site_info = fetch_site_fuse_info(plugin, 
         site_id,
@@ -1900,6 +1970,7 @@ def poll_equalizer(plugin, equalizer):
         site_structure=values.get(ak.SITE_STRUCTURE_KEYS['root']),
         equalizer_values=values,
         equalizer_id=eid,
+        lightweight=easee_api.is_rate_limited(plugin),
     )
 
     power_w = _import_power_w(plugin, values)
