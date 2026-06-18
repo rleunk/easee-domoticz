@@ -6,6 +6,18 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.12] — 2026-06-18
+
+### Opgelost
+- **Equalizer Vermogen 0/0/0** — Robuuste fallback-keten voor import/export W: `/equalizers/{id}/state` (primary), dedicated obs 40/41 query, volledige observations, site state scan, fase I×V en cumulatief-delta. Observations met waarde 0/null overschrijven niet langer geldige state-waarden. Observation-id parsing gefixt (int-coercie). INFO-log toont beschikbare observation-ids bij ontbrekende power; DEBUG met detail.
+- **429 rate limit** — `api_get` retry met exponential backoff (max 3) bij HTTP 429 op o.a. `/api/chargers`.
+
+### Gewijzigd
+- **Icon log spam** — `Icoon OK` regels naar DEBUG; post-sync icon re-apply van 3 naar 1 heartbeat.
+
+### Fixed (EN)
+- Equalizer power fallback chain (state → obs 40/41 → site → phase I×V → cumulative rate); smart merge prevents stale zero obs overwriting state; 429 retry with backoff.
+
 ## [10.9.11] — 2026-06-18
 
 ### Opgelost
@@ -19,6 +31,7 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 | Versie | Hoofdthema |
 |--------|------------|
+| **10.9.12** | Equalizer Vermogen fallback-keten; 429 retry |
 | **10.9.11** | Equalizer poll na Domoticz-herstart; obs 40/41 fallback |
 | **10.9.10** | Status combo-icoon alleen globaal; `EaseeStatusGlobal` (13 sets) |
 | **10.9.9** | Combo-icoon op Status (later gesplitst in 10.9.10) |

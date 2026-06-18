@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.11" author="Richard Leunk" version="10.9.11"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.12" author="Richard Leunk" version="10.9.12"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.11</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.12</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -189,7 +189,7 @@ class BasePlugin:
 
         try:
             domoticz_icons.apply_images_to_devices(self, force=True)
-            self.icon_reapply_remaining = 3
+            self.icon_reapply_remaining = 1
         except Exception as e:
             easee_logging.warning(
                 'plugin',

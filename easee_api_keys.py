@@ -78,6 +78,21 @@ EQUALIZER_KEYS = {
 OBSERVATION_KEYS = {
     'container': ('observations', 'data'),
     'query_ids': '20,31,32,33,34,35,36,40,41,44,45,46,230,231,232',
+    'power_query_ids': '40,41',
+}
+
+# Alternate API / state field names (underscore variants from equalizer state stream)
+EQUALIZER_POWER_ALIASES = {
+    'activePowerImport': (
+        'activePowerImport', 'ActivePowerImport', 'activePowerImport_kW',
+        'activePowerImportKw', 'importPower', 'gridImportPower', 'consumptionPower',
+        'householdPower', 'totalImportPower', 'powerImport',
+    ),
+    'activePowerExport': (
+        'activePowerExport', 'ActivePowerExport', 'activePowerExport_kW',
+        'activePowerExportKw', 'exportPower', 'gridExportPower', 'feedInPower',
+        'totalExportPower', 'powerExport',
+    ),
 }
 
 OBSERVATION_ID_TO_FIELD = {

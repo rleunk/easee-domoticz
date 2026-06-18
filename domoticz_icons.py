@@ -466,7 +466,7 @@ def apply_images_to_devices(plugin, force=False):
                 continue
             cur = _current_image_id(dev)
             if not force and cur == int(img_id):
-                easee_logging.info('domoticz_icons', f'Icoon OK {name}: Image={cur} ({root})')
+                easee_logging.debug('domoticz_icons', f'Icoon OK {name}: Image={cur} ({root})')
                 continue
             ok, method = _apply_image_to_unit(unit, dev, img_id)
             new_cur = _current_image_id(dev)

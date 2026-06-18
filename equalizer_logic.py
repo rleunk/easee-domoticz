@@ -11,6 +11,7 @@ import charger_logic
 import domoticz_devices
 from easee_api_keys import (
     EQUALIZER_KEYS,
+    EQUALIZER_POWER_ALIASES,
     FUSE_KEYS,
     OBSERVATION_ID_TO_FIELD,
     OBSERVATION_KEYS,
@@ -1126,46 +1127,281 @@ def parse_equalizer_observations(plugin, obs):
     for item in observations:
         if not isinstance(item, dict):
             continue
-        obs_id = item.get('id')
+        try:
+            obs_id = int(item.get('id'))
+        except (TypeError, ValueError):
+            continue
         obs_val = item.get('value')
         field = OBSERVATION_ID_TO_FIELD.get(obs_id)
         if field is not None:
             values[field] = obs_val
     return values
 
-def fetch_equalizer_observations(plugin, eid, values):
-    """Haal equalizer observations op; fallback naar volledige lijst als power-obs ontbreken."""
+def _observation_id_list(obs):
+    ids = []
+    if not isinstance(obs, dict):
+        return ids
+    observations = obs.get(OBSERVATION_KEYS['container'][0]) or obs.get(OBSERVATION_KEYS['container'][1]) or []
+    if not isinstance(observations, list):
+        return ids
+    for item in observations:
+        if not isinstance(item, dict):
+            continue
+        try:
+            ids.append(int(item.get('id')))
+        except (TypeError, ValueError):
+            pass
+    return sorted(set(ids))
+
+def _power_field_present(values, field):
+    if not isinstance(values, dict):
+        return False
+    val = values.get(field)
+    return val is not None and val != ''
+
+def _power_w_from_raw(plugin, raw):
+    power_w = easee_helpers.kw_to_watts(plugin, raw)
+    if power_w <= 0 and raw is not None and raw != '':
+        power_w = easee_helpers.power_watts(plugin, raw)
+    return max(0, power_w)
+
+def _merge_power_fields(plugin, values, incoming, source=''):
+    if not isinstance(values, dict) or not isinstance(incoming, dict):
+        return []
+    added = []
+    for field in ('activePowerImport', 'activePowerExport'):
+        raw = incoming.get(field)
+        if raw is None or raw == '':
+            continue
+        new_w = _power_w_from_raw(plugin, raw)
+        existing_raw = values.get(field)
+        existing_w = _power_w_from_raw(plugin, existing_raw) if _power_field_present(values, field) else 0
+        if new_w <= 0 and existing_w > 0:
+            continue
+        if existing_w > 0 and new_w > 0 and abs(new_w - existing_w) < 5:
+            continue
+        if not _power_field_present(values, field) or new_w > existing_w:
+            values[field] = raw
+            added.append(field)
+    if added and source:
+        easee_logging.debug(
+            'equalizer_logic',
+            f'Power merge ({source}): {", ".join(added)}',
+            'poll',
+        )
+    return added
+
+def _flatten_equalizer_payload(plugin, data, values):
+    if not isinstance(data, dict):
+        return
+    nested = data.get('state')
+    if isinstance(nested, dict):
+        values.update(nested)
+    values.update(data)
+
+def _deep_scan_power_fields(plugin, obj, prefix='', depth=0, max_depth=5):
+    found = {}
+    if depth > max_depth or not isinstance(obj, dict):
+        return found
+    for alias_field, keys in EQUALIZER_POWER_ALIASES.items():
+        val = easee_helpers.first_dict_value(plugin, obj, keys)
+        if val is not None and val != '':
+            found[alias_field] = val
+    for key, val in obj.items():
+        if not isinstance(key, str):
+            continue
+        kl = key.lower()
+        if isinstance(val, dict):
+            nested = _deep_scan_power_fields(plugin, val, f'{prefix}.{key}' if prefix else key, depth + 1, max_depth)
+            for nkey, nval in nested.items():
+                if nkey not in found:
+                    found[nkey] = nval
+        elif kl in ('activepowerimport', 'activepowerexport', 'importpower', 'exportpower',
+                    'gridimportpower', 'gridexportpower', 'consumptionpower', 'feedinpower'):
+            if val is not None and val != '':
+                if 'export' in kl or 'feed' in kl or 'terug' in kl:
+                    found.setdefault('activePowerExport', val)
+                else:
+                    found.setdefault('activePowerImport', val)
+    return found
+
+def _power_from_phases(plugin, values):
+    """Schat import/export uit fase-stroom × spanning (obs 31–36)."""
+    import_w = 0.0
+    export_w = 0.0
+    any_phase = False
+    for curr_keys, volt_keys in phase_voltage_keys():
+        current = easee_helpers.first_dict_value(plugin, values, curr_keys)
+        voltage = easee_helpers.first_dict_value(plugin, values, volt_keys)
+        if current is None or voltage is None:
+            continue
+        any_phase = True
+        i_a = easee_helpers.safe_float(plugin, current, 0.0)
+        v_v = easee_helpers.safe_float(plugin, voltage, 0.0)
+        if v_v <= 0:
+            v_v = 230.0
+        phase_w = i_a * v_v
+        if phase_w >= 0:
+            import_w += phase_w
+        else:
+            export_w += abs(phase_w)
+    if not any_phase:
+        return 0, 0, False
+    return int(round(import_w)), int(round(export_w)), True
+
+def _power_from_cumulative_rate(plugin, eid, values):
+    imp_field = EQUALIZER_KEYS['cumulative_import'][0]
+    exp_field = EQUALIZER_KEYS['cumulative_export'][0]
+    imp_kwh = easee_helpers.kwh_value(plugin, values.get(imp_field)) if imp_field in values else None
+    exp_kwh = easee_helpers.kwh_value(plugin, values.get(exp_field)) if exp_field in values else None
+    if imp_kwh is None and exp_kwh is None:
+        return None, None, False
+    st = easee_state.equalizer_state(plugin, eid)
+    now = easee_state.now_ts(plugin)
+    prev_imp = st.get('prev_cumulative_import_kwh')
+    prev_exp = st.get('prev_cumulative_export_kwh')
+    prev_ts = st.get('prev_cumulative_ts')
+    st['prev_cumulative_import_kwh'] = imp_kwh if imp_kwh is not None else prev_imp
+    st['prev_cumulative_export_kwh'] = exp_kwh if exp_kwh is not None else prev_exp
+    st['prev_cumulative_ts'] = now
+    if prev_ts is None or prev_imp is None or prev_exp is None:
+        return None, None, False
+    dt_h = (now - float(prev_ts)) / 3600.0
+    if dt_h <= 0.0005:
+        return None, None, False
+    imp_w = None
+    exp_w = None
+    if imp_kwh is not None:
+        imp_w = max(0, int(round((imp_kwh - float(prev_imp)) / dt_h * 1000.0)))
+    if exp_kwh is not None:
+        exp_w = max(0, int(round((exp_kwh - float(prev_exp)) / dt_h * 1000.0)))
+    if imp_w is None and exp_w is None:
+        return None, None, False
+    return imp_w or 0, exp_w or 0, True
+
+def _log_missing_power_observations(plugin, eid, obs_samples):
+    all_ids = []
+    for obs in obs_samples:
+        all_ids.extend(_observation_id_list(obs))
+    uniq = sorted(set(all_ids))
+    has_40 = 40 in uniq
+    has_41 = 41 in uniq
+    summary = f'Equalizer {eid}: obs 40/41 {"aanwezig" if has_40 and has_41 else "ontbreken"} — beschikbare ids: {", ".join(str(i) for i in uniq) or "geen"}'
+    easee_logging.info('equalizer_logic', summary, 'poll')
+    if domoticz_runtime.Parameters.get('Mode6') == 'Debug':
+        easee_logging.debug(
+            'equalizer_logic',
+            f'Equalizer {eid}: observation ids detail={uniq}; power keys={list(_deep_scan_power_fields(plugin, obs_samples[0] if obs_samples else {}).keys())}',
+            'poll',
+        )
+
+def _apply_power_fallback_chain(plugin, eid, values, site_id=None):
+    """Vul activePowerImport/Export aan via state, site en fase-berekening."""
+    sources = []
+
+    state_data = easee_api.api_get_optional(plugin, f'/equalizers/{eid}/state')
+    if isinstance(state_data, dict):
+        flat = {}
+        _flatten_equalizer_payload(plugin, state_data, flat)
+        if _merge_power_fields(plugin, values, flat, 'equalizer.state'):
+            sources.append('equalizer.state')
+
+    power_obs = easee_api.api_get_optional(
+        plugin, f'/state/{eid}/observations?ids={OBSERVATION_KEYS["power_query_ids"]}',
+    )
+    if isinstance(power_obs, dict):
+        parsed = parse_equalizer_observations(plugin, power_obs)
+        if _merge_power_fields(plugin, values, parsed, 'obs.power'):
+            sources.append('obs.40/41')
+
+    for scan_obj, src in (
+        (values, 'values'),
+        (state_data, 'equalizer.state-scan'),
+    ):
+        if isinstance(scan_obj, dict):
+            scanned = _deep_scan_power_fields(plugin, scan_obj)
+            if _merge_power_fields(plugin, values, scanned, src):
+                sources.append(src)
+
+    if site_id:
+        site_state = easee_api.api_get_optional(plugin, f'/sites/{site_id}/state')
+        if isinstance(site_state, dict):
+            scanned = _deep_scan_power_fields(plugin, site_state)
+            if _merge_power_fields(plugin, values, scanned, 'site.state'):
+                sources.append('site.state')
+
+    import_w = _import_power_w(plugin, values)
+    export_w = _export_power_w(plugin, values)
+    if import_w > 0 or export_w > 0:
+        return sources
+
+    phase_imp, phase_exp, has_phase = _power_from_phases(plugin, values)
+    if has_phase and (phase_imp > 0 or phase_exp > 0):
+        if import_w <= 0 and phase_imp > 0:
+            values['activePowerImport'] = phase_imp / 1000.0
+            sources.append('phase.I×V')
+        if export_w <= 0 and phase_exp > 0:
+            values['activePowerExport'] = phase_exp / 1000.0
+            sources.append('phase.I×V')
+        return sources
+
+    cum_imp, cum_exp, has_cum = _power_from_cumulative_rate(plugin, eid, values)
+    if has_cum:
+        if import_w <= 0 and cum_imp is not None and cum_imp > 0:
+            values['activePowerImport'] = cum_imp / 1000.0
+            sources.append('cumulative.rate')
+        if export_w <= 0 and cum_exp is not None and cum_exp > 0:
+            values['activePowerExport'] = cum_exp / 1000.0
+            sources.append('cumulative.rate')
+    return sources
+
+def fetch_equalizer_observations(plugin, eid, values, site_id=None):
+    """Haal equalizer observations op; robuuste fallback voor import/export power."""
+    obs_samples = []
     query_path = f'/state/{eid}/observations?ids={OBSERVATION_KEYS["query_ids"]}'
     obs = easee_api.api_get_optional(plugin, query_path)
+    if obs is not None:
+        obs_samples.append(obs)
     parsed = parse_equalizer_observations(plugin, obs)
-    values.update(parsed)
-    need_power = (
-        first_power_value(values) is None
-        or first_export_power_value(values) is None
-    )
-    if not need_power:
+    _merge_power_fields(plugin, values, parsed, 'obs.filtered')
+    for key, val in parsed.items():
+        if key not in ('activePowerImport', 'activePowerExport') and (
+            key not in values or values.get(key) in (None, '')
+        ):
+            values[key] = val
+
+    need_import = not _power_field_present(values, 'activePowerImport') or _import_power_w(plugin, values) <= 0
+    need_export = not _power_field_present(values, 'activePowerExport') or _export_power_w(plugin, values) <= 0
+    if not need_import and not need_export:
         return parsed
+
     full_path = f'/state/{eid}/observations'
     full_obs = easee_api.api_get_optional(plugin, full_path)
+    if full_obs is not None:
+        obs_samples.append(full_obs)
     full_parsed = parse_equalizer_observations(plugin, full_obs)
-    added = []
+    _merge_power_fields(plugin, values, full_parsed, 'obs.full')
     for key, val in full_parsed.items():
-        if key not in values or values.get(key) in (None, ''):
+        if key not in ('activePowerImport', 'activePowerExport') and (
+            key not in values or values.get(key) in (None, '')
+        ):
             values[key] = val
-            if key in ('activePowerImport', 'activePowerExport', 'currentPower', 'power'):
-                added.append(key)
-    if added:
-        easee_logging.info(
-            'equalizer_logic',
-            f'Equalizer {eid}: power-obs fallback via volledige observations ({", ".join(added)})',
-            'poll',
-        )
-    elif need_power:
-        easee_logging.info(
-            'equalizer_logic',
-            f'Equalizer {eid}: geen import/export power in observations (obs 40/41 ontbreken)',
-            'poll',
-        )
+
+    need_import = not _power_field_present(values, 'activePowerImport') or _import_power_w(plugin, values) <= 0
+    need_export = not _power_field_present(values, 'activePowerExport') or _export_power_w(plugin, values) <= 0
+    if need_import or need_export:
+        sources = _apply_power_fallback_chain(plugin, eid, values, site_id=site_id or values.get('siteId'))
+        need_import = _import_power_w(plugin, values) <= 0 and not _power_field_present(values, 'activePowerImport')
+        need_export = _export_power_w(plugin, values) <= 0 and not _power_field_present(values, 'activePowerExport')
+        if sources:
+            easee_logging.info(
+                'equalizer_logic',
+                f'Equalizer {eid}: power fallback via {", ".join(sources)} '
+                f'(import={_import_power_w(plugin, values)}W export={_export_power_w(plugin, values)}W)',
+                'poll',
+            )
+        if need_import or need_export:
+            _log_missing_power_observations(plugin, eid, obs_samples)
     return parsed
 
     # ---- Tibber API ----
@@ -1537,11 +1773,14 @@ def poll_equalizer(plugin, equalizer):
     for path in (f'/equalizers/{eid}', f'/equalizers/{eid}/state', f'/equalizers/{eid}/config'):
         data = easee_api.api_get_optional(plugin, path)
         if isinstance(data, dict):
-            values.update(data)
+            if path.endswith('/state'):
+                _flatten_equalizer_payload(plugin, data, values)
+            else:
+                values.update(data)
             if not site_id:
                 site_id = data.get('siteId')
 
-    fetch_equalizer_observations(plugin, eid, values)
+    fetch_equalizer_observations(plugin, eid, values, site_id=site_id)
 
     site_info = fetch_site_fuse_info(plugin, 
         site_id,
