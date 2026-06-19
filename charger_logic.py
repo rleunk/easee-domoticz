@@ -45,7 +45,7 @@ def is_session_resume(plugin, st, session_active, session, power_w):
     return bool(session) or power_w > 50
 
 def sync_day_energy(plugin, st, total_kwh, session_active, power_w):
-    """Track today's kWh; Domoticz Counter = midnight lifetime baseline Wh + day Wh."""
+    """Track today's kWh; Domoticz Energy Counter = day-only Wh (Vandaag = Counter/CounterToday)."""
     skip_monotonic = bool(st.pop('day_energy_reset', False))
     if st.get('day_baseline_kwh') is None:
         st['day_baseline_kwh'] = total_kwh
@@ -79,16 +79,13 @@ def sync_day_energy(plugin, st, total_kwh, session_active, power_w):
 
     day_kwh = easee_helpers.safe_float(plugin, st.get('day_kwh'), 0.0)
     day_wh = int(round(day_kwh * 1000.0))
-    base_wh = int(round(baseline * 1000.0))
-    counter_wh = base_wh + day_wh
     if not skip_monotonic:
-        prev_counter = easee_helpers.safe_int(plugin, st.get('counter_wh'), base_wh)
-        if counter_wh < prev_counter:
-            counter_wh = prev_counter
-            day_wh = max(0, counter_wh - base_wh)
+        prev_wh = easee_helpers.safe_int(plugin, st.get('day_wh'), 0)
+        if day_wh < prev_wh:
+            day_wh = prev_wh
     st['day_wh'] = day_wh
-    st['counter_wh'] = counter_wh
-    return counter_wh, day_kwh, day_delta
+    st.pop('counter_wh', None)
+    return day_wh, day_kwh, day_delta
 
 def power_integrated_kwh(plugin, power_w):
     if power_w <= 50:
@@ -234,8 +231,7 @@ def poll_charger(plugin, charger):
 
     st = easee_state.charger_state(plugin, cid)
     prev_total = st.get('prev_total_kwh')
-    counter_wh, day_kwh, day_delta = sync_day_energy(plugin, st, total_kwh, session_active, power_w)
-    day_wh = easee_helpers.safe_int(plugin, st.get('day_wh'), 0)
+    day_wh, day_kwh, day_delta = sync_day_energy(plugin, st, total_kwh, session_active, power_w)
 
     resuming = False
     if session_active and not st.get('session_active'):
@@ -342,7 +338,7 @@ def poll_charger(plugin, charger):
             )
 
     # UPDATE DEVICES
-    domoticz_devices.update_charger_energy(plugin, cid, 'Laden', power_w, counter_wh)
+    domoticz_devices.update_charger_energy(plugin, cid, 'Laden', power_w, day_wh)
     
     totaal_sessie = f'{int(round(total_kwh))} kWh | Sessie: {session_kwh:.3f} kWh'
     domoticz_devices.update_charger_custom(plugin, cid, 'Totaal & Sessie', totaal_sessie)

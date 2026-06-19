@@ -90,7 +90,6 @@ def charger_state(plugin, cid):
         'day_kwh': 0.0,
         'day_last_lifetime_kwh': None,
         'day_wh': 0,
-        'counter_wh': 0,
     })
     tk = today_key(plugin)
     if st.get('day_key') != tk:
@@ -104,39 +103,41 @@ def charger_state(plugin, cid):
         st['day_kwh'] = 0.0
         st['day_last_lifetime_kwh'] = None
         st['day_wh'] = 0
-        st['counter_wh'] = 0
+        st.pop('counter_wh', None)
         st['day_energy_reset'] = True
     elif 'display_wh' in st:
         # v10.9.25 used lifetime+baseline Counter; reset day track on upgrade
         st.pop('display_wh', None)
+        st.pop('counter_wh', None)
         st['day_baseline_kwh'] = None
         st['day_kwh'] = 0.0
         st['day_last_lifetime_kwh'] = None
         st['day_wh'] = 0
-        st['counter_wh'] = 0
+        st.pop('counter_wh', None)
         st['day_energy_reset'] = True
     return st
 
 def migrate_state_for_version(plugin):
     """One-time resets when energy/cost tracking logic changes."""
     key = 'energy_track_version'
-    if plugin.state.get(key) == PLUGIN_VERSION:
+    target = '10.9.26-dayonly'
+    if plugin.state.get(key) == target:
         return
     for st in (plugin.state.get('chargers') or {}).values():
         if not isinstance(st, dict):
             continue
         st.pop('display_wh', None)
+        st.pop('counter_wh', None)
         st['day_baseline_kwh'] = None
         st['day_kwh'] = 0.0
         st['day_last_lifetime_kwh'] = None
         st['day_wh'] = 0
-        st['counter_wh'] = 0
         st['day_energy_reset'] = True
         st['prev_session_kwh'] = None
-    plugin.state[key] = PLUGIN_VERSION
+    plugin.state[key] = target
     easee_logging.info(
         'easee_state',
-        f'State gemigreerd naar {PLUGIN_VERSION} (dag-kWh/kosten-teller gereset)',
+        f'State gemigreerd naar {PLUGIN_VERSION} dag-only Counter (energy track reset)',
         'migration',
     )
 
