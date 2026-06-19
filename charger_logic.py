@@ -11,7 +11,8 @@ import easee_state
 import tibber_pricing
 
 def session_energy_kwh(plugin, values, session):
-    for source in (values, session if isinstance(session, dict) else {}):
+    # Prefer /sessions/ongoing over /state — state sessionEnergy can stay stale after 429 or day change.
+    for source in (session if isinstance(session, dict) else {}, values):
         if not isinstance(source, dict):
             continue
         val = easee_helpers.first_dict_value(plugin, source, CHARGER_KEYS['session_energy'])
@@ -44,7 +45,7 @@ def is_session_resume(plugin, st, session_active, session, power_w):
     return bool(session) or power_w > 50
 
 def sync_day_energy(plugin, st, total_kwh, session_active, power_w):
-    """Track today's kWh with a midnight baseline; integrate power when lifetimeEnergy is stale."""
+    """Track today's kWh; Domoticz Counter = midnight lifetime baseline Wh + day Wh."""
     skip_monotonic = bool(st.pop('day_energy_reset', False))
     if st.get('day_baseline_kwh') is None:
         st['day_baseline_kwh'] = total_kwh
@@ -60,20 +61,34 @@ def sync_day_energy(plugin, st, total_kwh, session_active, power_w):
         delta_lifetime = max(0.0, float(total_kwh) - float(last_lifetime))
         if delta_lifetime > 0:
             st['day_last_lifetime_kwh'] = total_kwh
-            st['day_kwh'] = round(max(prev_day_kwh, float(total_kwh) - baseline), 6)
-            day_delta = max(0.0, st['day_kwh'] - prev_day_kwh)
+            if session_active and power_w > 50:
+                # lifetimeEnergy can jump with stale session totals during active charging
+                day_delta = power_integrated_kwh(plugin, power_w)
+                st['day_kwh'] = round(prev_day_kwh + day_delta, 6)
+            else:
+                st['day_kwh'] = round(max(prev_day_kwh, float(total_kwh) - baseline), 6)
+                day_delta = max(0.0, st['day_kwh'] - prev_day_kwh)
         elif session_active and power_w > 50:
             day_delta = power_integrated_kwh(plugin, power_w)
             st['day_kwh'] = round(prev_day_kwh + day_delta, 6)
     else:
         st['day_last_lifetime_kwh'] = total_kwh
+        if session_active and power_w > 50:
+            day_delta = power_integrated_kwh(plugin, power_w)
+            st['day_kwh'] = round(prev_day_kwh + day_delta, 6)
 
-    display_wh = int(round(baseline * 1000.0)) + int(round(easee_helpers.safe_float(plugin, st.get('day_kwh'), 0.0) * 1000.0))
-    prev_display = easee_helpers.safe_int(plugin, st.get('display_wh'), 0)
-    if not skip_monotonic and display_wh < prev_display:
-        display_wh = prev_display
-    st['display_wh'] = display_wh
-    return display_wh, easee_helpers.safe_float(plugin, st.get('day_kwh'), 0.0), day_delta
+    day_kwh = easee_helpers.safe_float(plugin, st.get('day_kwh'), 0.0)
+    day_wh = int(round(day_kwh * 1000.0))
+    base_wh = int(round(baseline * 1000.0))
+    counter_wh = base_wh + day_wh
+    if not skip_monotonic:
+        prev_counter = easee_helpers.safe_int(plugin, st.get('counter_wh'), base_wh)
+        if counter_wh < prev_counter:
+            counter_wh = prev_counter
+            day_wh = max(0, counter_wh - base_wh)
+    st['day_wh'] = day_wh
+    st['counter_wh'] = counter_wh
+    return counter_wh, day_kwh, day_delta
 
 def power_integrated_kwh(plugin, power_w):
     if power_w <= 50:
@@ -219,8 +234,10 @@ def poll_charger(plugin, charger):
 
     st = easee_state.charger_state(plugin, cid)
     prev_total = st.get('prev_total_kwh')
-    display_wh, day_kwh, day_delta = sync_day_energy(plugin, st, total_kwh, session_active, power_w)
+    counter_wh, day_kwh, day_delta = sync_day_energy(plugin, st, total_kwh, session_active, power_w)
+    day_wh = easee_helpers.safe_int(plugin, st.get('day_wh'), 0)
 
+    resuming = False
     if session_active and not st.get('session_active'):
         resuming = is_session_resume(plugin, st, session_active, session, power_w)
         api_start_ts = session_start_timestamp(plugin, values, session)
@@ -242,6 +259,7 @@ def poll_charger(plugin, charger):
             st['session_cost_total'] = 0.0
             st['session_cost_energy'] = 0.0
             st['session_cost_tax'] = 0.0
+            st['cost_delta_warned'] = False
 
     ending_session = (not session_active) and st.get('session_active')
 
@@ -249,13 +267,16 @@ def poll_charger(plugin, charger):
         plugin, session_active, api_session_kwh, st.get('prev_session_kwh'),
         total_kwh, prev_total, power_w, day_delta=day_delta,
     )
-    if session_active and api_session_kwh is not None and st.get('prev_session_kwh') is not None:
-        if float(api_session_kwh) > float(st.get('prev_session_kwh')):
+    if session_active and api_session_kwh is not None:
+        prev_sess = st.get('prev_session_kwh')
+        if prev_sess is not None and float(api_session_kwh) > float(prev_sess):
             st['prev_session_kwh'] = api_session_kwh
-    elif session_active and api_session_kwh is not None and st.get('prev_session_kwh') is None:
-        st['prev_session_kwh'] = api_session_kwh
+        elif prev_sess is None and not resuming and session:
+            # Only seed from /sessions/ongoing — never from stale /state sessionEnergy alone.
+            st['prev_session_kwh'] = api_session_kwh
 
     if easee_helpers.tibber_enabled(plugin) and delta_kwh > 0:
+        st['cost_delta_warned'] = False
         easee_logging.debug(
             'charger_logic',
             f'Kosten delta lader {cid}: {delta_kwh:.6f} kWh via {delta_source}',
@@ -310,8 +331,18 @@ def poll_charger(plugin, charger):
 
     st['prev_total_kwh'] = total_kwh
 
+    if easee_helpers.tibber_enabled(plugin) and session_active and power_w > 50 and delta_kwh <= 0:
+        if not st.get('cost_delta_warned'):
+            st['cost_delta_warned'] = True
+            easee_logging.warning(
+                'charger_logic',
+                f'Kosten overgeslagen lader {cid}: delta=0 ({power_w}W, sessionEnergy={api_session_kwh}, '
+                f'day_delta={day_delta:.6f}, prev_session={st.get("prev_session_kwh")})',
+                'cost',
+            )
+
     # UPDATE DEVICES
-    domoticz_devices.update_charger_energy(plugin, cid, 'Laden', power_w, display_wh)
+    domoticz_devices.update_charger_energy(plugin, cid, 'Laden', power_w, counter_wh)
     
     totaal_sessie = f'{int(round(total_kwh))} kWh | Sessie: {session_kwh:.3f} kWh'
     domoticz_devices.update_charger_custom(plugin, cid, 'Totaal & Sessie', totaal_sessie)
@@ -329,7 +360,7 @@ def poll_charger(plugin, charger):
     plugin.latest_chargers[cid] = {
         'power': power_w,
         'kwh': total_kwh,
-        'wh': display_wh,
+        'wh': day_wh,
         'day_kwh': day_kwh,
         'day_cost': easee_helpers.safe_float(plugin, st.get('day_cost_total', 0.0), 0.0),
         'day_energy_cost': easee_helpers.safe_float(plugin, st.get('day_cost_energy', 0.0), 0.0),

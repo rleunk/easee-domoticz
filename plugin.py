@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.25" author="Richard Leunk" version="10.9.25"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.26" author="Richard Leunk" version="10.9.26"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.25</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.26</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -308,7 +308,7 @@ class BasePlugin:
     def update_combined(self):
         total_power = sum(v.get('power', 0) for v in self.latest_chargers.values())
         total_kwh = round(sum(v.get('kwh', 0.0) for v in self.latest_chargers.values()), 3)
-        total_wh = sum(v.get('wh', 0) for v in self.latest_chargers.values())
+        total_wh = sum(v.get('day_wh', v.get('wh', 0)) for v in self.latest_chargers.values())
         any_online = any(bool(v.get('online')) for v in self.latest_chargers.values())
         any_lb = any(bool(v.get('loadbal')) for v in self.latest_equalizers.values())
         eq_count = len(self.equalizers)
@@ -359,9 +359,10 @@ class BasePlugin:
         self.session.headers.update({'accept': 'application/json'})
         domoticz_icons.load_custom_images(self, plugin_globals=globals())
         domoticz_devices.rebuild_index(self)
-        domoticz_devices.reset_cost_diagnostics()
+        domoticz_devices.reset_cost_diagnostics(self)
         domoticz_icons.apply_images_to_devices(self)
         easee_state.load_state(self)
+        easee_state.migrate_state_for_version(self)
         self.sync_done = False
         self.initial_sync_done = False
         self.icon_reapply_remaining = 0

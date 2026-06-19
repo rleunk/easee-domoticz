@@ -182,16 +182,28 @@ def resolve_charger_unit(plugin, cid, label_key, tried=None):
     return None
 
 _COST_LOOKUP_WARNED = set()
-_COST_UPDATE_LOGGED = set()
 _CORE_COST_LOOKUP_WARNED = set()
-_CORE_COST_UPDATE_LOGGED = set()
 
-def reset_cost_diagnostics():
+def _toggle_cost_nvalue(plugin, session_active):
+    """Alternate nValue so Domoticz refreshes timestamp even when € amount unchanged."""
+    if not session_active:
+        return 0
+    tick = easee_helpers.safe_int(plugin, getattr(plugin, '_cost_nvalue_tick', 0), 0) + 1
+    plugin._cost_nvalue_tick = tick
+    return tick % 2
+
+def _toggle_core_cost_nvalue(plugin):
+    tick = easee_helpers.safe_int(plugin, getattr(plugin, '_core_cost_nvalue_tick', 0), 0) + 1
+    plugin._core_cost_nvalue_tick = tick
+    return tick % 2
+
+def reset_cost_diagnostics(plugin=None):
     """Reset eenmalige kosten-diagnostiek na plugin-herstart (hardware of Domoticz)."""
     _COST_LOOKUP_WARNED.clear()
-    _COST_UPDATE_LOGGED.clear()
     _CORE_COST_LOOKUP_WARNED.clear()
-    _CORE_COST_UPDATE_LOGGED.clear()
+    if plugin is not None:
+        plugin._cost_nvalue_tick = 0
+        plugin._core_cost_nvalue_tick = 0
 
 def _core_legacy_names(plugin, label):
     label = easee_helpers.clean_label(plugin, label)
@@ -453,9 +465,11 @@ def update_core_text(plugin, label, value):
                 f'Kern-tegel niet gevonden: {clean} | geprobeerd: {", ".join(tried)}',
             )
         return
-    domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
-    if clean in ('Kosten & Samenvatting', 'Beste laden') and clean not in _CORE_COST_UPDATE_LOGGED:
-        _CORE_COST_UPDATE_LOGGED.add(clean)
+    nval = 0
+    if clean in ('Kosten & Samenvatting', 'Beste laden'):
+        nval = _toggle_core_cost_nvalue(plugin)
+    domoticz_runtime.Devices[u].Update(nValue=nval, sValue=str(value)[:4000])
+    if clean in ('Kosten & Samenvatting', 'Beste laden'):
         easee_logging.info(
             'domoticz_devices',
             f'Kern-tegel bijgewerkt: {clean} (unit {u})',
@@ -529,16 +543,15 @@ def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, sessi
         is_text = int(domoticz_runtime.Devices[u].SubType) == DEVICE_TYPES['Text']['Subtype']
     except Exception:
         is_text = False
+    nval = _toggle_cost_nvalue(plugin, session_active)
     if is_text:
-        domoticz_runtime.Devices[u].Update(nValue=1 if session_active else 0, sValue=text[:4000])
+        domoticz_runtime.Devices[u].Update(nValue=nval, sValue=text[:4000])
     else:
-        domoticz_runtime.Devices[u].Update(nValue=1 if session_active else 0, sValue=easee_helpers.euro_str(plugin, session_cost))
-    if cid_key not in _COST_UPDATE_LOGGED:
-        _COST_UPDATE_LOGGED.add(cid_key)
-        easee_logging.info(
-            'domoticz_devices',
-            f'Kosten-tegel bijgewerkt lader {cid_key} unit {u}: {text[:120]}',
-        )
+        domoticz_runtime.Devices[u].Update(nValue=nval, sValue=easee_helpers.euro_str(plugin, session_cost))
+    easee_logging.info(
+        'domoticz_devices',
+        f'Kosten-tegel bijgewerkt lader {cid_key} unit {u}: {text[:120]}',
+    )
 
 def update_charger_energy(plugin, cid, label_key, power_w, total_wh):
     u = resolve_charger_unit(plugin, cid, label_key)

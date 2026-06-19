@@ -2,7 +2,7 @@
 
 import os, json, time
 from datetime import datetime
-from easee_constants import STATE_FILE, LEGACY_STATE_FILE
+from easee_constants import STATE_FILE, LEGACY_STATE_FILE, PLUGIN_VERSION
 import easee_logging
 
 def state_path(plugin):
@@ -89,7 +89,8 @@ def charger_state(plugin, cid):
         'day_baseline_kwh': None,
         'day_kwh': 0.0,
         'day_last_lifetime_kwh': None,
-        'display_wh': 0,
+        'day_wh': 0,
+        'counter_wh': 0,
     })
     tk = today_key(plugin)
     if st.get('day_key') != tk:
@@ -102,9 +103,42 @@ def charger_state(plugin, cid):
         st['day_baseline_kwh'] = None
         st['day_kwh'] = 0.0
         st['day_last_lifetime_kwh'] = None
-        st['display_wh'] = 0
+        st['day_wh'] = 0
+        st['counter_wh'] = 0
+        st['day_energy_reset'] = True
+    elif 'display_wh' in st:
+        # v10.9.25 used lifetime+baseline Counter; reset day track on upgrade
+        st.pop('display_wh', None)
+        st['day_baseline_kwh'] = None
+        st['day_kwh'] = 0.0
+        st['day_last_lifetime_kwh'] = None
+        st['day_wh'] = 0
+        st['counter_wh'] = 0
         st['day_energy_reset'] = True
     return st
+
+def migrate_state_for_version(plugin):
+    """One-time resets when energy/cost tracking logic changes."""
+    key = 'energy_track_version'
+    if plugin.state.get(key) == PLUGIN_VERSION:
+        return
+    for st in (plugin.state.get('chargers') or {}).values():
+        if not isinstance(st, dict):
+            continue
+        st.pop('display_wh', None)
+        st['day_baseline_kwh'] = None
+        st['day_kwh'] = 0.0
+        st['day_last_lifetime_kwh'] = None
+        st['day_wh'] = 0
+        st['counter_wh'] = 0
+        st['day_energy_reset'] = True
+        st['prev_session_kwh'] = None
+    plugin.state[key] = PLUGIN_VERSION
+    easee_logging.info(
+        'easee_state',
+        f'State gemigreerd naar {PLUGIN_VERSION} (dag-kWh/kosten-teller gereset)',
+        'migration',
+    )
 
 def equalizer_state(plugin, eid):
     store = plugin.state.setdefault('equalizers', {})

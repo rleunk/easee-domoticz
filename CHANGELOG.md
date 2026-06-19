@@ -6,6 +6,13 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.26] — 2026-06-19
+
+### Bugfix
+- **Vandaag kWh ~3 kWh i.p.v. werkelijk dagverbruik** — `sessionEnergy` in `/state` bleef ~3 kWh staan (gisteren); die waarde schoof in `day_kwh` via `lifetimeEnergy`-sprongen tijdens laden. Ongoing-session gaat vóór state; tijdens laden telt vermogen×tijd i.p.v. lifetime-sprongen. Domoticz Counter = middernacht-baseline + dag-Wh (monotonic).
+- **Kosten-tegels vast op €0,00 / timestamp 00:04** — Verouderde `sessionEnergy` werd als `prev_session_kwh` gezet (delta bleef 0); tegel-Update ververste timestamp niet bij ongewijzigd bedrag. `prev_session_kwh` wordt niet meer gevoed bij sessie-hervatting met stale API-waarde; kosten vallen terug op `day_track`/vermogen. `nValue` wisselt elke poll zodat timestamp meeloopt; INFO-log per kosten-update.
+- **State-migratie bij upgrade** — Dag-kWh-teller en `prev_session_kwh` worden eenmalig gereset bij upgrade naar v10.9.26 (log: *State gemigreerd*).
+
 ## [10.9.25] — 2026-06-19
 
 ### Bugfix
