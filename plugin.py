@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.29" author="Richard Leunk" version="10.9.29"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.30" author="Richard Leunk" version="10.9.30"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.29</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.30</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -365,6 +365,7 @@ class BasePlugin:
         easee_state.load_state(self)
         easee_state.migrate_state_for_version(self)
         easee_state.migrate_cost_tracking(self)
+        tibber_src = easee_state.sync_tibber_token_backup(self)
         try:
             easee_state.save_state(self)
         except Exception as e:
@@ -382,7 +383,14 @@ class BasePlugin:
         self.started = True
         easee_logging.info('plugin', f'Plugin v{PLUGIN_VERSION} gestart', 'startup')
         if easee_helpers.tibber_enabled(self):
-            easee_logging.info('plugin', 'Tibber actief — kosten-tegels worden bijgewerkt na eerste poll', 'startup')
+            if tibber_src == 'restored':
+                easee_logging.info(
+                    'plugin',
+                    'Tibber actief — token hersteld uit state-backup (Mode7 leeg na opslag/herstart)',
+                    'startup',
+                )
+            else:
+                easee_logging.info('plugin', 'Tibber actief — kosten-tegels worden bijgewerkt na eerste poll', 'startup')
         else:
             easee_logging.info(
                 'plugin',
@@ -392,6 +400,7 @@ class BasePlugin:
         easee_logging.info('plugin', 'Initiële sync wacht op Domoticz Devices-readiness', 'startup')
 
     def onStop(self):
+        easee_state.sync_tibber_token_backup(self)
         easee_state.save_state(self)
         try:
             if self.session:

@@ -1,6 +1,6 @@
 # Troubleshooting Gids
 
-> **Huidige versie:** v10.9.29 (stable testing; functioneel v10.9.28) · Volledige installatie: [INSTALL.md](../INSTALL.md)
+> **Huidige versie:** v10.9.30 (stable testing; functioneel v10.9.28) · Volledige installatie: [INSTALL.md](../INSTALL.md)
 
 ## Veelvoorkomende Problemen
 
@@ -59,7 +59,7 @@ sudo journalctl -u domoticz -f | grep Easee
 **Oplossing** (v10.9.28+):
 1. **Verwijder oude Easee custom icons** via **Instellingen → Aangepaste pictogrammen**
 2. Controleer `Easee_icons_v2.zip` en map `icons/` (13 mini-zips) in pluginmap
-3. `git pull` naar v10.9.29 en herstart hardware-item
+3. `git pull` naar v10.9.30 en herstart hardware-item
 4. Log controleren:
    - `Custom icons geladen: 13 sets`
    - `image_ids: 13/13 sets`
@@ -129,6 +129,7 @@ Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 ### Tibber / kosten-tegels
 
 - **Tibber-token (Mode7) is verplicht** voor kosten-tegels — zonder token worden per-lader kosten en kern-tegels *Kosten & Samenvatting* / *Beste laden* niet bijgewerkt. Bij start zie je `Tibber uit (Mode7 leeg)`.
+- **Token verloren na hardware-opslag?** Sinds v10.9.30 bewaart de plugin een backup in `easee_state.json`. Na `git pull` + herstart zou Tibber automatisch actief moeten blijven (log: *token hersteld uit state-backup*). Zonder backup: token opnieuw invullen in Mode7.
 - Met Tibber: token op [developer.tibber.com](https://developer.tibber.com/settings/access-token). Bij start: `Tibber actief — kosten-tegels worden bijgewerkt na eerste poll`.
 - Kosten *0 €* terwijl Tibber actief is: verwijder **Kosten (Sessie/Dag)**-tile en herstart hardware-item; controleer of `Kosten-tegel niet gevonden` in log staat (WARNING).
 
@@ -173,4 +174,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Configuratie**: [CONFIGURATION.md](CONFIGURATION.md)
 
-Bij een issue: pluginversie **v10.9.29**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
+Bij een issue: pluginversie **v10.9.30**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).

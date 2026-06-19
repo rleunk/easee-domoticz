@@ -125,7 +125,7 @@ Gegroepeerde weergave op één teksttegel:
 
 **Huisvermogen staat niet op Status** — zie Vermogen-tegel.
 
-### Equalizer tegels (v10.9.1+, huidige release v10.9.29)
+### Equalizer tegels (v10.9.1+, huidige release v10.9.30)
 
 | Tegel | Type | Icoon | Weergave |
 |-------|------|-------|----------|
@@ -223,6 +223,10 @@ Legacy: bestaande **Vermogen**-tegel wordt automatisch **Import** (zelfde Device
 **Default**: (empty)  
 **Omschrijving**: Je Tibber Personal Access Token — **verplicht voor kosten-tegels**  
 **Zonder token**: per-lader *Kosten (Sessie/Dag)* en kern-tegels *Kosten & Samenvatting* / *Beste laden* worden niet bijgewerkt  
+
+**Token-backup (v10.9.30+)**  
+Domoticz wist wachtwoordvelden soms bij *Opslaan* op de hardwarepagina (veld lijkt leeg, token verdwijnt uit Mode7). De plugin bewaart een kopie in `easee_state.json` (`tibber_token_backup`) zodra je het token één keer invult. Bij herstart of plugin-update: als Mode7 leeg is maar de backup bestaat, gebruikt de plugin die automatisch — je hoeft het token niet opnieuw in te vullen. In het log: `Tibber actief — token hersteld uit state-backup`. Het token wordt **nooit** gelogd. Nieuw token invullen in Mode7 overschrijft de backup. Tibber uitzetten: verwijder het hardware-item of wis `tibber_token_backup` uit `easee_state.json` op de server.
+
 **Voordelen** (als ingesteld):
 - ✅ Realtime stroomtarieven
 - ✅ Automatische kostenberekening
@@ -267,7 +271,7 @@ Devices krijgen automatisch deze namen:
 [PREFIX] - [NAAM] - Kosten (Sessie/Dag) (Tibber)
 ```
 
-## Custom iconen (v10.9.29)
+## Custom iconen (v10.9.30)
 
 13 sets in `Easee_icons_v2.zip`. Belangrijkste mapping:
 

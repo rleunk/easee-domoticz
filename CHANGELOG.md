@@ -6,6 +6,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.30] — 2026-06-19
+
+### Bugfix
+- **Tibber-token (Mode7) blijft bewaard** — Domoticz wist wachtwoordvelden vaak bij hardware-opslaan of plugin-update; zonder opnieuw invullen verscheen `Tibber uit (Mode7 leeg)`. Token wordt nu gekopieerd naar `easee_state.json` (`tibber_token_backup`); bij lege Mode7 valt de plugin terug op die backup. Tokenwaarde wordt nooit gelogd.
+
 ## [10.9.29] — 2026-06-19
 
 ### Gewijzigd

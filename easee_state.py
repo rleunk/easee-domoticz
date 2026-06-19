@@ -2,7 +2,7 @@
 
 import os, json, time
 from datetime import datetime
-from easee_constants import STATE_FILE, LEGACY_STATE_FILE, PLUGIN_VERSION
+from easee_constants import STATE_FILE, LEGACY_STATE_FILE, PLUGIN_VERSION, TIBBER_TOKEN_STATE_KEY
 import easee_logging
 
 def state_path(plugin):
@@ -41,6 +41,20 @@ def load_state(plugin):
                     plugin.state.update(loaded)
     except Exception as e:
         easee_logging.debug('easee_state', f'state load failed: {e}', 'load')
+
+def sync_tibber_token_backup(plugin):
+    """Persist Mode7 token in state; use backup when Domoticz clears password on save."""
+    import domoticz_runtime
+    mode7 = (domoticz_runtime.Parameters.get('Mode7', '') or '').strip()
+    backup = (plugin.state.get(TIBBER_TOKEN_STATE_KEY) or '').strip()
+    if mode7:
+        if backup != mode7:
+            plugin.state[TIBBER_TOKEN_STATE_KEY] = mode7
+            return 'updated'
+        return 'unchanged'
+    if backup:
+        return 'restored'
+    return 'missing'
 
 def save_state(plugin):
     fp = state_path(plugin)

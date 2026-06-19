@@ -106,8 +106,18 @@ def parse_iso(plugin, value):
     except Exception:
         return None
 
-def tibber_token(plugin):
+def _mode7_token(plugin):
     return (domoticz_runtime.Parameters.get('Mode7', '') or '').strip()
+
+def tibber_token(plugin):
+    from easee_constants import TIBBER_TOKEN_STATE_KEY
+    mode7 = _mode7_token(plugin)
+    if mode7:
+        backup = plugin.state.get(TIBBER_TOKEN_STATE_KEY, '')
+        if backup != mode7:
+            plugin.state[TIBBER_TOKEN_STATE_KEY] = mode7
+        return mode7
+    return (plugin.state.get(TIBBER_TOKEN_STATE_KEY) or '').strip()
 
 def tibber_enabled(plugin):
     return bool(tibber_token(plugin))
