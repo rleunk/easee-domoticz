@@ -1,12 +1,12 @@
-# Easee Domoticz plugin v10.9.29
+# Easee Domoticz plugin v10.9.30
 
 **Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.9.29-blue)
+![Version](https://img.shields.io/badge/version-10.9.30-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** v10.9.28 — *stable testing* (kosten-tegels + Tibber + Vandaag kWh bevestigd werkend). v10.9.29 = alleen logging-opruiming. Pauze in actieve ontwikkeling. Getest met 2× Charge Lite, 1× Equalizer en Tibber (Richard, 19-06-2026). Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
+> **Status:** v10.9.28 — *stable testing* (kosten-tegels + Tibber + Vandaag kWh bevestigd werkend). v10.9.29 = logging-opruiming; v10.9.30 = Tibber-token backup. Pauze in actieve ontwikkeling. Getest met 2× Charge Lite, 1× Equalizer en Tibber (Richard, 19-06-2026). Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
 
 ## TL;DR — installeren in 2 minuten
 
@@ -16,7 +16,7 @@ git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.9.29** → Easee-gebruikersnaam + wachtwoord → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.9.30** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
 Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
@@ -48,7 +48,7 @@ Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder op
 | **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
 
-Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.9.29][LEVEL]…`.
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.9.30][LEVEL]…`.
 
 ## Logniveaus (kort)
 
@@ -173,7 +173,7 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 
 - Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md)
 - Laatste functionele release: **[v10.9.28](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.28)** — kosten-tegels, Vandaag kWh, Tibber
-- Huidige versie **v10.9.29** — logging-opruiming (geen functionele wijzigingen)
+- Huidige versie **v10.9.30** — Tibber-token backup in state-bestand
 
 ### v10.9.19 – v10.9.28 in het kort
 
@@ -213,7 +213,7 @@ Sinds v10.6.0: 13 Python-modules naast `Easee_icons_v2.zip`. Overzicht: [docs/RE
 
 ## Problemen melden
 
-[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.9.29**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.9.30**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
 
 ## Support & credits
 
@@ -225,4 +225,4 @@ MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Versie 10.9.29** — Richard Leunk
+**Versie 10.9.30** — Richard Leunk
