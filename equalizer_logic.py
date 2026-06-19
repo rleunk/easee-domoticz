@@ -1672,20 +1672,22 @@ def _phase_values_from_key_list(plugin, values, keys):
 def _lb_phase_compact(plugin, values):
     avail, has_avail = _phase_values_from_key_list(plugin, values, phase_available_current_keys())
     eq, has_eq = _phase_values_from_key_list(plugin, values, phase_equalized_charge_keys())
-    vrij = _format_phase_triple(plugin, avail, 'A') if has_avail else '— / — / —'
-    laad = _format_phase_triple(plugin, eq, 'A') if has_eq else '— / — / —'
-    return f'   Vrij: {vrij} A  |  Laad: {laad} A'
+    if has_avail or has_eq:
+        vrij = _format_phase_triple(plugin, avail, 'A') if has_avail else '— / — / —'
+        laad = _format_phase_triple(plugin, eq, 'A') if has_eq else '— / — / —'
+        return f'   Vrij: {vrij} A  |  Laad: {laad} A'
+    return '   Fase-data: nog niet beschikbaar'
 
 def _limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a):
-    emob = easee_helpers.format_amp(plugin, max_alloc) or '—'
-    hoofd = easee_helpers.format_amp(plugin, main_fuse_a) or '—'
-    limiet = easee_helpers.format_amp(plugin, main_fuse_limit_a) or '—'
+    emob = easee_helpers.format_amp(plugin, max_alloc) or 'n/b'
+    hoofd = easee_helpers.format_amp(plugin, main_fuse_a) or 'n/b'
+    limiet = easee_helpers.format_amp(plugin, main_fuse_limit_a) or 'n/b'
     return f'🛡️ eMobility: {emob} | Hoofd: {hoofd} | Limiet: {limiet}'
 
 def _voltage_status_line(plugin, values):
     phases, has = _phase_values_from_keys(plugin, values, phase_voltage_keys())
     if not has:
-        return '🔌 Spanning L1/L2/L3: — V'
+        return '🔌 Spanning L1/L2/L3: nog niet beschikbaar'
     return f'🔌 Spanning L1/L2/L3: {_format_phase_triple(plugin, phases, "V")} V'
 
 def _current_status_line(plugin, values, power_w):
@@ -1697,12 +1699,19 @@ def _current_status_line(plugin, values, power_w):
     return current_line
 
 def _build_status_text(plugin, values, online, lb_active, max_alloc, main_fuse_a, main_fuse_limit_a,
-                       max_import_kw, power_w):
+                       max_import_kw, power_w, tibber_controls=False):
     status_emoji = '✅' if online else '❌'
-    lb_emoji = '⚖️' if lb_active else '⏸️'
-    lb_text = 'Aan' if lb_active else 'Uit'
+    if lb_active:
+        lb_emoji = '⚖️'
+        lb_text = 'Aan'
+    elif tibber_controls:
+        lb_emoji = '📡'
+        lb_text = 'Tibber'
+    else:
+        lb_emoji = '⏸️'
+        lb_text = 'Uit'
     lines = [
-        f'{status_emoji} Equalizer online' if online else f'{status_emoji} Equalizer offline',
+        f'{status_emoji} Equalizer {"online" if online else "offline"}',
         f'{lb_emoji} Load balancing: {lb_text}',
         _lb_phase_compact(plugin, values),
         _limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a),
@@ -1744,6 +1753,8 @@ def _vermogen_text(plugin, eid, power_w, export_w, net_w, import_kwh, export_kwh
         f'📥 Import: {int(power_w)} W | Terug: {int(export_w)} W',
         f'📊 Netto: {int(net_w)} W',
     ]
+    if export_w > 0:
+        lines.append('↩️ Teruglevering actief')
     day_import = _daily_import_kwh(plugin, eid, import_kwh)
     day_net = _daily_netto_kwh(plugin, eid, import_kwh, export_kwh)
     if day_import is not None and day_net is not None:
@@ -2067,6 +2078,7 @@ def poll_equalizer(plugin, equalizer):
     status_text = _build_status_text(
         plugin, values, online, lb_active, max_alloc, main_fuse_a, main_fuse_limit_a,
         max_import_kw, power_w,
+        tibber_controls=bool(not lb_active and easee_helpers.tibber_enabled(plugin)),
     )
 
     import_field = EQUALIZER_KEYS['cumulative_import'][0]

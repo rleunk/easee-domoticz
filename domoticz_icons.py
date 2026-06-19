@@ -25,6 +25,8 @@ def image_root(plugin, name, device_id=None):
         return 'EaseeLoadBal'
     if devid == CORE_DEVICE_IDS.get('Status', '') or n == easee_helpers.pref(plugin, 'Status').lower():
         return 'EaseeStatusGlobal'
+    if devid == CORE_DEVICE_IDS.get('Dagrapport', ''):
+        return 'EaseeOverview'
     if devid.startswith('EASEE_EQ_'):
         label = n.split(' - ')[-1].strip() if ' - ' in n else n
         if label in ('import',):
@@ -84,7 +86,7 @@ def image_root(plugin, name, device_id=None):
             return 'EaseeOverview'
         return 'EaseeEqualizer'
 
-    if 'overzicht' in n or 'beste laden' in n:
+    if 'overzicht' in n or 'beste laden' in n or 'dagrapport' in n:
         return 'EaseeOverview'
     if 'kosten' in n or 'goedkoop' in n or '€' in n:
         return 'EaseeCost'

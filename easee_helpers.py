@@ -122,6 +122,17 @@ def tibber_token(plugin):
 def tibber_enabled(plugin):
     return bool(tibber_token(plugin))
 
+def beste_laden_hours(plugin):
+    """Sliding window lengte voor Beste laden (Extra-veld, default 3 uur)."""
+    raw = (domoticz_runtime.Parameters.get('Extra', '') or '').strip()
+    if not raw:
+        return 3
+    try:
+        hours = int(float(raw))
+    except Exception:
+        return 3
+    return max(1, min(hours, 12))
+
     # ---- emoji & status helpers ----
 
 def kw_to_watts(plugin, value):

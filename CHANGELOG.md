@@ -6,6 +6,21 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.10.0] — 2026-06-19
+
+### Toegevoegd
+- **Dagrapport-tegel** — dagelijkse samenvatting: kWh, €, laaduren, goedkoopste kwartier/uur (Tibber).
+- **Laadhints op Status-tegel** — inferentie *Laden bij duur tarief* / *Waarschijnlijk Grid Rewards* uit vermogen + Tibber-prijs.
+- **Status "Tibber stuurt"** — globale Status wanneer EQ load balancing uit is maar er geladen wordt via Tibber.
+- **Tibber kwartierprijzen** — `priceInfo(resolution: QUARTER_HOURLY)` met fallback naar uurprijzen; gebruikt voor kosten en Beste laden.
+- **Beste laden configureerbaar** — vensterlengte via hardwareveld *Beste laden venster (uren)* (Extra, default 3).
+- **Teruglevering hint** — Vermogen-tegel toont *Teruglevering actief* bij export > 0 W.
+
+### Gewijzigd
+- **Totaal & Sessie** — duidelijker onderscheid *Deze sessie* vs *Vandaag* vs totaal.
+- **Equalizer Status** — bij LB uit + Tibber actief: *Load balancing: Tibber* i.p.v. foutachtig *Uit*; betere fallback-labels (n/b, nog niet beschikbaar).
+- **Verwachte tegels** — 16 met Tibber (was 15); tag `v10.9.32-stable` bewaard.
+
 ## [10.9.32] — 2026-06-19
 
 ### Gewijzigd

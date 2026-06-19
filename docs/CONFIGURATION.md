@@ -140,7 +140,7 @@ Legacy: *Import*, *Terug & netto*, *Netto*, *Teruglevering*, *Spanning*, *Load b
 
 > **README-demo:** de gesanitiseerde screenshot in [README.md](../README.md) toont **11 tegels** met **één laadpaal** (*Lader 1*) en dezelfde globale + Equalizer-tegels — geen tweede laadpaal-sectie. Dat is alleen voor de documentatie-preview; de plugin maakt per geconfigureerde laadpaal eigen tegels aan.
 
-Bij **2 laadpalen + 1 Equalizer + Tibber** hoort de plugin **exact 15 tegels** aan te maken (prefix `[PREFIX]` = jouw hardwarenaam, bijv. `Easee`):
+Bij **2 laadpalen + 1 Equalizer + Tibber** hoort de plugin **exact 16 tegels** aan te maken (prefix `[PREFIX]` = jouw hardwarenaam, bijv. `Easee`):
 
 | # | Tegel |
 |---|-------|
@@ -150,12 +150,13 @@ Bij **2 laadpalen + 1 Equalizer + Tibber** hoort de plugin **exact 15 tegels** a
 | 4 | `[PREFIX] - LoadBal` |
 | 5 | `[PREFIX] - Kosten & Samenvatting` |
 | 6 | `[PREFIX] - Beste laden` |
-| 7 | `[PREFIX] - [EQ-naam] - Status` |
-| 8 | `[PREFIX] - [EQ-naam] - Vermogen` |
-| 9–12 | Per laadpaal 1: `[PREFIX] - [Naam] - Laden`, `Totaal & Sessie`, `Status`, `Kosten (Sessie/Dag)` |
-| 13–15 | Idem laadpaal 2 |
+| 7 | `[PREFIX] - Dagrapport` |
+| 8 | `[PREFIX] - [EQ-naam] - Status` |
+| 9 | `[PREFIX] - [EQ-naam] - Vermogen` |
+| 10–13 | Per laadpaal 1: `[PREFIX] - [Naam] - Laden`, `Totaal & Sessie`, `Status`, `Kosten (Sessie/Dag)` |
+| 14–16 | Idem laadpaal 2 |
 
-**Geen Tibber?** Dan ontbreken tegels 5, 6 en de Kosten-tegels per laadpaal (minder dan 15).
+**Geen Tibber?** Dan ontbreken tegels 5–7 en de Kosten-tegels per laadpaal (minder dan 16).
 
 ### Tibber slim laden / Grid Rewards
 
@@ -240,12 +241,23 @@ Domoticz wist wachtwoordvelden soms bij *Opslaan* op de hardwarepagina (veld lij
 ### Tibber Token Ophalen (Mode8)
 **Type**: Info link  
 **URL**: https://developer.tibber.com/settings/access-token  
-**Instructies**:
+
+### Beste laden venster (Extra)
+**Type**: Text  
+**Default**: `3`  
+**Omschrijving**: Aantal uren voor het goedkoopste laadvenster op de *Beste laden*-tegel (1–12). Gebruikt Tibber kwartierprijzen indien beschikbaar.
+
+**Instructies Mode8**:
 1. Ga naar link
 2. Log in met je Tibber account
 3. Klik "Create Personal Access Token"
 4. Kopieer token
 5. Plak in Mode7
+
+### Beste laden venster (Extra)
+**Type**: Text  
+**Default**: `3`  
+**Omschrijving**: Aantal uren voor het sliding-window van de *Beste laden*-tegel (1–12). Bij kwartierprijzen gebruikt de plugin 4× zoveel slots per uur.
 
 ## Device Naming
 
@@ -259,6 +271,7 @@ Devices krijgen automatisch deze namen:
 [PREFIX] - LoadBal
 [PREFIX] - Kosten & Samenvatting (Tibber)
 [PREFIX] - Beste laden (Tibber)
+[PREFIX] - Dagrapport (Tibber)
 ```
 
 ### Per Equalizer (indien gevonden)

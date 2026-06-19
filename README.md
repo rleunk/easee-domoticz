@@ -1,12 +1,12 @@
-# Easee Domoticz plugin v10.9.31
+# Easee Domoticz plugin v10.10.0
 
 **Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.9.31-blue)
+![Version](https://img.shields.io/badge/version-10.10.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** v10.9.28 — *stable testing* (kosten-tegels + Tibber + Vandaag kWh bevestigd werkend). v10.9.29 = logging-opruiming; v10.9.30 = Tibber-token backup; v10.9.31 = optionele API DEBUG + docs/mockups. Pauze in actieve ontwikkeling. Getest met 2× Charge Lite, 1× Equalizer en Tibber (Richard, 19-06-2026). Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
+> **Status:** v10.10.0 — Tibber kwartierprijzen, Dagrapport-tegel, laadhints, configureerbaar Beste laden. Stable baseline: **v10.9.32-stable**. Getest met 2× Charge Lite, 1× Equalizer en Tibber (Richard, 19-06-2026). Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
 
 ## TL;DR — installeren in 2 minuten
 
@@ -43,7 +43,7 @@ Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder op
 |-----------|---------------|
 | **Laadpalen** | Auto-discovery; per lader: Laden, Totaal & Sessie, Status, Kosten (met Tibber) |
 | **Equalizer** | 2 tegels per Equalizer: **Status** (LB, limieten, stroom, spanning) + **Vermogen** (import/terug/netto W, vandaag kWh) |
-| **Tibber** | Actueel tarief, dagkosten, **Beste laden** (3 uur goedkoop) — **Mode7 verplicht** |
+| **Tibber** | Actueel tarief, dagkosten, **Beste laden** (configureerbaar venster), **Dagrapport** — **Mode7 verplicht** |
 | **Core** | Globale Status, Totaal Laden, Totaal kWh, LoadBal-schakelaar |
 | **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
@@ -63,7 +63,7 @@ Zet **Debug logging** (Mode6) alleen aan als je problemen onderzoekt — dan wor
 
 ## Screenshots
 
-> **Let op:** de afbeeldingen hieronder zijn **gesanitiseerde demo-mockups** in echte Domoticz-tegelstijl (lichtgrijze achtergrond, witte tegels met lichtblauwe header, italic *Laatst gezien*, *Type:*-regel, footer met ster links en Log/Aanpassen-knoppen) — geen live Domoticz-data. Alle getallen zijn **0** / **€0.00**; kosten-tegels tonen **Laatste sessie** met oudere demo-timestamp (18:59) zoals in een echte setup na kort laden. De README-demo toont **11 tegels** met **één laadpaal** (*Lader 1*); een volledige installatie met 2 laadpalen heeft **15 tegels** (zie [CONFIGURATION.md](docs/CONFIGURATION.md)). Opnieuw genereren: `scripts/generate_dashboard_mockup.ps1`.
+> **Let op:** de afbeeldingen hieronder zijn **gesanitiseerde demo-mockups** in echte Domoticz-tegelstijl (lichtgrijze achtergrond, witte tegels met lichtblauwe header, italic *Laatst gezien*, *Type:*-regel, footer met ster links en Log/Aanpassen-knoppen) — geen live Domoticz-data. Alle getallen zijn **0** / **€0.00**; kosten-tegels tonen **Laatste sessie** met oudere demo-timestamp (18:59) zoals in een echte setup na kort laden. De README-demo toont **11 tegels** met **één laadpaal** (*Lader 1*); een volledige installatie met 2 laadpalen heeft **16 tegels** (zie [CONFIGURATION.md](docs/CONFIGURATION.md)). Opnieuw genereren: `scripts/generate_dashboard_mockup.ps1`.
 
 ### Dashboard (11 demo-tegels)
 
@@ -100,7 +100,7 @@ Laat naamvelden leeg voor de Easee-appnaam. De **hardwarenaam** in Domoticz (bij
 ### Core
 - **Easee - Status** — online, Equalizer-aantal, load balancing, Tibber
 - **Totaal Laden**, **Totaal kWh**, **LoadBal**
-- **Kosten & Samenvatting**, **Beste laden** (met Tibber, Mode7)
+- **Kosten & Samenvatting**, **Beste laden**, **Dagrapport** (met Tibber, Mode7)
 
 ### Per Equalizer
 - **[Naam] - Status** — verbinding, LB (fase-detail), limieten, stroom L1/L2/L3, spanning
@@ -134,7 +134,7 @@ Verwacht in log: `Custom icons geladen: 13 sets` of `Custom icons uit Domoticz (
 | **EaseeCharger** | Laadpaal **Laden** |
 | **EaseePower** | **Totaal Laden**, laadpaal **Totaal & Sessie** |
 | **EaseeCost** | Kosten-tegels |
-| **EaseeOverview** | **Beste laden**, overzicht |
+| **EaseeOverview** | **Beste laden**, **Dagrapport**, overzicht |
 | **EaseeLoadBal** | **LoadBal**-schakelaar |
 | Overige sets | Legacy/gereserveerd (Import, Export, Net, Voltage, Alert) |
 

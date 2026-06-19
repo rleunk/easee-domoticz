@@ -296,6 +296,7 @@ def poll_charger(plugin, charger):
         st['day_cost_total'] = round(easee_helpers.safe_float(plugin, st.get('day_cost_total', 0.0), 0.0) + add_total, 4)
         st['day_cost_energy'] = round(easee_helpers.safe_float(plugin, st.get('day_cost_energy', 0.0), 0.0) + add_energy, 4)
         st['day_cost_tax'] = round(easee_helpers.safe_float(plugin, st.get('day_cost_tax', 0.0), 0.0) + add_tax, 4)
+        easee_state.track_global_charge(plugin, day_delta if day_delta > 0 else delta_kwh, add_total, session_active and power_w > 50)
         if st.get('session_active'):
             st['session_cost_total'] = round(easee_helpers.safe_float(plugin, st.get('session_cost_total', 0.0), 0.0) + add_total, 4)
             st['session_cost_energy'] = round(easee_helpers.safe_float(plugin, st.get('session_cost_energy', 0.0), 0.0) + add_energy, 4)
@@ -347,13 +348,19 @@ def poll_charger(plugin, charger):
 
     # UPDATE DEVICES
     domoticz_devices.update_charger_energy(plugin, cid, 'Laden', power_w, counter_wh)
-    
-    totaal_sessie = f'{int(round(total_kwh))} kWh | Sessie: {session_kwh:.3f} kWh'
+
+    totaal_sessie = (
+        f'🔋 Deze sessie: {session_kwh:.3f} kWh | 📅 Vandaag: {day_kwh:.3f} kWh'
+        f' | Totaal: {total_kwh:.1f} kWh'
+    )
     domoticz_devices.update_charger_custom(plugin, cid, 'Totaal & Sessie', totaal_sessie)
-    
+
+    eq_lb = any(bool(v.get('loadbal')) for v in (plugin.latest_equalizers or {}).values())
+    hint = tibber_pricing.charging_hint(plugin, power_w, session_active, eq_lb_active=eq_lb)
+    hint_part = f' | 💡 {hint}' if hint else ''
     status_text = (
         f'{status_emoji(plugin, online, session_active)} '
-        f'{power_emoji(plugin, power_w)} {status_label} | ⏱️ {laadduur}'
+        f'{power_emoji(plugin, power_w)} {status_label} | ⏱️ {laadduur}{hint_part}'
     )
     domoticz_devices.update_charger_text(plugin, cid, 'Status', status_text)
     

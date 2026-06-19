@@ -9,7 +9,7 @@ REFRESH_URL = BASE_URL + '/accounts/refresh_token'
 TIBBER_GQL = 'https://api.tibber.com/v1-beta/gql'
 STATE_FILE = 'easee_state.json'
 LEGACY_STATE_FILE = 'easee_v9_0_state.json'
-PLUGIN_VERSION = '10.9.32'
+PLUGIN_VERSION = '10.10.0'
 TIBBER_TOKEN_STATE_KEY = 'tibber_token_backup'
 PLUGIN_KEY = 'EaseeCloudAutoDiscoveryV1000'
 ULTRA_DEBUG = False
@@ -41,4 +41,5 @@ CORE_DEVICE_IDS = {
     'LoadBal': 'EASEE_CORE_LOADBAL',
     'Kosten & Samenvatting': 'EASEE_CORE_COSTS',
     'Beste laden': 'EASEE_CORE_BEST',
+    'Dagrapport': 'EASEE_CORE_DAG',
 }

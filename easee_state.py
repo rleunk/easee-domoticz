@@ -4,6 +4,7 @@ import os, json, time
 from datetime import datetime
 from easee_constants import STATE_FILE, LEGACY_STATE_FILE, PLUGIN_VERSION, TIBBER_TOKEN_STATE_KEY
 import easee_logging
+import easee_helpers
 
 def state_path(plugin):
     return os.path.join(plugin.plugin_dir, STATE_FILE)
@@ -183,3 +184,49 @@ def equalizer_state(plugin, eid):
         'last_export_w': None,
         'last_power_ts': None,
     })
+
+
+def daily_report_state(plugin):
+    """Alias for global_day_state (Dagrapport tile)."""
+    return global_day_state(plugin)
+
+
+def track_daily_report(plugin, day_kwh_delta=0.0, day_cost_delta=0.0, charging=False):
+    track_global_charge(plugin, day_kwh_delta, day_cost_delta, charging)
+
+
+def format_charge_duration(seconds):
+    secs = max(0, int(seconds or 0))
+    h, rem = divmod(secs, 3600)
+    m = rem // 60
+    if h > 0:
+        return f'{h}u {m:02d}m'
+    return f'{m}m'
+
+
+def global_day_state(plugin):
+    """Dagtotalen voor Dagrapport-tegel (alle laders samen)."""
+    store = plugin.state.setdefault('global_day', {})
+    tk = today_key(plugin)
+    if store.get('day_key') != tk:
+        store.clear()
+        store.update({
+            'day_key': tk,
+            'charge_kwh': 0.0,
+            'charge_hours': 0.0,
+            'charge_cost': 0.0,
+            'last_track_ts': None,
+        })
+    return store
+
+def track_global_charge(plugin, day_kwh_delta=0.0, day_cost_delta=0.0, any_charging=False):
+    """Accumuleer laaduren en kWh voor Dagrapport."""
+    g = global_day_state(plugin)
+    if day_kwh_delta > 0:
+        g['charge_kwh'] = round(easee_helpers.safe_float(plugin, g.get('charge_kwh'), 0.0) + day_kwh_delta, 4)
+    if day_cost_delta > 0:
+        g['charge_cost'] = round(easee_helpers.safe_float(plugin, g.get('charge_cost'), 0.0) + day_cost_delta, 4)
+    if any_charging:
+        interval_h = float(easee_helpers.poll_interval_sec(plugin)) / 3600.0
+        g['charge_hours'] = round(easee_helpers.safe_float(plugin, g.get('charge_hours'), 0.0) + interval_h, 4)
+    g['last_track_ts'] = now_ts(plugin)

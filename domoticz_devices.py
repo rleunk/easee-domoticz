@@ -259,7 +259,7 @@ def resolve_core_unit(plugin, label, tried=None):
             return u
 
     label_lower = label.lower()
-    if 'kosten' in label_lower or 'beste laden' in label_lower:
+    if 'kosten' in label_lower or 'beste laden' in label_lower or 'dagrapport' in label_lower:
         for unit, dev in domoticz_runtime.Devices.items():
             name = easee_helpers.norm(plugin, dev.Name).lower()
             if label_lower in name:
@@ -461,7 +461,7 @@ def update_core_text(plugin, label, value):
     tried = []
     u = resolve_core_unit(plugin, clean, tried=tried)
     if u is None:
-        if clean in ('Kosten & Samenvatting', 'Beste laden') and clean not in _CORE_COST_LOOKUP_WARNED:
+        if clean in ('Kosten & Samenvatting', 'Beste laden', 'Dagrapport') and clean not in _CORE_COST_LOOKUP_WARNED:
             _CORE_COST_LOOKUP_WARNED.add(clean)
             easee_logging.warning(
                 'domoticz_devices',
@@ -469,10 +469,10 @@ def update_core_text(plugin, label, value):
             )
         return
     nval = 0
-    if clean in ('Kosten & Samenvatting', 'Beste laden'):
+    if clean in ('Kosten & Samenvatting', 'Beste laden', 'Dagrapport'):
         nval = _toggle_core_cost_nvalue(plugin)
     domoticz_runtime.Devices[u].Update(nValue=nval, sValue=str(value)[:4000])
-    if clean in ('Kosten & Samenvatting', 'Beste laden'):
+    if clean in ('Kosten & Samenvatting', 'Beste laden', 'Dagrapport'):
         easee_logging.debug(
             'domoticz_devices',
             f'Kern-tegel bijgewerkt: {clean} (unit {u})',
@@ -612,6 +612,7 @@ def ensure_core_devices(plugin):
         core.extend([
             ('Kosten & Samenvatting', 'Text'),
             ('Beste laden', 'Text'),
+            ('Dagrapport', 'Text'),
         ])
     for label, typ in core:
         devid = CORE_DEVICE_IDS.get(label)

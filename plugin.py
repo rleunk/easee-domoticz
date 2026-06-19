@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.32" author="Richard Leunk" version="10.9.32"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.10.0" author="Richard Leunk" version="10.10.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.32</h2><br/>
-        <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
+        <h2>Easee Domoticz plugin v10.10.0</h2><br/>
+        <p>Stabiele Easee laadpaal integratie met compacte UI, Tibber kwartierprijzen, Dagrapport-tegel, laadhints en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
@@ -32,6 +32,7 @@
         <group label="Tibber (optioneel)">
             <param field="Mode7" label="Tibber Personal Access Token" width="360px" password="true" default=""/>
             <param field="Mode8" label="Tibber token ophalen" width="360px" default="https://developer.tibber.com/settings/access-token"/>
+            <param field="Extra" label="Beste laden venster (uren)" width="80px" default="3"/>
         </group>
     </params>
 </plugin>
@@ -328,9 +329,26 @@ class BasePlugin:
             kosten_samenvatting = f'{price_emoji} {currency}\nKosten: €{easee_helpers.euro_str(self, total_day_cost)} | Tarief: €{easee_helpers.euro_str(self, rate)}/kWh\nEnergy: €{easee_helpers.euro_str(self, total_day_energy)} | Belasting: €{easee_helpers.euro_str(self, total_day_tax)}'
             domoticz_devices.update_core_text(self, 'Kosten & Samenvatting', kosten_samenvatting)
 
-            domoticz_devices.update_core_text(self, 'Beste laden', tibber_pricing.cheapest_window_text(self, 3))
+            domoticz_devices.update_core_text(self, 'Beste laden', tibber_pricing.cheapest_window_text(self))
+
+            g = easee_state.global_day_state(self)
+            day_kwh = round(sum(v.get('day_kwh', 0.0) for v in self.latest_chargers.values()), 3)
+            charge_hours = easee_helpers.safe_float(self, g.get('charge_hours'), 0.0)
+            any_charging = any(v.get('power', 0) > 50 for v in self.latest_chargers.values())
+            easee_state.track_global_charge(self, 0, 0, any_charging)
+            charge_hours = easee_helpers.safe_float(self, g.get('charge_hours'), 0.0)
+            hours_txt = f'{int(charge_hours)}u {int((charge_hours % 1) * 60):02d}m' if charge_hours >= 1 else f'{int(charge_hours * 60)} min'
+            dagrapport = (
+                f'📅 Vandaag\n'
+                f'⚡ {day_kwh:.2f} kWh | €{easee_helpers.euro_str(self, total_day_cost)}\n'
+                f'⏱️ Laaduren: {hours_txt}\n'
+                f'💰 {tibber_pricing.dagrapport_cheapest_line(self)}'
+            )
+            domoticz_devices.update_core_text(self, 'Dagrapport', dagrapport)
+
+            tibber_stuurt = bool(not any_lb and any_charging)
             eq_part = f' | EQ: {eq_count}' if eq_count else ' | Geen EQ'
-            lb_part = ' | LB actief' if any_lb else ''
+            lb_part = ' | LB actief' if any_lb else (' | Tibber stuurt' if tibber_stuurt else '')
             status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part + ' | Tibber actief'
             if self.icons_upload_required:
                 status_msg = '⚠️ Upload Easee_icons_v2.zip (Instellingen) | ' + status_msg
