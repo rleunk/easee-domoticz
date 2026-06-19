@@ -6,6 +6,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.32] — 2026-06-19
+
+### Gewijzigd
+- **Optionele API 404/429 → DEBUG** — Geen actieve sessie (`/chargers/…/sessions/ongoing` HTTP 404) en charger rate limit (429 op optionele charger-endpoints, o.a. ongoing/config) worden niet meer als WARNING gelogd; plugin valt terug op state/observations. WARNING blijft voor onverwachte optionele fouten en kritieke endpoints (o.a. `/chargers/{id}/state`).
+
 ## [10.9.31] — 2026-06-19
 
 ### Gewijzigd

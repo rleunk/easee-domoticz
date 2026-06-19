@@ -87,8 +87,15 @@ def _is_priority_path(path):
     return '/equalizers/' in path and path.endswith('/state')
 
 
+def _is_charger_optional_path(path):
+    path = str(path or '')
+    if '/chargers/' not in path and '/sessions/' not in path:
+        return False
+    return not path.rstrip('/').endswith('/state')
+
+
 def _is_expected_optional_failure(path, status):
-    """HTTP 403/405 on optional probes that are often account-restricted — DEBUG only."""
+    """Expected optional probe failures — DEBUG only (plugin has fallbacks)."""
     if status is None:
         return False
     path = str(path or '')
@@ -96,6 +103,10 @@ def _is_expected_optional_failure(path, status):
         code = int(status)
     except (TypeError, ValueError):
         return False
+    if code == 404 and '/chargers/' in path and '/sessions/ongoing' in path:
+        return True
+    if code == 429 and _is_charger_optional_path(path):
+        return True
     if code == 403:
         if path == '/equalizers' or path.rstrip('/') == '/equalizers':
             return True
@@ -109,10 +120,10 @@ def _is_expected_optional_failure(path, status):
 
 
 def _log_optional_api_issue(path, status, message):
-    if status == 429 or not _is_expected_optional_failure(path, status):
-        easee_logging.warning('easee_api', message, 'api')
-    else:
+    if _is_expected_optional_failure(path, status):
         easee_logging.debug('easee_api', message, 'api')
+    else:
+        easee_logging.warning('easee_api', message, 'api')
 
 
 def _is_rate_limited_for_path(plugin, path):
@@ -181,11 +192,12 @@ def api_get(plugin, path, retry=True):
     if r.status_code == 429:
         retry_after = r.headers.get('Retry-After', 'onbekend')
         mark_rate_limited(plugin, retry_after)
-        easee_logging.warning(
-            'easee_api',
-            f'GET {path} rate limit (429, {_rate_limit_category(path)}), Retry-After={retry_after} — overslaan tot volgende poll',
-            'api',
+        msg = (
+            f'GET {path} rate limit (429, {_rate_limit_category(path)}), '
+            f'Retry-After={retry_after} — overslaan tot volgende poll'
         )
+        log_fn = easee_logging.debug if _is_expected_optional_failure(path, 429) else easee_logging.warning
+        log_fn('easee_api', msg, 'api')
         return None
     r.raise_for_status()
     return r.json() if r.text else None

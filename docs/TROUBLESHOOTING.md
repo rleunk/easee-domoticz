@@ -1,6 +1,6 @@
 # Troubleshooting Gids
 
-> **Huidige versie:** v10.9.31 (stable testing; functioneel v10.9.28) · Volledige installatie: [INSTALL.md](../INSTALL.md)
+> **Huidige versie:** v10.9.32 (stable testing; functioneel v10.9.28) · Volledige installatie: [INSTALL.md](../INSTALL.md)
 
 ## Veelvoorkomende Problemen
 
@@ -117,11 +117,11 @@ Sinds v10.9.17 blijft de laatste geldige waarde op de tegel staan bij een misluk
 
 Sinds v10.9.13 blokkeert 429 de hardware-thread niet meer. Sinds v10.9.17 blokkeert een charger-429 de Equalizer-poll niet meer.
 
-### Optionele API 403/405 (normaal — alleen Debug)
+### Optionele API 403/404/405/429 (normaal — alleen Debug)
 
-**Symptoom** (alleen bij **Debug logging**, Mode6 = *Debug*): regels als `GET /equalizers/…/state optioneel mislukt (HTTP 403)` of `GET /sites/…/circuits optioneel: HTTP 405`
+**Symptoom** (alleen bij **Debug logging**, Mode6 = *Debug*): regels als `GET /equalizers/…/state optioneel mislukt (HTTP 403)`, `GET /chargers/…/sessions/ongoing optioneel: HTTP 404`, of `GET /chargers/…/config optioneel: rate limit (429, charger)`
 
-**Oorzaak**: veel Easee-accounts hebben **geen API-toegang** tot bepaalde optionele endpoints. De plugin probeert ze voor extra fuse/LB-data; bij mislukking valt hij terug op observations en `siteStructure`.
+**Oorzaak**: veel Easee-accounts hebben **geen API-toegang** tot bepaalde optionele endpoints, of de plugin raakt een tijdelijke rate limit op optionele charger-calls. De plugin valt terug op observations, `siteStructure` en `/chargers/{id}/state`.
 
 | Endpoint | HTTP | Verwacht gedrag |
 |----------|------|-----------------|
@@ -130,8 +130,10 @@ Sinds v10.9.13 blokkeert 429 de hardware-thread niet meer. Sinds v10.9.17 blokke
 | `/equalizers/{id}/loadbalancing/…` | 403 | Idem |
 | `/equalizers` (lijst) | 403 | Discovery via `/accounts/products` |
 | `/sites/{id}/circuits` | 405 | Embedded circuits in site/state |
+| `/chargers/{id}/sessions/ongoing` | 404 | Geen actieve sessie; fallback op `/state` sessionEnergy |
+| `/chargers/{id}/config`, `/sessions/ongoing` | 429 | Rate limit; overslaan tot volgende poll; state blijft bron |
 
-**Oplossing**: geen actie nodig. Zet Debug uit (Mode6 = *Normal*) als je deze regels niet wilt zien. **HTTP 429** blijft WARNING — dat wijst op te veel polling.
+**Oplossing**: geen actie nodig. Zet Debug uit (Mode6 = *Normal*) als je deze regels niet wilt zien. **HTTP 429 op verplichte endpoints** (bijv. `/chargers/{id}/state`) blijft WARNING — verhoog dan het poll-interval.
 
 Zie ook [ROADMAP — Equalizer stap 2+](ROADMAP.md#equalizer--stap-1-afgerond-vs-stap-2-beperkt-door-account-api).
 
@@ -156,8 +158,8 @@ Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 | Niveau | Wanneer | Voorbeelden |
 |--------|---------|-------------|
 | INFO | Altijd (Mode6 = Normal) | Plugin gestart, Tibber actief/uit, `image_ids: 13/13`, state migratie |
-| DEBUG | Alleen Mode6 = *Debug* | `Poll voltooid`, kosten-tegel bijgewerkt, siteStructure, verwachte optionele API 403/405 |
-| WARNING | Altijd | Kosten-tegel niet gevonden, HTTP 429 (sessions/ongoing e.d.), iconen ontbreken |
+| DEBUG | Alleen Mode6 = *Debug* | `Poll voltooid`, kosten-tegel bijgewerkt, siteStructure, verwachte optionele API 403/404/405/429 |
+| WARNING | Altijd | Kosten-tegel niet gevonden, HTTP 429 op verplichte endpoints, iconen ontbreken |
 | ERROR | Altijd | Login mislukt, zip laden mislukt |
 
 Laat Debug op *Normal* staan tenzij je troubleshoott.
@@ -192,4 +194,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Configuratie**: [CONFIGURATION.md](CONFIGURATION.md)
 
-Bij een issue: pluginversie **v10.9.31**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
+Bij een issue: pluginversie **v10.9.32**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
