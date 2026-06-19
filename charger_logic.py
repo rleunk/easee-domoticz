@@ -361,6 +361,7 @@ def poll_charger(plugin, charger):
         'power': power_w,
         'kwh': total_kwh,
         'wh': day_wh,
+        'day_wh': day_wh,
         'day_kwh': day_kwh,
         'day_cost': easee_helpers.safe_float(plugin, st.get('day_cost_total', 0.0), 0.0),
         'day_energy_cost': easee_helpers.safe_float(plugin, st.get('day_cost_energy', 0.0), 0.0),
