@@ -157,6 +157,10 @@ Bij **2 laadpalen + 1 Equalizer + Tibber** hoort de plugin **exact 15 tegels** a
 
 **Geen Tibber?** Dan ontbreken tegels 5, 6 en de Kosten-tegels per laadpaal (minder dan 15).
 
+### Tibber slim laden / Grid Rewards
+
+**Niet via plugin.** Tibber API levert alleen energieprijzen (voor kosten-tegels). Tibber *slim laden*, *Grid Rewards* en vergelijkbare grid-programma's zijn alleen in de Tibber-app — geen publieke API. De plugin plant hier geen tegels of automatisering; gesloten tenzij Tibber API dit opent. Zie [ROADMAP.md](ROADMAP.md).
+
 **Geen Equalizer?** Dan ontbreken tegels 7 en 8.
 
 **Legacy-tegels die er níet horen:** *Import*, *Spanning*, *Terug & netto*, *Netto*, *Teruglevering*, losse *Load balancing* (EQ). Die komen uit v10.8.0 of v10.9.0 — verwijder ze handmatig in Domoticz als ze nog bestaan.

@@ -87,6 +87,34 @@ def _is_priority_path(path):
     return '/equalizers/' in path and path.endswith('/state')
 
 
+def _is_expected_optional_failure(path, status):
+    """HTTP 403/405 on optional probes that are often account-restricted — DEBUG only."""
+    if status is None:
+        return False
+    path = str(path or '')
+    try:
+        code = int(status)
+    except (TypeError, ValueError):
+        return False
+    if code == 403:
+        if path == '/equalizers' or path.rstrip('/') == '/equalizers':
+            return True
+        if path.startswith('/equalizers/'):
+            return True
+        if '/cloud-loadbalancing/' in path or 'loadbalancing' in path:
+            return True
+    if code == 405 and '/sites/' in path and '/circuits' in path:
+        return True
+    return False
+
+
+def _log_optional_api_issue(path, status, message):
+    if status == 429 or not _is_expected_optional_failure(path, status):
+        easee_logging.warning('easee_api', message, 'api')
+    else:
+        easee_logging.debug('easee_api', message, 'api')
+
+
 def _is_rate_limited_for_path(plugin, path):
     if _is_priority_path(path):
         return False
@@ -177,28 +205,20 @@ def api_get_optional(plugin, path, skip_if_rate_limited=True):
         status = getattr(plugin, '_last_http_status', None)
         if data is None:
             if status == 429:
-                easee_logging.warning(
-                    'easee_api',
+                _log_optional_api_issue(
+                    path,
+                    status,
                     f'GET {path} optioneel: rate limit (429, {_rate_limit_category(path)}) — geen data',
-                    'api',
                 )
             elif status:
-                easee_logging.warning(
-                    'easee_api',
-                    f'GET {path} optioneel: HTTP {status} — geen data',
-                    'api',
-                )
+                _log_optional_api_issue(path, status, f'GET {path} optioneel: HTTP {status} — geen data')
             else:
-                easee_logging.warning(
-                    'easee_api',
-                    f'GET {path} optioneel: geen response',
-                    'api',
-                )
+                easee_logging.warning('easee_api', f'GET {path} optioneel: geen response', 'api')
         return data
     except Exception as e:
         status = getattr(plugin, '_last_http_status', None)
         if status:
-            easee_logging.warning('easee_api', f'GET {path} optioneel mislukt (HTTP {status}): {e}', 'api')
+            _log_optional_api_issue(path, status, f'GET {path} optioneel mislukt (HTTP {status}): {e}')
         else:
             easee_logging.warning('easee_api', f'GET {path} optioneel mislukt: {e}', 'api')
         return None

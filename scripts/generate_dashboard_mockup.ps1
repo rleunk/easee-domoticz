@@ -20,25 +20,25 @@ $PluginKey = 'EaseeCloudAutoDiscoveryV1000'
 # Domoticz light-dashboard palette (matches real tile close-up)
 $PageBg = [Drawing.Color]::FromArgb(255, 224, 224, 224)       # #E0E0E0
 $TileWhite = [Drawing.Color]::FromArgb(255, 255, 255, 255)
-$TileBorder = [Drawing.Color]::FromArgb(255, 196, 196, 196)
-$TileShadow = [Drawing.Color]::FromArgb(36, 0, 0, 0)
-$HeaderBlue = [Drawing.Color]::FromArgb(255, 217, 232, 245)   # #D9E8F5
-$HeaderBorder = [Drawing.Color]::FromArgb(255, 180, 180, 180)
-$HeaderText = [Drawing.Color]::FromArgb(255, 51, 51, 51)
-$BodyTextColor = [Drawing.Color]::FromArgb(255, 51, 51, 51)
-$BodyTextMuted = [Drawing.Color]::FromArgb(255, 115, 115, 115)
+$TileBorder = [Drawing.Color]::FromArgb(255, 204, 204, 204)
+$TileShadow = [Drawing.Color]::FromArgb(28, 0, 0, 0)
+$HeaderBlue = [Drawing.Color]::FromArgb(255, 201, 221, 240)   # #C9DDF0 — lichtblauw header
+$HeaderBorder = [Drawing.Color]::FromArgb(255, 176, 190, 205)
+$HeaderText = [Drawing.Color]::FromArgb(255, 33, 33, 33)
+$BodyTextColor = [Drawing.Color]::FromArgb(255, 33, 33, 33)
+$BodyTextMuted = [Drawing.Color]::FromArgb(255, 119, 119, 119)
 $ButtonBlue = [Drawing.Color]::FromArgb(255, 51, 122, 183)    # #337AB7
+$ButtonBorder = [Drawing.Color]::FromArgb(255, 46, 109, 164)
 $ButtonText = [Drawing.Color]::FromArgb(255, 255, 255, 255)
 $StarYellow = [Drawing.Color]::FromArgb(255, 255, 193, 7)
 $StarOutline = [Drawing.Color]::FromArgb(255, 200, 150, 0)
 $StarGrey = [Drawing.Color]::FromArgb(255, 189, 189, 189)
 $StarGreyOutline = [Drawing.Color]::FromArgb(255, 150, 150, 150)
-$FooterBg = [Drawing.Color]::FromArgb(255, 248, 248, 248)
 
-# Tile section heights (real Domoticz proportions at this scale)
-$HeaderH = 26
-$BodyH = 82
-$FooterH = 30
+# Tile section heights — Domoticz default tile proportions at ~264px width
+$HeaderH = 28
+$BodyH = 90
+$FooterH = 32
 $TileIconDisplayPx = 48
 
 Write-Host 'Refreshing icon zips via generate_photo_icon_variants.ps1 ...'
@@ -132,10 +132,14 @@ function Draw-DomoticzFooterButton(
     [string]$Label
 ) {
     $brush = New-Object System.Drawing.SolidBrush $ButtonBlue
-    Draw-RoundedRect $G $brush $X $Y $W $H 3.0
+    Draw-RoundedRect $G $brush $X $Y $W $H 2.5
     $brush.Dispose()
 
-    $font = New-Object System.Drawing.Font ('Segoe UI', 7.5, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
+    $borderPen = New-Object System.Drawing.Pen $ButtonBorder, 0.75
+    Draw-RoundedRectBorder $G $borderPen $X $Y $W $H 2.5
+    $borderPen.Dispose()
+
+    $font = New-Object System.Drawing.Font ('Segoe UI', 7.25, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
     $textBrush = New-Object System.Drawing.SolidBrush $ButtonText
     $sf = New-Object System.Drawing.StringFormat
     $sf.Alignment = [Drawing.StringAlignment]::Center
@@ -162,8 +166,8 @@ function Draw-DomoticzTile(
     $headerH = $HeaderH
     $footerH = $FooterH
     $bodyH = $BodyH
-    $radius = 4.0
-    $shadowOff = 2
+    $radius = 3.0
+    $shadowOff = 1
 
     # Drop shadow
     $shadowBrush = New-Object System.Drawing.SolidBrush $TileShadow
@@ -193,11 +197,11 @@ function Draw-DomoticzTile(
     $G.DrawLine($headerBorderPen, $X, $Y + $headerH - 1, $X + $W, $Y + $headerH - 1)
     $headerBorderPen.Dispose()
 
-    $headerFont = New-Object System.Drawing.Font ('Segoe UI', 8.0, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
-    $headerValueFont = New-Object System.Drawing.Font ('Segoe UI', 8.0, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
+    $headerFont = New-Object System.Drawing.Font ('Segoe UI', 8.25, [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Point)
+    $headerValueFont = New-Object System.Drawing.Font ('Segoe UI', 8.25, [Drawing.FontStyle]::Bold, [Drawing.GraphicsUnit]::Point)
     $headerTextBrush = New-Object System.Drawing.SolidBrush $HeaderText
-    $pad = 7
-    $headerTextY = [single]($Y + 5)
+    $pad = 8
+    $headerTextY = [single]($Y + 6)
 
     if ($HeaderValue) {
         $valueRect = New-Object System.Drawing.RectangleF ([single]($X + $pad)), $headerTextY, ([single]($W - 2 * $pad)), ([single]16)
@@ -224,15 +228,15 @@ function Draw-DomoticzTile(
     $G.FillRectangle($bodyBrush, $X, $bodyY, $W, $bodyH)
     $bodyBrush.Dispose()
 
-    $iconSize = [math]::Min($IconDisplayPx, [int]($bodyH - 6))
-    $iconX = $X + 6
+    $iconSize = [math]::Min($IconDisplayPx, [int]($bodyH - 10))
+    $iconX = $X + 7
     $iconY = $bodyY + [int](($bodyH - $iconSize) / 2)
     $G.DrawImage($Icon, $iconX, $iconY, $iconSize, $iconSize)
 
-    $textX = $iconX + $iconSize + 5
-    $textW = $W - ($textX - $X) - 5
-    $lineY = [single]($bodyY + 5)
-    $lineH = 15.5
+    $textX = $iconX + $iconSize + 6
+    $textW = $W - ($textX - $X) - 6
+    $lineY = [single]($bodyY + 6)
+    $lineH = 14.5
     $statusLines = @($StatusLine -split "`n" | Where-Object { $_ -ne '' })
     if ($statusLines.Count -eq 0) { $statusLines = @('') }
 
@@ -262,9 +266,9 @@ function Draw-DomoticzTile(
     $boldFont.Dispose(); $italicFont.Dispose(); $plainFont.Dispose()
     $textBrush.Dispose(); $mutedBrush.Dispose(); $textSf.Dispose()
 
-    # Footer
+    # Footer (wit, ster links-onder, knoppen rechts)
     $footerY = $bodyY + $bodyH
-    $footerBgBrush = New-Object System.Drawing.SolidBrush $FooterBg
+    $footerBgBrush = New-Object System.Drawing.SolidBrush $TileWhite
     $G.FillRectangle($footerBgBrush, $X, $footerY, $W, $footerH)
     $footerBgBrush.Dispose()
 
@@ -272,14 +276,14 @@ function Draw-DomoticzTile(
     $G.DrawLine($footerBorderPen, $X, $footerY, $X + $W, $footerY)
     $footerBorderPen.Dispose()
 
-    $btnGap = 4
-    $btnPad = 6
-    $starSpace = 22
+    $btnGap = 5
+    $btnPadRight = 7
+    $starSpace = 24
     $btnCount = $FooterButtons.Count
-    $availW = $W - $btnPad - $starSpace - $btnPad
+    $availW = $W - $starSpace - $btnPadRight - $btnPadRight
     $btnW = [single](($availW - ($btnCount - 1) * $btnGap) / $btnCount)
-    $btnH = [single]($footerH - 10)
-    $btnStartX = [single]($X + $starSpace)
+    $btnH = [single]($footerH - 11)
+    $btnStartX = [single]($X + $W - $btnPadRight - $btnCount * $btnW - ($btnCount - 1) * $btnGap)
     for ($bi = 0; $bi -lt $btnCount; $bi++) {
         $bx = $btnStartX + $bi * ($btnW + $btnGap)
         $by = [single]($footerY + 5)
@@ -289,19 +293,19 @@ function Draw-DomoticzTile(
     if ($ShowStar) {
         $starFill = if ($StarFavorite) { $StarYellow } else { $StarGrey }
         $starOutline = if ($StarFavorite) { $StarOutline } else { $StarGreyOutline }
-        Draw-Star $G ([single]($X + 11)) ([single]($footerY + $footerH - 9)) 5.5 $starFill $starOutline
+        Draw-Star $G ([single]($X + 12)) ([single]($footerY + $footerH - 10)) 6.0 $starFill $starOutline
     }
 
     $G.ResetClip()
 }
 
 function New-DashboardMockup {
-    $tileW = 258
+    $tileW = 264
     $tileH = $HeaderH + $BodyH + $FooterH
     $cols = 3
     $rows = 4
-    $gap = 8
-    $pad = 12
+    $gap = 10
+    $pad = 14
     $canvasW = $pad * 2 + $cols * $tileW + ($cols - 1) * $gap
     $canvasH = $pad * 2 + $rows * $tileH + ($rows - 1) * $gap
 
@@ -475,5 +479,5 @@ $equalizer.Dispose()
 
 foreach ($cached in $script:EaseeIconCache.Values) { $cached.Dispose() }
 
-Write-Output "Created $DashboardPath (12 tiles, grid 3x4)"
+Write-Output "Created $DashboardPath (11 tiles, grid 3x4)"
 Write-Output "Created $EqualizerPath"

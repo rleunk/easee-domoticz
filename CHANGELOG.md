@@ -6,6 +6,12 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.31] — 2026-06-19
+
+### Gewijzigd
+- **Optionele API 403/405 → DEBUG** — Verwachte mislukkingen op equalizer state, cloud-loadbalancing, `/equalizers` en site circuits worden niet meer als WARNING gelogd; HTTP 429 blijft WARNING.
+- **Documentatie** — ROADMAP (Equalizer stap 1 vs 2+, Tibber slim laden gesloten), TROUBLESHOOTING (normale 403/405), README-mockups verfijnd.
+
 ## [10.9.30] — 2026-06-19
 
 ### Bugfix

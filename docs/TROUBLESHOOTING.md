@@ -1,6 +1,6 @@
 # Troubleshooting Gids
 
-> **Huidige versie:** v10.9.30 (stable testing; functioneel v10.9.28) · Volledige installatie: [INSTALL.md](../INSTALL.md)
+> **Huidige versie:** v10.9.31 (stable testing; functioneel v10.9.28) · Volledige installatie: [INSTALL.md](../INSTALL.md)
 
 ## Veelvoorkomende Problemen
 
@@ -117,6 +117,24 @@ Sinds v10.9.17 blijft de laatste geldige waarde op de tegel staan bij een misluk
 
 Sinds v10.9.13 blokkeert 429 de hardware-thread niet meer. Sinds v10.9.17 blokkeert een charger-429 de Equalizer-poll niet meer.
 
+### Optionele API 403/405 (normaal — alleen Debug)
+
+**Symptoom** (alleen bij **Debug logging**, Mode6 = *Debug*): regels als `GET /equalizers/…/state optioneel mislukt (HTTP 403)` of `GET /sites/…/circuits optioneel: HTTP 405`
+
+**Oorzaak**: veel Easee-accounts hebben **geen API-toegang** tot bepaalde optionele endpoints. De plugin probeert ze voor extra fuse/LB-data; bij mislukking valt hij terug op observations en `siteStructure`.
+
+| Endpoint | HTTP | Verwacht gedrag |
+|----------|------|-----------------|
+| `/equalizers/{id}/state` | 403 | Observations + sticky power; 403-cache 5 min |
+| `/cloud-loadbalancing/…` | 403 | Limiet uit siteStructure/site.state |
+| `/equalizers/{id}/loadbalancing/…` | 403 | Idem |
+| `/equalizers` (lijst) | 403 | Discovery via `/accounts/products` |
+| `/sites/{id}/circuits` | 405 | Embedded circuits in site/state |
+
+**Oplossing**: geen actie nodig. Zet Debug uit (Mode6 = *Normal*) als je deze regels niet wilt zien. **HTTP 429** blijft WARNING — dat wijst op te veel polling.
+
+Zie ook [ROADMAP — Equalizer stap 2+](ROADMAP.md#equalizer--stap-1-afgerond-vs-stap-2-beperkt-door-account-api).
+
 ### Geen Equalizer gevonden
 
 1. Debug logging aan (Mode6)
@@ -138,8 +156,8 @@ Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 | Niveau | Wanneer | Voorbeelden |
 |--------|---------|-------------|
 | INFO | Altijd (Mode6 = Normal) | Plugin gestart, Tibber actief/uit, `image_ids: 13/13`, state migratie |
-| DEBUG | Alleen Mode6 = *Debug* | `Poll voltooid`, kosten-tegel bijgewerkt, siteStructure, per-tegel iconen |
-| WARNING | Altijd | Kosten-tegel niet gevonden, HTTP 429, iconen ontbreken |
+| DEBUG | Alleen Mode6 = *Debug* | `Poll voltooid`, kosten-tegel bijgewerkt, siteStructure, verwachte optionele API 403/405 |
+| WARNING | Altijd | Kosten-tegel niet gevonden, HTTP 429 (sessions/ongoing e.d.), iconen ontbreken |
 | ERROR | Altijd | Login mislukt, zip laden mislukt |
 
 Laat Debug op *Normal* staan tenzij je troubleshoott.
@@ -174,4 +192,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Configuratie**: [CONFIGURATION.md](CONFIGURATION.md)
 
-Bij een issue: pluginversie **v10.9.30**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
+Bij een issue: pluginversie **v10.9.31**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
