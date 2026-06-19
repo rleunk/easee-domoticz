@@ -558,22 +558,22 @@ def log_site_structure_once(plugin, site_id, raw, candidates):
     cand_parts = [f'{src}={int(round(v))}A' for src, v in sorted(candidates.items(), key=lambda x: x[1], reverse=True)[:16]]
     cand_text = ', '.join(cand_parts) if cand_parts else 'geen'
     key_text = ', '.join(keys[:14]) if keys else 'leeg'
-    easee_logging.info('equalizer_logic', f'Equalizer siteStructure (site {key}): keys={key_text} | fuse kandidaten: {cand_text}')
+    easee_logging.debug('equalizer_logic', f'Equalizer siteStructure (site {key}): keys={key_text} | fuse kandidaten: {cand_text}')
     data = parse_site_structure_json(plugin, raw)
     if data:
         mcc = amp_value(plugin, data.get(ak.SITE_STRUCTURE_KEYS['max_continuous_current']))
         rated = amp_value(plugin, data.get(ak.SITE_STRUCTURE_KEYS['rated_current']))
         if mcc > 0:
             if rated > 0 and mcc < rated - 0.4:
-                easee_logging.info('equalizer_logic', f'siteStructure maxContinuousCurrent (site {key}): {int(round(mcc))}A (hoofdzekering limiet kandidaat)')
+                easee_logging.debug('equalizer_logic', f'siteStructure maxContinuousCurrent (site {key}): {int(round(mcc))}A (hoofdzekering limiet kandidaat)')
             else:
-                easee_logging.info('equalizer_logic', f'siteStructure maxContinuousCurrent (site {key}): {int(round(mcc))}A')
+                easee_logging.debug('equalizer_logic', f'siteStructure maxContinuousCurrent (site {key}): {int(round(mcc))}A')
         tree = collect_json_key_tree(plugin, data, ak.SITE_STRUCTURE_KEYS['root'])
         if tree:
             tree_text = ' | '.join(tree[:12])
             if len(tree_text) > 900:
                 tree_text = tree_text[:900] + '...'
-            easee_logging.info('equalizer_logic', f'siteStructure structuur (site {key}): {tree_text}')
+            easee_logging.debug('equalizer_logic', f'siteStructure structuur (site {key}): {tree_text}')
     log_site_structure_numerics_once(plugin, site_id, raw)
 
 def collect_numeric_values(plugin, obj, path='', depth=0, max_depth=12):
@@ -612,7 +612,7 @@ def log_site_structure_numerics_once(plugin, site_id, raw):
         chunk_size = 20
         for i in range(0, len(amp_range), chunk_size):
             chunk = amp_range[i:i + chunk_size]
-            easee_logging.info('equalizer_logic', f'siteStructure amp-range 15-30 (site {key}): ' + '; '.join(chunk))
+            easee_logging.debug('equalizer_logic', f'siteStructure amp-range 15-30 (site {key}): ' + '; '.join(chunk))
     if domoticz_runtime.Parameters.get('Mode6') == 'Debug':
         numerics = collect_numeric_values(plugin, data, ak.SITE_STRUCTURE_KEYS['root'])
         if numerics:

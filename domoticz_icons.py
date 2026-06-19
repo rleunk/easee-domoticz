@@ -162,26 +162,26 @@ def _log_icon_startup_diagnostic(plugin, plugin_globals=None, zip_path=None, zip
     images = _images_dict(plugin_globals)
     total_keys = len(images)
     easee_keys = _easee_image_keys(images)
-    easee_logging.info(
+    easee_logging.debug(
         'domoticz_icons',
         f'Images dict: {total_keys} keys totaal, {len(easee_keys)} met "Easee"',
     )
     if easee_keys:
-        easee_logging.info(
+        easee_logging.debug(
             'domoticz_icons',
             f'Easee Images-keys ({len(easee_keys)}): {", ".join(easee_keys)}',
         )
     elif total_keys:
-        easee_logging.info('domoticz_icons', 'Geen Images-keys met "Easee" — handmatige upload waarschijnlijk nodig')
+        easee_logging.debug('domoticz_icons', 'Geen Images-keys met "Easee" — handmatige upload waarschijnlijk nodig')
 
     if zip_path is not None:
-        easee_logging.info(
+        easee_logging.debug(
             'domoticz_icons',
             f'Zip: {zip_path} | bestaat: {zip_exists} | grootte: {zip_size} bytes',
         )
     if create_ok is not None:
         if create_ok:
-            easee_logging.info('domoticz_icons', f'Zip Create(): succes ({create_method or "onbekend"})')
+            easee_logging.debug('domoticz_icons', f'Zip Create(): succes ({create_method or "onbekend"})')
         else:
             easee_logging.error(
                 'domoticz_icons',
@@ -191,7 +191,7 @@ def _log_icon_startup_diagnostic(plugin, plugin_globals=None, zip_path=None, zip
     mappings = _collect_image_ids(plugin, plugin_globals)
     easee_logging.info('domoticz_icons', f'image_ids: {len(mappings)}/{len(_ICON_ROOTS)} sets')
     if mappings:
-        easee_logging.info(
+        easee_logging.debug(
             'domoticz_icons',
             f'image_ids mappings: {", ".join(f"{k}={v}" for k, v in mappings.items())}',
         )
@@ -201,6 +201,14 @@ def _log_icon_startup_diagnostic(plugin, plugin_globals=None, zip_path=None, zip
             'image_ids leeg — upload Easee_icons_v2.zip via Instellingen → Meer opties → Aangepaste pictogrammen, herstart hardware-item',
         )
     return mappings
+
+
+def _maybe_log_icon_startup_diagnostic(plugin, plugin_globals=None, **kwargs):
+    if getattr(plugin, '_icon_diagnostic_done', False):
+        return _collect_image_ids(plugin, plugin_globals)
+    _log_icon_startup_diagnostic(plugin, plugin_globals, **kwargs)
+    plugin._icon_diagnostic_done = True
+    return plugin.image_ids or _collect_image_ids(plugin, plugin_globals)
 
 def _domoticz_image_create_path(plugin, path, fn):
     """Pad voor Image().Create(): relatief t.o.v. plugin_dir (Domoticz voegt plugin_dir toe)."""
@@ -221,7 +229,7 @@ def _domoticz_image_create_path(plugin, path, fn):
 def _try_create_icon_zip(plugin, path, fn):
     errors = []
     create_path = _domoticz_image_create_path(plugin, path, fn)
-    easee_logging.info('domoticz_icons', f'Image().Create() aanroep met: "{create_path}"')
+    easee_logging.debug('domoticz_icons', f'Image().Create() aanroep met: "{create_path}"')
     attempts = (
         ('Image(fn).Create()', lambda p=create_path: Domoticz.Image(p).Create()),
         ('Image(Filename=fn).Create()', lambda p=create_path: Domoticz.Image(Filename=p).Create()),
@@ -244,14 +252,14 @@ def _try_load_per_set_zips(plugin, plugin_globals, missing_roots, load_errors):
         if not os.path.isfile(path):
             load_errors.append(f'{fn}: niet gevonden in {sets_dir}')
             continue
-        easee_logging.info('domoticz_icons', f'Per-set icon zip laden: {fn}')
+        easee_logging.debug('domoticz_icons', f'Per-set icon zip laden: {fn}')
         rel_path = os.path.join(_ICON_SETS_DIR, fn).replace('\\', '/')
         create_ok, create_errors, create_method = _try_create_icon_zip(plugin, path, rel_path)
         if create_ok:
             refresh_images_dict(plugin_globals)
             loaded += 1
             if _icon_images_key(plugin, root, plugin_globals):
-                easee_logging.info('domoticz_icons', f'Per-set zip OK: {root}')
+                easee_logging.debug('domoticz_icons', f'Per-set zip OK: {root}')
             else:
                 load_errors.append(f'{fn}: Create() OK maar {root} niet in Images')
         elif create_errors:
@@ -259,7 +267,7 @@ def _try_load_per_set_zips(plugin, plugin_globals, missing_roots, load_errors):
             load_errors.append(msg)
             easee_logging.error('domoticz_icons', msg)
     if loaded:
-        easee_logging.info('domoticz_icons', f'Per-set zips geladen: {loaded}/{len(missing_roots)}')
+        easee_logging.debug('domoticz_icons', f'Per-set zips geladen: {loaded}/{len(missing_roots)}')
     return loaded
 
 def load_custom_images(plugin, plugin_globals=None):
@@ -281,7 +289,7 @@ def load_custom_images(plugin, plugin_globals=None):
         plugin.image_ids = preloaded
         plugin.icons_upload_required = False
         easee_logging.info('domoticz_icons', f'Custom icons uit Domoticz (handmatig geüpload): {len(plugin.image_ids)} sets')
-        _log_icon_startup_diagnostic(plugin, plugin_globals)
+        _maybe_log_icon_startup_diagnostic(plugin, plugin_globals)
         return
 
     for fn in candidates:
@@ -294,7 +302,7 @@ def load_custom_images(plugin, plugin_globals=None):
         diagnostic_zip_size = os.path.getsize(path)
         try:
             if _missing_icon_roots(plugin, plugin_globals):
-                easee_logging.info('domoticz_icons', f'Custom icons laden uit {fn} (map: {plugin.plugin_dir})')
+                easee_logging.debug('domoticz_icons', f'Custom icons laden uit {fn} (map: {plugin.plugin_dir})')
                 create_ok, create_errors, create_method = _try_create_icon_zip(plugin, path, fn)
                 if create_ok:
                     zip_loaded = True
@@ -362,7 +370,7 @@ def load_custom_images(plugin, plugin_globals=None):
             'Geen custom icon sets geladen (image_ids leeg) — tegels krijgen standaard Text-iconen tot zip handmatig is geüpload',
         )
 
-    _log_icon_startup_diagnostic(
+    _maybe_log_icon_startup_diagnostic(
         plugin,
         plugin_globals=plugin_globals,
         zip_path=diagnostic_zip_path,
@@ -439,7 +447,7 @@ def apply_icon_to_unit(plugin, unit, force=False):
         return False
     ok, _method = _apply_image_to_unit(unit, dev, img_id)
     if ok:
-        easee_logging.info('domoticz_icons', f'Icoon gezet {name} -> {root} (Image={img_id})')
+        easee_logging.debug('domoticz_icons', f'Icoon gezet {name} -> {root} (Image={img_id})')
     return ok
 
 def apply_images_to_devices(plugin, force=False):
@@ -462,7 +470,7 @@ def apply_images_to_devices(plugin, force=False):
             root = image_root(plugin, name, getattr(dev, 'DeviceID', ''))
             img_id = plugin.image_ids.get(root)
             if not img_id:
-                easee_logging.info('domoticz_icons', f'Icoon overgeslagen {name}: geen mapping (root={root})')
+                easee_logging.debug('domoticz_icons', f'Icoon overgeslagen {name}: geen mapping (root={root})')
                 continue
             cur = _current_image_id(dev)
             if not force and cur == int(img_id):
@@ -472,7 +480,7 @@ def apply_images_to_devices(plugin, force=False):
             new_cur = _current_image_id(dev)
             if ok:
                 updated += 1
-                easee_logging.info('domoticz_icons', f'Icoon gezet {name}: {cur} -> {new_cur} ({root}, {method})')
+                easee_logging.debug('domoticz_icons', f'Icoon gezet {name}: {cur} -> {new_cur} ({root}, {method})')
             else:
                 easee_logging.warning(
                     'domoticz_icons',
@@ -483,5 +491,5 @@ def apply_images_to_devices(plugin, force=False):
     if updated:
         easee_logging.info('domoticz_icons', f'Custom icons toegepast op {updated} Easee-device(s)')
     elif force:
-        easee_logging.info('domoticz_icons', 'Geen icon-updates nodig of alle updates mislukt — zie regels hierboven')
+        easee_logging.debug('domoticz_icons', 'Geen icon-updates nodig of alle updates mislukt — zie regels hierboven')
     return updated

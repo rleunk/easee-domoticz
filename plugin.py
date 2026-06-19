@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.28" author="Richard Leunk" version="10.9.28"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.9.29" author="Richard Leunk" version="10.9.29"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.9.28</h2><br/>
+        <h2>Easee Domoticz plugin v10.9.29</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, emoji indicators, Tibber stroomtarief integratie en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -298,7 +298,7 @@ class BasePlugin:
             charger_logic.poll_charger(self, c)
         total_power = sum(v.get('power', 0) for v in self.latest_chargers.values())
         online = sum(1 for v in self.latest_chargers.values() if v.get('online'))
-        easee_logging.info(
+        easee_logging.debug(
             'plugin',
             f'Poll voltooid: {len(self.chargers)} lader(s), {len(self.equalizers)} EQ, '
             f'{online}/{len(self.chargers)} online, totaal {total_power} W',
@@ -357,6 +357,7 @@ class BasePlugin:
                 pass
         self.session = requests.Session()
         self.session.headers.update({'accept': 'application/json'})
+        self._icon_diagnostic_done = False
         domoticz_icons.load_custom_images(self, plugin_globals=globals())
         domoticz_devices.rebuild_index(self)
         domoticz_devices.reset_cost_diagnostics(self)
@@ -371,6 +372,7 @@ class BasePlugin:
         self.sync_done = False
         self.initial_sync_done = False
         self.icon_reapply_remaining = 0
+        self._icon_diagnostic_done = False
         self.startup_at = time.time()
         self.startup_min_delay = 3
         self.startup_force_after = 60

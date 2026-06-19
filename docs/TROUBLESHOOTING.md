@@ -1,6 +1,6 @@
 # Troubleshooting Gids
 
-> **Huidige versie:** v10.9.17 · Volledige installatie: [INSTALL.md](../INSTALL.md)
+> **Huidige versie:** v10.9.29 (stable testing; functioneel v10.9.28) · Volledige installatie: [INSTALL.md](../INSTALL.md)
 
 ## Veelvoorkomende Problemen
 
@@ -56,10 +56,10 @@ sudo journalctl -u domoticz -f | grep Easee
 - v10.9.6: `Device.Update(Image=…)` zonder `nValue`/`sValue`
 - v10.9.4: zip-pad verdubbeling; v10.9.5: plugin-key-prefix ontbrak (1/12 sets)
 
-**Oplossing** (v10.9.17):
+**Oplossing** (v10.9.28+):
 1. **Verwijder oude Easee custom icons** via **Instellingen → Aangepaste pictogrammen**
 2. Controleer `Easee_icons_v2.zip` en map `icons/` (13 mini-zips) in pluginmap
-3. `git pull` naar v10.9.17 en herstart hardware-item
+3. `git pull` naar v10.9.29 en herstart hardware-item
 4. Log controleren:
    - `Custom icons geladen: 13 sets`
    - `image_ids: 13/13 sets`
@@ -74,7 +74,7 @@ Zie [INSTALL.md — Custom iconen](../INSTALL.md#custom-iconen-handmatig-uploade
 **Symptoom**: Laadpaal Status toont Equalizer-puck, of globale Status mist combo-icoon
 
 **Oplossing** (v10.9.10+):
-- Upgrade naar **v10.9.17**
+- Upgrade naar **v10.9.28+**
 - Upload **`Easee_icons_v2.zip` opnieuw** (bevat `EaseeStatusGlobal`)
 - Verwacht mapping:
   - *Easee - Status* → combo (`EaseeStatusGlobal`)
@@ -91,13 +91,13 @@ Zie [INSTALL.md — Custom iconen](../INSTALL.md#custom-iconen-handmatig-uploade
 
 **Symptoom**: Vermogen-tegel toont 0 na Domoticz-herstart of na enkele polls
 
-**Oplossing** (v10.9.11–v10.9.17):
-1. Upgrade naar **v10.9.17** (`git pull`, herstart hardware-item)
+**Oplossing** (v10.9.11–v10.9.28):
+1. Upgrade naar **v10.9.28+** (`git pull`, herstart hardware-item)
 2. Controleer log op `HTTP 429` — zie [HTTP 429 rate limit](#http-429-rate-limit-easee-api) hieronder
 3. Zet **Debug logging** (Mode6) aan; zoek naar `power via equalizer.state` of `obs 40/41`
 4. Handmatig **Equalizer ID** in IP-veld als auto-discovery faalt
 
-Sinds v10.9.17 blijft de laatste geldige waarde op de tegel staan bij een mislukte poll (sticky power).
+Sinds v10.9.17 blijft de laatste geldige waarde op de tegel staan bij een mislukte poll (sticky power). Sinds v10.9.28 is Vandaag kWh op de Laden-tegel betrouwbaar na middernacht-upgrade.
 
 ### HTTP 429 rate limit (Easee API)
 
@@ -128,9 +128,20 @@ Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 
 ### Tibber / kosten-tegels
 
-- Zonder Tibber-token: geen kosten-tegels (verwacht)
-- Met Tibber: token op [developer.tibber.com](https://developer.tibber.com/settings/access-token)
-- Kosten *0 €*: verwijder **Kosten (Sessie/Dag)**-tile en herstart hardware-item
+- **Tibber-token (Mode7) is verplicht** voor kosten-tegels — zonder token worden per-lader kosten en kern-tegels *Kosten & Samenvatting* / *Beste laden* niet bijgewerkt. Bij start zie je `Tibber uit (Mode7 leeg)`.
+- Met Tibber: token op [developer.tibber.com](https://developer.tibber.com/settings/access-token). Bij start: `Tibber actief — kosten-tegels worden bijgewerkt na eerste poll`.
+- Kosten *0 €* terwijl Tibber actief is: verwijder **Kosten (Sessie/Dag)**-tile en herstart hardware-item; controleer of `Kosten-tegel niet gevonden` in log staat (WARNING).
+
+### Logniveaus
+
+| Niveau | Wanneer | Voorbeelden |
+|--------|---------|-------------|
+| INFO | Altijd (Mode6 = Normal) | Plugin gestart, Tibber actief/uit, `image_ids: 13/13`, state migratie |
+| DEBUG | Alleen Mode6 = *Debug* | `Poll voltooid`, kosten-tegel bijgewerkt, siteStructure, per-tegel iconen |
+| WARNING | Altijd | Kosten-tegel niet gevonden, HTTP 429, iconen ontbreken |
+| ERROR | Altijd | Login mislukt, zip laden mislukt |
+
+Laat Debug op *Normal* staan tenzij je troubleshoott.
 
 ### Devices dubbel na herstart
 
@@ -162,4 +173,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Configuratie**: [CONFIGURATION.md](CONFIGURATION.md)
 
-Bij een issue: pluginversie **v10.9.17**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
+Bij een issue: pluginversie **v10.9.29**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).

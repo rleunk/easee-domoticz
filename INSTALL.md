@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee Domoticz plugin v10.9.18
+# Installatiehandleiding — Easee Domoticz plugin v10.9.29
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,7 +8,7 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee Domoticz plugin v10.9.18 |
+| Plugin | Easee Domoticz plugin v10.9.29 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` (+ 12 Python-modules = 13 `.py`-bestanden sinds v10.6.0) |
@@ -104,7 +104,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee Domoticz plugin v10.9.18**
+4. Selecteer **Easee Domoticz plugin v10.9.29**
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
 7. Klik **Add**
@@ -251,11 +251,22 @@ Zonder Tibber-token werken laadpalen en Equalizer normaal. Je mist alleen de kos
 | Naam Equalizer (Address) | Weergavenaam | `Meterkast` |
 | Equalizer ID (IP) | Handmatig ID bij detectieproblemen | `EQ-...` |
 
-### Optioneel — Tibber
+### Tibber (vereist voor kosten-tegels)
 
 | Veld | Wat invullen |
 |------|--------------|
-| Tibber Personal Access Token (Mode7) | Token van [developer.tibber.com](https://developer.tibber.com/settings/access-token) |
+| Tibber Personal Access Token (Mode7) | Token van [developer.tibber.com](https://developer.tibber.com/settings/access-token) — **zonder token geen kosten-tegels** |
+
+Bij start zie je in het log: `Tibber actief — kosten-tegels worden bijgewerkt` of `Tibber uit (Mode7 leeg)`.
+
+### Logniveaus (Mode6)
+
+| Mode6 | Wat je ziet |
+|-------|-------------|
+| **Normal** (standaard) | Startup, Tibber-status, `image_ids: 13/13`, migratie, WARNING/ERROR |
+| **Debug** | Extra: `Poll voltooid`, kosten-tegel updates, siteStructure, per-tegel iconen |
+
+Zet Debug alleen aan bij problemen — het log wordt dan veel langer.
 
 ---
 
@@ -287,10 +298,16 @@ Custom iconen uit `Easee_icons_v2.zip` worden bij start automatisch geladen en o
 - State migreert automatisch naar `easee_state.json` (atomisch opslaan sinds v10.6.1).
 - Upload **`Easee_icons_v2.zip` opnieuw** als badges/iconen niet veranderen (Domoticz cached iconen).
 
-### Specifiek: v10.9.18 (huidige release, stable testing)
+### Specifiek: v10.9.28–v10.9.29 (huidige release, stable testing)
 
-- **`EaseeStatusGlobal` combo-icoon** — EQ-puck iets groter linksonder, laadpaal iets kleiner rechtsboven (v10.9.18). Upload **`Easee_icons_v2.zip` opnieuw** als het combo-icoon niet verandert.
+- **Kosten-tegels + Vandaag kWh** — fixes v10.9.19–v10.9.28 (legacy DeviceID lookup, dag-tracking, lifetime Counter, Tibber vereist in Mode7). Getest door Richard (19-06-2026).
+- **v10.9.29** — logging opgeschoond: normaal log toont minder spam; zet **Debug logging (Mode6)** op *Debug* voor per-poll details.
+- **`EaseeStatusGlobal` combo-icoon** — upload **`Easee_icons_v2.zip` opnieuw** als het combo-icoon niet verandert.
 - Verder: sticky power + per-endpoint rate limit (v10.9.17); discovery-throttle, equalizer vóór laders (v10.9.11–v10.9.16).
+
+### Specifiek: v10.9.18
+
+- **`EaseeStatusGlobal` combo-icoon** — EQ-puck iets groter linksonder, laadpaal iets kleiner rechtsboven. Upload **`Easee_icons_v2.zip` opnieuw** als het combo-icoon niet verandert.
 
 ### Specifiek: v10.9.17
 

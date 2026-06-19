@@ -47,7 +47,13 @@ De **hardwarenaam** die je in Domoticz invult (bijv. `Easee`) wordt automatisch 
 **Options**: Normal / Debug  
 **Default**: Normal  
 **Omschrijving**: Verbositeit van logging  
-**Debug**: Extra gedetailleerde logs voor troubleshooting
+
+| Mode6 | Wat je ziet in het log |
+|-------|------------------------|
+| **Normal** | Startup, Tibber actief/uit, `image_ids: 13/13`, migratie, WARNING/ERROR |
+| **Debug** | Alles hierboven + `Poll voltooid`, kosten-tegel updates, siteStructure, per-tegel iconen |
+
+Zet Debug alleen aan bij problemen — het log wordt dan veel langer.
 
 ## Aangepaste laadpaalnamen (optioneel)
 
@@ -119,7 +125,7 @@ Gegroepeerde weergave op één teksttegel:
 
 **Huisvermogen staat niet op Status** — zie Vermogen-tegel.
 
-### Equalizer tegels (v10.9.1+, huidige release v10.9.17)
+### Equalizer tegels (v10.9.1+, huidige release v10.9.29)
 
 | Tegel | Type | Icoon | Weergave |
 |-------|------|-------|----------|
@@ -183,7 +189,7 @@ Legacy: *Vermogen* → *Import*; *Netto* of *Teruglevering* → *Terug & netto*.
 - **Hoofdzekering limiet (22 A)** = wat jij instelt (gele lijn in Easee Energy)
 - **Max import (17,2 kW)** = technisch max vermogen — **niet** hetzelfde als limiet
 
-Als limiet **onbekend** is, controleer het Domoticz-log op `siteStructure amp-range 15-30` (1× per site, geen debug nodig). Wijzig je limiet in Easee en vergelijk welke waarde verandert.
+Als limiet **onbekend** is, zet **Debug logging** (Mode6) aan en zoek op `siteStructure amp-range 15-30` (1× per site, alleen zichtbaar in Debug-modus sinds v10.9.29). Wijzig je limiet in Easee en vergelijk welke waarde verandert.
 
 Zet **Debug logging** aan (Mode6) voor uitgebreide fuse-probe details.
 
@@ -210,12 +216,13 @@ Legacy: bestaande **Vermogen**-tegel wordt automatisch **Import** (zelfde Device
 | **Vandaag** kWh | observation 45 CumulativeActivePowerImport | Cumulatieve teller (Wh); Domoticz berekent dagtotaal sinds middernacht |
 | Fallback | `power_integrated_kwh` in `easee_state.json` | Als observation 45 ontbreekt: geïntegreerd vermogen over tijd |
 
-## Tibber Integration (Optioneel)
+## Tibber Integration (vereist voor kosten-tegels)
 
 ### Tibber Token (Mode7)
 **Type**: Password  
 **Default**: (empty)  
-**Omschrijving**: Je Tibber Personal Access Token  
+**Omschrijving**: Je Tibber Personal Access Token — **verplicht voor kosten-tegels**  
+**Zonder token**: per-lader *Kosten (Sessie/Dag)* en kern-tegels *Kosten & Samenvatting* / *Beste laden* worden niet bijgewerkt  
 **Voordelen** (als ingesteld):
 - ✅ Realtime stroomtarieven
 - ✅ Automatische kostenberekening
@@ -260,7 +267,7 @@ Devices krijgen automatisch deze namen:
 [PREFIX] - [NAAM] - Kosten (Sessie/Dag) (Tibber)
 ```
 
-## Custom iconen (v10.9.17)
+## Custom iconen (v10.9.29)
 
 13 sets in `Easee_icons_v2.zip`. Belangrijkste mapping:
 

@@ -6,6 +6,13 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.29] — 2026-06-19
+
+### Gewijzigd
+- **Logging opgeschoond** — diagnostische regels uit troubleshooting-periode terug naar DEBUG: per-poll `Poll voltooid`, succesvolle `Kosten-tegel bijgewerkt` / `Kern-tegel bijgewerkt`, siteStructure-dumps, per-tegel icon-updates. WARNING/ERROR bij mislukte lookup of update blijven.
+- **Icon-startup** — volledige icon-diagnostiek maximaal 1× per plugin-start (geen dubbele dump bij onStart + initiële sync); `image_ids: X/13 sets` en samenvatting blijven INFO.
+- **Documentatie** — README/INSTALL/docs bijgewerkt naar v10.9.28 stable testing + v10.9.29; logniveaus uitgelegd voor niet-technische gebruikers; Tibber (Mode7) als vereiste voor kosten-tegels benadrukt.
+
 ## [10.9.28] — 2026-06-19
 
 ### Bugfix
@@ -153,6 +160,10 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 | Versie | Hoofdthema |
 |--------|------------|
+| **10.9.28** | Kosten-tegels + Vandaag kWh + Tibber; versies gesynchroniseerd |
+| **10.9.27** | Negatieve Vandaag kWh-fix; lifetime Counter |
+| **10.9.24–10.9.26** | Dag-kWh middernacht-baseline; kosten timestamp/delta |
+| **10.9.19–10.9.23** | Legacy kosten DeviceID; 429/herstart fallback |
 | **10.9.18** | Combo-icoon `EaseeStatusGlobal`: EQ groter linksonder, laadpaal kleiner rechtsboven |
 | **10.9.17** | Sticky power; per-endpoint rate limit (charger 429 ≠ equalizer blok) |
 | **10.9.16** | Discovery-throttle; equalizer vóór laders; observations URL-fix |

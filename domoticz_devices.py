@@ -473,7 +473,7 @@ def update_core_text(plugin, label, value):
         nval = _toggle_core_cost_nvalue(plugin)
     domoticz_runtime.Devices[u].Update(nValue=nval, sValue=str(value)[:4000])
     if clean in ('Kosten & Samenvatting', 'Beste laden'):
-        easee_logging.info(
+        easee_logging.debug(
             'domoticz_devices',
             f'Kern-tegel bijgewerkt: {clean} (unit {u})',
         )
@@ -552,7 +552,7 @@ def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, sessi
             domoticz_runtime.Devices[u].Update(nValue=nval, sValue=text[:4000])
         else:
             domoticz_runtime.Devices[u].Update(nValue=nval, sValue=easee_helpers.euro_str(plugin, session_cost))
-        easee_logging.info(
+        easee_logging.debug(
             'domoticz_devices',
             f'Kosten-tegel bijgewerkt lader {cid_key} unit {u}: {text[:120]}',
         )
