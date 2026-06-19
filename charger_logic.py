@@ -10,12 +10,16 @@ import easee_helpers
 import easee_state
 import tibber_pricing
 
-def session_energy_kwh(plugin, values, session):
+def session_energy_kwh(plugin, values, session, ongoing_fetched=False):
     # Prefer /sessions/ongoing over /state — state sessionEnergy can stay stale after 429 or day change.
-    for source in (session if isinstance(session, dict) else {}, values):
-        if not isinstance(source, dict):
-            continue
-        val = easee_helpers.first_dict_value(plugin, source, CHARGER_KEYS['session_energy'])
+    if isinstance(session, dict) and session:
+        val = easee_helpers.first_dict_value(plugin, session, CHARGER_KEYS['session_energy'])
+        if val is not None:
+            return easee_helpers.kwh_value(plugin, val)
+    if ongoing_fetched:
+        return None
+    if isinstance(values, dict):
+        val = easee_helpers.first_dict_value(plugin, values, CHARGER_KEYS['session_energy'])
         if val is not None:
             return easee_helpers.kwh_value(plugin, val)
     return None
@@ -206,6 +210,7 @@ def poll_charger(plugin, charger):
     cid = charger['id']
     values = {}
     session = {}
+    ongoing_fetched = False
     try:
         state = easee_api.api_get(plugin, f'/chargers/{cid}/state') or {}
         if isinstance(state, dict):
@@ -217,6 +222,7 @@ def poll_charger(plugin, charger):
         if isinstance(cfg, dict):
             values.update(cfg)
     if not easee_api.should_skip_ongoing(plugin):
+        ongoing_fetched = True
         sess = easee_api.api_get_optional(plugin, f'/chargers/{cid}/sessions/ongoing') or {}
         if isinstance(sess, dict):
             session = sess
@@ -230,7 +236,7 @@ def poll_charger(plugin, charger):
     if session_status and not str(session_status).strip().isdigit():
         status_label = str(session_status)
     session_active = bool(session) or power_w > 50
-    api_session_kwh = session_energy_kwh(plugin, values, session)
+    api_session_kwh = session_energy_kwh(plugin, values, session, ongoing_fetched=ongoing_fetched)
 
     st = easee_state.charger_state(plugin, cid)
     prev_total = st.get('prev_total_kwh')
@@ -270,8 +276,7 @@ def poll_charger(plugin, charger):
         prev_sess = st.get('prev_session_kwh')
         if prev_sess is not None and float(api_session_kwh) > float(prev_sess):
             st['prev_session_kwh'] = api_session_kwh
-        elif prev_sess is None and not resuming and session:
-            # Only seed from /sessions/ongoing — never from stale /state sessionEnergy alone.
+        elif prev_sess is None and not resuming and ongoing_fetched and session:
             st['prev_session_kwh'] = api_session_kwh
 
     if easee_helpers.tibber_enabled(plugin) and delta_kwh > 0:

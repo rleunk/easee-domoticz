@@ -97,6 +97,9 @@ def _charger_legacy_names(plugin, display, label_key, cid=None):
 
 def _charger_display_for_cid(plugin, cid):
     cid_s = str(cid).strip()
+    names = getattr(plugin, 'charger_names', {}) or {}
+    if cid_s in names:
+        return names[cid_s]
     for idx, charger in enumerate(getattr(plugin, 'chargers', []) or []):
         if str(charger.get('id', '')).strip() == cid_s:
             return charger_logic.charger_display_name(plugin, charger, idx)
@@ -122,7 +125,7 @@ def _charger_label_suffixes(label_key):
     return suffixes
 
 def _find_charger_unit_by_name_scan(plugin, cid, display, label_key):
-    display_key = easee_helpers.clean_label(plugin, display).lower()
+    display_key = easee_helpers.clean_label(plugin, display).lower() if display else ''
     cid_s = str(cid).strip().lower()
     short = easee_helpers.short_id(plugin, cid).lower()
     suffixes = _charger_label_suffixes(label_key)
@@ -131,7 +134,9 @@ def _find_charger_unit_by_name_scan(plugin, cid, display, label_key):
         name = easee_helpers.clean_label(plugin, dev.Name).lower()
         if not (devid.startswith('EASEE_CHG_') or devid.startswith('EASEE_') or 'easee' in name):
             continue
-        if display_key not in name and cid_s not in name and short not in name:
+        if display_key and display_key not in name and cid_s not in name and short not in name:
+            continue
+        if not display_key and cid_s not in name and short not in name:
             continue
         suffix = name.split(' - ')[-1].strip() if ' - ' in name else name
         if any(suffix == s or s in suffix for s in suffixes):
@@ -164,11 +169,11 @@ def resolve_charger_unit(plugin, cid, label_key, tried=None):
             if via:
                 _note(f'hit:{via}')
             return unit
-        unit, via = _find_charger_unit_by_name_scan(plugin, cid, display, label_key)
-        if unit is not None:
-            if via:
-                _note(f'hit:{via}')
-            return unit
+    unit, via = _find_charger_unit_by_name_scan(plugin, cid, display, label_key)
+    if unit is not None:
+        if via:
+            _note(f'hit:{via}')
+        return unit
 
     unit = find_unit_by_devid(plugin, current_devid)
     if unit is not None:
@@ -186,8 +191,6 @@ _CORE_COST_LOOKUP_WARNED = set()
 
 def _toggle_cost_nvalue(plugin, session_active):
     """Alternate nValue so Domoticz refreshes timestamp even when € amount unchanged."""
-    if not session_active:
-        return 0
     tick = easee_helpers.safe_int(plugin, getattr(plugin, '_cost_nvalue_tick', 0), 0) + 1
     plugin._cost_nvalue_tick = tick
     return tick % 2
@@ -534,24 +537,30 @@ def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, sessi
                 f'Kosten-tegel niet gevonden lader {cid_key} | geprobeerd: {", ".join(tried)}',
             )
         return
-    tibber_rate = easee_helpers.safe_float(plugin, tibber_pricing.current_tibber_price(plugin).get('total'), 0.0)
-    rate = session_cost / session_kwh if session_kwh > 0 else tibber_rate
-    price_emoji = tibber_pricing.price_emoji(plugin, rate, plugin.state.get('price_cache', {}))
-    session_label = 'Sessie' if session_active else 'Laatste sessie'
-    text = f'{price_emoji} {session_label}: €{easee_helpers.euro_str(plugin, session_cost)} | Dag: €{easee_helpers.euro_str(plugin, day_cost)}'
     try:
-        is_text = int(domoticz_runtime.Devices[u].SubType) == DEVICE_TYPES['Text']['Subtype']
-    except Exception:
-        is_text = False
-    nval = _toggle_cost_nvalue(plugin, session_active)
-    if is_text:
-        domoticz_runtime.Devices[u].Update(nValue=nval, sValue=text[:4000])
-    else:
-        domoticz_runtime.Devices[u].Update(nValue=nval, sValue=easee_helpers.euro_str(plugin, session_cost))
-    easee_logging.info(
-        'domoticz_devices',
-        f'Kosten-tegel bijgewerkt lader {cid_key} unit {u}: {text[:120]}',
-    )
+        tibber_rate = easee_helpers.safe_float(plugin, tibber_pricing.current_tibber_price(plugin).get('total'), 0.0)
+        rate = session_cost / session_kwh if session_kwh > 0 else tibber_rate
+        price_emoji = tibber_pricing.price_emoji(plugin, rate, plugin.state.get('price_cache', {}))
+        session_label = 'Sessie' if session_active else 'Laatste sessie'
+        text = f'{price_emoji} {session_label}: €{easee_helpers.euro_str(plugin, session_cost)} | Dag: €{easee_helpers.euro_str(plugin, day_cost)}'
+        try:
+            is_text = int(domoticz_runtime.Devices[u].SubType) == DEVICE_TYPES['Text']['Subtype']
+        except Exception:
+            is_text = False
+        nval = _toggle_cost_nvalue(plugin, session_active)
+        if is_text:
+            domoticz_runtime.Devices[u].Update(nValue=nval, sValue=text[:4000])
+        else:
+            domoticz_runtime.Devices[u].Update(nValue=nval, sValue=easee_helpers.euro_str(plugin, session_cost))
+        easee_logging.info(
+            'domoticz_devices',
+            f'Kosten-tegel bijgewerkt lader {cid_key} unit {u}: {text[:120]}',
+        )
+    except Exception as e:
+        easee_logging.error(
+            'domoticz_devices',
+            f'Kosten-tegel update mislukt lader {cid_key} unit {u}: {e}',
+        )
 
 def update_charger_energy(plugin, cid, label_key, power_w, total_wh):
     u = resolve_charger_unit(plugin, cid, label_key)

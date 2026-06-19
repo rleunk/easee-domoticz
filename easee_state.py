@@ -120,7 +120,8 @@ def migrate_state_for_version(plugin):
     """One-time resets when energy/cost tracking logic changes."""
     key = 'energy_track_version'
     target = '10.9.27-lifetime-counter'
-    if plugin.state.get(key) == target:
+    current = plugin.state.get(key)
+    if current == target:
         return
     for st in (plugin.state.get('chargers') or {}).values():
         if not isinstance(st, dict):
@@ -135,9 +136,28 @@ def migrate_state_for_version(plugin):
         st['day_energy_reset'] = True
         st['prev_session_kwh'] = None
     plugin.state[key] = target
+    from_ver = current or 'geen'
     easee_logging.info(
         'easee_state',
-        f'State gemigreerd naar {PLUGIN_VERSION} lifetime Counter (energy track reset)',
+        f'State gemigreerd naar {PLUGIN_VERSION} lifetime Counter (was {from_ver}; energy track reset)',
+        'migration',
+    )
+
+def migrate_cost_tracking(plugin):
+    """One-time reset of session cost baselines when cost delta logic changes."""
+    key = 'cost_track_version'
+    target = PLUGIN_VERSION
+    if plugin.state.get(key) == target:
+        return
+    for st in (plugin.state.get('chargers') or {}).values():
+        if not isinstance(st, dict):
+            continue
+        st['prev_session_kwh'] = None
+        st.pop('cost_delta_warned', None)
+    plugin.state[key] = target
+    easee_logging.info(
+        'easee_state',
+        f'Kosten-tracking gemigreerd naar {PLUGIN_VERSION} (prev_session_kwh gereset)',
         'migration',
     )
 

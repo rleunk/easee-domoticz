@@ -6,6 +6,13 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.28] — 2026-06-19
+
+### Bugfix
+- **Domoticz init toonde 10.9.26 terwijl logs 10.9.27 zeiden** — `plugin.xml` `<Version>` / `<name>` stond nog op 10.9.26; `PLUGIN_VERSION` in `easee_constants.py` was al 10.9.27. Alle versievelden gesynchroniseerd; startup-log meldt nu expliciet `Plugin v{PLUGIN_VERSION} gestart`.
+- **Kosten-tegels vast op €0,00 / timestamp 00:04** — Stale `sessionEnergy` uit `/state` werd nog gebruikt als `/sessions/ongoing` leeg terugkwam (geen actieve sessie in API maar wel laden op vermogen). `prev_session_kwh` wordt nu alleen gezaaid bij echte ongoing-data; `nValue` wisselt elke poll (ook buiten sessie) zodat timestamp meeloopt; lookup gebruikt `charger_names` + naam-scan zonder display; aparte `cost_track_version`-migratie reset `prev_session_kwh`.
+- **State-/kosten-migratie bij upgrade** — State wordt direct na migratie opgeslagen; aparte `cost_track_version`-migratie (log: *Kosten-tracking gemigreerd*) reset `prev_session_kwh` zonder dag-kWh opnieuw te wissen.
+
 ## [10.9.27] — 2026-06-19
 
 ### Bugfix
