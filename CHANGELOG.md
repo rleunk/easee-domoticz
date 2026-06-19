@@ -6,6 +6,13 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.9.27] — 2026-06-19
+
+### Bugfix
+- **Negatieve Vandaag kWh (v10.9.26-regressie)** — Domoticz berekent *Vandaag* als `Counter − Counter@middernacht`. v10.9.26 stuurde dag-only Wh (~3 kWh) terwijl Domoticz de middernacht-baseline nog op lifetime stond (~2718 kWh) → negatieve *Vandaag* (~−2715 kWh). Counter is weer **middernacht-baseline + dag-Wh** (lifetime-stijl); dagtracking via vermogensintegratie blijft behouden.
+- **Kosten blijven €0,00 tijdens laden** — kWh-delta voor kosten geeft tijdens actief laden nu voorrang aan `day_track`/vermogen×tijd boven stale `lifetimeEnergy`; stale `sessionEnergy` uit `/state` wordt niet meer als `prev_session_kwh` gezaaid zonder `/sessions/ongoing`.
+- **State-migratie bij upgrade** — eenmalige reset bij upgrade vanaf v10.9.26 (log: *State gemigreerd naar 10.9.27 lifetime Counter*).
+
 ## [10.9.26] — 2026-06-19
 
 ### Bugfix

@@ -45,7 +45,12 @@ def is_session_resume(plugin, st, session_active, session, power_w):
     return bool(session) or power_w > 50
 
 def sync_day_energy(plugin, st, total_kwh, session_active, power_w):
-    """Track today's kWh; Domoticz Energy Counter = day-only Wh (Vandaag = Counter/CounterToday)."""
+    """Track today's kWh; Domoticz CounterToday = Counter - Counter@midnight.
+
+    Counter (sValue Wh) must stay lifetime-style: midnight baseline Wh + day Wh.
+    Sending day-only Wh leaves Domoticz CounterToday baseline at the old lifetime
+    total and produces negative *Vandaag* values.
+    """
     skip_monotonic = bool(st.pop('day_energy_reset', False))
     if st.get('day_baseline_kwh') is None:
         st['day_baseline_kwh'] = total_kwh
@@ -78,14 +83,14 @@ def sync_day_energy(plugin, st, total_kwh, session_active, power_w):
             st['day_kwh'] = round(prev_day_kwh + day_delta, 6)
 
     day_kwh = easee_helpers.safe_float(plugin, st.get('day_kwh'), 0.0)
-    day_wh = int(round(day_kwh * 1000.0))
+    counter_wh = int(round(baseline * 1000.0)) + int(round(day_kwh * 1000.0))
     if not skip_monotonic:
-        prev_wh = easee_helpers.safe_int(plugin, st.get('day_wh'), 0)
-        if day_wh < prev_wh:
-            day_wh = prev_wh
-    st['day_wh'] = day_wh
-    st.pop('counter_wh', None)
-    return day_wh, day_kwh, day_delta
+        prev_counter = easee_helpers.safe_int(plugin, st.get('counter_wh'), 0)
+        if counter_wh < prev_counter:
+            counter_wh = prev_counter
+    st['counter_wh'] = counter_wh
+    st['day_wh'] = int(round(day_kwh * 1000.0))
+    return counter_wh, day_kwh, day_delta
 
 def power_integrated_kwh(plugin, power_w):
     if power_w <= 50:
@@ -97,27 +102,25 @@ def delta_kwh_for_cost(plugin, session_active, api_session_kwh, prev_session_kwh
     """Pick the best positive kWh delta for cost accumulation.
 
     sessionEnergy can be stale in /state when /sessions/ongoing is 429'd; lifetimeEnergy
-    often does not move during an active session. Fall back to day-track / power integration.
+    often does not move during an active session. During active charging prefer day_track
+    and power integration over stale lifetime deltas.
     Returns (delta_kwh, source_label).
     """
-    delta_kwh = 0.0
-    source = 'none'
     if session_active and api_session_kwh is not None and prev_session_kwh is not None:
-        delta_kwh = max(0.0, float(api_session_kwh) - float(prev_session_kwh))
-        if delta_kwh > 0:
-            source = 'sessionEnergy'
-    if delta_kwh <= 0 and prev_total is not None:
-        delta_kwh = max(0.0, float(total_kwh) - float(prev_total))
-        if delta_kwh > 0:
-            source = 'lifetimeEnergy'
-    if delta_kwh <= 0 and day_delta > 0:
-        delta_kwh = day_delta
-        source = 'day_track'
-    if delta_kwh <= 0 and session_active and power_w > 50:
-        delta_kwh = power_integrated_kwh(plugin, power_w)
-        if delta_kwh > 0:
-            source = 'power'
-    return delta_kwh, source
+        session_delta = max(0.0, float(api_session_kwh) - float(prev_session_kwh))
+        if session_delta > 0:
+            return session_delta, 'sessionEnergy'
+    if session_active and power_w > 50:
+        if day_delta > 0:
+            return day_delta, 'day_track'
+        power_delta = power_integrated_kwh(plugin, power_w)
+        if power_delta > 0:
+            return power_delta, 'power'
+    if prev_total is not None:
+        lifetime_delta = max(0.0, float(total_kwh) - float(prev_total))
+        if lifetime_delta > 0:
+            return lifetime_delta, 'lifetimeEnergy'
+    return 0.0, 'none'
 
 def custom_charger_name(plugin, index):
     if index == 0:
@@ -231,7 +234,7 @@ def poll_charger(plugin, charger):
 
     st = easee_state.charger_state(plugin, cid)
     prev_total = st.get('prev_total_kwh')
-    day_wh, day_kwh, day_delta = sync_day_energy(plugin, st, total_kwh, session_active, power_w)
+    counter_wh, day_kwh, day_delta = sync_day_energy(plugin, st, total_kwh, session_active, power_w)
 
     resuming = False
     if session_active and not st.get('session_active'):
@@ -338,7 +341,7 @@ def poll_charger(plugin, charger):
             )
 
     # UPDATE DEVICES
-    domoticz_devices.update_charger_energy(plugin, cid, 'Laden', power_w, day_wh)
+    domoticz_devices.update_charger_energy(plugin, cid, 'Laden', power_w, counter_wh)
     
     totaal_sessie = f'{int(round(total_kwh))} kWh | Sessie: {session_kwh:.3f} kWh'
     domoticz_devices.update_charger_custom(plugin, cid, 'Totaal & Sessie', totaal_sessie)
@@ -356,8 +359,9 @@ def poll_charger(plugin, charger):
     plugin.latest_chargers[cid] = {
         'power': power_w,
         'kwh': total_kwh,
-        'wh': day_wh,
-        'day_wh': day_wh,
+        'wh': counter_wh,
+        'counter_wh': counter_wh,
+        'day_wh': int(round(day_kwh * 1000.0)),
         'day_kwh': day_kwh,
         'day_cost': easee_helpers.safe_float(plugin, st.get('day_cost_total', 0.0), 0.0),
         'day_energy_cost': easee_helpers.safe_float(plugin, st.get('day_cost_energy', 0.0), 0.0),

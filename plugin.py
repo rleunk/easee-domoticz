@@ -308,7 +308,7 @@ class BasePlugin:
     def update_combined(self):
         total_power = sum(v.get('power', 0) for v in self.latest_chargers.values())
         total_kwh = round(sum(v.get('kwh', 0.0) for v in self.latest_chargers.values()), 3)
-        total_wh = sum(v.get('day_wh', v.get('wh', 0)) for v in self.latest_chargers.values())
+        total_wh = sum(v.get('counter_wh', v.get('wh', 0)) for v in self.latest_chargers.values())
         any_online = any(bool(v.get('online')) for v in self.latest_chargers.values())
         any_lb = any(bool(v.get('loadbal')) for v in self.latest_equalizers.values())
         eq_count = len(self.equalizers)
