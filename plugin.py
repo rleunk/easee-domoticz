@@ -213,7 +213,8 @@ class BasePlugin:
 
     def initial_sync(self):
         self.discover_entities()
-        self.last_discovery = time.time()
+        if not getattr(self, '_discovery_network_error', False):
+            self.last_discovery = time.time()
         self.charger_names = {}
         self.equalizer_names = {}
         domoticz_devices.ensure_core_devices(self)
@@ -249,8 +250,12 @@ class BasePlugin:
             return
         old_eq_ids = {e['id'] for e in self.equalizers}
         old_charger_ids = {c['id'] for c in self.chargers}
+        prev_chargers = list(self.chargers)
+        prev_equalizers = list(self.equalizers)
         self.discover_entities()
         if getattr(self, '_discovery_network_error', False):
+            self.chargers = prev_chargers
+            self.equalizers = prev_equalizers
             easee_logging.warning(
                 'plugin',
                 'Discovery overgeslagen door netwerkfout — cache behouden, retry volgende poll',

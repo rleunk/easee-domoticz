@@ -1,12 +1,12 @@
-# Easee Domoticz plugin v10.10.0
+# Easee Domoticz plugin v10.10.1
 
 **Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.10.0-blue)
+![Version](https://img.shields.io/badge/version-10.10.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** v10.10.0 — Tibber kwartierprijzen, Dagrapport-tegel, laadhints, configureerbaar Beste laden. Stable baseline: **v10.9.32-stable**. Getest met 2× Charge Lite, 1× Equalizer en Tibber (Richard, 19-06-2026). Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
+> **Status:** v10.10.1 — netwerk-timeout fix (hardware-thread blijft draaien). v10.10.0: Tibber kwartierprijzen, Dagrapport-tegel, laadhints, configureerbaar Beste laden. Stable baseline: **v10.9.32-stable**. Getest met 2× Charge Lite, 1× Equalizer en Tibber (Richard, 19-06-2026). Bugreports welkom via [Issues](https://github.com/rleunk/easee-domoticz/issues).
 
 ## TL;DR — installeren in 2 minuten
 

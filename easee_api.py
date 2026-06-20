@@ -8,16 +8,8 @@ import easee_logging
 
 try:
     import requests
-    _REQUEST_ERRORS = (requests.exceptions.RequestException,)
-except Exception:
-    _REQUEST_ERRORS = (OSError, TimeoutError)
-
-try:
-    import requests
 except Exception:
     requests = None
-
-API_TIMEOUT_SEC = 30
 
 
 def _parse_retry_after(header_val):
@@ -155,7 +147,7 @@ def _request_base_url(path):
 
 def login(plugin):
     try:
-        r = plugin.session.post(LOGIN_URL, json={'userName': domoticz_runtime.Parameters.get('Username',''), 'password': domoticz_runtime.Parameters.get('Password','')}, timeout=API_TIMEOUT_SEC)
+        r = plugin.session.post(LOGIN_URL, json={'userName': domoticz_runtime.Parameters.get('Username',''), 'password': domoticz_runtime.Parameters.get('Password','')}, timeout=API_TIMEOUT)
         if r.status_code == 200:
             data = r.json()
             plugin.access_token = data.get('accessToken','')
@@ -174,7 +166,7 @@ def refresh(plugin):
     if not plugin.access_token or not plugin.refresh_token:
         return login(plugin)
     try:
-        r = plugin.session.post(REFRESH_URL, json={'accessToken': plugin.access_token, 'refreshToken': plugin.refresh_token}, timeout=API_TIMEOUT_SEC)
+        r = plugin.session.post(REFRESH_URL, json={'accessToken': plugin.access_token, 'refreshToken': plugin.refresh_token}, timeout=API_TIMEOUT)
         if r.status_code == 200:
             data = r.json()
             plugin.access_token = data.get('accessToken','')
@@ -205,7 +197,7 @@ def api_get(plugin, path, retry=True):
         r = plugin.session.get(
             _request_base_url(path) + path,
             headers={'Authorization': f'Bearer {plugin.access_token}'},
-            timeout=API_TIMEOUT_SEC,
+            timeout=API_TIMEOUT,
         )
     except Exception as e:
         if _is_network_error(e):
