@@ -108,6 +108,7 @@ def charger_state(plugin, cid):
         'day_last_lifetime_kwh': None,
         'day_wh': 0,
         'counter_wh': 0,
+        'session_kwh_zero_polls': 0,
     })
     tk = today_key(plugin)
     if st.get('day_key') != tk:
@@ -187,6 +188,27 @@ def migrate_cost_tracking(plugin):
     easee_logging.info(
         'easee_state',
         f'Kosten-tracking gemigreerd naar {PLUGIN_VERSION} (prev_session_kwh gereset)',
+        'migration',
+    )
+
+def migrate_session_baseline(plugin):
+    """One-time reset of stuck session_start_day_kwh when display logic changes."""
+    key = 'session_baseline_version'
+    target = '10.10.6-unstick-display'
+    if plugin.state.get(key) == target:
+        return
+    for st in (plugin.state.get('chargers') or {}).values():
+        if not isinstance(st, dict):
+            continue
+        st.pop('session_kwh_zero_warned', None)
+        st.pop('session_baseline_recal_warned', None)
+        st['session_kwh_zero_polls'] = 0
+        if st.get('session_active'):
+            st['session_start_day_kwh'] = None
+    plugin.state[key] = target
+    easee_logging.info(
+        'easee_state',
+        f'Sessie-baseline gemigreerd naar {PLUGIN_VERSION} (stuck baseline gereset bij actieve sessie)',
         'migration',
     )
 

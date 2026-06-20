@@ -6,6 +6,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.10.6] — 2026-06-20
+
+### Opgelost
+- **Totaal & Sessie header blijft 0 kWh na herstart (v10.10.5)** — `maybe_recalibrate_session_start_day_kwh()` had een 2-minuten gate na herstart en liep niet bij delta >0,001 kWh; `session_kwh_zero_warned` blokkeerde INFO-log na eerdere sessie; display-fallback gebruikte geen `day_kwh`-vloer terwijl CustomkWh-header `int(round(kWh))` waarden <0,5 kWh als 0 toont. Baseline-repair via `unstick_session_day_baseline()` (geen tijdsgate, stuck-detectie); `display_session_kwh()` deelt één waarde voor header én sValue (vloer `day_kwh` wanneer header 0 zou zijn); API-starttijd hersteld bij resume; WARNING na 3 polls; migratie reset stuck `session_start_day_kwh` bij actieve sessie.
+
 ## [10.10.5] — 2026-06-20
 
 ### Opgelost

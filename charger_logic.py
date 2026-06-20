@@ -200,9 +200,37 @@ def estimate_session_kwh_from_power(power_w, elapsed_h):
         return 0.0
     return round((float(power_w) / 1000.0) * elapsed_h, 6)
 
-def ensure_session_start_day_kwh(plugin, st, day_kwh, api_session_kwh=None, power_w=0, start_ts=None):
+def _session_day_delta(plugin, st, day_kwh):
+    start_day = st.get('session_start_day_kwh')
+    if start_day is None:
+        return None
+    return max(0.0, float(day_kwh) - float(start_day))
+
+def _estimate_session_kwh_so_far(plugin, st, day_kwh, power_w, api_session_kwh=None):
+    """Best-effort session energy for baseline repair (API → integrated → day delta → power×time)."""
+    if api_session_kwh is not None and float(api_session_kwh) > 0:
+        return float(api_session_kwh)
+    integrated = easee_helpers.safe_float(plugin, st.get('session_integrated_kwh', 0.0), 0.0)
+    if integrated > 0:
+        return integrated
+    day_delta = _session_day_delta(plugin, st, day_kwh)
+    if day_delta is not None and day_delta > 0:
+        return day_delta
+    elapsed_h = session_elapsed_hours(plugin, st.get('session_start_ts'))
+    return estimate_session_kwh_from_power(power_w, elapsed_h)
+
+def ensure_session_start_day_kwh(plugin, st, day_kwh, api_session_kwh=None, power_w=0, start_ts=None, cid=''):
     """Baseline day_kwh at session start — same counter source as the Laden tile."""
-    if st.get('session_start_day_kwh') is not None:
+    existing = st.get('session_start_day_kwh')
+    if existing is not None:
+        if power_w > 50 and float(day_kwh) > 0.05:
+            delta = _session_day_delta(plugin, st, day_kwh)
+            stuck = abs(float(day_kwh) - float(existing)) < 0.001
+            if delta is not None and (stuck or delta < 0.5):
+                unstick_session_day_baseline(
+                    plugin, st, day_kwh, power_w, api_session_kwh=api_session_kwh, cid=cid,
+                    force=stuck,
+                )
         return
     integrated = easee_helpers.safe_float(plugin, st.get('session_integrated_kwh', 0.0), 0.0)
     if api_session_kwh is not None and float(api_session_kwh) > 0:
@@ -222,49 +250,94 @@ def ensure_session_start_day_kwh(plugin, st, day_kwh, api_session_kwh=None, powe
         return
     st['session_start_day_kwh'] = float(day_kwh)
 
-def maybe_recalibrate_session_start_day_kwh(plugin, st, day_kwh, power_w, session_active, cid=''):
-    """Unstick baseline when day delta is 0 but day_kwh grew (upgrade / mis-detected new session)."""
-    if not session_active or power_w <= 50:
-        return
+def unstick_session_day_baseline(plugin, st, day_kwh, power_w, api_session_kwh=None, cid='', force=False):
+    """Repair session_start_day_kwh when day-track delta is stuck near 0 during active charging."""
+    if power_w <= 50 or float(day_kwh) < 0.05:
+        return False
     start_day = st.get('session_start_day_kwh')
     if start_day is None:
-        return
-    delta = float(day_kwh) - float(start_day)
-    if delta > 0.001:
-        return
-    if float(day_kwh) < 0.05:
-        return
-    elapsed_h = session_elapsed_hours(plugin, st.get('session_start_ts'))
-    baseline_stuck_at_day = abs(float(start_day) - float(day_kwh)) < 0.001
-    if not baseline_stuck_at_day and elapsed_h < 120.0 / 3600.0:
-        return
-    est = estimate_session_kwh_from_power(power_w, elapsed_h)
-    new_baseline = max(0.0, float(day_kwh) - est)
+        return False
+    delta = _session_day_delta(plugin, st, day_kwh)
+    if delta is None:
+        return False
+    stuck = abs(float(day_kwh) - float(start_day)) < 0.001 and float(day_kwh) > 0.05
+    if not force and not stuck and delta >= 0.5:
+        return False
+    session_so_far = _estimate_session_kwh_so_far(plugin, st, day_kwh, power_w, api_session_kwh)
+    if session_so_far < 0.05:
+        session_so_far = float(day_kwh)
+    new_baseline = max(0.0, float(day_kwh) - session_so_far)
     if abs(new_baseline - float(start_day)) < 0.001 and float(day_kwh) > 0.05:
         new_baseline = 0.0
+    if abs(new_baseline - float(start_day)) < 0.001:
+        return False
+    old_baseline = float(start_day)
     st['session_start_day_kwh'] = new_baseline
-    if not st.get('session_baseline_recal_warned'):
-        st['session_baseline_recal_warned'] = True
-        easee_logging.info(
+    elapsed_h = session_elapsed_hours(plugin, st.get('session_start_ts'))
+    easee_logging.info(
+        'charger_logic',
+        f'Sessie-baseline gecorrigeerd lader {cid}: day_kwh={day_kwh:.3f}, '
+        f'was start_day={old_baseline:.3f}, nu={new_baseline:.3f} '
+        f'(delta={delta:.3f}, sessie≈{session_so_far:.3f}, timer={elapsed_h * 60:.0f}m, {power_w}W)',
+        'session',
+    )
+    st.pop('session_kwh_zero_warned', None)
+    st['session_kwh_zero_polls'] = 0
+    return True
+
+def display_session_kwh(plugin, st, session_kwh, day_kwh, power_w, session_active, api_session_kwh=None):
+    """Unified session kWh for CustomkWh header and sValue — never show 0 while day_kwh grows."""
+    if not (session_active and power_w > 50):
+        return float(session_kwh)
+    start_day = float(st.get('session_start_day_kwh') or 0.0)
+    day_delta = max(0.0, float(day_kwh) - start_day)
+    elapsed_h = session_elapsed_hours(plugin, st.get('session_start_ts'))
+    power_est = estimate_session_kwh_from_power(power_w, elapsed_h)
+    api_kwh = float(api_session_kwh) if api_session_kwh else 0.0
+    display = max(float(session_kwh), day_delta, power_est, api_kwh)
+    # CustomkWh header uses int(round(kWh)) — values below 0.5 kWh render as 0.
+    if int(round(display)) == 0 and float(day_kwh) > 0.05:
+        display = float(day_kwh)
+        if st.get('session_start_day_kwh') is not None:
+            st['session_start_day_kwh'] = 0.0
+    return round(display, 6)
+
+def track_session_kwh_zero_polls(plugin, st, display_kwh, day_kwh, power_w, session_active, cid=''):
+    """WARNING after 3 polls with 0 kWh display while charging and day_kwh > 0."""
+    if not (session_active and power_w > 50 and float(day_kwh) > 0.05):
+        st['session_kwh_zero_polls'] = 0
+        return
+    if int(round(float(display_kwh))) == 0:
+        st['session_kwh_zero_polls'] = 0
+        st.pop('session_kwh_zero_warned', None)
+        return
+    polls = easee_helpers.safe_int(plugin, st.get('session_kwh_zero_polls', 0), 0) + 1
+    st['session_kwh_zero_polls'] = polls
+    if polls >= 3 and not st.get('session_kwh_zero_warned'):
+        st['session_kwh_zero_warned'] = True
+        easee_logging.warning(
             'charger_logic',
-            f'Sessie-baseline gecorrigeerd lader {cid}: day_kwh={day_kwh:.3f}, '
-            f'was start_day={start_day:.3f}, nu={new_baseline:.3f} '
-            f'(timer={elapsed_h * 60:.0f}m, {power_w}W)',
+            f'Sessie-kWh header nog 0 na {polls} polls lader {cid}: day_kwh={day_kwh:.3f}, '
+            f'display={display_kwh:.3f}, start_day={st.get("session_start_day_kwh")}, '
+            f'integrated={st.get("session_integrated_kwh")}, timer={compute_duration_text(plugin, st.get("session_start_ts"))}',
             'session',
         )
 
-def ensure_session_tracking(plugin, st, values, session, session_active, total_kwh, day_kwh=0.0, api_session_kwh=None, power_w=0):
+def ensure_session_tracking(plugin, st, values, session, session_active, total_kwh, day_kwh=0.0, api_session_kwh=None, power_w=0, cid=''):
     """Keep session clock/baseline when session_active persisted without start metadata."""
     if not session_active:
         return
     api_start_ts = session_start_timestamp(plugin, values, session)
     if st.get('session_start_ts') is None:
         st['session_start_ts'] = api_start_ts if api_start_ts is not None else easee_state.now_ts(plugin)
+    elif api_start_ts is not None:
+        st['session_start_ts'] = api_start_ts
     if st.get('session_start_kwh') is None:
         st['session_start_kwh'] = total_kwh
     ensure_session_start_day_kwh(
         plugin, st, day_kwh, api_session_kwh=api_session_kwh, power_w=power_w,
         start_ts=api_start_ts if api_start_ts is not None else st.get('session_start_ts'),
+        cid=cid,
     )
 
 def resolve_session_kwh(plugin, st, session_active, api_session_kwh, total_kwh, power_w, day_kwh=0.0):
@@ -383,7 +456,7 @@ def poll_charger(plugin, charger):
                 st['session_start_kwh'] = total_kwh
             ensure_session_start_day_kwh(
                 plugin, st, day_kwh, api_session_kwh=api_session_kwh, power_w=power_w,
-                start_ts=st.get('session_start_ts'),
+                start_ts=st.get('session_start_ts'), cid=cid,
             )
             st['prev_session_kwh'] = None
         else:
@@ -391,7 +464,7 @@ def poll_charger(plugin, charger):
             st['session_start_kwh'] = total_kwh
             ensure_session_start_day_kwh(
                 plugin, st, day_kwh, api_session_kwh=api_session_kwh, power_w=power_w,
-                start_ts=api_start_ts,
+                start_ts=api_start_ts, cid=cid,
             )
             st['prev_session_kwh'] = None
             if st.get('session_start_day_kwh') is None or abs(float(day_kwh) - float(st.get('session_start_day_kwh'))) < 0.001:
@@ -400,12 +473,12 @@ def poll_charger(plugin, charger):
             st['session_cost_energy'] = 0.0
             st['session_cost_tax'] = 0.0
             st['cost_delta_warned'] = False
-            st.pop('session_baseline_recal_warned', None)
             st.pop('session_kwh_zero_warned', None)
+            st['session_kwh_zero_polls'] = 0
     elif session_active:
         ensure_session_tracking(
             plugin, st, values, session, session_active, total_kwh,
-            day_kwh=day_kwh, api_session_kwh=api_session_kwh, power_w=power_w,
+            day_kwh=day_kwh, api_session_kwh=api_session_kwh, power_w=power_w, cid=cid,
         )
 
     ending_session = (not session_active) and st.get('session_active')
@@ -466,24 +539,31 @@ def poll_charger(plugin, charger):
         st['session_cost_total'] = 0.0
         st['session_cost_energy'] = 0.0
         st['session_cost_tax'] = 0.0
-        st.pop('session_baseline_recal_warned', None)
         st.pop('session_kwh_zero_warned', None)
+        st['session_kwh_zero_polls'] = 0
 
-    if session_active and bool(st.get('session_active')):
-        maybe_recalibrate_session_start_day_kwh(
-            plugin, st, day_kwh, power_w, session_active=True, cid=cid,
+    tracking_active = session_active and bool(st.get('session_active'))
+    if tracking_active:
+        unstick_session_day_baseline(
+            plugin, st, day_kwh, power_w, api_session_kwh=api_session_kwh, cid=cid,
+            force=abs(float(day_kwh) - float(st.get('session_start_day_kwh') or -1)) < 0.001,
         )
 
     session_kwh = resolve_session_kwh(
-        plugin, st, session_active and bool(st.get('session_active')),
-        api_session_kwh, total_kwh, power_w, day_kwh=day_kwh,
+        plugin, st, tracking_active, api_session_kwh, total_kwh, power_w, day_kwh=day_kwh,
+    )
+
+    display_kwh = display_session_kwh(
+        plugin, st, session_kwh, day_kwh, power_w, tracking_active, api_session_kwh=api_session_kwh,
+    )
+    track_session_kwh_zero_polls(
+        plugin, st, display_kwh, day_kwh, power_w, tracking_active, cid=cid,
     )
     if (
-        session_active and bool(st.get('session_active')) and power_w > 50
-        and float(session_kwh) < 0.001 and float(day_kwh) > 0.05
-        and not st.get('session_kwh_zero_warned')
+        tracking_active and power_w > 50
+        and int(round(float(display_kwh))) == 0 and float(day_kwh) > 0.05
+        and easee_helpers.safe_int(plugin, st.get('session_kwh_zero_polls', 0), 0) == 1
     ):
-        st['session_kwh_zero_warned'] = True
         easee_logging.info(
             'charger_logic',
             f'Sessie-kWh=0 terwijl day_kwh={day_kwh:.3f} en laden ({power_w}W) lader {cid}: '
@@ -517,18 +597,8 @@ def poll_charger(plugin, charger):
     # UPDATE DEVICES
     domoticz_devices.update_charger_energy(plugin, cid, 'Laden', power_w, counter_wh)
 
-    display_kwh = float(session_kwh)
-    if (
-        display_kwh < 0.001 and session_active and bool(st.get('session_active'))
-        and power_w > 50 and float(day_kwh) > 0.05
-    ):
-        est = estimate_session_kwh_from_power(
-            power_w, session_elapsed_hours(plugin, st.get('session_start_ts')),
-        )
-        day_delta = float(day_kwh) - float(st.get('session_start_day_kwh') or 0.0)
-        display_kwh = max(est, day_delta, 0.0)
     totaal_sessie = (
-        f'🔋 Deze sessie: {session_kwh:.3f} kWh | 📅 Vandaag: {day_kwh:.3f} kWh'
+        f'🔋 Deze sessie: {display_kwh:.3f} kWh | 📅 Vandaag: {day_kwh:.3f} kWh'
         f' | Totaal: {total_kwh:.1f} kWh'
     )
     domoticz_devices.update_charger_custom(

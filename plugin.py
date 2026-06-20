@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.10.5" author="Richard Leunk" version="10.10.5"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.10.6" author="Richard Leunk" version="10.10.6"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.10.5</h2><br/>
+        <h2>Easee Domoticz plugin v10.10.6</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, Tibber kwartierprijzen, Dagrapport-tegel, laadhints en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -396,6 +396,7 @@ class BasePlugin:
         easee_state.load_state(self)
         easee_state.migrate_state_for_version(self)
         easee_state.migrate_cost_tracking(self)
+        easee_state.migrate_session_baseline(self)
         tibber_src = easee_state.sync_tibber_token_backup(self)
         try:
             easee_state.save_state(self)
