@@ -307,7 +307,7 @@ def track_session_kwh_zero_polls(plugin, st, display_kwh, day_kwh, power_w, sess
     if not (session_active and power_w > 50 and float(day_kwh) > 0.05):
         st['session_kwh_zero_polls'] = 0
         return
-    if int(round(float(display_kwh))) == 0:
+    if int(round(float(display_kwh))) > 0:
         st['session_kwh_zero_polls'] = 0
         st.pop('session_kwh_zero_warned', None)
         return
