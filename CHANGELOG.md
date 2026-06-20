@@ -6,6 +6,15 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.10.2] — 2026-06-20
+
+### Opgelost
+- **Totaal & Sessie toont 0 kWh** — CustomkWh-tegel kreeg `nValue=0`; header toont nu sessie-kWh (API → lifetime-delta → vermogen×tijd fallback).
+- **Laadtimer blijft 00:00** — `session_start_ts` wordt gezet wanneer laden actief is maar timestamp ontbrak (persisted state).
+- **Kosten sessie > dag / stale sessiekosten** — `is_session_resume` gebruikte achtergebleven `session_cost_total` na sessie-einde; sessiekosten worden na afloop gewist; dagwisseling reset sessiekosten bij doorlopend laden.
+- **Energy €0,00 | Belasting €X** — Tibber-prijs normaliseert energy/tax wanneer energy ontbreekt (`energy = total − tax`).
+- **EQ Fase-data vs Stroom contradictie** — LB-fase regel valt terug op gemeten L1/L2/L3-stroom wanneer available/equalized keys ontbreken.
+
 ## [10.10.1] — 2026-06-20
 
 ### Opgelost

@@ -88,6 +88,7 @@ def charger_state(plugin, cid):
         'session_active': False,
         'session_start_ts': None,
         'session_start_kwh': None,
+        'session_integrated_kwh': 0.0,
         'session_cost_total': 0.0,
         'session_cost_energy': 0.0,
         'session_cost_tax': 0.0,
@@ -113,6 +114,12 @@ def charger_state(plugin, cid):
         st['day_cost_total'] = 0.0
         st['day_cost_energy'] = 0.0
         st['day_cost_tax'] = 0.0
+        if st.get('session_active'):
+            st['session_cost_total'] = 0.0
+            st['session_cost_energy'] = 0.0
+            st['session_cost_tax'] = 0.0
+            st['session_integrated_kwh'] = 0.0
+            st['prev_session_kwh'] = None
     if st.get('day_energy_key') != tk:
         st['day_energy_key'] = tk
         st['day_baseline_kwh'] = None
@@ -161,7 +168,7 @@ def migrate_state_for_version(plugin):
 def migrate_cost_tracking(plugin):
     """One-time reset of session cost baselines when cost delta logic changes."""
     key = 'cost_track_version'
-    target = PLUGIN_VERSION
+    target = '10.10.2-session-cost-reset'
     if plugin.state.get(key) == target:
         return
     for st in (plugin.state.get('chargers') or {}).values():
@@ -169,6 +176,11 @@ def migrate_cost_tracking(plugin):
             continue
         st['prev_session_kwh'] = None
         st.pop('cost_delta_warned', None)
+        if not st.get('session_active'):
+            st['session_cost_total'] = 0.0
+            st['session_cost_energy'] = 0.0
+            st['session_cost_tax'] = 0.0
+            st['session_integrated_kwh'] = 0.0
     plugin.state[key] = target
     easee_logging.info(
         'easee_state',

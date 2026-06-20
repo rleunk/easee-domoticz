@@ -133,6 +133,30 @@ def _slot_interval_sec(plugin, points):
     return int(round(sum(deltas) / len(deltas)))
 
 
+def normalize_price_parts(plugin, price):
+    """Ensure energy/tax split matches total when Tibber omits energy."""
+    if not isinstance(price, dict):
+        return {'total': 0.0, 'energy': 0.0, 'tax': 0.0}
+    out = dict(price)
+    total = easee_helpers.safe_float(plugin, out.get('total'), 0.0)
+    energy = easee_helpers.safe_float(plugin, out.get('energy'), 0.0)
+    tax = easee_helpers.safe_float(plugin, out.get('tax'), 0.0)
+    if total <= 0:
+        out['total'] = total
+        out['energy'] = energy
+        out['tax'] = tax
+        return out
+    if energy <= 0 and tax <= 0:
+        out['energy'] = total
+        out['tax'] = 0.0
+    elif energy <= 0:
+        out['energy'] = max(0.0, total - tax)
+    elif tax <= 0:
+        out['tax'] = max(0.0, total - energy)
+    out['total'] = total
+    return out
+
+
 def current_tibber_price(plugin):
     cache = plugin.state.get('price_cache') or {}
     if not cache:
@@ -143,7 +167,7 @@ def current_tibber_price(plugin):
         interval = _slot_interval_sec(plugin, points)
         for dt, total, data in reversed(points):
             if (now - dt).total_seconds() >= 0 and (now - dt).total_seconds() < interval + 60:
-                out = dict(data)
+                out = normalize_price_parts(plugin, dict(data))
                 out['currency'] = plugin.state.get('currency', 'EUR')
                 out['startsAt'] = dt.isoformat()
                 return out
@@ -169,7 +193,7 @@ def current_tibber_price(plugin):
                 best_delta = delta
                 best = data
                 best_start = start_s
-    out = dict(best or {})
+    out = normalize_price_parts(plugin, dict(best or {}))
     out['currency'] = plugin.state.get('currency', 'EUR')
     out['startsAt'] = best_start
     return out

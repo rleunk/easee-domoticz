@@ -1676,6 +1676,10 @@ def _lb_phase_compact(plugin, values):
         vrij = _format_phase_triple(plugin, avail, 'A') if has_avail else '— / — / —'
         laad = _format_phase_triple(plugin, eq, 'A') if has_eq else '— / — / —'
         return f'   Vrij: {vrij} A  |  Laad: {laad} A'
+    measured, has_measured = _phase_values_from_key_list(plugin, values, EQUALIZER_KEYS['phase_current'])
+    if has_measured:
+        stroom = _format_phase_triple(plugin, measured, 'A')
+        return f'   📊 Stroom L1/L2/L3: {stroom} A'
     return '   Fase-data: nog niet beschikbaar'
 
 def _limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a):
