@@ -1,6 +1,6 @@
 # Troubleshooting Gids
 
-> **Huidige versie:** v10.9.32 (stable testing; functioneel v10.9.28) · Volledige installatie: [INSTALL.md](../INSTALL.md)
+> **Huidige versie:** v10.10.8 (stable: **v10.10.8-stable**) · Volledige installatie: [INSTALL.md](../INSTALL.md) · Stable-tags: [STABLE.md](../STABLE.md)
 
 ## Veelvoorkomende Problemen
 
@@ -41,11 +41,11 @@ sudo journalctl -u domoticz -f | grep Easee
 
 **Symptoom**: Meer dan verwachte tegels, of tegels met namen als *Import*, *Spanning*, *Terug & netto*
 
-**Verwacht (referentie):** bij **2 laadpalen + 1 Equalizer + Tibber** hoort **exact 15 tegels** — zie [CONFIGURATION.md — Verwachte tegels](CONFIGURATION.md#verwachte-tegels-referentie).
+**Verwacht (referentie):** bij **2 laadpalen + 1 Equalizer + Tibber** hoort **exact 16 tegels** — zie [CONFIGURATION.md — Verwachte tegels](CONFIGURATION.md#verwachte-tegels-referentie).
 
 **Legacy-tegels die er níet horen:** *Import*, *Spanning*, *Terug & netto*, *Netto*, *Teruglevering*, losse *Load balancing* (Equalizer). Die komen uit v10.8.0 of v10.9.0. Verwijder ze handmatig in Domoticz (**Setup → Devices**).
 
-**Heb je precies 15 tegels** (zonder legacy-namen)? Dan is alles in orde — geen actie nodig.
+**Heb je precies 16 tegels** (zonder legacy-namen)? Dan is alles in orde — geen actie nodig.
 
 ### Custom iconen ontbreken
 
@@ -59,7 +59,7 @@ sudo journalctl -u domoticz -f | grep Easee
 **Oplossing** (v10.9.28+):
 1. **Verwijder oude Easee custom icons** via **Instellingen → Aangepaste pictogrammen**
 2. Controleer `Easee_icons_v2.zip` en map `icons/` (13 mini-zips) in pluginmap
-3. `git pull` naar v10.9.30 en herstart hardware-item
+3. `git pull` of `git checkout v10.10.8-stable` en herstart hardware-item
 4. Log controleren:
    - `Custom icons geladen: 13 sets`
    - `image_ids: 13/13 sets`
@@ -194,4 +194,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Configuratie**: [CONFIGURATION.md](CONFIGURATION.md)
 
-Bij een issue: pluginversie **v10.9.32**, Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
+Bij een issue: pluginversie **v10.10.8** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).

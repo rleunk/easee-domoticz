@@ -1,0 +1,43 @@
+# Stable releases
+
+Dit project gebruikt **annotated git-tags** met het suffix `-stable` voor aanbevolen productie-baselines. Gewone versietags (`v10.10.8`, `v10.9.32`, …) markeren releases; `-stable` geeft aan welke release Richard als **huidige stabiele baseline** aanbeveelt.
+
+## Huidige stable
+
+| Tag | Commit | Status |
+|-----|--------|--------|
+| **`v10.10.8-stable`** | zelfde als `v10.10.8` | **Aanbevolen** — sessie-kWh fixes, Tibber v10.10-features, 16 tegels |
+| `v10.9.32-stable` | zelfde als `v10.9.32` | **Bewaard** — rollback-baseline (v10.9.x stable testing line) |
+
+## Installeren of upgraden naar stable
+
+```bash
+cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+git fetch --tags origin
+git checkout v10.10.8-stable
+sudo systemctl restart domoticz
+```
+
+Of blijf op `main` volgen (`git pull`) — `main` wijst doorgaans naar dezelfde commit als de huidige stable.
+
+**Na elke upgrade:** herstart het Easee hardware-item in Domoticz (**Setup → Hardware**).
+
+## Rollback naar v10.9.32
+
+Alleen als v10.10.x problemen geeft en je terug wilt naar de vorige stable testing line:
+
+```bash
+cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+git fetch --tags origin
+git checkout v10.9.32-stable
+sudo systemctl restart domoticz
+```
+
+De tag `v10.9.32-stable` blijft op GitHub staan; er wordt niets verwijderd.
+
+## Releases
+
+- [v10.10.8](https://github.com/rleunk/easee-domoticz/releases/tag/v10.10.8) — huidige stable (aanbevolen)
+- [v10.9.32](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.32) — vorige stable testing baseline
+
+Zie [CHANGELOG.md](CHANGELOG.md) en [README.md](README.md) voor details per versie.

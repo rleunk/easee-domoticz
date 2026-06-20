@@ -125,7 +125,7 @@ Gegroepeerde weergave op één teksttegel:
 
 **Huisvermogen staat niet op Status** — zie Vermogen-tegel.
 
-### Equalizer tegels (v10.9.1+, huidige release v10.9.30)
+### Equalizer tegels (v10.9.1+, huidige release v10.10.8)
 
 | Tegel | Type | Icoon | Weergave |
 |-------|------|-------|----------|
@@ -288,7 +288,7 @@ Devices krijgen automatisch deze namen:
 [PREFIX] - [NAAM] - Kosten (Sessie/Dag) (Tibber)
 ```
 
-## Custom iconen (v10.9.30)
+## Custom iconen (v10.10.8)
 
 13 sets in `Easee_icons_v2.zip`. Belangrijkste mapping:
 
