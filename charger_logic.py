@@ -12,16 +12,22 @@ import tibber_pricing
 
 def session_energy_kwh(plugin, values, session, ongoing_fetched=False):
     # Prefer /sessions/ongoing over /state — state sessionEnergy can stay stale after 429 or day change.
+    def _positive_kwh(raw):
+        if raw is None:
+            return None
+        kwh = easee_helpers.kwh_value(plugin, raw)
+        return kwh if kwh > 0 else None
+
     if isinstance(session, dict) and session:
         val = easee_helpers.first_dict_value(plugin, session, CHARGER_KEYS['session_energy'])
-        if val is not None:
-            return easee_helpers.kwh_value(plugin, val)
+        parsed = _positive_kwh(val)
+        if parsed is not None:
+            return parsed
     if ongoing_fetched:
         return None
     if isinstance(values, dict):
         val = easee_helpers.first_dict_value(plugin, values, CHARGER_KEYS['session_energy'])
-        if val is not None:
-            return easee_helpers.kwh_value(plugin, val)
+        return _positive_kwh(val)
     return None
 
 def session_start_timestamp(plugin, values, session):
@@ -331,7 +337,9 @@ def poll_charger(plugin, charger):
         else:
             st['session_start_ts'] = api_start_ts if api_start_ts is not None else easee_state.now_ts(plugin)
             st['session_start_kwh'] = total_kwh
-            st['session_start_day_kwh'] = float(day_kwh)
+            ensure_session_start_day_kwh(
+                plugin, st, day_kwh, api_session_kwh=api_session_kwh, power_w=power_w,
+            )
             st['prev_session_kwh'] = None
             st['session_integrated_kwh'] = 0.0
             st['session_cost_total'] = 0.0
@@ -439,7 +447,7 @@ def poll_charger(plugin, charger):
     )
     domoticz_devices.update_charger_custom(
         plugin, cid, 'Totaal & Sessie', totaal_sessie,
-        nvalue=int(round(session_kwh * 10)),
+        nvalue=session_kwh,
     )
 
     eq_lb = any(bool(v.get('loadbal')) for v in (plugin.latest_equalizers or {}).values())

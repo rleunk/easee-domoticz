@@ -120,6 +120,7 @@ def charger_state(plugin, cid):
             st['session_cost_energy'] = 0.0
             st['session_cost_tax'] = 0.0
             st['session_integrated_kwh'] = 0.0
+            st['session_start_day_kwh'] = None
             st['prev_session_kwh'] = None
     if st.get('day_energy_key') != tk:
         st['day_energy_key'] = tk

@@ -522,10 +522,25 @@ def update_charger_text(plugin, cid, label_key, value):
     if u is not None:
         domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
 
+def _custom_kwh_nvalue(plugin, unit, kwh):
+    """Map kWh to Custom sensor nValue using device Options scale (display = nValue * scale)."""
+    try:
+        opts = str(getattr(domoticz_runtime.Devices[unit], 'Options', '') or '')
+        raw = opts.split(';')[0].strip() if ';' in opts else '1'
+        scale = float(raw.replace(',', '.'))
+        if scale <= 0:
+            scale = 1.0
+    except Exception:
+        scale = 1.0
+    return int(round(float(kwh) / scale))
+
 def update_charger_custom(plugin, cid, label_key, value, nvalue=None):
     u = resolve_charger_unit(plugin, cid, label_key)
     if u is not None:
-        nv = int(round(float(nvalue))) if nvalue is not None else 0
+        if nvalue is not None:
+            nv = _custom_kwh_nvalue(plugin, u, nvalue)
+        else:
+            nv = 0
         domoticz_runtime.Devices[u].Update(nValue=nv, sValue=str(value))
 
 def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, session_active):
