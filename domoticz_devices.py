@@ -523,15 +523,28 @@ def update_charger_text(plugin, cid, label_key, value):
         domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
 
 def _custom_kwh_nvalue(plugin, unit, kwh):
-    """Map kWh to Custom sensor nValue using device Options scale (display = nValue * scale)."""
+    """Map kWh to Custom nValue — match Totaal kWh core tile (int(round(kWh)) for scale 1)."""
     try:
-        opts = str(getattr(domoticz_runtime.Devices[unit], 'Options', '') or '')
-        raw = opts.split(';')[0].strip() if ';' in opts else '1'
-        scale = float(raw.replace(',', '.'))
+        opts = getattr(domoticz_runtime.Devices[unit], 'Options', None)
+        custom = ''
+        if isinstance(opts, dict):
+            custom = str(opts.get('Custom') or opts.get('custom') or '')
+        else:
+            text = str(opts or '')
+            if 'Custom' in text and ';' in text:
+                import re
+                match = re.search(r"['\"]Custom['\"]\s*:\s*['\"]([^'\"]+)['\"]", text)
+                custom = match.group(1) if match else text
+            else:
+                custom = text
+        raw = custom.split(';')[0].strip() if ';' in custom else custom.strip()
+        scale = float(raw.replace(',', '.')) if raw else 1.0
         if scale <= 0:
             scale = 1.0
     except Exception:
         scale = 1.0
+    if abs(scale - 1.0) < 0.0001:
+        return int(round(float(kwh)))
     return int(round(float(kwh) / scale))
 
 def update_charger_custom(plugin, cid, label_key, value, nvalue=None):

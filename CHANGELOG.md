@@ -6,6 +6,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.10.5] — 2026-06-20
+
+### Opgelost
+- **Totaal & Sessie header blijft 0 kWh (v10.10.4 regressie)** — `session_start_day_kwh` kon gelijk aan `day_kwh` worden vastgezet (baseline delta altijd 0) wanneer `session_start_ts` pas in dezelfde poll op *now* werd gezet vóór de baseline-berekening, of bij mis-detectie als nieuwe sessie mid-charge. Baseline gebruikt nu API-starttijd vóór clock-fallback; stuck baseline wordt direct gecorrigeerd via `maybe_recalibrate_session_start_day_kwh()`; power×timer-fallback in `resolve_session_kwh()`; CustomkWh `nValue` volgt weer `int(round(kWh))` zoals Totaal kWh (Options-dict parsing). INFO-log eenmalig bij sessie-kWh=0 terwijl `day_kwh>0` en laden actief.
+
 ## [10.10.4] — 2026-06-20
 
 ### Opgelost
