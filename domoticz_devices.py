@@ -481,8 +481,10 @@ def update_core_text(plugin, label, value):
 def update_core_custom(plugin, label, value):
     u = resolve_core_unit(plugin, easee_helpers.clean_label(plugin, label))
     if u is not None:
-        nv = int(round(float(value))) if isinstance(value, (int, float)) else 0
-        domoticz_runtime.Devices[u].Update(nValue=nv, sValue=str(value))
+        kwh = float(value) if isinstance(value, (int, float)) else 0.0
+        nv = _custom_kwh_nvalue(plugin, u, kwh)
+        sval = _custom_kwh_svalue(kwh)
+        domoticz_runtime.Devices[u].Update(nValue=nv, sValue=sval)
 
 def update_core_energy(plugin, label, power_w, total_wh):
     u = resolve_core_unit(plugin, easee_helpers.clean_label(plugin, label))
@@ -503,8 +505,10 @@ def update_text(plugin, name, value):
 def update_custom(plugin, name, value, nvalue=None):
     u = resolve_unit(plugin, name)
     if u is not None:
-        nv = int(round(float(nvalue))) if nvalue is not None else 0
-        domoticz_runtime.Devices[u].Update(nValue=nv, sValue=str(value))
+        kwh = float(nvalue) if nvalue is not None else 0.0
+        nv = _custom_kwh_nvalue(plugin, u, kwh)
+        sval = _custom_kwh_svalue(kwh) if nvalue is not None else str(value)
+        domoticz_runtime.Devices[u].Update(nValue=nv, sValue=sval)
 
 def update_energy(plugin, name, power_w, total_wh):
     u = resolve_unit(plugin, name)
@@ -521,6 +525,15 @@ def update_charger_text(plugin, cid, label_key, value):
     u = resolve_charger_unit(plugin, cid, label_key)
     if u is not None:
         domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
+
+def _custom_kwh_svalue(kwh):
+    """Custom Sensor (243/31) header parses sValue as float — must be numeric, not emoji text."""
+    kwh = float(kwh)
+    if abs(kwh - round(kwh)) < 0.0005:
+        return str(int(round(kwh)))
+    if kwh >= 100:
+        return f'{kwh:.1f}'
+    return f'{kwh:.3f}'
 
 def _custom_kwh_nvalue(plugin, unit, kwh):
     """Map kWh to Custom nValue — match Totaal kWh core tile (int(round(kWh)) for scale 1)."""
@@ -547,14 +560,37 @@ def _custom_kwh_nvalue(plugin, unit, kwh):
         return int(round(float(kwh)))
     return int(round(float(kwh) / scale))
 
+_TOTAAL_SESSIE_LOOKUP_WARNED = set()
+
 def update_charger_custom(plugin, cid, label_key, value, nvalue=None):
     u = resolve_charger_unit(plugin, cid, label_key)
-    if u is not None:
-        if nvalue is not None:
-            nv = _custom_kwh_nvalue(plugin, u, nvalue)
-        else:
-            nv = 0
-        domoticz_runtime.Devices[u].Update(nValue=nv, sValue=str(value))
+    cid_key = str(cid).strip()
+    if u is None:
+        if label_key == 'Totaal & Sessie' and cid_key not in _TOTAAL_SESSIE_LOOKUP_WARNED:
+            _TOTAAL_SESSIE_LOOKUP_WARNED.add(cid_key)
+            tried = []
+            resolve_charger_unit(plugin, cid, label_key, tried=tried)
+            easee_logging.warning(
+                'domoticz_devices',
+                f'Totaal & Sessie-tegel niet gevonden lader {cid_key} | geprobeerd: {", ".join(tried)}',
+            )
+        return
+    kwh = float(nvalue) if nvalue is not None else 0.0
+    nv = _custom_kwh_nvalue(plugin, u, kwh)
+    sval = _custom_kwh_svalue(kwh)
+    detail = str(value)[:4000] if value is not None else sval
+    try:
+        domoticz_runtime.Devices[u].Update(nValue=nv, sValue=sval, Description=detail)
+    except TypeError:
+        domoticz_runtime.Devices[u].Update(nValue=nv, sValue=sval)
+    if label_key == 'Totaal & Sessie':
+        devid = str(getattr(domoticz_runtime.Devices[u], 'DeviceID', '') or '')
+        easee_logging.info(
+            'domoticz_devices',
+            f'Totaal & Sessie update lader {cid_key}: sessie={kwh:.3f} kWh, nValue={nv}, '
+            f'sValue={sval!r}, unit={u}, device_id={devid}',
+            'session',
+        )
 
 def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, session_active):
     tried = []

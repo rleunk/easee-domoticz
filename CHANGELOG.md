@@ -6,6 +6,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.10.7] — 2026-06-20
+
+### Opgelost
+- **Totaal & Sessie header blijft 0 kWh (v10.10.4–6)** — echte oorzaak: Domoticz Custom Sensor (243/31) toont de tegel-header uit **numerieke `sValue`**, niet uit `nValue`. De plugin stuurde emoji-tekst (`🔋 Deze sessie: 2.573 kWh | …`) in `sValue`; Domoticz kon dat niet parsen → header `0 kWh`. **Totaal kWh** werkte wel (sValue `"4075"`). Fix: `_custom_kwh_svalue()` zet numerieke sValue; detailtekst in `Description`. INFO-log per poll bij Totaal & Sessie-update; WARNING als tegel niet gevonden. **`track_session_kwh_zero_polls`** had omgekeerde logica in v10.10.6 (reset bij 0 i.p.v. increment) — gecorrigeerd.
+
 ## [10.10.6] — 2026-06-20
 
 ### Opgelost
