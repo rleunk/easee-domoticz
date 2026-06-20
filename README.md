@@ -1,12 +1,12 @@
-# Easee Domoticz plugin v10.10.7
+# Easee Domoticz plugin v10.10.8
 
 **Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.10.7-blue)
+![Version](https://img.shields.io/badge/version-10.10.8-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** v10.10.7 — Totaal & Sessie header fix (numerieke Custom sValue). v10.10.6: display floor + baseline unstick. Stable baseline: **v10.9.32-stable**.
+> **Status:** v10.10.8 — sessie-kWh cap op dagtotaal (geen 34 kWh bij 12 kWh vandaag). v10.10.7: numerieke Custom sValue. Stable baseline: **v10.9.32-stable**.
 
 ## TL;DR — installeren in 2 minuten
 

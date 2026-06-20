@@ -585,7 +585,7 @@ def update_charger_custom(plugin, cid, label_key, value, nvalue=None):
         domoticz_runtime.Devices[u].Update(nValue=nv, sValue=sval)
     if label_key == 'Totaal & Sessie':
         devid = str(getattr(domoticz_runtime.Devices[u], 'DeviceID', '') or '')
-        easee_logging.info(
+        easee_logging.debug(
             'domoticz_devices',
             f'Totaal & Sessie update lader {cid_key}: sessie={kwh:.3f} kWh, nValue={nv}, '
             f'sValue={sval!r}, unit={u}, device_id={devid}',

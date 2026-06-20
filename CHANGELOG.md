@@ -6,6 +6,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.10.8] — 2026-06-20
+
+### Opgelost
+- **Sessie-kWh absurd hoog (bijv. 34 kWh bij 12,7 kWh vandaag)** — `display_session_kwh()` nam het maximum van `session_kwh`, `day_delta`, `power×timer` en API; een verouderde API-starttijd (sessie vanaf ochtend) gaf `power×timer` ≫ `day_kwh`. Mid-session herstart zette `session_start_day_kwh` op `0` of `unstick` forceerde baseline `0`, waardoor `day_delta` of ongecapped timer won. Fix: voorkeur voor `day_kwh − session_start_day_kwh` bij geldige baseline; `power×timer` alleen als schatting ≤ `day_kwh`; `display_kwh = min(display_kwh, day_kwh)`; mid-session baseline via `day_kwh − timer×vermogen` (nooit `0`). Garage 3,3 vs dag 2,7 wordt ook gecapped. v10.10.7 numerieke `sValue` blijft intact. Totaal & Sessie INFO-log → DEBUG.
+
 ## [10.10.7] — 2026-06-20
 
 ### Opgelost
