@@ -88,6 +88,7 @@ def charger_state(plugin, cid):
         'session_active': False,
         'session_start_ts': None,
         'session_start_kwh': None,
+        'session_start_day_kwh': None,
         'session_integrated_kwh': 0.0,
         'session_cost_total': 0.0,
         'session_cost_energy': 0.0,

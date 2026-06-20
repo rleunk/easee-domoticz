@@ -6,6 +6,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.10.4] — 2026-06-20
+
+### Opgelost
+- **Totaal & Sessie header blijft 0 kWh tijdens laden** — `resolve_session_kwh()` gebruikte lifetime-delta (`session_start_kwh` = `total_kwh`, terwijl lifetimeEnergy tijdens een actieve sessie niet beweegt) en vermogensintegratie die na upgrade/herstart op 0 stond. Sessie-kWh volgt nu dezelfde `day_kwh`-tracker als de Laden-tegel via `session_start_day_kwh`; mid-session upgrade schat baseline uit timer×vermogen.
+
 ## [10.10.3] — 2026-06-20
 
 ### Opgelost

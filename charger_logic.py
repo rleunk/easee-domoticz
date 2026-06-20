@@ -184,7 +184,26 @@ def compute_duration_text(plugin, start_ts):
     secs = max(0, int(easee_state.now_ts(plugin) - float(start_ts)))
     return f'{secs // 3600:02d}:{(secs % 3600) // 60:02d}'
 
-def ensure_session_tracking(plugin, st, values, session, session_active, total_kwh):
+def ensure_session_start_day_kwh(plugin, st, day_kwh, api_session_kwh=None, power_w=0):
+    """Baseline day_kwh at session start — same counter source as the Laden tile."""
+    if st.get('session_start_day_kwh') is not None:
+        return
+    integrated = easee_helpers.safe_float(plugin, st.get('session_integrated_kwh', 0.0), 0.0)
+    if api_session_kwh is not None and float(api_session_kwh) > 0:
+        st['session_start_day_kwh'] = max(0.0, float(day_kwh) - float(api_session_kwh))
+        return
+    if integrated > 0:
+        st['session_start_day_kwh'] = max(0.0, float(day_kwh) - integrated)
+        return
+    start_ts = st.get('session_start_ts')
+    if start_ts is not None and power_w > 50:
+        elapsed_h = max(0.0, (easee_state.now_ts(plugin) - float(start_ts)) / 3600.0)
+        est_session = round((float(power_w) / 1000.0) * elapsed_h, 6)
+        st['session_start_day_kwh'] = max(0.0, float(day_kwh) - est_session)
+        return
+    st['session_start_day_kwh'] = float(day_kwh)
+
+def ensure_session_tracking(plugin, st, values, session, session_active, total_kwh, day_kwh=0.0, api_session_kwh=None, power_w=0):
     """Keep session clock/baseline when session_active persisted without start metadata."""
     if not session_active:
         return
@@ -193,14 +212,23 @@ def ensure_session_tracking(plugin, st, values, session, session_active, total_k
         st['session_start_ts'] = api_start_ts if api_start_ts is not None else easee_state.now_ts(plugin)
     if st.get('session_start_kwh') is None:
         st['session_start_kwh'] = total_kwh
+    ensure_session_start_day_kwh(
+        plugin, st, day_kwh, api_session_kwh=api_session_kwh, power_w=power_w,
+    )
 
-def resolve_session_kwh(plugin, st, session_active, api_session_kwh, total_kwh, power_w):
-    """Session kWh: sessionEnergy → lifetime delta → power×time integration."""
+def resolve_session_kwh(plugin, st, session_active, api_session_kwh, total_kwh, power_w, day_kwh=0.0):
+    """Session kWh: sessionEnergy → day_track delta → lifetime delta → power×time."""
     if not session_active:
         return easee_helpers.safe_float(plugin, st.get('last_session_kwh', 0.0), 0.0)
     if api_session_kwh is not None and float(api_session_kwh) > 0:
         st['session_integrated_kwh'] = float(api_session_kwh)
         return float(api_session_kwh)
+    start_day = st.get('session_start_day_kwh')
+    if start_day is not None:
+        day_session = max(0.0, float(day_kwh) - float(start_day))
+        if day_session > 0:
+            st['session_integrated_kwh'] = day_session
+            return day_session
     start_kwh = st.get('session_start_kwh')
     if start_kwh is not None:
         lifetime_delta = max(0.0, float(total_kwh) - float(start_kwh))
@@ -296,10 +324,14 @@ def poll_charger(plugin, charger):
                 st['session_start_kwh'] = max(0.0, float(total_kwh) - float(api_session_kwh))
             elif st.get('session_start_kwh') is None:
                 st['session_start_kwh'] = total_kwh
+            ensure_session_start_day_kwh(
+                plugin, st, day_kwh, api_session_kwh=api_session_kwh, power_w=power_w,
+            )
             st['prev_session_kwh'] = None
         else:
             st['session_start_ts'] = api_start_ts if api_start_ts is not None else easee_state.now_ts(plugin)
             st['session_start_kwh'] = total_kwh
+            st['session_start_day_kwh'] = float(day_kwh)
             st['prev_session_kwh'] = None
             st['session_integrated_kwh'] = 0.0
             st['session_cost_total'] = 0.0
@@ -307,7 +339,10 @@ def poll_charger(plugin, charger):
             st['session_cost_tax'] = 0.0
             st['cost_delta_warned'] = False
     elif session_active:
-        ensure_session_tracking(plugin, st, values, session, session_active, total_kwh)
+        ensure_session_tracking(
+            plugin, st, values, session, session_active, total_kwh,
+            day_kwh=day_kwh, api_session_kwh=api_session_kwh, power_w=power_w,
+        )
 
     ending_session = (not session_active) and st.get('session_active')
 
@@ -346,8 +381,10 @@ def poll_charger(plugin, charger):
             st['session_cost_tax'] = round(easee_helpers.safe_float(plugin, st.get('session_cost_tax', 0.0), 0.0) + add_tax, 4)
 
     if ending_session:
-        if api_session_kwh is not None:
-            st['last_session_kwh'] = api_session_kwh
+        if api_session_kwh is not None and float(api_session_kwh) > 0:
+            st['last_session_kwh'] = float(api_session_kwh)
+        elif st.get('session_start_day_kwh') is not None:
+            st['last_session_kwh'] = max(0.0, float(day_kwh) - float(st.get('session_start_day_kwh')))
         elif st.get('session_start_kwh') is not None:
             st['last_session_kwh'] = max(0.0, float(total_kwh) - float(st.get('session_start_kwh')))
         elif easee_helpers.safe_float(plugin, st.get('session_integrated_kwh'), 0.0) > 0:
@@ -359,6 +396,7 @@ def poll_charger(plugin, charger):
         st['session_active'] = False
         st['session_start_ts'] = None
         st['session_start_kwh'] = None
+        st['session_start_day_kwh'] = None
         st['prev_session_kwh'] = None
         st['session_integrated_kwh'] = 0.0
         st['session_cost_total'] = 0.0
@@ -366,7 +404,8 @@ def poll_charger(plugin, charger):
         st['session_cost_tax'] = 0.0
 
     session_kwh = resolve_session_kwh(
-        plugin, st, bool(st.get('session_active')), api_session_kwh, total_kwh, power_w,
+        plugin, st, session_active and bool(st.get('session_active')),
+        api_session_kwh, total_kwh, power_w, day_kwh=day_kwh,
     )
     if st.get('session_active'):
         laadduur = compute_duration_text(plugin, st.get('session_start_ts'))

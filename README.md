@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** v10.10.3 — CustomkWh `nValue` int-fix (Totaal & Sessie / Totaal kWh). v10.10.2: sessie-kWh/tegel-header, laadtimer, kosten-splitsing en EQ-fase fallback fixes. v10.10.1: netwerk-timeout fix. Stable baseline: **v10.9.32-stable**.
+> **Status:** v10.10.4 — Totaal & Sessie sessie-kWh via day-track (zelfde bron als Laden-tegel). v10.10.3: CustomkWh `nValue` int-fix. v10.10.2: sessie-kWh/tegel-header, laadtimer, kosten-splitsing en EQ-fase fallback fixes. v10.10.1: netwerk-timeout fix. Stable baseline: **v10.9.32-stable**.
 
 ## TL;DR — installeren in 2 minuten
 
