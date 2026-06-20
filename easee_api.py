@@ -3,8 +3,21 @@
 import time
 
 import domoticz_runtime
-from easee_constants import BASE_URL, DEVICE_STATE_URL, LOGIN_URL, REFRESH_URL
+from easee_constants import API_TIMEOUT, BASE_URL, DEVICE_STATE_URL, LOGIN_URL, REFRESH_URL
 import easee_logging
+
+try:
+    import requests
+    _REQUEST_ERRORS = (requests.exceptions.RequestException,)
+except Exception:
+    _REQUEST_ERRORS = (OSError, TimeoutError)
+
+try:
+    import requests
+except Exception:
+    requests = None
+
+API_TIMEOUT_SEC = 30
 
 
 def _parse_retry_after(header_val):
@@ -142,7 +155,7 @@ def _request_base_url(path):
 
 def login(plugin):
     try:
-        r = plugin.session.post(LOGIN_URL, json={'userName': domoticz_runtime.Parameters.get('Username',''), 'password': domoticz_runtime.Parameters.get('Password','')}, timeout=20)
+        r = plugin.session.post(LOGIN_URL, json={'userName': domoticz_runtime.Parameters.get('Username',''), 'password': domoticz_runtime.Parameters.get('Password','')}, timeout=API_TIMEOUT_SEC)
         if r.status_code == 200:
             data = r.json()
             plugin.access_token = data.get('accessToken','')
@@ -161,7 +174,7 @@ def refresh(plugin):
     if not plugin.access_token or not plugin.refresh_token:
         return login(plugin)
     try:
-        r = plugin.session.post(REFRESH_URL, json={'accessToken': plugin.access_token, 'refreshToken': plugin.refresh_token}, timeout=20)
+        r = plugin.session.post(REFRESH_URL, json={'accessToken': plugin.access_token, 'refreshToken': plugin.refresh_token}, timeout=API_TIMEOUT_SEC)
         if r.status_code == 200:
             data = r.json()
             plugin.access_token = data.get('accessToken','')
@@ -173,15 +186,34 @@ def refresh(plugin):
         easee_logging.debug('easee_api', f'Token refresh mislukt, opnieuw inloggen: {e}', 'login')
     return login(plugin)
 
+def _mark_network_error(plugin):
+    plugin._discovery_network_error = True
+
+
+def _is_network_error(exc):
+    if requests is not None and isinstance(exc, requests.RequestException):
+        return True
+    name = type(exc).__name__
+    return name in ('ReadTimeout', 'ConnectTimeout', 'ConnectionError', 'Timeout', 'SSLError')
+
+
 def api_get(plugin, path, retry=True):
     plugin._last_api_path = path
     plugin._last_http_status = None
     started = time.time()
-    r = plugin.session.get(
-        _request_base_url(path) + path,
-        headers={'Authorization': f'Bearer {plugin.access_token}'},
-        timeout=20,
-    )
+    try:
+        r = plugin.session.get(
+            _request_base_url(path) + path,
+            headers={'Authorization': f'Bearer {plugin.access_token}'},
+            timeout=API_TIMEOUT_SEC,
+        )
+    except Exception as e:
+        if _is_network_error(e):
+            _mark_network_error(plugin)
+            easee_logging.warning('easee_api', f'GET {path} netwerkfout: {e} — retry volgende poll', 'api')
+        else:
+            easee_logging.warning('easee_api', f'GET {path} mislukt: {e}', 'api')
+        return None
     plugin._last_http_status = r.status_code
     elapsed = time.time() - started
     if elapsed > 5:

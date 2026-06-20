@@ -6,6 +6,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.10.1] — 2026-06-20
+
+### Opgelost
+- **Hardware-thread stopt bij API-timeout** — Netwerk/timeouts tijdens discovery of polling beëindigen de Domoticz-thread niet meer. `api_get` vangt connectie/timeouts af (30s timeout), discovery behoudt de bestaande cache bij fouten, en `onHeartbeat` heeft extra foutafhandeling zodat de poll-loop blijft draaien.
+
 ## [10.10.0] — 2026-06-19
 
 ### Toegevoegd

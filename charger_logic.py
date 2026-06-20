@@ -191,7 +191,16 @@ def discover_chargers(plugin):
     chargers = []
     flt = domoticz_runtime.Parameters.get('Mode5', '').strip().lower()
     try:
-        data = easee_api.api_get(plugin, '/chargers') or []
+        data = easee_api.api_get(plugin, '/chargers')
+        if data is None:
+            if plugin.chargers:
+                easee_logging.warning(
+                    'charger_logic',
+                    'Discovery chargers mislukt (geen API-data) — vorige cache behouden',
+                    'discovery',
+                )
+                return list(plugin.chargers)
+            return []
         if isinstance(data, list):
             for item in data:
                 if not isinstance(item, dict):
@@ -203,7 +212,9 @@ def discover_chargers(plugin):
                     chargers.append({'id': str(cid).strip(), 'name': name, 'siteName': site})
         easee_logging.info('charger_logic', f'Discovery: {len(chargers)} laadpaal(en) gevonden', 'discovery')
     except Exception as e:
-        easee_logging.error('charger_logic', f'Discovery chargers mislukt: {e}', 'discovery')
+        easee_logging.warning('charger_logic', f'Discovery chargers mislukt: {e}', 'discovery')
+        if plugin.chargers:
+            return list(plugin.chargers)
     return sorted({c['id']: c for c in chargers}.values(), key=lambda x: x['id'])
 
 def poll_charger(plugin, charger):

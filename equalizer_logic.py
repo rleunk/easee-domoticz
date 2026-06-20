@@ -1842,6 +1842,16 @@ def _ingest_equalizer_items(plugin, equalizers, seen, items, source, site_name='
     return added
 
 def discover_equalizers(plugin):
+    try:
+        return _discover_equalizers_impl(plugin)
+    except Exception as e:
+        easee_logging.warning('equalizer_logic', f'Discovery equalizers mislukt: {e}', 'discovery')
+        if plugin.equalizers:
+            return list(plugin.equalizers)
+        return []
+
+
+def _discover_equalizers_impl(plugin):
     equalizers = []
     seen = set()
     sources = []
@@ -1940,6 +1950,13 @@ def discover_equalizers(plugin):
     plugin.equalizer_probes = probes
     plugin.equalizer_source = ','.join(dict.fromkeys(sources)) if sources else 'none'
     equalizers = sorted({e['id']: e for e in equalizers}.values(), key=lambda x: x['id'])
+    if not equalizers and plugin.equalizers and getattr(plugin, '_discovery_network_error', False):
+        easee_logging.warning(
+            'equalizer_logic',
+            'Discovery equalizers mislukt (geen API-data) — vorige cache behouden',
+            'discovery',
+        )
+        return list(plugin.equalizers)
     easee_logging.debug('equalizer_logic', f'Equalizer probes: {probes}', 'discovery')
     easee_logging.info('equalizer_logic', f'Equalizer discovery: {len(equalizers)} via {plugin.equalizer_source}', 'discovery')
     return equalizers

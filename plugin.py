@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.10.0" author="Richard Leunk" version="10.10.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.10.1" author="Richard Leunk" version="10.10.1"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.10.0</h2><br/>
+        <h2>Easee Domoticz plugin v10.10.1</h2><br/>
         <p>Stabiele Easee laadpaal integratie met compacte UI, Tibber kwartierprijzen, Dagrapport-tegel, laadhints en Equalizer (compacte meterkast-tegels).</p>
     </description>
     <params>
@@ -102,6 +102,7 @@ class BasePlugin:
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
 
     def discover_entities(self):
+        self._discovery_network_error = False
         self.chargers = charger_logic.discover_chargers(self)
         self.equalizers = equalizer_logic.discover_equalizers(self)
         return self.chargers, self.equalizers
@@ -249,6 +250,13 @@ class BasePlugin:
         old_eq_ids = {e['id'] for e in self.equalizers}
         old_charger_ids = {c['id'] for c in self.chargers}
         self.discover_entities()
+        if getattr(self, '_discovery_network_error', False):
+            easee_logging.warning(
+                'plugin',
+                'Discovery overgeslagen door netwerkfout — cache behouden, retry volgende poll',
+                'discovery',
+            )
+            return
         self.last_discovery = time.time()
         self.charger_names = {c['id']: charger_logic.charger_display_name(self, c, i) for i, c in enumerate(self.chargers)}
         self.equalizer_names = {e['id']: equalizer_logic.equalizer_display_name(self, e, i) for i, e in enumerate(self.equalizers)}
@@ -453,13 +461,31 @@ class BasePlugin:
                 )
                 return
             self.last_poll = time.time()
-            self.refresh_entity_cache_only()
-            self.poll_all()
-            self.update_combined()
-            easee_state.save_state(self)
+            try:
+                self.refresh_entity_cache_only()
+            except Exception as e:
+                easee_logging.warning('plugin', f'Discovery refresh mislukt: {e}', 'discovery')
+            try:
+                self.poll_all()
+            except Exception as e:
+                easee_logging.warning('plugin', f'Poll mislukt: {e}', 'poll')
+            try:
+                self.update_combined()
+            except Exception as e:
+                easee_logging.warning('plugin', f'UI-update mislukt: {e}', 'poll')
+            try:
+                easee_state.save_state(self)
+            except Exception as e:
+                easee_logging.warning('plugin', f'State opslaan mislukt: {e}', 'poll')
         except Exception as e:
-            easee_logging.error('plugin', f'onHeartbeat fout: {e}\n{traceback.format_exc()}')
-            domoticz_devices.update_core_text(self, 'Status', f'Fout: {e}')
+            try:
+                easee_logging.error('plugin', f'onHeartbeat fout: {e}\n{traceback.format_exc()}')
+            except Exception:
+                pass
+            try:
+                domoticz_devices.update_core_text(self, 'Status', f'Fout: {e}')
+            except Exception:
+                pass
 
 
 _plugin = BasePlugin()
