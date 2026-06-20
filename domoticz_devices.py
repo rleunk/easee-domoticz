@@ -481,7 +481,7 @@ def update_core_text(plugin, label, value):
 def update_core_custom(plugin, label, value):
     u = resolve_core_unit(plugin, easee_helpers.clean_label(plugin, label))
     if u is not None:
-        nv = easee_helpers.safe_float(plugin, value, 0.0) if isinstance(value, (int, float)) else 0.0
+        nv = int(round(float(value))) if isinstance(value, (int, float)) else 0
         domoticz_runtime.Devices[u].Update(nValue=nv, sValue=str(value))
 
 def update_core_energy(plugin, label, power_w, total_wh):
@@ -503,7 +503,7 @@ def update_text(plugin, name, value):
 def update_custom(plugin, name, value, nvalue=None):
     u = resolve_unit(plugin, name)
     if u is not None:
-        nv = float(nvalue) if nvalue is not None else 0.0
+        nv = int(round(float(nvalue))) if nvalue is not None else 0
         domoticz_runtime.Devices[u].Update(nValue=nv, sValue=str(value))
 
 def update_energy(plugin, name, power_w, total_wh):
@@ -522,10 +522,10 @@ def update_charger_text(plugin, cid, label_key, value):
     if u is not None:
         domoticz_runtime.Devices[u].Update(nValue=0, sValue=str(value)[:4000])
 
-def update_charger_custom(plugin, cid, label_key, value, header_kwh=None):
+def update_charger_custom(plugin, cid, label_key, value, nvalue=None):
     u = resolve_charger_unit(plugin, cid, label_key)
     if u is not None:
-        nv = easee_helpers.safe_float(plugin, header_kwh, 0.0) if header_kwh is not None else 0.0
+        nv = int(round(float(nvalue))) if nvalue is not None else 0
         domoticz_runtime.Devices[u].Update(nValue=nv, sValue=str(value))
 
 def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, session_active):

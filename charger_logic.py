@@ -399,7 +399,8 @@ def poll_charger(plugin, charger):
         f' | Totaal: {total_kwh:.1f} kWh'
     )
     domoticz_devices.update_charger_custom(
-        plugin, cid, 'Totaal & Sessie', totaal_sessie, header_kwh=round(session_kwh, 3),
+        plugin, cid, 'Totaal & Sessie', totaal_sessie,
+        nvalue=int(round(session_kwh * 10)),
     )
 
     eq_lb = any(bool(v.get('loadbal')) for v in (plugin.latest_equalizers or {}).values())

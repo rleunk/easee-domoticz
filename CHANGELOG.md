@@ -6,6 +6,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.10.3] — 2026-06-20
+
+### Opgelost
+- **CustomkWh Update()-fout na v10.10.2** — `Totaal & Sessie` en `Totaal kWh` gaven `Failed to parse parameters` / `TypeError: 'float' object cannot be interpreted as an integer` doordat `nValue` als float werd doorgegeven. Alle Custom/kWh-updates gebruiken nu `int()`; sessie-header via `nvalue=int(round(session_kwh * 10))` (1 decimaal, conform `Custom: 1;kWh`).
+
 ## [10.10.2] — 2026-06-20
 
 ### Opgelost
