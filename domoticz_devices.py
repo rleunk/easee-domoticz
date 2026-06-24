@@ -695,6 +695,10 @@ def update_equalizer_energy(plugin, eid, label_key, power_w, total_wh=0):
         domoticz_runtime.Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
 
 
+def _device_current_values(dev):
+    """Read current nValue/sValue — required on some Domoticz builds for any Update()."""
+    return int(getattr(dev, 'nValue', 0) or 0), str(getattr(dev, 'sValue', '') or '')
+
 def mark_device_unused(plugin, unit, reason=''):
     """Mark deprecated tile unused (Used=0) once; never auto-delete."""
     if unit is None:
@@ -705,10 +709,17 @@ def mark_device_unused(plugin, unit, reason=''):
     try:
         dev = domoticz_runtime.Devices[unit]
         name = getattr(dev, 'Name', str(unit))
+        if int(getattr(dev, 'Used', 1) or 1) == 0:
+            _DEPRECATED_UNUSED_MARKED.add(marker)
+            return
+        n_value, s_value = _device_current_values(dev)
         try:
-            dev.Update(Used=0)
+            dev.Update(nValue=n_value, sValue=s_value, Used=0)
         except TypeError:
-            pass
+            try:
+                dev.Update(nValue=n_value, sValue=s_value)
+            except Exception:
+                pass
         if hasattr(dev, 'Used'):
             dev.Used = 0
         easee_logging.info(

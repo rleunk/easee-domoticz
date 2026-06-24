@@ -1,12 +1,12 @@
-# Easee Domoticz plugin v10.11.0
+# Easee Domoticz plugin v10.11.1
 
 **Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.11.0-blue)
+![Version](https://img.shields.io/badge/version-10.11.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** v10.11.0 — compacte tegels (11 i.p.v. 16 bij 2 laders + EQ + Tibber). **Stable baseline: v10.10.8-stable** ([STABLE.md](STABLE.md)) — test v10.11.0 eerst voordat je stable wijzigt.
+> **Status:** v10.11.1 — compacte tegels (11 i.p.v. 16 bij 2 laders + EQ + Tibber). **Stable baseline: v10.10.8-stable** ([STABLE.md](STABLE.md)) — test v10.11.x eerst voordat je stable wijzigt.
 
 ## TL;DR — installeren in 2 minuten
 
@@ -16,7 +16,7 @@ git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.11.0** → Easee-gebruikersnaam + wachtwoord → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.11.1** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
 Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
@@ -48,7 +48,7 @@ Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder op
 | **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
 
-Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.11.0][LEVEL]…`.
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.11.1][LEVEL]…`.
 
 ## Logniveaus (kort)
 

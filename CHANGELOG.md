@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.11.1] — 2026-06-24
+
+### Opgelost
+- **Deprecated tegels: `Failed to parse parameters` / `missing required argument 'nvalue'`** — `mark_device_unused()` riep `Update(Used=0)` aan zonder `nValue`/`sValue` (zelfde regressie als v10.9.6 icon-fix). Verouderde tegels (*Dagrapport*, *Kosten & Samenvatting*, *Totaal & Sessie*, *Kosten (Sessie/Dag)*) krijgen nu éénmalig `Update(nValue=…, sValue=…, Used=0)` met huidige waarden; reeds `Used=0` wordt overgeslagen.
+
+### Upgrade
+- Van **v10.11.0**: `git pull` + hardware herstarten. Geen handmatige tegel-actie nodig; logspam bij deprecated tegels verdwijnt.
+
 ## [10.11.0] — 2026-06-24
 
 ### Gewijzigd — compacte tegels (16 → 11 bij 2 laders + EQ + Tibber)
