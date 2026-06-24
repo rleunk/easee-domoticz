@@ -125,7 +125,7 @@ Gegroepeerde weergave op één teksttegel:
 
 **Huisvermogen staat niet op Status** — zie Vermogen-tegel.
 
-### Equalizer tegels (v10.9.1+, huidige release v10.10.8)
+### Equalizer tegels (v10.9.1+, huidige release v10.11.1)
 
 | Tegel | Type | Icoon | Weergave |
 |-------|------|-------|----------|
@@ -138,7 +138,7 @@ Legacy: *Import*, *Terug & netto*, *Netto*, *Teruglevering*, *Spanning*, *Load b
 
 ## Verwachte tegels (referentie)
 
-> **README-demo:** de gesanitiseerde screenshot in [README.md](../README.md) toont **11 tegels** met **één laadpaal** (*Lader 1*) en dezelfde globale + Equalizer-tegels — geen tweede laadpaal-sectie. Dat is alleen voor de documentatie-preview; de plugin maakt per geconfigureerde laadpaal eigen tegels aan.
+> **README-demo:** de gesanitiseerde screenshot in [README.md](../README.md) toont **11 actieve tegels + LoadBal** met **twee laadpalen** (*Lader 1*, *Lader 2*) plus globale en Equalizer-tegels — compacte v10.11-layout.
 
 Bij **2 laadpalen + 1 Equalizer + Tibber** hoort de plugin **11 dashboard-tegels** (+ **LoadBal**-schakelaar = 12 devices totaal). Prefix `[PREFIX]` = jouw hardwarenaam, bijv. `Easee`:
 
@@ -291,7 +291,7 @@ Legacy (v10.10.x, niet meer bijgewerkt sinds v10.11): *Kosten & Samenvatting*, *
 
 Legacy (v10.10.x): *Totaal & Sessie*, *Kosten (Sessie/Dag)* — verborgen (`Used=0`) na upgrade.
 
-## Custom iconen (v10.10.8)
+## Custom iconen (v10.11.1)
 
 13 sets in `Easee_icons_v2.zip`. Belangrijkste mapping:
 
@@ -300,7 +300,8 @@ Legacy (v10.10.x): *Totaal & Sessie*, *Kosten (Sessie/Dag)* — verborgen (`Used
 | **[PREFIX] - Status** (globaal) | `EaseeStatusGlobal` — combo laadpaal + EQ-puck + **i** |
 | **[PREFIX] - [Naam] - Status** (laadpaal) | `EaseeStatus` — laadpaal-only + **i** |
 | **[PREFIX] - [Naam] - Laden** | `EaseeCharger` |
-| **[PREFIX] - [Naam] - Kosten** | `EaseeCost` |
+| **[PREFIX] - [Naam] - Status** | `EaseeStatus` |
+| **[PREFIX] - Dag overzicht** | `EaseeOverview` |
 | **[PREFIX] - [EQ] - Status / Vermogen** | `EaseeEqualizer` |
 | **LoadBal** | `EaseeLoadBal` |
 | **Totaal Laden / kWh** | `EaseePower` *(Energy-tegel kan standaard bliksem tonen — Domoticz-beperking)* |

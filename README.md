@@ -2,11 +2,11 @@
 
 **Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.11.1-blue)
+![Version](https://img.shields.io/badge/version-10.11.1--stable-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** v10.11.1 — compacte tegels (11 i.p.v. 16 bij 2 laders + EQ + Tibber). **Stable baseline: v10.10.8-stable** ([STABLE.md](STABLE.md)) — test v10.11.x eerst voordat je stable wijzigt.
+> **Status:** **v10.11.1-stable** — aanbevolen productie-baseline. Compacte tegels (**11** i.p.v. 16 bij 2 laders + EQ + Tibber): *Kosten & Samenvatting* + *Dagrapport* → **Dag overzicht**; *Totaal & Sessie* → **Laden**; *Kosten (Sessie/Dag)* → **Status**. Rollback: [v10.10.8-stable](STABLE.md). Zie [STABLE.md](STABLE.md).
 
 ## TL;DR — installeren in 2 minuten
 
@@ -63,13 +63,13 @@ Zet **Debug logging** (Mode6) alleen aan als je problemen onderzoekt — dan wor
 
 ## Screenshots
 
-> **Let op:** de afbeeldingen hieronder zijn **gesanitiseerde demo-mockups** in echte Domoticz-tegelstijl (lichtgrijze achtergrond, witte tegels met lichtblauwe header, italic *Laatst gezien*, *Type:*-regel, footer met ster links en Log/Aanpassen-knoppen) — geen live Domoticz-data. Alle getallen zijn **0** / **€0.00**. De README-demo toont **10 tegels** met **één laadpaal** (*Lader 1*); **2 laadpalen + EQ + Tibber** = **11 tegels** (zie [CONFIGURATION.md](docs/CONFIGURATION.md)). Opnieuw genereren: `scripts/generate_dashboard_mockup.ps1`.
+> **Let op:** de afbeeldingen hieronder zijn **gesanitiseerde demo-mockups** in echte Domoticz-tegelstijl (lichtgrijze achtergrond, witte tegels met lichtblauwe header, italic *Laatst gezien*, *Type:*-regel, footer met ster links en Log/Aanpassen-knoppen) — geen live Domoticz-data. Alle getallen zijn **0** / **€0.00**. De README-demo toont **11 actieve tegels + LoadBal** (2 laadpalen, EQ, Tibber) — zie [CONFIGURATION.md](docs/CONFIGURATION.md). Opnieuw genereren: `scripts/generate_dashboard_mockup.ps1`.
 
-### Dashboard (10 demo-tegels)
+### Dashboard (11 tegels + LoadBal)
 
 ![Domoticz dashboard — gesanitiseerde demo](docs/screenshot-dashboard.png)
 
-*Demo-layout (3×4, 10 tegels): globale tegels incl. LoadBal + Dag overzicht, 2 laadpaal-tegels (*Lader 1*), 2 Equalizer-tegels (*Meterkast*).*
+*Demo-layout (3×4): globale tegels incl. **Dag overzicht** + LoadBal, 2× laadpaal (**Laden** + **Status**), 2 Equalizer-tegels (*Meterkast*). Geen aparte *Dagrapport*, *Kosten & Samenvatting*, *Totaal & Sessie* of *Kosten (Sessie/Dag)* — die zijn samengevoegd in v10.11.*
 
 ### Iconen (actuele referentie)
 
@@ -100,14 +100,17 @@ Laat naamvelden leeg voor de Easee-appnaam. De **hardwarenaam** in Domoticz (bij
 ### Core
 - **Easee - Status** — online, Equalizer-aantal, load balancing, Tibber
 - **Totaal Laden**, **Totaal kWh**, **LoadBal**
-- **Kosten & Samenvatting**, **Beste laden**, **Dagrapport** (met Tibber, Mode7)
+- **Beste laden**, **Dag overzicht** (met Tibber, Mode7)
 
 ### Per Equalizer
 - **[Naam] - Status** — verbinding, LB (fase-detail), limieten, stroom L1/L2/L3, spanning
 - **[Naam] - Vermogen** — import/terug/netto W, vandaag import en netto kWh (Text-tegel)
 
 ### Per laadpaal
-- **[Naam] - Laden**, **Totaal & Sessie**, **Status**, **Kosten (Sessie/Dag)** (met Tibber, Mode7)
+- **[Naam] - Laden** — vermogen + grafiek; sessie/vandaag/totaal kWh in Description (v10.11+)
+- **[Naam] - Status** — laadtoestand, timer, laadhint + sessie/dag € bij Tibber (v10.11+)
+
+**Verouderd sinds v10.11** (verborgen na upgrade, `Used=0`): *Kosten & Samenvatting*, *Dagrapport*, *Totaal & Sessie*, *Kosten (Sessie/Dag)*.
 
 Details: [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
@@ -132,9 +135,9 @@ Verwacht in log: `Custom icons geladen: 13 sets` of `Custom icons uit Domoticz (
 | **EaseeStatus** | Laadpaal **Status** per locatie (bijv. Lader 1, Garage, Voordeur) — laadpaal + **i**, geen EQ |
 | **EaseeEqualizer** | Equalizer **Status** en **Vermogen** (Meterkast) |
 | **EaseeCharger** | Laadpaal **Laden** |
-| **EaseePower** | **Totaal Laden**, laadpaal **Totaal & Sessie** |
-| **EaseeCost** | Kosten-tegels |
-| **EaseeOverview** | **Beste laden**, **Dagrapport**, overzicht |
+| **EaseePower** | **Totaal Laden**, **Totaal kWh** |
+| **EaseeCost** | Legacy kosten-tegels (v10.10.x) |
+| **EaseeOverview** | **Beste laden**, **Dag overzicht** |
 | **EaseeLoadBal** | **LoadBal**-schakelaar |
 | Overige sets | Legacy/gereserveerd (Import, Export, Net, Voltage, Alert) |
 
@@ -160,7 +163,7 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 ```bash
 cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
-git checkout v10.10.8-stable   # huidige stable; of: git pull op main
+git checkout v10.11.1-stable   # aanbevolen stable; of: git pull op main
 sudo systemctl restart domoticz
 ```
 
@@ -173,8 +176,9 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 ## Changelog & release
 
 - Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md)
-- **Huidige stable:** **[v10.10.8-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.10.8)** — Tibber kwartierprijzen, Dagrapport, sessie-kWh-fixes
-- Vorige stable: [v10.9.32-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.32) (rollback)
+- **Huidige stable:** **[v10.11.1-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.1)** — compacte 11-tegel UI, merged Dag overzicht / Laden / Status
+- Vorige stable: [v10.10.8-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.10.8) (rollback, 16 tegels)
+- Oudere rollback: [v10.9.32-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.32)
 
 ### v10.9.19 – v10.9.28 in het kort
 
@@ -214,7 +218,7 @@ Sinds v10.6.0: 13 Python-modules naast `Easee_icons_v2.zip`. Overzicht: [docs/RE
 
 ## Problemen melden
 
-[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.10.8** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.11.1-stable** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
 
 ## Support & credits
 
@@ -226,4 +230,4 @@ MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Versie 10.10.8** (stable: v10.10.8-stable) — Richard Leunk
+**Versie 10.11.1** (stable: v10.11.1-stable) — Richard Leunk

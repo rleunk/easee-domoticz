@@ -1,6 +1,6 @@
 # Troubleshooting Gids
 
-> **Huidige versie:** v10.10.8 (stable: **v10.10.8-stable**) · Volledige installatie: [INSTALL.md](../INSTALL.md) · Stable-tags: [STABLE.md](../STABLE.md)
+> **Huidige versie:** v10.11.1 (stable: **v10.11.1-stable**) · Volledige installatie: [INSTALL.md](../INSTALL.md) · Stable-tags: [STABLE.md](../STABLE.md)
 
 ## Veelvoorkomende Problemen
 
@@ -41,11 +41,13 @@ sudo journalctl -u domoticz -f | grep Easee
 
 **Symptoom**: Meer dan verwachte tegels, of tegels met namen als *Import*, *Spanning*, *Terug & netto*
 
-**Verwacht (referentie):** bij **2 laadpalen + 1 Equalizer + Tibber** hoort **exact 16 tegels** — zie [CONFIGURATION.md — Verwachte tegels](CONFIGURATION.md#verwachte-tegels-referentie).
+**Verwacht (referentie):** bij **2 laadpalen + 1 Equalizer + Tibber** hoort **11 actieve tegels + LoadBal** (12 devices) — zie [CONFIGURATION.md — Verwachte tegels](CONFIGURATION.md#verwachte-tegels-referentie).
+
+**Verouderde v10.10-tegels** (*Kosten & Samenvatting*, *Dagrapport*, *Totaal & Sessie*, *Kosten (Sessie/Dag)*): na upgrade naar v10.11.x worden deze verborgen (`Used=0`). Data staat op **Dag overzicht**, **Laden** (Description) en **Status**. Handmatig verwijderen mag.
 
 **Legacy-tegels die er níet horen:** *Import*, *Spanning*, *Terug & netto*, *Netto*, *Teruglevering*, losse *Load balancing* (Equalizer). Die komen uit v10.8.0 of v10.9.0. Verwijder ze handmatig in Domoticz (**Setup → Devices**).
 
-**Heb je precies 16 tegels** (zonder legacy-namen)? Dan is alles in orde — geen actie nodig.
+**Heb je 11 tegels + LoadBal** (zonder legacy-namen)? Dan is alles in orde — geen actie nodig.
 
 ### Custom iconen ontbreken
 
@@ -59,7 +61,7 @@ sudo journalctl -u domoticz -f | grep Easee
 **Oplossing** (v10.9.28+):
 1. **Verwijder oude Easee custom icons** via **Instellingen → Aangepaste pictogrammen**
 2. Controleer `Easee_icons_v2.zip` en map `icons/` (13 mini-zips) in pluginmap
-3. `git pull` of `git checkout v10.10.8-stable` en herstart hardware-item
+3. `git pull` of `git checkout v10.11.1-stable` en herstart hardware-item
 4. Log controleren:
    - `Custom icons geladen: 13 sets`
    - `image_ids: 13/13 sets`
@@ -148,10 +150,14 @@ Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 
 ### Tibber / kosten-tegels
 
-- **Tibber-token (Mode7) is verplicht** voor kosten-tegels — zonder token worden per-lader kosten en kern-tegels *Kosten & Samenvatting* / *Beste laden* niet bijgewerkt. Bij start zie je `Tibber uit (Mode7 leeg)`.
+- **Tibber-token (Mode7) is verplicht** voor kosten — zonder token worden *Dag overzicht*, *Beste laden* en sessie/dag-€ op laadpaal-**Status** niet bijgewerkt. Bij start zie je `Tibber uit (Mode7 leeg)`.
 - **Token verloren na hardware-opslag?** Sinds v10.9.30 bewaart de plugin een backup in `easee_state.json`. Na `git pull` + herstart zou Tibber automatisch actief moeten blijven (log: *token hersteld uit state-backup*). Zonder backup: token opnieuw invullen in Mode7.
 - Met Tibber: token op [developer.tibber.com](https://developer.tibber.com/settings/access-token). Bij start: `Tibber actief — kosten-tegels worden bijgewerkt na eerste poll`.
-- Kosten *0 €* terwijl Tibber actief is: verwijder **Kosten (Sessie/Dag)**-tile en herstart hardware-item; controleer of `Kosten-tegel niet gevonden` in log staat (WARNING).
+- Kosten *0 €* terwijl Tibber actief is: herstart hardware-item; controleer of laadpaal-**Status** en **Dag overzicht** bestaan (niet de verouderde *Kosten (Sessie/Dag)* / *Kosten & Samenvatting*).
+
+### Sessie-kWh / Totaal & Sessie (v10.10.x — superseded in v10.11)
+
+Sinds **v10.11** staat sessie/vandaag/totaal kWh op de **Laden**-tegel (Description), niet meer op *Totaal & Sessie*. Problemen met *Totaal & Sessie header 0 kWh* (v10.10.4–10.10.8) zijn opgelost in v10.10.8 maar die tegel is **verouderd** — upgrade naar **v10.11.1-stable** en kijk op **Laden**.
 
 ### Logniveaus
 
@@ -194,4 +200,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Configuratie**: [CONFIGURATION.md](CONFIGURATION.md)
 
-Bij een issue: pluginversie **v10.10.8** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
+Bij een issue: pluginversie **v10.11.1-stable** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).

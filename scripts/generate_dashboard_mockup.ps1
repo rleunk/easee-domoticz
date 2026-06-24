@@ -333,6 +333,10 @@ function New-DashboardMockup {
     $Euro = [char]0x20AC
     $Check = [char]0x2705
     $RedCircle = -join [char[]]@(0xD83D, 0xDD34)
+    $Cal = -join [char[]]@(0xD83D, 0xDCC5)      # calendar
+    $Bolt = -join [char[]]@(0x26A1)              # lightning
+    $Timer = -join [char[]]@(0x23F1, 0xFE0F)     # stopwatch
+    $Money = -join [char[]]@(0xD83D, 0xDCB0)     # money bag
     $statusButtons = @('Log', 'Aanpassen')
     $powerButtons = @('Log', 'Aanpassen', 'Notificaties')
     $freshTs = '2026-12-31 23:03:00'
@@ -366,17 +370,30 @@ function New-DashboardMockup {
         }
         @{
             Title = 'Easee - Dag overzicht'; HeaderValue = ''; Icon = $icons.overview
-            Status = "📅 Vandaag`n⚡ 0.00 kWh | ${Euro}0.00`n⏱️ Laaduren: 0 min`n💰 Goedkoopste kwartier: —"
+            Status = "Vandaag: 0.00 kWh | ${Euro}0.00`nLaaduren: 0 min`nGoedkoopste kwartier: -"
             Type = 'Type: General, Text'
             Buttons = $powerButtons; LastSeen = $staleTs; Favorite = $false
         }
         @{
             Title = 'Easee - Lader 1 - Laden'; HeaderValue = '0 Watt'; Icon = $icons.charger
-            Status = 'Vandaag: 0.000 kWh'; Type = 'Type: General, kWh'
+            Status = 'Sessie: 0.000 kWh | Vandaag: 0.000 kWh | Totaal: 0 kWh'
+            Type = 'Type: General, kWh'
             Buttons = $powerButtons; LastSeen = $freshTs; Favorite = $true
         }
         @{
             Title = 'Easee - Lader 1 - Status'; HeaderValue = ''; Icon = $icons.chStatus
+            Status = "Geen auto 00:00 · Laatste sessie ${Euro}0.00 · Dag ${Euro}0.00"
+            Type = 'Type: General, Text'
+            Buttons = $statusButtons; LastSeen = $freshTs; Favorite = $false
+        }
+        @{
+            Title = 'Easee - Lader 2 - Laden'; HeaderValue = '0 Watt'; Icon = $icons.charger
+            Status = 'Sessie: 0.000 kWh | Vandaag: 0.000 kWh | Totaal: 0 kWh'
+            Type = 'Type: General, kWh'
+            Buttons = $powerButtons; LastSeen = $freshTs; Favorite = $false
+        }
+        @{
+            Title = 'Easee - Lader 2 - Status'; HeaderValue = ''; Icon = $icons.chStatus
             Status = "Geen auto 00:00 · Laatste sessie ${Euro}0.00 · Dag ${Euro}0.00"
             Type = 'Type: General, Text'
             Buttons = $statusButtons; LastSeen = $freshTs; Favorite = $false
@@ -469,5 +486,5 @@ $equalizer.Dispose()
 
 foreach ($cached in $script:EaseeIconCache.Values) { $cached.Dispose() }
 
-Write-Output "Created $DashboardPath (11 tiles, grid 3x4)"
+Write-Output "Created $DashboardPath (12 tiles incl. LoadBal = 11 actieve + schakelaar, grid 3x4)"
 Write-Output "Created $EqualizerPath"

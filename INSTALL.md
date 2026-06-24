@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee Domoticz plugin v10.10.8
+# Installatiehandleiding — Easee Domoticz plugin v10.11.1
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,7 +8,7 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee Domoticz plugin v10.10.8 |
+| Plugin | Easee Domoticz plugin v10.11.1 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` (+ 12 Python-modules = 13 `.py`-bestanden sinds v10.6.0) |
@@ -104,7 +104,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee Domoticz plugin v10.10.8**
+4. Selecteer **Easee Domoticz plugin v10.11.1**
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
 7. Klik **Add**
@@ -242,7 +242,7 @@ De plugin werkt volledig zonder Equalizer. Er verschijnen dan geen meterkast-teg
 
 ### Geen Tibber
 
-Zonder Tibber-token werken laadpalen en Equalizer normaal. Je mist alleen de kosten- en tarief-tegels (**Kosten & Samenvatting**, **Beste laden**, per-lader **Kosten (Sessie/Dag)**).
+Zonder Tibber-token werken laadpalen en Equalizer normaal. Je mist alleen **Dag overzicht**, **Beste laden** en sessie/dag-€ op laadpaal-**Status**.
 
 ### Optioneel — Equalizer
 
@@ -298,12 +298,24 @@ Custom iconen uit `Easee_icons_v2.zip` worden bij start automatisch geladen en o
 - State migreert automatisch naar `easee_state.json` (atomisch opslaan sinds v10.6.1).
 - Upload **`Easee_icons_v2.zip` opnieuw** als badges/iconen niet veranderen (Domoticz cached iconen).
 
-### Specifiek: v10.10.x (huidige stable — v10.10.8-stable)
+### Specifiek: v10.11.x (huidige stable — v10.11.1-stable)
+
+- **v10.11.0** — Compacte UI: **11 tegels** (2 laders + EQ + Tibber). *Kosten & Samenvatting* + *Dagrapport* → **Dag overzicht**; *Totaal & Sessie* → **Laden**; *Kosten (Sessie/Dag)* → **Status**. Oude tegels verborgen (`Used=0`).
+- **v10.11.1** — Fix deprecated-tegel `Used=0`-update; stable promotion.
+- **Stable tag** — `v10.11.1-stable` is de aanbevolen baseline; zie [STABLE.md](STABLE.md). Vorige stable `v10.10.8-stable` blijft voor rollback.
+
+```bash
+git fetch --tags origin
+git checkout v10.11.1-stable
+sudo systemctl restart domoticz
+```
+
+### Specifiek: v10.10.x (vorige stable — v10.10.8-stable)
 
 - **v10.10.0** — Tibber kwartierprijzen, Dagrapport-tegel, laadhints, configureerbaar Beste laden, **16 tegels** met Tibber (2 laders + EQ).
 - **v10.10.1** — API-timeout crasht hardware-thread niet meer.
 - **v10.10.2–v10.10.8** — Sessie-kWh, timer, kosten, EQ fase-weergave; Totaal & Sessie numerische Custom sValue; sessie-kWh cap op dagtotaal.
-- **Stable tag** — `v10.10.8-stable` is de aanbevolen baseline; zie [STABLE.md](STABLE.md). Vorige stable `v10.9.32-stable` blijft voor rollback.
+- **Stable tag** — `v10.10.8-stable` voor rollback; zie [STABLE.md](STABLE.md).
 
 ```bash
 git fetch --tags origin

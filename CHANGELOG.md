@@ -8,11 +8,15 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [10.11.1] — 2026-06-24
 
+### Stable
+- **v10.11.1-stable** — huidige aanbevolen productie-baseline (compacte 11-tegel UI). Tag `v10.10.8-stable` blijft bewaard voor rollback. Zie [STABLE.md](STABLE.md).
+
 ### Opgelost
 - **Deprecated tegels: `Failed to parse parameters` / `missing required argument 'nvalue'`** — `mark_device_unused()` riep `Update(Used=0)` aan zonder `nValue`/`sValue` (zelfde regressie als v10.9.6 icon-fix). Verouderde tegels (*Dagrapport*, *Kosten & Samenvatting*, *Totaal & Sessie*, *Kosten (Sessie/Dag)*) krijgen nu éénmalig `Update(nValue=…, sValue=…, Used=0)` met huidige waarden; reeds `Used=0` wordt overgeslagen.
 
 ### Upgrade
 - Van **v10.11.0**: `git pull` + hardware herstarten. Geen handmatige tegel-actie nodig; logspam bij deprecated tegels verdwijnt.
+- Van **v10.10.x**: `git checkout v10.11.1-stable` (of `git pull` op `main`) + hardware herstarten. Oude tegels worden verborgen (`Used=0`); sessie-kWh staat op **Laden** (Description), kosten op **Status** en **Dag overzicht**.
 
 ## [10.11.0] — 2026-06-24
 
@@ -26,12 +30,15 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 - Per laadpaal: **Totaal & Sessie**, **Kosten (Sessie/Dag)** — idem; data staat op **Laden** resp. **Status**.
 
 ### Upgrade
-- `git pull` + hardware herstarten. Oude tegels blijven staan maar worden verborgen (`Used=0`); handmatig verwijderen mag. Stable baseline blijft **v10.10.8-stable** tot user-testing afgerond is.
+- `git pull` + hardware herstarten. Oude tegels blijven staan maar worden verborgen (`Used=0`); handmatig verwijderen mag.
+
+### Stable (promoted in v10.11.1)
+- **v10.11.1-stable** — user-testing afgerond; zie [10.11.1] stable-sectie.
 
 ## [10.10.8] — 2026-06-20
 
 ### Stable
-- **v10.10.8-stable** — huidige aanbevolen productie-baseline. Tag `v10.9.32-stable` blijft bewaard voor rollback. Zie [STABLE.md](STABLE.md).
+- **v10.10.8-stable** — was aanbevolen productie-baseline tot v10.11.1-stable; tag bewaard voor rollback. Tag `v10.9.32-stable` blijft eveneens bewaard. Zie [STABLE.md](STABLE.md).
 
 ### Opgelost
 - **Sessie-kWh absurd hoog (bijv. 34 kWh bij 12,7 kWh vandaag)** — `display_session_kwh()` nam het maximum van `session_kwh`, `day_delta`, `power×timer` en API; een verouderde API-starttijd (sessie vanaf ochtend) gaf `power×timer` ≫ `day_kwh`. Mid-session herstart zette `session_start_day_kwh` op `0` of `unstick` forceerde baseline `0`, waardoor `day_delta` of ongecapped timer won. Fix: voorkeur voor `day_kwh − session_start_day_kwh` bij geldige baseline; `power×timer` alleen als schatting ≤ `day_kwh`; `display_kwh = min(display_kwh, day_kwh)`; mid-session baseline via `day_kwh − timer×vermogen` (nooit `0`). Garage 3,3 vs dag 2,7 wordt ook gecapped. v10.10.7 numerieke `sValue` blijft intact. Totaal & Sessie INFO-log → DEBUG.
