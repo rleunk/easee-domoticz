@@ -380,10 +380,11 @@ def sync_charging_timer(plugin, st, values, session, session_active, power_w):
     """Timer alleen tijdens actief laden; 00:00 bij pauze (bijv. Wacht op start)."""
     charging = is_charging_active(session_active, power_w)
     was_charging = bool(st.get('charging_active'))
-    if charging and not was_charging:
-        api_start_ts = session_start_timestamp(plugin, values, session)
-        st['session_start_ts'] = api_start_ts if api_start_ts is not None else easee_state.now_ts(plugin)
+    if charging and not was_charging and st.get('session_start_ts') is None:
+        st['session_start_ts'] = easee_state.now_ts(plugin)
     elif not charging and (was_charging or st.get('session_start_ts') is not None):
+        if was_charging and st.get('session_start_ts') is not None:
+            st['session_elapsed_at_pause'] = compute_duration_text(plugin, st.get('session_start_ts'))
         st['session_start_ts'] = None
     st['charging_active'] = charging
     return charging
@@ -608,9 +609,12 @@ def poll_charger(plugin, charger):
         st['last_session_cost_energy'] = easee_helpers.safe_float(plugin, st.get('session_cost_energy', 0.0), 0.0)
         st['last_session_cost_tax'] = easee_helpers.safe_float(plugin, st.get('session_cost_tax', 0.0), 0.0)
         st['last_session_duration'] = compute_duration_text(plugin, st.get('session_start_ts'))
+        if st['last_session_duration'] == '00:00' and st.get('session_elapsed_at_pause'):
+            st['last_session_duration'] = st['session_elapsed_at_pause']
         st['session_active'] = False
         st['charging_active'] = False
         st['session_start_ts'] = None
+        st.pop('session_elapsed_at_pause', None)
         st['session_start_kwh'] = None
         st['session_start_day_kwh'] = None
         st['prev_session_kwh'] = None
