@@ -1,6 +1,6 @@
 # Troubleshooting Gids
 
-> **Huidige versie:** v10.11.1 (stable: **v10.11.1-stable**) · Volledige installatie: [INSTALL.md](../INSTALL.md) · Stable-tags: [STABLE.md](../STABLE.md)
+> **Huidige versie:** v10.11.2 (stable: **v10.11.2-stable**) · Volledige installatie: [INSTALL.md](../INSTALL.md) · Stable-tags: [STABLE.md](../STABLE.md)
 
 ## Veelvoorkomende Problemen
 
@@ -61,7 +61,7 @@ sudo journalctl -u domoticz -f | grep Easee
 **Oplossing** (v10.9.28+):
 1. **Verwijder oude Easee custom icons** via **Instellingen → Aangepaste pictogrammen**
 2. Controleer `Easee_icons_v2.zip` en map `icons/` (13 mini-zips) in pluginmap
-3. `git pull` of `git checkout v10.11.1-stable` en herstart hardware-item
+3. `git pull` of `git checkout v10.11.2-stable` en herstart hardware-item
 4. Log controleren:
    - `Custom icons geladen: 13 sets`
    - `image_ids: 13/13 sets`
@@ -157,7 +157,7 @@ Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 
 ### Sessie-kWh / Totaal & Sessie (v10.10.x — superseded in v10.11)
 
-Sinds **v10.11** staat sessie/vandaag/totaal kWh op de **Laden**-tegel (Description), niet meer op *Totaal & Sessie*. Problemen met *Totaal & Sessie header 0 kWh* (v10.10.4–10.10.8) zijn opgelost in v10.10.8 maar die tegel is **verouderd** — upgrade naar **v10.11.1-stable** en kijk op **Laden**.
+Sinds **v10.11** staat sessie/vandaag/totaal kWh op de **Laden**-tegel (Description), niet meer op *Totaal & Sessie*. Problemen met *Totaal & Sessie header 0 kWh* (v10.10.4–10.10.8) zijn opgelost in v10.10.8 maar die tegel is **verouderd** — upgrade naar **v10.11.2-stable** en kijk op **Laden**.
 
 ### Logniveaus
 
@@ -200,4 +200,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Configuratie**: [CONFIGURATION.md](CONFIGURATION.md)
 
-Bij een issue: pluginversie **v10.11.1-stable** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
+Bij een issue: pluginversie **v10.11.2-stable** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
