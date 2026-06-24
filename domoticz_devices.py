@@ -191,8 +191,7 @@ def resolve_charger_unit(plugin, cid, label_key, tried=None):
 
 _COST_LOOKUP_WARNED = set()
 _CORE_COST_LOOKUP_WARNED = set()
-_DEPRECATED_CORE_MARKED = set()
-_DEPRECATED_CHARGER_MARKED = set()
+_DEPRECATED_UNUSED_MARKED = set()
 
 def _toggle_cost_nvalue(plugin, session_active):
     """Alternate nValue so Domoticz refreshes timestamp even when € amount unchanged."""
@@ -209,66 +208,10 @@ def reset_cost_diagnostics(plugin=None):
     """Reset eenmalige kosten-diagnostiek na plugin-herstart (hardware of Domoticz)."""
     _COST_LOOKUP_WARNED.clear()
     _CORE_COST_LOOKUP_WARNED.clear()
-    _DEPRECATED_CORE_MARKED.clear()
-    _DEPRECATED_CHARGER_MARKED.clear()
+    _DEPRECATED_UNUSED_MARKED.clear()
     if plugin is not None:
         plugin._cost_nvalue_tick = 0
         plugin._core_cost_nvalue_tick = 0
-
-def _core_search_labels(label):
-    clean = easee_helpers.clean_label(None, label) if label is None else label
-    labels = [clean]
-    if clean == 'Dag overzicht':
-        labels.extend(('Kosten & Samenvatting', 'Dagrapport'))
-    return labels
-
-def _mark_device_unused(plugin, unit, name):
-    try:
-        dev = domoticz_runtime.Devices[unit]
-        if int(getattr(dev, 'Used', 1)) == 0:
-            return False
-        dev.Used = 0
-        rebuild_index(plugin)
-        return True
-    except Exception as e:
-        easee_logging.debug('domoticz_devices', f'Used=0 mislukt voor {name} unit {unit}: {e}')
-        return False
-
-def deprecate_core_tile(plugin, label):
-    key = easee_helpers.clean_label(plugin, label)
-    if key not in DEPRECATED_CORE_TILES or key in _DEPRECATED_CORE_MARKED:
-        return
-    tried = []
-    u = resolve_core_unit(plugin, key, tried=tried)
-    if u is None:
-        return
-    _DEPRECATED_CORE_MARKED.add(key)
-    hidden = _mark_device_unused(plugin, u, key)
-    suffix = ' (Used=0)' if hidden else ''
-    easee_logging.info(
-        'domoticz_devices',
-        f'Veouderde kern-tegel "{key}" niet meer bijgewerkt sinds v10.11 — '
-        f'gebruik "Dag overzicht"{suffix}',
-    )
-
-def deprecate_charger_tile(plugin, cid, label_key):
-    cid_key = str(cid).strip()
-    mark_key = f'{cid_key}|{label_key}'
-    if label_key not in DEPRECATED_CHARGER_TILES or mark_key in _DEPRECATED_CHARGER_MARKED:
-        return
-    tried = []
-    u = resolve_charger_unit(plugin, cid, label_key, tried=tried)
-    if u is None:
-        return
-    _DEPRECATED_CHARGER_MARKED.add(mark_key)
-    hidden = _mark_device_unused(plugin, u, label_key)
-    merge_target = 'Laden' if label_key == 'Totaal & Sessie' else 'Status'
-    suffix = ' (Used=0)' if hidden else ''
-    easee_logging.info(
-        'domoticz_devices',
-        f'Veouderde lader-tegel "{label_key}" ({cid_key}) niet meer bijgewerkt sinds v10.11 — '
-        f'gebruik "{merge_target}"{suffix}',
-    )
 
 def _core_legacy_names(plugin, label):
     label = easee_helpers.clean_label(plugin, label)
@@ -751,7 +694,6 @@ def update_equalizer_energy(plugin, eid, label_key, power_w, total_wh=0):
     if u is not None:
         domoticz_runtime.Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
 
-_DEPRECATED_UNUSED_MARKED = set()
 
 def mark_device_unused(plugin, unit, reason=''):
     """Mark deprecated tile unused (Used=0) once; never auto-delete."""
