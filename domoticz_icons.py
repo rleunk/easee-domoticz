@@ -25,7 +25,7 @@ def image_root(plugin, name, device_id=None):
         return 'EaseeLoadBal'
     if devid == CORE_DEVICE_IDS.get('Status', '') or n == easee_helpers.pref(plugin, 'Status').lower():
         return 'EaseeStatusGlobal'
-    if devid == CORE_DEVICE_IDS.get('Dagrapport', ''):
+    if devid == CORE_DEVICE_IDS.get('Dag overzicht', '') or devid == CORE_DEVICE_IDS.get('Dagrapport', ''):
         return 'EaseeOverview'
     if devid.startswith('EASEE_EQ_'):
         label = n.split(' - ')[-1].strip() if ' - ' in n else n

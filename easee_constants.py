@@ -9,7 +9,7 @@ REFRESH_URL = BASE_URL + '/accounts/refresh_token'
 TIBBER_GQL = 'https://api.tibber.com/v1-beta/gql'
 STATE_FILE = 'easee_state.json'
 LEGACY_STATE_FILE = 'easee_v9_0_state.json'
-PLUGIN_VERSION = '10.10.8'
+PLUGIN_VERSION = '10.11.0'
 API_TIMEOUT = 30
 TIBBER_TOKEN_STATE_KEY = 'tibber_token_backup'
 PLUGIN_KEY = 'EaseeCloudAutoDiscoveryV1000'
@@ -40,7 +40,12 @@ CORE_DEVICE_IDS = {
     'Totaal Laden': 'EASEE_CORE_ENERGY',
     'Totaal kWh': 'EASEE_CORE_KWH',
     'LoadBal': 'EASEE_CORE_LOADBAL',
+    'Dag overzicht': 'EASEE_CORE_DAG_OVERZ',
     'Kosten & Samenvatting': 'EASEE_CORE_COSTS',
     'Beste laden': 'EASEE_CORE_BEST',
     'Dagrapport': 'EASEE_CORE_DAG',
 }
+
+# Tiles merged in v10.11 — no longer created or updated (marked Used=0 if present).
+DEPRECATED_CORE_LABELS = ('Kosten & Samenvatting', 'Dagrapport')
+DEPRECATED_CHARGER_LABELS = ('Totaal & Sessie', 'Kosten (Sessie/Dag)')

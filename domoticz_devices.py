@@ -5,7 +5,10 @@ import traceback
 import Domoticz
 import domoticz_runtime
 import easee_logging
-from easee_constants import DEVICE_TYPES, CORE_DEVICE_IDS, ULTRA_DEBUG
+from easee_constants import (
+    DEVICE_TYPES, CORE_DEVICE_IDS, ULTRA_DEBUG,
+    DEPRECATED_CORE_LABELS, DEPRECATED_CHARGER_LABELS,
+)
 import charger_logic
 import domoticz_icons
 import easee_helpers
@@ -188,6 +191,8 @@ def resolve_charger_unit(plugin, cid, label_key, tried=None):
 
 _COST_LOOKUP_WARNED = set()
 _CORE_COST_LOOKUP_WARNED = set()
+_DEPRECATED_CORE_MARKED = set()
+_DEPRECATED_CHARGER_MARKED = set()
 
 def _toggle_cost_nvalue(plugin, session_active):
     """Alternate nValue so Domoticz refreshes timestamp even when € amount unchanged."""
@@ -204,18 +209,84 @@ def reset_cost_diagnostics(plugin=None):
     """Reset eenmalige kosten-diagnostiek na plugin-herstart (hardware of Domoticz)."""
     _COST_LOOKUP_WARNED.clear()
     _CORE_COST_LOOKUP_WARNED.clear()
+    _DEPRECATED_CORE_MARKED.clear()
+    _DEPRECATED_CHARGER_MARKED.clear()
     if plugin is not None:
         plugin._cost_nvalue_tick = 0
         plugin._core_cost_nvalue_tick = 0
 
+def _core_search_labels(label):
+    clean = easee_helpers.clean_label(None, label) if label is None else label
+    labels = [clean]
+    if clean == 'Dag overzicht':
+        labels.extend(('Kosten & Samenvatting', 'Dagrapport'))
+    return labels
+
+def _mark_device_unused(plugin, unit, name):
+    try:
+        dev = domoticz_runtime.Devices[unit]
+        if int(getattr(dev, 'Used', 1)) == 0:
+            return False
+        dev.Used = 0
+        rebuild_index(plugin)
+        return True
+    except Exception as e:
+        easee_logging.debug('domoticz_devices', f'Used=0 mislukt voor {name} unit {unit}: {e}')
+        return False
+
+def deprecate_core_tile(plugin, label):
+    key = easee_helpers.clean_label(plugin, label)
+    if key not in DEPRECATED_CORE_TILES or key in _DEPRECATED_CORE_MARKED:
+        return
+    tried = []
+    u = resolve_core_unit(plugin, key, tried=tried)
+    if u is None:
+        return
+    _DEPRECATED_CORE_MARKED.add(key)
+    hidden = _mark_device_unused(plugin, u, key)
+    suffix = ' (Used=0)' if hidden else ''
+    easee_logging.info(
+        'domoticz_devices',
+        f'Veouderde kern-tegel "{key}" niet meer bijgewerkt sinds v10.11 — '
+        f'gebruik "Dag overzicht"{suffix}',
+    )
+
+def deprecate_charger_tile(plugin, cid, label_key):
+    cid_key = str(cid).strip()
+    mark_key = f'{cid_key}|{label_key}'
+    if label_key not in DEPRECATED_CHARGER_TILES or mark_key in _DEPRECATED_CHARGER_MARKED:
+        return
+    tried = []
+    u = resolve_charger_unit(plugin, cid, label_key, tried=tried)
+    if u is None:
+        return
+    _DEPRECATED_CHARGER_MARKED.add(mark_key)
+    hidden = _mark_device_unused(plugin, u, label_key)
+    merge_target = 'Laden' if label_key == 'Totaal & Sessie' else 'Status'
+    suffix = ' (Used=0)' if hidden else ''
+    easee_logging.info(
+        'domoticz_devices',
+        f'Veouderde lader-tegel "{label_key}" ({cid_key}) niet meer bijgewerkt sinds v10.11 — '
+        f'gebruik "{merge_target}"{suffix}',
+    )
+
 def _core_legacy_names(plugin, label):
     label = easee_helpers.clean_label(plugin, label)
-    return [
+    names = [
         label,
         easee_helpers.pref(plugin, label),
         f'Easee - {label}',
         f'Easee - Easee - {label}',
     ]
+    if label == 'Dag overzicht':
+        for legacy in DEPRECATED_CORE_LABELS:
+            names.extend([
+                legacy,
+                easee_helpers.pref(plugin, legacy),
+                f'Easee - {legacy}',
+                f'Easee - Easee - {legacy}',
+            ])
+    return names
 
 def resolve_equalizer_unit(plugin, eid, label_key):
     devid = make_equalizer_device_id(plugin, eid, label_key)
@@ -259,10 +330,15 @@ def resolve_core_unit(plugin, label, tried=None):
             return u
 
     label_lower = label.lower()
-    if 'kosten' in label_lower or 'beste laden' in label_lower or 'dagrapport' in label_lower:
+    scan_terms = []
+    if label_lower == 'dag overzicht':
+        scan_terms = ('dag overzicht', 'dagrapport', 'kosten & samenvatting')
+    elif 'kosten' in label_lower or 'beste laden' in label_lower or 'dagrapport' in label_lower:
+        scan_terms = (label_lower,)
+    for term in scan_terms:
         for unit, dev in domoticz_runtime.Devices.items():
             name = easee_helpers.norm(plugin, dev.Name).lower()
-            if label_lower in name:
+            if term in name:
                 _note(f'hit:scan:{dev.Name}')
                 return unit
     return None
@@ -461,7 +537,7 @@ def update_core_text(plugin, label, value):
     tried = []
     u = resolve_core_unit(plugin, clean, tried=tried)
     if u is None:
-        if clean in ('Kosten & Samenvatting', 'Beste laden', 'Dagrapport') and clean not in _CORE_COST_LOOKUP_WARNED:
+        if clean in ('Dag overzicht', 'Beste laden') and clean not in _CORE_COST_LOOKUP_WARNED:
             _CORE_COST_LOOKUP_WARNED.add(clean)
             easee_logging.warning(
                 'domoticz_devices',
@@ -469,10 +545,10 @@ def update_core_text(plugin, label, value):
             )
         return
     nval = 0
-    if clean in ('Kosten & Samenvatting', 'Beste laden', 'Dagrapport'):
+    if clean in ('Dag overzicht', 'Beste laden'):
         nval = _toggle_core_cost_nvalue(plugin)
     domoticz_runtime.Devices[u].Update(nValue=nval, sValue=str(value)[:4000])
-    if clean in ('Kosten & Samenvatting', 'Beste laden', 'Dagrapport'):
+    if clean in ('Dag overzicht', 'Beste laden'):
         easee_logging.debug(
             'domoticz_devices',
             f'Kern-tegel bijgewerkt: {clean} (unit {u})',
@@ -629,10 +705,19 @@ def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, sessi
             f'Kosten-tegel update mislukt lader {cid_key} unit {u}: {e}',
         )
 
-def update_charger_energy(plugin, cid, label_key, power_w, total_wh):
+def update_charger_energy(plugin, cid, label_key, power_w, total_wh, description=None):
     u = resolve_charger_unit(plugin, cid, label_key)
     if u is not None:
-        domoticz_runtime.Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
+        sval = f'{int(power_w)};{int(total_wh)}'
+        if description:
+            try:
+                domoticz_runtime.Devices[u].Update(
+                    nValue=0, sValue=sval, Description=str(description)[:4000],
+                )
+            except TypeError:
+                domoticz_runtime.Devices[u].Update(nValue=0, sValue=sval)
+        else:
+            domoticz_runtime.Devices[u].Update(nValue=0, sValue=sval)
 
 def update_equalizer_text(plugin, eid, label_key, value):
     u = resolve_equalizer_unit(plugin, eid, label_key)
@@ -666,6 +751,54 @@ def update_equalizer_energy(plugin, eid, label_key, power_w, total_wh=0):
     if u is not None:
         domoticz_runtime.Devices[u].Update(nValue=0, sValue=f'{int(power_w)};{int(total_wh)}')
 
+_DEPRECATED_UNUSED_MARKED = set()
+
+def mark_device_unused(plugin, unit, reason=''):
+    """Mark deprecated tile unused (Used=0) once; never auto-delete."""
+    if unit is None:
+        return
+    marker = f'unused:{unit}'
+    if marker in _DEPRECATED_UNUSED_MARKED:
+        return
+    try:
+        dev = domoticz_runtime.Devices[unit]
+        name = getattr(dev, 'Name', str(unit))
+        try:
+            dev.Update(Used=0)
+        except TypeError:
+            pass
+        if hasattr(dev, 'Used'):
+            dev.Used = 0
+        easee_logging.info(
+            'domoticz_devices',
+            f'Verstorpen tegel gemarkeerd als ongebruikt (Used=0): {name}'
+            + (f' — {reason}' if reason else ''),
+        )
+        _DEPRECATED_UNUSED_MARKED.add(marker)
+    except Exception as e:
+        easee_logging.debug('domoticz_devices', f'Used=0 mislukt unit {unit}: {e}')
+
+def deprecate_core_tiles(plugin):
+    dag_unit = resolve_core_unit(plugin, 'Dag overzicht')
+    for label in DEPRECATED_CORE_LABELS:
+        u = resolve_core_unit(plugin, label)
+        if u is not None and u != dag_unit:
+            mark_device_unused(
+                plugin, u,
+                'vervangen door Dag overzicht (v10.11)',
+            )
+
+def deprecate_charger_tiles(plugin, cid):
+    for label in DEPRECATED_CHARGER_LABELS:
+        u = resolve_charger_unit(plugin, cid, label)
+        if u is None:
+            continue
+        if label == 'Totaal & Sessie':
+            reason = 'samengevoegd in Laden-tegel (v10.11)'
+        else:
+            reason = 'samengevoegd in Status-tegel (v10.11)'
+        mark_device_unused(plugin, u, reason)
+
     # ---- Easee API ----
 
 def ensure_core_devices(plugin):
@@ -677,14 +810,28 @@ def ensure_core_devices(plugin):
     ]
     if easee_helpers.tibber_enabled(plugin):
         core.extend([
-            ('Kosten & Samenvatting', 'Text'),
             ('Beste laden', 'Text'),
-            ('Dagrapport', 'Text'),
+            ('Dag overzicht', 'Text'),
         ])
     for label, typ in core:
         devid = CORE_DEVICE_IDS.get(label)
-        legacy = [easee_helpers.pref(plugin, label), f'Easee - {label}', f'Easee - Easee - {label}']
-        ensure_device_once(plugin, label, typ, device_id=devid, legacy_names=legacy)
+        legacy = _core_legacy_names(plugin, label) if label == 'Dag overzicht' else [
+            easee_helpers.pref(plugin, label),
+            f'Easee - {label}',
+            f'Easee - Easee - {label}',
+        ]
+        legacy_devids = None
+        if label == 'Dag overzicht':
+            legacy_devids = [
+                CORE_DEVICE_IDS.get('Dagrapport'),
+                CORE_DEVICE_IDS.get('Kosten & Samenvatting'),
+            ]
+        ensure_device_once(
+            plugin, label, typ, device_id=devid,
+            legacy_names=legacy, legacy_device_ids=legacy_devids,
+        )
+    if easee_helpers.tibber_enabled(plugin):
+        deprecate_core_tiles(plugin)
     if ULTRA_DEBUG:
         ensure_device_once(plugin, easee_helpers.pref(plugin, 'Debug'),'Text')
         ensure_device_once(plugin, easee_helpers.pref(plugin, 'Counts'),'Text')
@@ -696,17 +843,15 @@ def ensure_charger_devices(plugin, charger, index):
     cid = charger['id']
     devices = [
         ('Energy', 'Laden'),
-        ('CustomkWh', 'Totaal & Sessie'),
         ('Text', 'Status'),
     ]
-    if easee_helpers.tibber_enabled(plugin):
-        devices.append(('Text', 'Kosten (Sessie/Dag)'))
     for typ, label_key in devices:
         name = charger_logic.charger_dev_name(plugin, display, label_key)
         devid = make_charger_device_id(plugin, cid, label_key)
         legacy = list(_charger_legacy_names(plugin, display, label_key, cid=cid))
         legacy_devids = _charger_legacy_device_ids(plugin, cid, label_key)
         ensure_device_once(plugin, name, typ, device_id=devid, legacy_names=legacy, legacy_device_ids=legacy_devids)
+    deprecate_charger_tiles(plugin, cid)
 
 def _name_contains_import(plugin, name):
     label = easee_helpers.clean_label(plugin, name).lower()

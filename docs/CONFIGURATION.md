@@ -140,23 +140,25 @@ Legacy: *Import*, *Terug & netto*, *Netto*, *Teruglevering*, *Spanning*, *Load b
 
 > **README-demo:** de gesanitiseerde screenshot in [README.md](../README.md) toont **11 tegels** met **één laadpaal** (*Lader 1*) en dezelfde globale + Equalizer-tegels — geen tweede laadpaal-sectie. Dat is alleen voor de documentatie-preview; de plugin maakt per geconfigureerde laadpaal eigen tegels aan.
 
-Bij **2 laadpalen + 1 Equalizer + Tibber** hoort de plugin **exact 16 tegels** aan te maken (prefix `[PREFIX]` = jouw hardwarenaam, bijv. `Easee`):
+Bij **2 laadpalen + 1 Equalizer + Tibber** hoort de plugin **11 dashboard-tegels** (+ **LoadBal**-schakelaar = 12 devices totaal). Prefix `[PREFIX]` = jouw hardwarenaam, bijv. `Easee`:
 
 | # | Tegel |
 |---|-------|
 | 1 | `[PREFIX] - Status` |
 | 2 | `[PREFIX] - Totaal Laden` |
 | 3 | `[PREFIX] - Totaal kWh` |
-| 4 | `[PREFIX] - LoadBal` |
-| 5 | `[PREFIX] - Kosten & Samenvatting` |
-| 6 | `[PREFIX] - Beste laden` |
-| 7 | `[PREFIX] - Dagrapport` |
-| 8 | `[PREFIX] - [EQ-naam] - Status` |
-| 9 | `[PREFIX] - [EQ-naam] - Vermogen` |
-| 10–13 | Per laadpaal 1: `[PREFIX] - [Naam] - Laden`, `Totaal & Sessie`, `Status`, `Kosten (Sessie/Dag)` |
-| 14–16 | Idem laadpaal 2 |
+| 4 | `[PREFIX] - Beste laden` |
+| 5 | `[PREFIX] - Dag overzicht` |
+| 6 | `[PREFIX] - [EQ-naam] - Status` |
+| 7 | `[PREFIX] - [EQ-naam] - Vermogen` |
+| 8–9 | Laadpaal 1: `[PREFIX] - [Naam] - Laden`, `Status` |
+| 10–11 | Laadpaal 2: idem |
 
-**Geen Tibber?** Dan ontbreken tegels 5–7 en de Kosten-tegels per laadpaal (minder dan 16).
+Daarnaast: **`[PREFIX] - LoadBal`** (schakelaar, niet meegeteld in de 11 tegel-overzichten).
+
+> **v10.11.0:** *Kosten & Samenvatting* + *Dagrapport* → **Dag overzicht**; per laadpaal *Totaal & Sessie* → **Laden** (Description), *Kosten (Sessie/Dag)* → **Status**. Oude tegels: `Used=0` (verborgen), niet auto-verwijderd.
+
+**Geen Tibber?** Dan ontbreken #4–5 en sessie/dag-€ op Status.
 
 ### Tibber slim laden / Grid Rewards
 
@@ -227,7 +229,7 @@ Legacy: bestaande **Vermogen**-tegel wordt automatisch **Import** (zelfde Device
 **Type**: Password  
 **Default**: (empty)  
 **Omschrijving**: Je Tibber Personal Access Token — **verplicht voor kosten-tegels**  
-**Zonder token**: per-lader *Kosten (Sessie/Dag)* en kern-tegels *Kosten & Samenvatting* / *Beste laden* worden niet bijgewerkt  
+**Zonder token**: *Dag overzicht* en sessie/dag-€ op laadpaal-**Status** worden niet bijgewerkt  
 
 **Token-backup (v10.9.30+)**  
 Domoticz wist wachtwoordvelden soms bij *Opslaan* op de hardwarepagina (veld lijkt leeg, token verdwijnt uit Mode7). De plugin bewaart een kopie in `easee_state.json` (`tibber_token_backup`) zodra je het token één keer invult. Bij herstart of plugin-update: als Mode7 leeg is maar de backup bestaat, gebruikt de plugin die automatisch — je hoeft het token niet opnieuw in te vullen. In het log: `Tibber actief — token hersteld uit state-backup`. Het token wordt **nooit** gelogd. Nieuw token invullen in Mode7 overschrijft de backup. Tibber uitzetten: verwijder het hardware-item of wis `tibber_token_backup` uit `easee_state.json` op de server.
@@ -269,10 +271,11 @@ Devices krijgen automatisch deze namen:
 [PREFIX] - Totaal Laden
 [PREFIX] - Totaal kWh
 [PREFIX] - LoadBal
-[PREFIX] - Kosten & Samenvatting (Tibber)
 [PREFIX] - Beste laden (Tibber)
-[PREFIX] - Dagrapport (Tibber)
+[PREFIX] - Dag overzicht (Tibber)
 ```
+
+Legacy (v10.10.x, niet meer bijgewerkt sinds v10.11): *Kosten & Samenvatting*, *Dagrapport*.
 
 ### Per Equalizer (indien gevonden)
 ```
@@ -282,11 +285,11 @@ Devices krijgen automatisch deze namen:
 
 ### Per Laadpaal
 ```
-[PREFIX] - [NAAM] - Laden
-[PREFIX] - [NAAM] - Totaal & Sessie
-[PREFIX] - [NAAM] - Status
-[PREFIX] - [NAAM] - Kosten (Sessie/Dag) (Tibber)
+[PREFIX] - [NAAM] - Laden          ← sessie/vandaag/totaal kWh in Description (v10.11+)
+[PREFIX] - [NAAM] - Status         ← incl. sessie/dag € bij Tibber (v10.11+)
 ```
+
+Legacy (v10.10.x): *Totaal & Sessie*, *Kosten (Sessie/Dag)* — verborgen (`Used=0`) na upgrade.
 
 ## Custom iconen (v10.10.8)
 

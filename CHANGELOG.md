@@ -6,6 +6,20 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.11.0] — 2026-06-24
+
+### Gewijzigd — compacte tegels (16 → 11 bij 2 laders + EQ + Tibber)
+- **Dag overzicht** — kern-tegel merge van *Kosten & Samenvatting* + *Dagrapport*: kWh vandaag, € vandaag, laaduren, goedkoopste kwartier/uur, tarief, energy/belasting-split.
+- **Laden** (per laadpaal) — merge met *Totaal & Sessie*: Energy-tegel (243/29) ongewijzigd voor grafieken (`sValue` = `vermogen;counter_wh`); sessie/vandaag/totaal kWh in `Description`.
+- **Status** (per laadpaal) — merge met *Kosten (Sessie/Dag)*: laadtoestand, timer, laadhint (Grid Rewards / duur tarief) + sessie € + dag € in één regel.
+
+### Verouderd (niet verwijderd — veiligheid Domoticz)
+- Kern: **Kosten & Samenvatting**, **Dagrapport** — niet meer aangemaakt/bijgewerkt; bestaande tegels krijgen `Used=0` (INFO-log eenmalig).
+- Per laadpaal: **Totaal & Sessie**, **Kosten (Sessie/Dag)** — idem; data staat op **Laden** resp. **Status**.
+
+### Upgrade
+- `git pull` + hardware herstarten. Oude tegels blijven staan maar worden verborgen (`Used=0`); handmatig verwijderen mag. Stable baseline blijft **v10.10.8-stable** tot user-testing afgerond is.
+
 ## [10.10.8] — 2026-06-20
 
 ### Stable

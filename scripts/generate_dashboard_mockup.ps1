@@ -360,15 +360,15 @@ function New-DashboardMockup {
             Buttons = @('Log', 'Aanpassen'); LastSeen = $freshTs; Favorite = $false
         }
         @{
-            Title = 'Easee - Kosten & Samenvatting'; HeaderValue = ''; Icon = $icons.cost
-            Status = "${RedCircle} EUR`nKosten: ${Euro}0.00 | Tarief: ${Euro}0.00/kWh`nEnergy: ${Euro}0.00 | Belasting: ${Euro}0.00"
-            Type = 'Type: General, Text'
-            Buttons = $powerButtons; LastSeen = $staleTs; Favorite = $false
-        }
-        @{
             Title = 'Easee - Beste laden'; HeaderValue = ''; Icon = $icons.overview
             Status = "00:00 - 00:00 | ${Euro}0.00/kWh"; Type = 'Type: General, Text'
             Buttons = $powerButtons; LastSeen = $freshTs; Favorite = $false
+        }
+        @{
+            Title = 'Easee - Dag overzicht'; HeaderValue = ''; Icon = $icons.overview
+            Status = "📅 Vandaag`n⚡ 0.00 kWh | ${Euro}0.00`n⏱️ Laaduren: 0 min`n💰 Goedkoopste kwartier: —"
+            Type = 'Type: General, Text'
+            Buttons = $powerButtons; LastSeen = $staleTs; Favorite = $false
         }
         @{
             Title = 'Easee - Lader 1 - Laden'; HeaderValue = '0 Watt'; Icon = $icons.charger
@@ -376,20 +376,10 @@ function New-DashboardMockup {
             Buttons = $powerButtons; LastSeen = $freshTs; Favorite = $true
         }
         @{
-            Title = 'Easee - Lader 1 - Totaal & Sessie'; HeaderValue = '0 kWh'; Icon = $icons.power
-            Status = 'Sessie: 0.000 kWh'; Type = 'Type: General, kWh'
-            Buttons = $powerButtons; LastSeen = $freshTs; Favorite = $false
-        }
-        @{
             Title = 'Easee - Lader 1 - Status'; HeaderValue = ''; Icon = $icons.chStatus
-            Status = 'Geen auto | 00:00'; Type = 'Type: General, Text'
-            Buttons = $statusButtons; LastSeen = $freshTs; Favorite = $false
-        }
-        @{
-            Title = 'Easee - Lader 1 - Kosten (Sessie/Dag)'; HeaderValue = ''; Icon = $icons.chCost
-            Status = "${RedCircle} Laatste sessie: ${Euro}0.00 | Dag: ${Euro}0.00"
+            Status = "Geen auto 00:00 · Laatste sessie ${Euro}0.00 · Dag ${Euro}0.00"
             Type = 'Type: General, Text'
-            Buttons = $powerButtons; LastSeen = $staleTs; Favorite = $false
+            Buttons = $statusButtons; LastSeen = $freshTs; Favorite = $false
         }
         @{
             Title = 'Easee - Meterkast - Status'; HeaderValue = ''; Icon = $icons.eqEqualizer

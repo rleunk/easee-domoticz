@@ -4,7 +4,10 @@ Kort overzicht — **v10.10.8-stable** is de huidige stabiele baseline; **v10.9.
 
 ## Afgerond — v10.10.x stable (2026-06)
 
-- **v10.10.0** — Tibber kwartierprijzen, Dagrapport, laadhints, configureerbaar Beste laden, **16 tegels** met Tibber.
+## Huidige release (v10.11.0 — tegel-merge, user testing)
+
+- **v10.11.0** — Compacte UI: **11 tegels** (2 laders + EQ + Tibber). Merge *Kosten & Samenvatting* + *Dagrapport* → **Dag overzicht**; *Totaal & Sessie* → **Laden**; *Kosten (Sessie/Dag)* → **Status**. Stable baseline blijft **v10.10.8-stable**.
+- **v10.10.0** — Tibber kwartierprijzen, Dagrapport, laadhints, configureerbaar Beste laden, **16 tegels** met Tibber (v10.10.x).
 - **v10.10.1** — API-timeout crasht hardware-thread niet meer.
 - **v10.10.2–v10.10.8** — Sessie-kWh, timer, kosten, EQ fase-weergave; Totaal & Sessie numerische Custom sValue; sessie-kWh cap op dagtotaal.
 - **Stable release** — tag `v10.10.8-stable` (aanbevolen productie-baseline).
@@ -32,7 +35,7 @@ Zie [CHANGELOG.md](../CHANGELOG.md) voor details.
 
 ## Getest scenario
 
-2× Charge Lite, 1× Equalizer, Tibber (Mode7) — **16 tegels** (zie [CONFIGURATION.md](CONFIGURATION.md#verwachte-tegels-referentie)). Kosten-tegels, Dagrapport en Vandaag kWh bevestigd werkend (Richard, 19-06-2026). v10.10.8-stable sessie-kWh fixes getest (20-06-2026).
+2× Charge Lite, 1× Equalizer, Tibber (Mode7) — **11 actieve tegels** (zie [CONFIGURATION.md](CONFIGURATION.md#verwachte-tegels-referentie)). v10.11.0 tegel-merge; v10.10.8-stable sessie-kWh fixes getest (20-06-2026).
 
 ## Afgerond — geen plugin-plan
 

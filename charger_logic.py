@@ -190,6 +190,25 @@ def compute_duration_text(plugin, start_ts):
     secs = max(0, int(easee_state.now_ts(plugin) - float(start_ts)))
     return f'{secs // 3600:02d}:{(secs % 3600) // 60:02d}'
 
+def build_charger_status_text(
+    plugin, online, session_active, power_w, status_label, laadduur, hint,
+    session_cost=None, day_cost=None, session_active_for_cost=False,
+):
+    """Combined Status-tegel: laadtoestand, timer, hint, sessie/dag € (v10.11)."""
+    charging = session_active and power_w > 50
+    if charging:
+        head = f'⚡ {status_label} {laadduur}'
+    else:
+        head = f'{status_emoji(plugin, online, session_active)} {status_label} {laadduur}'
+    parts = [head]
+    if hint:
+        parts.append(hint)
+    if session_cost is not None and day_cost is not None:
+        sess_label = 'Sessie' if session_active_for_cost else 'Laatste sessie'
+        parts.append(f'{sess_label} €{easee_helpers.euro_str(plugin, session_cost)}')
+        parts.append(f'Dag €{easee_helpers.euro_str(plugin, day_cost)}')
+    return ' · '.join(parts)
+
 def session_elapsed_hours(plugin, start_ts):
     if start_ts is None:
         return 0.0
@@ -629,31 +648,24 @@ def poll_charger(plugin, charger):
                 'cost',
             )
 
-    # UPDATE DEVICES
-    domoticz_devices.update_charger_energy(plugin, cid, 'Laden', power_w, counter_wh)
-
-    totaal_sessie = (
-        f'🔋 Deze sessie: {display_kwh:.3f} kWh | 📅 Vandaag: {day_kwh:.3f} kWh'
-        f' | Totaal: {total_kwh:.1f} kWh'
+    # UPDATE DEVICES — v10.11: Laden (Energy + Description), Status (incl. kosten)
+    laden_detail = (
+        f'Sessie: {display_kwh:.3f} kWh | Vandaag: {day_kwh:.3f} kWh | Totaal: {total_kwh:.1f} kWh'
     )
-    domoticz_devices.update_charger_custom(
-        plugin, cid, 'Totaal & Sessie', totaal_sessie,
-        nvalue=display_kwh,
+    domoticz_devices.update_charger_energy(
+        plugin, cid, 'Laden', power_w, counter_wh, description=laden_detail,
     )
 
     eq_lb = any(bool(v.get('loadbal')) for v in (plugin.latest_equalizers or {}).values())
     hint = tibber_pricing.charging_hint(plugin, power_w, session_active, eq_lb_active=eq_lb)
-    hint_part = f' | 💡 {hint}' if hint else ''
-    status_text = (
-        f'{status_emoji(plugin, online, session_active)} '
-        f'{power_emoji(plugin, power_w)} {status_label} | ⏱️ {laadduur}{hint_part}'
+    status_text = build_charger_status_text(
+        plugin, online, session_active, power_w, status_label, laadduur, hint,
+        session_cost=session_cost if easee_helpers.tibber_enabled(plugin) else None,
+        day_cost=easee_helpers.safe_float(plugin, st.get('day_cost_total', 0.0), 0.0)
+        if easee_helpers.tibber_enabled(plugin) else None,
+        session_active_for_cost=session_active,
     )
     domoticz_devices.update_charger_text(plugin, cid, 'Status', status_text)
-    
-    if easee_helpers.tibber_enabled(plugin):
-        day_cost = easee_helpers.safe_float(plugin, st.get('day_cost_total', 0.0), 0.0)
-        domoticz_devices.update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, session_active)
-    
     plugin.latest_chargers[cid] = {
         'power': power_w,
         'kwh': total_kwh,
