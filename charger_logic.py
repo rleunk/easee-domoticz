@@ -372,9 +372,25 @@ def track_session_kwh_zero_polls(plugin, st, display_kwh, day_kwh, power_w, sess
             'session',
         )
 
+def is_charging_active(session_active, power_w):
+    """Actief laden: sessie + vermogen boven drempel (timer/kWh-display)."""
+    return bool(session_active) and float(power_w) > 50
+
+def sync_charging_timer(plugin, st, values, session, session_active, power_w):
+    """Timer alleen tijdens actief laden; 00:00 bij pauze (bijv. Wacht op start)."""
+    charging = is_charging_active(session_active, power_w)
+    was_charging = bool(st.get('charging_active'))
+    if charging and not was_charging:
+        api_start_ts = session_start_timestamp(plugin, values, session)
+        st['session_start_ts'] = api_start_ts if api_start_ts is not None else easee_state.now_ts(plugin)
+    elif not charging and (was_charging or st.get('session_start_ts') is not None):
+        st['session_start_ts'] = None
+    st['charging_active'] = charging
+    return charging
+
 def ensure_session_tracking(plugin, st, values, session, session_active, total_kwh, day_kwh=0.0, api_session_kwh=None, power_w=0, cid=''):
     """Keep session clock/baseline when session_active persisted without start metadata."""
-    if not session_active:
+    if not is_charging_active(session_active, power_w):
         return
     api_start_ts = session_start_timestamp(plugin, values, session)
     if st.get('session_start_ts') is None:
@@ -495,15 +511,22 @@ def poll_charger(plugin, charger):
     counter_wh, day_kwh, day_delta = sync_day_energy(plugin, st, total_kwh, session_active, power_w)
 
     resuming = False
+    charging_active = is_charging_active(session_active, power_w)
     if session_active and not st.get('session_active'):
         resuming = is_session_resume(plugin, st, session_active, session, power_w)
         api_start_ts = session_start_timestamp(plugin, values, session)
         st['session_active'] = True
+        if charging_active:
+            if resuming:
+                if api_start_ts is not None:
+                    st['session_start_ts'] = api_start_ts
+                elif st.get('session_start_ts') is None:
+                    st['session_start_ts'] = easee_state.now_ts(plugin)
+            else:
+                st['session_start_ts'] = api_start_ts if api_start_ts is not None else easee_state.now_ts(plugin)
+        else:
+            st['session_start_ts'] = None
         if resuming:
-            if api_start_ts is not None:
-                st['session_start_ts'] = api_start_ts
-            elif st.get('session_start_ts') is None:
-                st['session_start_ts'] = easee_state.now_ts(plugin)
             if api_session_kwh is not None:
                 st['session_start_kwh'] = max(0.0, float(total_kwh) - float(api_session_kwh))
             elif st.get('session_start_kwh') is None:
@@ -514,7 +537,6 @@ def poll_charger(plugin, charger):
             )
             st['prev_session_kwh'] = None
         else:
-            st['session_start_ts'] = api_start_ts if api_start_ts is not None else easee_state.now_ts(plugin)
             st['session_start_kwh'] = total_kwh
             ensure_session_start_day_kwh(
                 plugin, st, day_kwh, api_session_kwh=api_session_kwh, power_w=power_w,
@@ -534,6 +556,8 @@ def poll_charger(plugin, charger):
             plugin, st, values, session, session_active, total_kwh,
             day_kwh=day_kwh, api_session_kwh=api_session_kwh, power_w=power_w, cid=cid,
         )
+
+    charging_active = sync_charging_timer(plugin, st, values, session, session_active, power_w)
 
     ending_session = (not session_active) and st.get('session_active')
 
@@ -585,6 +609,7 @@ def poll_charger(plugin, charger):
         st['last_session_cost_tax'] = easee_helpers.safe_float(plugin, st.get('session_cost_tax', 0.0), 0.0)
         st['last_session_duration'] = compute_duration_text(plugin, st.get('session_start_ts'))
         st['session_active'] = False
+        st['charging_active'] = False
         st['session_start_ts'] = None
         st['session_start_kwh'] = None
         st['session_start_day_kwh'] = None
@@ -625,8 +650,13 @@ def poll_charger(plugin, charger):
             f'api_session={api_session_kwh}, timer={compute_duration_text(plugin, st.get("session_start_ts"))}',
             'session',
         )
-    if st.get('session_active'):
+    if charging_active:
         laadduur = compute_duration_text(plugin, st.get('session_start_ts'))
+        session_cost = easee_helpers.safe_float(plugin, st.get('session_cost_total', 0.0), 0.0)
+        session_cost_energy = easee_helpers.safe_float(plugin, st.get('session_cost_energy', 0.0), 0.0)
+        session_cost_tax = easee_helpers.safe_float(plugin, st.get('session_cost_tax', 0.0), 0.0)
+    elif st.get('session_active'):
+        laadduur = '00:00'
         session_cost = easee_helpers.safe_float(plugin, st.get('session_cost_total', 0.0), 0.0)
         session_cost_energy = easee_helpers.safe_float(plugin, st.get('session_cost_energy', 0.0), 0.0)
         session_cost_tax = easee_helpers.safe_float(plugin, st.get('session_cost_tax', 0.0), 0.0)
@@ -663,7 +693,7 @@ def poll_charger(plugin, charger):
         session_cost=session_cost if easee_helpers.tibber_enabled(plugin) else None,
         day_cost=easee_helpers.safe_float(plugin, st.get('day_cost_total', 0.0), 0.0)
         if easee_helpers.tibber_enabled(plugin) else None,
-        session_active_for_cost=session_active,
+        session_active_for_cost=charging_active,
     )
     domoticz_devices.update_charger_text(plugin, cid, 'Status', status_text)
     plugin.latest_chargers[cid] = {

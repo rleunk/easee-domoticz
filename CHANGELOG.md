@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.11.2] — 2026-06-24
+
+### Opgelost
+- **Status-timer blijft lopen bij pauze (Wacht op start, 0 W)** — laadtijd op de Status-tegel liep door zolang de Easee-sessie open stond, ook zonder actief vermogen. Timer telt nu alleen tijdens laden (> 50 W); bij pauze **00:00**, bij hervatting opnieuw vanaf nul. Sessie-kWh op **Laden** en kosten blijven intact.
+
+### Upgrade
+- Van **v10.11.1**: `git pull` + hardware herstarten.
+
 ## [10.11.1] — 2026-06-24
 
 ### Stable
