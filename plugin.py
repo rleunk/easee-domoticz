@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.11.2" author="Richard Leunk" version="10.11.2"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.11.3" author="Richard Leunk" version="10.11.3"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.11.2</h2><br/>
+        <h2>Easee Domoticz plugin v10.11.3</h2><br/>
         <p>Easee laadpaal integratie met compacte UI (11 tegels), samengevoegde Dag overzicht / Laden / Status-tegels, Tibber kwartierprijzen, laadhints en Equalizer.</p>
     </description>
     <params>
@@ -100,6 +100,20 @@ class BasePlugin:
         self.fuse_first_poll_logged = set()
         self.site_structure_numerics_logged = set()
         self.plugin_dir = os.path.dirname(os.path.realpath(__file__))
+
+    def _log_heartbeat_exception(self, step, exc):
+        msg = f'heartbeat exception: {step}: {exc}\n{traceback.format_exc()}'
+        try:
+            easee_logging.error('plugin', msg, 'heartbeat')
+        except Exception:
+            pass
+
+    def _heartbeat_step(self, step, func):
+        try:
+            return func()
+        except Exception as e:
+            self._log_heartbeat_exception(step, e)
+            return None
 
     def discover_entities(self):
         self._discovery_network_error = False
@@ -305,11 +319,13 @@ class BasePlugin:
             )
         refreshed = easee_helpers.safe_int(self, self.state.get('price_cache_refreshed', 0), 0)
         if easee_helpers.tibber_enabled(self) and ((easee_state.now_ts(self) - refreshed) > 900 or not (self.state.get('price_cache') or {})):
-            tibber_pricing.refresh_tibber_prices(self)
+            self._heartbeat_step('tibber refresh', lambda: tibber_pricing.refresh_tibber_prices(self))
         for eq in self.equalizers:
-            equalizer_logic.poll_equalizer(self, eq)
+            eid = eq.get('id', '?')
+            self._heartbeat_step(f'poll equalizer {eid}', lambda eq=eq: equalizer_logic.poll_equalizer(self, eq))
         for c in self.chargers:
-            charger_logic.poll_charger(self, c)
+            cid = c.get('id', '?')
+            self._heartbeat_step(f'poll charger {cid}', lambda c=c: charger_logic.poll_charger(self, c))
         total_power = sum(v.get('power', 0) for v in self.latest_chargers.values())
         online = sum(1 for v in self.latest_chargers.values() if v.get('online'))
         easee_logging.debug(
@@ -397,6 +413,7 @@ class BasePlugin:
         easee_state.migrate_state_for_version(self)
         easee_state.migrate_cost_tracking(self)
         easee_state.migrate_session_baseline(self)
+        easee_state.migrate_charging_timer_state(self)
         tibber_src = easee_state.sync_tibber_token_backup(self)
         try:
             easee_state.save_state(self)
@@ -445,18 +462,25 @@ class BasePlugin:
         if not self.started:
             return
         try:
-            if not self.access_token and not easee_api.login(self):
-                domoticz_devices.update_core_text(self, 'Status', 'Login mislukt')
-                easee_logging.info('plugin', 'Poll overgeslagen: login mislukt', 'poll')
-                return
+            if not self.access_token:
+                logged_in = self._heartbeat_step('login', lambda: easee_api.login(self))
+                if not logged_in:
+                    self._heartbeat_step(
+                        'login status',
+                        lambda: domoticz_devices.update_core_text(self, 'Status', 'Login mislukt'),
+                    )
+                    easee_logging.info('plugin', 'Poll overgeslagen: login mislukt', 'poll')
+                    return
             if not self.sync_done:
-                self.handle_startup_sync()
+                self._heartbeat_step('startup sync', self.handle_startup_sync)
                 if not self.sync_done:
                     return
             if self.icon_reapply_remaining > 0:
-                domoticz_icons.load_custom_images(self, plugin_globals=globals())
-                domoticz_icons.apply_images_to_devices(self, force=True)
-                self.icon_reapply_remaining -= 1
+                def _reapply_icons():
+                    domoticz_icons.load_custom_images(self, plugin_globals=globals())
+                    domoticz_icons.apply_images_to_devices(self, force=True)
+                    self.icon_reapply_remaining -= 1
+                self._heartbeat_step('icon reapply', _reapply_icons)
             interval = max(10, easee_helpers.safe_int(self, Parameters.get('Mode1', '30'), 30))
             since_poll = time.time() - self.last_poll
             if since_poll < interval:
@@ -467,35 +491,31 @@ class BasePlugin:
                 )
                 return
             self.last_poll = time.time()
-            try:
-                self.refresh_entity_cache_only()
-            except Exception as e:
-                easee_logging.warning('plugin', f'Discovery refresh mislukt: {e}', 'discovery')
-            try:
-                self.poll_all()
-            except Exception as e:
-                easee_logging.warning('plugin', f'Poll mislukt: {e}', 'poll')
-            try:
-                self.update_combined()
-            except Exception as e:
-                easee_logging.warning('plugin', f'UI-update mislukt: {e}', 'poll')
-            try:
-                easee_state.save_state(self)
-            except Exception as e:
-                easee_logging.warning('plugin', f'State opslaan mislukt: {e}', 'poll')
+            self._heartbeat_step('discovery refresh', self.refresh_entity_cache_only)
+            self._heartbeat_step('poll', self.poll_all)
+            self._heartbeat_step('ui update', self.update_combined)
+            self._heartbeat_step('state save', lambda: easee_state.save_state(self))
         except Exception as e:
-            try:
-                easee_logging.error('plugin', f'onHeartbeat fout: {e}\n{traceback.format_exc()}')
-            except Exception:
-                pass
-            try:
-                domoticz_devices.update_core_text(self, 'Status', f'Fout: {e}')
-            except Exception:
-                pass
+            self._log_heartbeat_exception('onHeartbeat', e)
+            self._heartbeat_step(
+                'status after error',
+                lambda: domoticz_devices.update_core_text(self, 'Status', f'Fout: {e}'),
+            )
 
 
 _plugin = BasePlugin()
 
 def onStart(): _plugin.onStart()
 def onStop(): _plugin.onStop()
-def onHeartbeat(): _plugin.onHeartbeat()
+def onHeartbeat():
+    try:
+        _plugin.onHeartbeat()
+    except Exception as e:
+        try:
+            easee_logging.error(
+                'plugin',
+                f'heartbeat exception: onHeartbeat (module): {e}\n{traceback.format_exc()}',
+                'heartbeat',
+            )
+        except Exception:
+            pass

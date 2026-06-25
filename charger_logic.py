@@ -185,9 +185,12 @@ def status_emoji(plugin, online, session_active):
         return '🔴'
 
 def compute_duration_text(plugin, start_ts):
-    if not start_ts:
+    if start_ts is None:
         return '00:00'
-    secs = max(0, int(easee_state.now_ts(plugin) - float(start_ts)))
+    start = easee_helpers.safe_float(plugin, start_ts, None)
+    if start is None or start <= 0:
+        return '00:00'
+    secs = max(0, int(easee_state.now_ts(plugin) - start))
     return f'{secs // 3600:02d}:{(secs % 3600) // 60:02d}'
 
 def build_charger_status_text(
@@ -212,7 +215,10 @@ def build_charger_status_text(
 def session_elapsed_hours(plugin, start_ts):
     if start_ts is None:
         return 0.0
-    return max(0.0, (easee_state.now_ts(plugin) - float(start_ts)) / 3600.0)
+    start = easee_helpers.safe_float(plugin, start_ts, None)
+    if start is None or start <= 0:
+        return 0.0
+    return max(0.0, (easee_state.now_ts(plugin) - start) / 3600.0)
 
 def estimate_session_kwh_from_power(power_w, elapsed_h):
     if power_w <= 50 or elapsed_h <= 0:
@@ -374,12 +380,16 @@ def track_session_kwh_zero_polls(plugin, st, display_kwh, day_kwh, power_w, sess
 
 def is_charging_active(session_active, power_w):
     """Actief laden: sessie + vermogen boven drempel (timer/kWh-display)."""
-    return bool(session_active) and float(power_w) > 50
+    try:
+        pw = float(power_w)
+    except (TypeError, ValueError):
+        pw = 0.0
+    return bool(session_active) and pw > 50
 
 def sync_charging_timer(plugin, st, values, session, session_active, power_w):
     """Timer alleen tijdens actief laden; 00:00 bij pauze (bijv. Wacht op start)."""
     charging = is_charging_active(session_active, power_w)
-    was_charging = bool(st.get('charging_active'))
+    was_charging = easee_helpers.truthy(st.get('charging_active', False))
     if charging and not was_charging and st.get('session_start_ts') is None:
         st['session_start_ts'] = easee_state.now_ts(plugin)
     elif not charging and (was_charging or st.get('session_start_ts') is not None):

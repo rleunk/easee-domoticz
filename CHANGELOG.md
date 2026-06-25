@@ -6,6 +6,15 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.11.3] — 2026-06-25
+
+### Opgelost
+- **Hardware-thread stopt stil (v10.11.2)** — onverwachte uitzonderingen in de heartbeat/poll-loop (o.a. `sync_charging_timer()`, ontbrekende `charging_active` na upgrade, ongeldige `session_start_ts`) kunnen de Domoticz-thread beëindigen zonder plugin-regels in het log. Elke heartbeat-stap (login, sync, discovery, poll per lader/EQ, UI, state) heeft nu een eigen `try/except` met **`heartbeat exception: …`** op ERROR-niveau; de thread blijft draaien.
+- **Laad-timer state na upgrade** — `charging_active` en sessie-flags worden genormaliseerd bij state-load en eenmalige migratie (`migrate_charging_timer_state`); `compute_duration_text()` / `session_elapsed_hours()` tolereren corrupte timestamps.
+
+### Upgrade
+- Van **v10.11.2**: `git pull` (of `git checkout v10.11.3`) + hardware herstarten. Bij herhaalde thread-fouten: zoek in het log naar `heartbeat exception:` voor de exacte oorzaak.
+
 ## [10.11.2] — 2026-06-24
 
 ### Stable

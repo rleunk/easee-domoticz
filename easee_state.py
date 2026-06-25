@@ -80,6 +80,23 @@ def today_key(plugin):
 def now_ts(plugin):
     return time.time()
 
+def _normalize_charger_session_fields(st):
+    """Ensure session/timer keys exist after upgrade from older plugin versions."""
+    st.setdefault('charging_active', False)
+    if not isinstance(st.get('charging_active'), bool):
+        st['charging_active'] = easee_helpers.truthy(st.get('charging_active', False))
+    st.setdefault('session_active', False)
+    if not isinstance(st.get('session_active'), bool):
+        st['session_active'] = easee_helpers.truthy(st.get('session_active', False))
+    if not st.get('session_active'):
+        st['charging_active'] = False
+    ts = st.get('session_start_ts')
+    if ts is not None:
+        start = easee_helpers.safe_float(None, ts, None)
+        if start is None or start <= 0:
+            st['session_start_ts'] = None
+    st.setdefault('session_kwh_zero_polls', 0)
+
 def charger_state(plugin, cid):
     store = plugin.state.setdefault('chargers', {})
     st = store.setdefault(cid, {
@@ -140,7 +157,25 @@ def charger_state(plugin, cid):
         st['day_wh'] = 0
         st['counter_wh'] = 0
         st['day_energy_reset'] = True
+    _normalize_charger_session_fields(st)
     return st
+
+def migrate_charging_timer_state(plugin):
+    """One-time normalize charging_active / session flags (v10.11.2 timer fix upgrade)."""
+    key = 'charging_timer_version'
+    target = '10.11.3-charging-active'
+    if plugin.state.get(key) == target:
+        return
+    for st in (plugin.state.get('chargers') or {}).values():
+        if not isinstance(st, dict):
+            continue
+        _normalize_charger_session_fields(st)
+    plugin.state[key] = target
+    easee_logging.info(
+        'easee_state',
+        f'Laad-timer state gemigreerd naar {PLUGIN_VERSION} (charging_active defaults)',
+        'migration',
+    )
 
 def migrate_state_for_version(plugin):
     """One-time resets when energy/cost tracking logic changes."""
