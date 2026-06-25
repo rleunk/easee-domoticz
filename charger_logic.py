@@ -389,7 +389,7 @@ def is_charging_active(session_active, power_w):
 def sync_charging_timer(plugin, st, values, session, session_active, power_w):
     """Timer alleen tijdens actief laden; 00:00 bij pauze (bijv. Wacht op start)."""
     charging = is_charging_active(session_active, power_w)
-    was_charging = easee_helpers.truthy(st.get('charging_active', False))
+    was_charging = easee_helpers.truthy(plugin, st.get('charging_active', False))
     if charging and not was_charging and st.get('session_start_ts') is None:
         st['session_start_ts'] = easee_state.now_ts(plugin)
     elif not charging and (was_charging or st.get('session_start_ts') is not None):

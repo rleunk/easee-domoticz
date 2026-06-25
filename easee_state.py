@@ -84,10 +84,10 @@ def _normalize_charger_session_fields(st):
     """Ensure session/timer keys exist after upgrade from older plugin versions."""
     st.setdefault('charging_active', False)
     if not isinstance(st.get('charging_active'), bool):
-        st['charging_active'] = easee_helpers.truthy(st.get('charging_active', False))
+        st['charging_active'] = easee_helpers.truthy(None, st.get('charging_active', False))
     st.setdefault('session_active', False)
     if not isinstance(st.get('session_active'), bool):
-        st['session_active'] = easee_helpers.truthy(st.get('session_active', False))
+        st['session_active'] = easee_helpers.truthy(None, st.get('session_active', False))
     if not st.get('session_active'):
         st['charging_active'] = False
     ts = st.get('session_start_ts')

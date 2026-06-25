@@ -6,6 +6,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.11.4] — 2026-06-25
+
+### Opgelost
+- **`truthy()` TypeError in laad-timer** — `sync_charging_timer()` en state-normalisatie riepen `easee_helpers.truthy(value)` aan zonder verplichte `plugin`-parameter; Domoticz crashte met `missing 1 required positional argument: 'value'`.
+
+### Upgrade
+- Van **v10.11.3**: `git pull` (of `git checkout v10.11.4`) + hardware herstarten.
+
 ## [10.11.3] — 2026-06-25
 
 ### Opgelost
