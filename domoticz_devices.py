@@ -720,7 +720,19 @@ def _rename_device_via_update(plugin, unit, name, used=None):
     kwargs = {'nValue': n_value, 'sValue': s_value, 'Name': key}
     if used is not None:
         kwargs['Used'] = int(used)
-    dev.Update(**kwargs)
+    try:
+        dev.Update(**kwargs)
+    except TypeError:
+        # Oudere Domoticz: Name/Used niet in Update(); directe assignment werkt daar wel.
+        used_val = kwargs.pop('Used', None)
+        kwargs.pop('Name', None)
+        try:
+            dev.Update(**kwargs)
+        except Exception:
+            pass
+        dev.Name = key
+        if used_val is not None and hasattr(dev, 'Used'):
+            dev.Used = used_val
     rebuild_index(plugin)
     return True
 

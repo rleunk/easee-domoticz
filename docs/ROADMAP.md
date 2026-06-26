@@ -1,6 +1,6 @@
 # Roadmap
 
-Kort overzicht — **v10.11.5-stable** is de huidige stabiele baseline; **v10.11.4-stable**, **v10.11.2-stable** en **v10.10.8-stable** blijven bewaard voor rollback. Zie [STABLE.md](../STABLE.md).
+Kort overzicht — **v10.11.6-stable** is de huidige stabiele baseline; **v10.11.5-stable**, **v10.11.4-stable**, **v10.11.2-stable** en **v10.10.8-stable** blijven bewaard voor rollback. Zie [STABLE.md](../STABLE.md).
 
 ## Afgerond — v10.11.x stable (2026-06)
 
@@ -8,7 +8,8 @@ Kort overzicht — **v10.11.5-stable** is de huidige stabiele baseline; **v10.11
 - **v10.11.1** — Fix deprecated-tegel `Used=0`-update; user-testing afgerond → **v10.11.1-stable**.
 - **v10.11.2** — Status-timer pauze-fix; user-testing afgerond → **v10.11.2-stable**.
 - **v10.11.4** — truthy()-fix laad-timer → **v10.11.4-stable**.
-- **v10.11.5** — Dag overzicht-migratie + idle timer **00:00**; user-testing afgerond → **v10.11.5-stable** (aanbevolen productie-baseline).
+- **v10.11.6** — Dag overzicht-migratie fix (`Device.Update`); user-testing afgerond → **v10.11.6-stable** (aanbevolen productie-baseline).
+- **v10.11.5** — Dag overzicht-migratie + idle timer **00:00**; → **v10.11.5-stable** (rollback-baseline; readonly-fout op nieuwere Domoticz).
 
 ## Afgerond — v10.10.x stable (2026-06)
 
@@ -32,7 +33,7 @@ Kort overzicht — **v10.11.5-stable** is de huidige stabiele baseline; **v10.11
 
 ## Testomgeving Richard
 
-2× Charge Lite, 1× Equalizer, Tibber (Mode7) — **11 actieve tegels** (zie [CONFIGURATION.md](CONFIGURATION.md#verwachte-tegels-referentie)). v10.11.0 tegel-merge getest en goedgekeurd (24-06-2026); v10.10.8-stable sessie-kWh fixes getest (20-06-2026); v10.11.5 Dag overzicht-migratie + idle timer getest (26-06-2026).
+2× Charge Lite, 1× Equalizer, Tibber (Mode7) — **11 actieve tegels** (zie [CONFIGURATION.md](CONFIGURATION.md#verwachte-tegels-referentie)). v10.11.0 tegel-merge getest en goedgekeurd (24-06-2026); v10.10.8-stable sessie-kWh fixes getest (20-06-2026); v10.11.6 Dag overzicht-migratie fix getest (26-06-2026).
 
 ## Oudere milestones (samenvatting)
 

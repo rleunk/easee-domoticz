@@ -1,6 +1,6 @@
 # Troubleshooting Gids
 
-> **Huidige versie:** v10.11.5 (stable: **v10.11.5-stable**) · Volledige installatie: [INSTALL.md](../INSTALL.md) · Stable-tags: [STABLE.md](../STABLE.md)
+> **Huidige versie:** v10.11.6 (stable: **v10.11.6-stable**) · Volledige installatie: [INSTALL.md](../INSTALL.md) · Stable-tags: [STABLE.md](../STABLE.md)
 
 ## Veelvoorkomende Problemen
 
@@ -43,7 +43,7 @@ sudo journalctl -u domoticz -f | grep Easee
 
 **Verwacht (referentie):** bij **2 laadpalen + 1 Equalizer + Tibber** hoort **11 actieve tegels + LoadBal** (12 devices) — zie [CONFIGURATION.md — Verwachte tegels](CONFIGURATION.md#verwachte-tegels-referentie).
 
-**Verouderde v10.10-tegels** (*Kosten & Samenvatting*, *Dagrapport*, *Totaal & Sessie*, *Kosten (Sessie/Dag)*): na upgrade naar v10.11.x worden deze verborgen (`Used=0`) of hernoemd naar **Dag overzicht** (v10.11.5+). Data staat op **Dag overzicht**, **Laden** (Description) en **Status**. Handmatig verwijderen mag.
+**Verouderde v10.10-tegels** (*Kosten & Samenvatting*, *Dagrapport*, *Totaal & Sessie*, *Kosten (Sessie/Dag)*): na upgrade naar v10.11.x worden deze verborgen (`Used=0`) of hernoemd naar **Dag overzicht** (v10.11.5+; fix in v10.11.6). Data staat op **Dag overzicht**, **Laden** (Description) en **Status**. Handmatig verwijderen mag.
 
 **Legacy-tegels die er níet horen:** *Import*, *Spanning*, *Terug & netto*, *Netto*, *Teruglevering*, losse *Load balancing* (Equalizer). Die komen uit v10.8.0 of v10.9.0. Verwijder ze handmatig in Domoticz (**Setup → Devices**).
 
@@ -61,7 +61,7 @@ sudo journalctl -u domoticz -f | grep Easee
 **Oplossing** (v10.9.28+):
 1. **Verwijder oude Easee custom icons** via **Instellingen → Aangepaste pictogrammen**
 2. Controleer `Easee_icons_v2.zip` en map `icons/` (13 mini-zips) in pluginmap
-3. `git pull` of `git checkout v10.11.5-stable` en herstart hardware-item
+3. `git pull` of `git checkout v10.11.6-stable` en herstart hardware-item
 4. Log controleren:
    - `Custom icons geladen: 13 sets`
    - `image_ids: 13/13 sets`
@@ -157,7 +157,7 @@ Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 
 ### Sessie-kWh / Totaal & Sessie (v10.10.x — superseded in v10.11)
 
-Sinds **v10.11** staat sessie/vandaag/totaal kWh op de **Laden**-tegel (Description), niet meer op *Totaal & Sessie*. Problemen met *Totaal & Sessie header 0 kWh* (v10.10.4–10.10.8) zijn opgelost in v10.10.8 maar die tegel is **verouderd** — upgrade naar **v10.11.5-stable** en kijk op **Laden**.
+Sinds **v10.11** staat sessie/vandaag/totaal kWh op de **Laden**-tegel (Description), niet meer op *Totaal & Sessie*. Problemen met *Totaal & Sessie header 0 kWh* (v10.10.4–10.10.8) zijn opgelost in v10.10.8 maar die tegel is **verouderd** — upgrade naar **v10.11.6-stable** en kijk op **Laden**.
 
 ### Logniveaus
 
@@ -200,4 +200,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Configuratie**: [CONFIGURATION.md](CONFIGURATION.md)
 
-Bij een issue: pluginversie **v10.11.5-stable** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
+Bij een issue: pluginversie **v10.11.6-stable** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
