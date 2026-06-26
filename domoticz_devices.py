@@ -272,6 +272,17 @@ def resolve_core_unit(plugin, label, tried=None):
             _note(f'hit:{devid}')
             return u
 
+    if label.lower() == 'dag overzicht':
+        for leg_label in DEPRECATED_CORE_LABELS:
+            leg_devid = CORE_DEVICE_IDS.get(leg_label)
+            if not leg_devid:
+                continue
+            _note(f'legacy_devid={leg_devid}')
+            u = find_unit_by_devid(plugin, leg_devid)
+            if u is not None:
+                _note(f'hit:legacy_devid:{leg_devid}')
+                return u
+
     label_lower = label.lower()
     scan_terms = []
     if label_lower == 'dag overzicht':
@@ -297,8 +308,7 @@ def sync_device_name(plugin, unit, name):
                 'domoticz_devices',
                 f'Legacy Import-tegel hernoemd: {current} -> {key}',
             )
-        domoticz_runtime.Devices[unit].Name = key
-        rebuild_index(plugin)
+        _rename_device_via_update(plugin, unit, name)
     except Exception as e:
         easee_logging.debug('domoticz_devices', f'device rename failed unit {unit}: {e}')
 
@@ -699,6 +709,21 @@ def _device_current_values(dev):
     """Read current nValue/sValue — required on some Domoticz builds for any Update()."""
     return int(getattr(dev, 'nValue', 0) or 0), str(getattr(dev, 'sValue', '') or '')
 
+def _rename_device_via_update(plugin, unit, name, used=None):
+    """Rename via Device.Update — Name/DeviceID zijn readonly op nieuwere Domoticz."""
+    dev = domoticz_runtime.Devices[unit]
+    key = easee_helpers.clean_label(plugin, name)
+    current = easee_helpers.norm(plugin, dev.Name)
+    if current == easee_helpers.norm(plugin, key):
+        return True
+    n_value, s_value = _device_current_values(dev)
+    kwargs = {'nValue': n_value, 'sValue': s_value, 'Name': key}
+    if used is not None:
+        kwargs['Used'] = int(used)
+    dev.Update(**kwargs)
+    rebuild_index(plugin)
+    return True
+
 def mark_device_unused(plugin, unit, reason=''):
     """Mark deprecated tile unused (Used=0) once; never auto-delete."""
     if unit is None:
@@ -770,21 +795,13 @@ def migrate_dag_overzicht_core_tile(plugin):
         primary = units[0]
     try:
         dev = domoticz_runtime.Devices[primary]
+        target_key = easee_helpers.clean_label(plugin, target_name)
         current_name = easee_helpers.norm(plugin, dev.Name)
-        if current_name != easee_helpers.norm(plugin, target_name):
-            dev.Name = target_name
-            rebuild_index(plugin)
+        if current_name != easee_helpers.norm(plugin, target_key):
+            _rename_device_via_update(plugin, primary, target_name, used=1)
             easee_logging.info(
                 'domoticz_devices',
-                f'Kern-tegel hernoemd: {current_name} → {target_name}',
-            )
-        current_devid = str(getattr(dev, 'DeviceID', '') or '')
-        if canonical_devid and current_devid != canonical_devid:
-            dev.DeviceID = canonical_devid
-            rebuild_index(plugin)
-            easee_logging.info(
-                'domoticz_devices',
-                f'Dag overzicht DeviceID gemigreerd: {current_devid} → {canonical_devid}',
+                'Kern-tegel hernoemd naar Easee - Dag overzicht',
             )
     except Exception as e:
         easee_logging.warning('domoticz_devices', f'Dag overzicht migratie mislukt: {e}')
@@ -792,7 +809,7 @@ def migrate_dag_overzicht_core_tile(plugin):
     domoticz_icons.apply_icon_to_unit(plugin, primary, force=True)
     for u in units:
         if u != primary:
-            mark_device_unused(plugin, u, 'dubbele legacy-tegel → Dag overzicht (v10.11.5)')
+            mark_device_unused(plugin, u, 'dubbele legacy-tegel → Dag overzicht (v10.11.6)')
     return primary
 
 def deprecate_core_tiles(plugin):

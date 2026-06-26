@@ -6,6 +6,18 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.11.6] — 2026-06-26
+
+### Stable
+- **v10.11.6-stable** — huidige aanbevolen productie-baseline (Dag overzicht-migratie fix). Tag `v10.11.5-stable` bewaard op v10.11.5-commit. Zie [STABLE.md](STABLE.md).
+
+### Opgelost
+- **Dag overzicht-migratie faalde met `readonly attribute`** — v10.11.5 schreef `dev.Name` / `dev.DeviceID` direct; op nieuwere Domoticz zijn die velden readonly. `migrate_dag_overzicht_core_tile()` hernoemt nu via `Device.Update(Name=…, Used=1, …)`; legacy DeviceID (`EASEE_CORE_COSTS` / `EASEE_CORE_DAG`) blijft behouden en lookup vindt de tegel via legacy naam, legacy DeviceID en canonieke naam.
+
+### Upgrade
+- Van **v10.11.5**: `git pull` (of `git checkout v10.11.6-stable`) + hardware herstarten. Tegelnaam wordt automatisch gecorrigeerd.
+- Van **v10.11.5-stable** / **v10.11.4-stable**: `git checkout v10.11.6-stable` + hardware herstarten.
+
 ## [10.11.5] — 2026-06-26
 
 ### Stable
