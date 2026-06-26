@@ -1,13 +1,14 @@
 # Roadmap
 
-Kort overzicht — **v10.11.2-stable** is de huidige stabiele baseline; **v10.11.1-stable** en **v10.10.8-stable** blijven bewaard voor rollback. Zie [STABLE.md](../STABLE.md).
+Kort overzicht — **v10.11.5-stable** is de huidige stabiele baseline; **v10.11.4-stable**, **v10.11.2-stable** en **v10.10.8-stable** blijven bewaard voor rollback. Zie [STABLE.md](../STABLE.md).
 
 ## Afgerond — v10.11.x stable (2026-06)
 
 - **v10.11.0** — Compacte UI: **11 tegels** (2 laders + EQ + Tibber). Merge *Kosten & Samenvatting* + *Dagrapport* → **Dag overzicht**; *Totaal & Sessie* → **Laden**; *Kosten (Sessie/Dag)* → **Status**.
 - **v10.11.1** — Fix deprecated-tegel `Used=0`-update; user-testing afgerond → **v10.11.1-stable**.
 - **v10.11.2** — Status-timer pauze-fix; user-testing afgerond → **v10.11.2-stable**.
-- **Stable release** — tag `v10.11.2-stable` (aanbevolen productie-baseline).
+- **v10.11.4** — truthy()-fix laad-timer → **v10.11.4-stable**.
+- **v10.11.5** — Dag overzicht-migratie + idle timer **00:00**; user-testing afgerond → **v10.11.5-stable** (aanbevolen productie-baseline).
 
 ## Afgerond — v10.10.x stable (2026-06)
 
@@ -19,73 +20,27 @@ Kort overzicht — **v10.11.2-stable** is de huidige stabiele baseline; **v10.11
 ## Afgerond — v10.10.0 (2026-06-19)
 
 - **Dagrapport-tegel** — kWh, €, laaduren, goedkoopste kwartier (Tibber). *(Samengevoegd in **Dag overzicht** sinds v10.11.)*
-- **Tibber kwartierprijzen** — kosten + Beste laden op 15-min resolutie.
-- **Laadhints** — duur tarief / Grid Rewards op laadpaal-Status.
-- **Tibber stuurt** — globale Status + EQ *Load balancing: Tibber*.
-- **16 tegels** met Tibber (2 laders + EQ); tag `v10.9.32-stable` bewaard als vorige stable.
+- **Laadhints** — dynamische hints op Status-tegel (Tibber + load balancing).
+- **Beste laden** — configureerbaar venster (Mode8).
+- **16 tegels** — volledige layout met Tibber (2 laders + EQ).
 
-## Afgerond — v10.9.x stable testing (2026-06)
+## Gepland / onderzoek
 
-- **v10.9.19–v10.9.28** — Kosten-tegels: legacy DeviceID lookup, stale sessionEnergy, dag-tracking, Vandaag kWh (middernacht-baseline + lifetime Counter), Tibber (Mode7) vereist. Getest door Richard (19-06-2026).
-- **v10.9.29** — Logging opgeschoond: per-poll INFO → DEBUG; icon-diagnostiek 1× per start.
-- **v10.9.30** — Tibber-token backup in `easee_state.json` (Mode7 leeg na hardware-opslaan/plugin-update).
-- **v10.9.31** — Optionele API 403/405 (equalizer state, loadbalancing, `/equalizers`, circuits) alleen DEBUG; 429 blijft WARNING. README-mockups dichter bij echte Domoticz-tegels.
-- **v10.9.11–v10.9.17** — Equalizer Vermogen betrouwbaarheid: poll na herstart, fallback-keten, 429 fail-fast, sticky power, per-endpoint rate limits, observations URL-fix, discovery-throttle.
-- **v10.9.10** — Status combo-icoon (`EaseeStatusGlobal`); 13 icon sets.
-- **v10.9.0–v10.9.1** — Equalizer geconsolideerd naar 2 tegels (Status + Vermogen).
-- **v10.9.7.x** — Wrapper-cleanup en regressiefixes in modulaire codebase.
+- **Equalizer fase-detail** — verdere verfijning LB-weergave
+- **Domoticz Energy-tegel icoon-beperking** — documentatie/alternatief
+- **API rate limit** — adaptieve poll-interval bij 429
 
-Zie [CHANGELOG.md](../CHANGELOG.md) voor details.
+## Testomgeving Richard
 
-## Getest scenario
+2× Charge Lite, 1× Equalizer, Tibber (Mode7) — **11 actieve tegels** (zie [CONFIGURATION.md](CONFIGURATION.md#verwachte-tegels-referentie)). v10.11.0 tegel-merge getest en goedgekeurd (24-06-2026); v10.10.8-stable sessie-kWh fixes getest (20-06-2026); v10.11.5 Dag overzicht-migratie + idle timer getest (26-06-2026).
 
-2× Charge Lite, 1× Equalizer, Tibber (Mode7) — **11 actieve tegels** (zie [CONFIGURATION.md](CONFIGURATION.md#verwachte-tegels-referentie)). v10.11.0 tegel-merge getest en goedgekeurd (24-06-2026); v10.10.8-stable sessie-kWh fixes getest (20-06-2026).
+## Oudere milestones (samenvatting)
 
-## Afgerond — geen plugin-plan
+| Periode | Thema |
+|---------|-------|
+| v10.9.x | Modulaire refactor, custom iconen v2, Equalizer 2-tegel, kosten-fixes |
+| v10.8.x | Tibber integratie, laadhints prototype |
+| v10.7.x | State persistence, load balancing |
+| v10.6.x | Module split (13 Python-bestanden) |
 
-### Tibber slim laden / Grid Rewards
-
-**Status: gesloten** — niet via API, alleen Easee/Tibber-app.
-
-De Tibber GraphQL-API levert **alleen dynamische stroomprijzen** (gebruikt voor kosten-tegels). *Slim laden*, *Grid Rewards* en load-balancing-programma's zijn **app-only**; Easee biedt geen publieke API-endpoints daarvoor. Geen Domoticz-tegel of automatisering gepland tenzij Tibber of Easee dit later via API openstelt.
-
-## Equalizer — stap 1 (afgerond) vs stap 2+ (beperkt door account-API)
-
-### Stap 1 — wat nu werkt (v10.9.x)
-
-| Onderdeel | Bron | Status |
-|-----------|------|--------|
-| Discovery | `/accounts/products`, `/sites`, detailed site | Werkt |
-| Vermogen (import/terug/netto W) | Observations 40/41, fase I×V, cumulatief, sticky power | Werkt (fallback-keten) |
-| Status (online, LB aan/uit/Tibber, fase-detail) | Observations + siteStructure | Werkt; LB **Tibber** wanneer EQ LB uit en Tibber actief (v10.10) |
-| Limieten (eMobility, hoofd, ingestelde limiet) | `siteStructure`, `site.state`, circuit-fuse uit embedded data | Werkt wanneer data in observations/siteStructure zit |
-| 2 compacte tegels | Status + Vermogen | Afgerond sinds v10.9.1 |
-
-### Wat HTTP 403/405 blokkeert (normaal voor veel accounts)
-
-Deze optionele probes falen vaak met **403 Forbidden** of **405 Method Not Allowed**. Sinds v10.9.31 alleen zichtbaar op **Debug** (Mode6); geen actie nodig.
-
-| Endpoint | HTTP | Gevolg |
-|----------|------|--------|
-| `/equalizers/{id}/state` | 403 | Plugin cached 403 (5 min), valt terug op observations + siteStructure |
-| `/cloud-loadbalancing/equalizer/{id}/…` | 403 | Geen LB-config uit cloud API; limiet uit andere bronnen |
-| `/equalizers/{id}/loadbalancing/…` | 403 | Idem |
-| `/equalizers` (lijst) | 403 | Discovery via `/accounts/products` i.p.v. lijst-endpoint |
-| `/sites/{id}/circuits` | 405 | Circuit-lijst niet via deze methode; embedded circuits in site/state gebruikt |
-
-**Eerlijk:** LB-configuratie en surplus-energy via Easee cloud-loadbalancing-API werkt **mogelijk nooit** voor dit account — dat is een account-/rechtenlimiet van Easee, geen plugin-bug. De Status-tegel toont LB **Uit** wanneer de API geen actieve LB-state levert (ook als de app iets anders suggereert).
-
-### Stap 2+ — realistische vervolg (indicatief)
-
-Alleen zinvol als Easee API-toegang verbetert of bugreports nieuwe haakjes tonen:
-
-- Betere fuse-limiet uit `siteStructure` wanneer cloud-loadbalancing 403 blijft (geen fantasy LB-config-tegel)
-- Verfijning LB-weergave wanneer observations 230–232 wél data geven maar state-endpoint 403 blijft
-- Verdere stabilisatie op basis van [Issues](https://github.com/rleunk/easee-domoticz/issues)
-
-**Niet gepland** (zolang API 403/405 blijft): LB-config lezen/schrijven via API, aparte cloud-LB-tegel, surplus-energy automatisering in Domoticz.
-
-## Toekomst (indicatief, geen planning)
-
-- Verdere stabilisatie op basis van bugreports via [Issues](https://github.com/rleunk/easee-domoticz/issues)
-
+Zie [CHANGELOG.md](../CHANGELOG.md) voor volledige release-notes.

@@ -731,6 +731,70 @@ def mark_device_unused(plugin, unit, reason=''):
     except Exception as e:
         easee_logging.debug('domoticz_devices', f'Used=0 mislukt unit {unit}: {e}')
 
+def migrate_dag_overzicht_core_tile(plugin):
+    """Hernoem/repurpose legacy Kosten & Samenvatting / Dagrapport → Dag overzicht."""
+    canonical_devid = CORE_DEVICE_IDS.get('Dag overzicht')
+    target_name = easee_helpers.pref(plugin, 'Dag overzicht')
+    legacy_devids = [
+        CORE_DEVICE_IDS.get('Kosten & Samenvatting'),
+        CORE_DEVICE_IDS.get('Dagrapport'),
+    ]
+    units = []
+    primary = find_unit_by_devid(plugin, canonical_devid)
+    if primary is not None:
+        units.append(primary)
+    for leg_devid in legacy_devids:
+        u = find_unit_by_devid(plugin, leg_devid)
+        if u is not None and u not in units:
+            units.append(u)
+    for leg_name in _core_legacy_names(plugin, 'Dag overzicht'):
+        leg_key = easee_helpers.clean_label(plugin, leg_name)
+        u = find_unit(plugin, leg_name) or find_unit_by_devid(plugin, make_device_id(plugin, leg_key))
+        if u is not None and u not in units:
+            units.append(u)
+    if not units:
+        return None
+    primary = None
+    for u in units:
+        devid = str(getattr(domoticz_runtime.Devices[u], 'DeviceID', '') or '')
+        if devid in legacy_devids:
+            primary = u
+            break
+    if primary is None:
+        for u in units:
+            clean = easee_helpers.clean_label(plugin, domoticz_runtime.Devices[u].Name).lower()
+            if 'kosten' in clean or 'dagrapport' in clean:
+                primary = u
+                break
+    if primary is None:
+        primary = units[0]
+    try:
+        dev = domoticz_runtime.Devices[primary]
+        current_name = easee_helpers.norm(plugin, dev.Name)
+        if current_name != easee_helpers.norm(plugin, target_name):
+            dev.Name = target_name
+            rebuild_index(plugin)
+            easee_logging.info(
+                'domoticz_devices',
+                f'Kern-tegel hernoemd: {current_name} → {target_name}',
+            )
+        current_devid = str(getattr(dev, 'DeviceID', '') or '')
+        if canonical_devid and current_devid != canonical_devid:
+            dev.DeviceID = canonical_devid
+            rebuild_index(plugin)
+            easee_logging.info(
+                'domoticz_devices',
+                f'Dag overzicht DeviceID gemigreerd: {current_devid} → {canonical_devid}',
+            )
+    except Exception as e:
+        easee_logging.warning('domoticz_devices', f'Dag overzicht migratie mislukt: {e}')
+        return primary
+    domoticz_icons.apply_icon_to_unit(plugin, primary, force=True)
+    for u in units:
+        if u != primary:
+            mark_device_unused(plugin, u, 'dubbele legacy-tegel → Dag overzicht (v10.11.5)')
+    return primary
+
 def deprecate_core_tiles(plugin):
     dag_unit = resolve_core_unit(plugin, 'Dag overzicht')
     for label in DEPRECATED_CORE_LABELS:
@@ -766,6 +830,7 @@ def ensure_core_devices(plugin):
             ('Beste laden', 'Text'),
             ('Dag overzicht', 'Text'),
         ])
+        migrate_dag_overzicht_core_tile(plugin)
     for label, typ in core:
         devid = CORE_DEVICE_IDS.get(label)
         legacy = _core_legacy_names(plugin, label) if label == 'Dag overzicht' else [

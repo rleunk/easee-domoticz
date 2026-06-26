@@ -1,12 +1,12 @@
-# Easee Domoticz plugin v10.11.2
+# Easee Domoticz plugin v10.11.5
 
 **Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.11.2--stable-blue)
+![Version](https://img.shields.io/badge/version-10.11.5--stable-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** **v10.11.2-stable** — aanbevolen productie-baseline. Status-timer pauze-fix; compacte tegels (**11** i.p.v. 16 bij 2 laders + EQ + Tibber): *Kosten & Samenvatting* + *Dagrapport* → **Dag overzicht**; *Totaal & Sessie* → **Laden**; *Kosten (Sessie/Dag)* → **Status**. Rollback: [v10.11.1-stable](STABLE.md), [v10.10.8-stable](STABLE.md). Zie [STABLE.md](STABLE.md).
+> **Status:** **v10.11.5-stable** — aanbevolen productie-baseline. Dag overzicht-migratie (legacy *Kosten & Samenvatting* → **Dag overzicht**); idle timer **00:00** op Status; compacte tegels (**11** i.p.v. 16 bij 2 laders + EQ + Tibber). Rollback: [v10.11.4-stable](STABLE.md), [v10.11.2-stable](STABLE.md). Zie [STABLE.md](STABLE.md).
 
 ## TL;DR — installeren in 2 minuten
 
@@ -16,7 +16,7 @@ git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.11.2** → Easee-gebruikersnaam + wachtwoord → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.11.5** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
 Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
@@ -48,7 +48,7 @@ Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder op
 | **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
 
-Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.11.2][LEVEL]…`.
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.11.5][LEVEL]…`.
 
 ## Logniveaus (kort)
 
@@ -163,7 +163,7 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 ```bash
 cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
-git checkout v10.11.2-stable   # aanbevolen stable; of: git pull op main
+git checkout v10.11.5-stable   # aanbevolen stable; of: git pull op main
 sudo systemctl restart domoticz
 ```
 
@@ -176,9 +176,9 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 ## Changelog & release
 
 - Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md)
-- **Huidige stable:** **[v10.11.2-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.2)** — Status-timer pauze-fix, compacte 11-tegel UI
-- Vorige stable: [v10.11.1-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.1) (rollback, zelfde 11-tegel UI)
-- Oudere rollback: [v10.10.8-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.10.8) (16 tegels)
+- **Huidige stable:** **[v10.11.5-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.5)** — Dag overzicht-migratie, idle timer 00:00, compacte 11-tegel UI
+- Vorige stable: [v10.11.4-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.4) (rollback)
+- Oudere rollback: [v10.11.2-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.2)
 - Oudere rollback: [v10.9.32-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.32)
 
 ### v10.9.19 – v10.9.28 in het kort
@@ -219,7 +219,7 @@ Sinds v10.6.0: 13 Python-modules naast `Easee_icons_v2.zip`. Overzicht: [docs/RE
 
 ## Problemen melden
 
-[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.11.2-stable** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.11.5-stable** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
 
 ## Support & credits
 
@@ -231,4 +231,4 @@ MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Versie 10.11.2** (stable: v10.11.2-stable) — Richard Leunk
+**Versie 10.11.5** (stable: v10.11.5-stable) — Richard Leunk

@@ -387,7 +387,7 @@ def is_charging_active(session_active, power_w):
     return bool(session_active) and pw > 50
 
 def sync_charging_timer(plugin, st, values, session, session_active, power_w):
-    """Timer alleen tijdens actief laden; 00:00 bij pauze (bijv. Wacht op start)."""
+    """Timer alleen tijdens actief laden; 00:00 in alle idle-toestanden (Geen auto, Wacht op start, …)."""
     charging = is_charging_active(session_active, power_w)
     was_charging = easee_helpers.truthy(plugin, st.get('charging_active', False))
     if charging and not was_charging and st.get('session_start_ts') is None:
@@ -675,7 +675,7 @@ def poll_charger(plugin, charger):
         session_cost_energy = easee_helpers.safe_float(plugin, st.get('session_cost_energy', 0.0), 0.0)
         session_cost_tax = easee_helpers.safe_float(plugin, st.get('session_cost_tax', 0.0), 0.0)
     else:
-        laadduur = st.get('last_session_duration', '00:00')
+        laadduur = '00:00'
         session_cost = easee_helpers.safe_float(plugin, st.get('last_session_cost_total', 0.0), 0.0)
         session_cost_energy = easee_helpers.safe_float(plugin, st.get('last_session_cost_energy', 0.0), 0.0)
         session_cost_tax = easee_helpers.safe_float(plugin, st.get('last_session_cost_tax', 0.0), 0.0)

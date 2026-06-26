@@ -6,7 +6,23 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [10.11.5] — 2026-06-26
+
+### Stable
+- **v10.11.5-stable** — huidige aanbevolen productie-baseline (Dag overzicht-migratie + idle timer **00:00**). Tag `v10.11.4-stable` bewaard op v10.11.4-commit. Zie [STABLE.md](STABLE.md).
+
+### Opgelost
+- **Legacy tegel blijft *Kosten & Samenvatting* heten** — bij upgrade van v10.10.x werd de tegel wel bijgewerkt maar niet hernoemd naar **Dag overzicht** (DeviceID + naam). `migrate_dag_overzicht_core_tile()` hernoemt/repurposet legacy *Kosten & Samenvatting* / *Dagrapport* naar **Easee - Dag overzicht**; dubbele tegels krijgen `Used=0`.
+- **Status-timer toont laatste sessieduur bij *Geen auto*** — idle laders (Geen auto, Gereed, …) tonen nu **00:00** op de Status-tegel; alleen actief laden (> 50 W) toont een lopende timer. *Laatste sessie* € blijft zichtbaar.
+
+### Upgrade
+- Van **v10.11.4**: `git pull` (of `git checkout v10.11.5-stable`) + hardware herstarten. Tegelnaam wordt automatisch gecorrigeerd.
+- Van **v10.11.2-stable** / **v10.11.4-stable**: `git checkout v10.11.5-stable` + hardware herstarten.
+
 ## [10.11.4] — 2026-06-25
+
+### Stable
+- **v10.11.4-stable** — bewaarde baseline op v10.11.4-commit (truthy-fix); superseded door v10.11.5-stable.
 
 ### Opgelost
 - **`truthy()` TypeError in laad-timer** — `sync_charging_timer()` en state-normalisatie riepen `easee_helpers.truthy(value)` aan zonder verplichte `plugin`-parameter; Domoticz crashte met `missing 1 required positional argument: 'value'`.

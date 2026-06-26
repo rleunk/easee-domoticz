@@ -125,7 +125,7 @@ Gegroepeerde weergave op één teksttegel:
 
 **Huisvermogen staat niet op Status** — zie Vermogen-tegel.
 
-### Equalizer tegels (v10.9.1+, huidige release v10.11.2)
+### Equalizer tegels (v10.9.1+, huidige release v10.11.5)
 
 | Tegel | Type | Icoon | Weergave |
 |-------|------|-------|----------|

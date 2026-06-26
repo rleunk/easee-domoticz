@@ -1,4 +1,4 @@
-# Installatiehandleiding — Easee Domoticz plugin v10.11.2
+# Installatiehandleiding — Easee Domoticz plugin v10.11.5
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
@@ -8,7 +8,7 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee Domoticz plugin v10.11.2 |
+| Plugin | Easee Domoticz plugin v10.11.5 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` (+ 12 Python-modules = 13 `.py`-bestanden sinds v10.6.0) |
@@ -104,7 +104,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee Domoticz plugin v10.11.2**
+4. Selecteer **Easee Domoticz plugin v10.11.5**
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
 7. Klik **Add**
@@ -298,16 +298,18 @@ Custom iconen uit `Easee_icons_v2.zip` worden bij start automatisch geladen en o
 - State migreert automatisch naar `easee_state.json` (atomisch opslaan sinds v10.6.1).
 - Upload **`Easee_icons_v2.zip` opnieuw** als badges/iconen niet veranderen (Domoticz cached iconen).
 
-### Specifiek: v10.11.x (huidige stable — v10.11.2-stable)
+### Specifiek: v10.11.x (huidige stable — v10.11.5-stable)
 
 - **v10.11.0** — Compacte UI: **11 tegels** (2 laders + EQ + Tibber). *Kosten & Samenvatting* + *Dagrapport* → **Dag overzicht**; *Totaal & Sessie* → **Laden**; *Kosten (Sessie/Dag)* → **Status**. Oude tegels verborgen (`Used=0`).
 - **v10.11.1** — Fix deprecated-tegel `Used=0`-update; stable promotion.
 - **v10.11.2** — Status-timer pauze-fix; stable promotion.
-- **Stable tag** — `v10.11.2-stable` is de aanbevolen baseline; zie [STABLE.md](STABLE.md). Vorige stable tags `v10.11.1-stable` en `v10.10.8-stable` blijven voor rollback.
+- **v10.11.4** — truthy()-fix in laad-timer; stable tag `v10.11.4-stable`.
+- **v10.11.5** — Dag overzicht-migratie (legacy tegel hernoemen); idle timer **00:00**; stable promotion.
+- **Stable tag** — `v10.11.5-stable` is de aanbevolen baseline; zie [STABLE.md](STABLE.md). Vorige stable tags blijven voor rollback.
 
 ```bash
 git fetch --tags origin
-git checkout v10.11.2-stable
+git checkout v10.11.5-stable
 sudo systemctl restart domoticz
 ```
 
