@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.4.1)" author="Richard Leunk" version="0.4.1"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.5.0)" author="Richard Leunk" version="0.5.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v1 (0.4.1)</h2><br/>
-        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints en Equalizer. v1 ontwikkelingslijn.</p>
+        <h2>Easee Domoticz plugin v1 (0.5.0)</h2><br/>
+        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints en Equalizer. v1 ontwikkelingslijn.</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
@@ -35,8 +35,10 @@
                     <option label="Geen" value="Geen"/>
                     <option label="Handmatig" value="Handmatig"/>
                     <option label="Tibber" value="Tibber" default="true"/>
+                    <option label="ENTSO-E" value="ENTSO-E"/>
                 </options>
             </param>
+            <param field="BesteLadenHours" type="number" label="Beste laden venster uren (Tibber/Handmatig/ENTSO-E)" min="1" max="12" default="3" width="80px"/>
             <param field="Mode11" label="Handmatig type (alleen bij Handmatig)" width="160px">
                 <options>
                     <option label="Vast" value="Vast" default="true"/>
@@ -60,7 +62,11 @@
             </param>
             <param field="Mode7" label="Tibber token (alleen bij Tibber)" width="360px" password="true" default=""/>
             <param field="Mode8" label="Tibber token ophalen (alleen bij Tibber)" width="360px" default="https://developer.tibber.com/settings/access-token"/>
-            <param field="BesteLadenHours" type="number" label="Beste laden venster uren (Tibber/Handmatig)" min="1" max="12" default="3" width="80px"/>
+            <param field="Mode24" label="ENTSO-E API token (alleen bij ENTSO-E)" width="360px" password="true" default=""/>
+            <param field="Mode28" label="ENTSO-E token aanvragen (alleen bij ENTSO-E)" width="360px" default="https://transparency.entsoe.eu/"/>
+            <param field="Mode25" label="Opslag leverancier €/kWh (alleen bij ENTSO-E)" width="120px" default="0"/>
+            <param field="Mode26" label="Energiebelasting €/kWh (alleen bij ENTSO-E, ca. 0,12)" width="120px" default="0"/>
+            <param field="Mode27" label="BTW % (alleen bij ENTSO-E)" width="80px" default="21"/>
         </group>
         <group label="Energie hints (optioneel)">
             <param field="Mode20" label="P1 / zon / thuisbatterij hints" width="100px">
@@ -423,7 +429,7 @@ class BasePlugin:
             if easee_helpers.beste_laden_enabled(self):
                 domoticz_devices.update_core_text(self, 'Beste laden', pricing_ui.cheapest_window_text(self))
 
-            if source == 'Tibber':
+            if source in ('Tibber', 'ENTSO-E'):
                 price_emoji = pricing_ui.price_status_emoji(self)
                 dag_overzicht = (
                     f'📅 Vandaag\n'
@@ -455,6 +461,13 @@ class BasePlugin:
             tibber_stuurt = bool(not any_lb and any_charging)
             lb_part = ' | LB actief' if any_lb else (' | Tibber stuurt' if tibber_stuurt else '')
             status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part + ' | Tibber actief'
+        elif source == 'ENTSO-E' and costs_on:
+            lb_part = ' | LB actief' if any_lb else ''
+            rate = easee_helpers.safe_float(self, pricing_ui.current_price(self).get('total'), 0.0)
+            status_msg = (
+                ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
+                + f' | ENTSO-E spot €{easee_helpers.euro_str(self, rate)}/kWh'
+            )
         elif source == 'Handmatig' and costs_on:
             lb_part = ' | LB actief' if any_lb else ''
             tariff_type = easee_helpers.manual_tariff_type(self)
@@ -507,6 +520,7 @@ class BasePlugin:
         easee_state.migrate_charging_timer_state(self)
         easee_state.migrate_manual_tariff_fields(self)
         tibber_src = easee_state.sync_tibber_token_backup(self)
+        entsoe_src = easee_state.sync_entsoe_token_backup(self)
         beste_src = easee_state.sync_besteladen_hours_backup(self)
         try:
             easee_state.save_state(self)
@@ -590,10 +604,38 @@ class BasePlugin:
                     'Tibber uit (Mode7 leeg) — Dag overzicht en laadpaal-kosten in Status worden niet bijgewerkt',
                     'startup',
                 )
+        elif prijsbron == 'ENTSO-E':
+            if easee_helpers.entsoe_enabled(self):
+                if entsoe_src == 'restored':
+                    easee_logging.info(
+                        'plugin',
+                        'ENTSO-E actief — token hersteld uit state-backup (Mode24 leeg na opslag/herstart)',
+                        'startup',
+                    )
+                else:
+                    easee_logging.info(
+                        'plugin',
+                        'ENTSO-E actief — kosten na eerste poll',
+                        'startup',
+                    )
+                easee_logging.info(
+                    'plugin',
+                    f'ENTSO-E opslag €{easee_helpers.entsoe_opslag(self):.4f}/kWh, '
+                    f'energiebelasting €{easee_helpers.entsoe_energiebelasting(self):.4f}/kWh, '
+                    f'BTW {easee_helpers.entsoe_btw_pct(self):.0f}%',
+                    'startup',
+                )
+            else:
+                easee_logging.info(
+                    'plugin',
+                    'ENTSO-E uit (Mode24 leeg) — Dag overzicht en laadpaal-kosten in Status worden niet bijgewerkt',
+                    'startup',
+                )
         easee_logging.info('plugin', 'Initiële sync wacht op Domoticz Devices-readiness', 'startup')
 
     def onStop(self):
         easee_state.sync_tibber_token_backup(self)
+        easee_state.sync_entsoe_token_backup(self)
         easee_state.sync_besteladen_hours_backup(self)
         easee_state.save_state(self)
         try:

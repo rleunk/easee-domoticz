@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import easee_helpers
+from pricing.entsoe import EntsoePricingProvider
 from pricing.manual import ManualPricingProvider
 from pricing.none import NoPricingProvider
 from pricing.tibber import TibberPricingProvider
@@ -13,4 +14,6 @@ def get_provider(plugin, config=None):
         return NoPricingProvider(plugin)
     if source == 'Handmatig':
         return ManualPricingProvider(plugin)
+    if source == 'ENTSO-E':
+        return EntsoePricingProvider(plugin)
     return TibberPricingProvider(plugin)

@@ -4,6 +4,7 @@
 
 import easee_helpers
 import tibber_pricing
+from pricing import entsoe as entsoe_pricing
 from pricing.factory import get_provider
 
 
@@ -25,6 +26,8 @@ def price_status_emoji(plugin) -> str:
         return '🟡'
     if source == 'Geen' or not easee_helpers.pricing_enabled(plugin):
         return '⚪'
+    if source == 'ENTSO-E':
+        return entsoe_pricing.price_status_emoji(plugin)
     return tibber_pricing.price_status_emoji(plugin)
 
 
@@ -45,6 +48,8 @@ def price_emoji(plugin, price_total, cache=None):
         return '⚪'
     if cache is None:
         cache = plugin.state.get('price_cache') or {}
+    if source == 'ENTSO-E':
+        return entsoe_pricing.price_emoji(plugin, price_total, cache)
     return tibber_pricing.price_emoji(plugin, price_total, cache)
 
 
@@ -55,6 +60,8 @@ def cheapest_window_text(plugin, hours=None) -> str:
     if source == 'Handmatig':
         provider = get_provider(plugin)
         return provider.cheapest_window_text(hours=hours)
+    if source == 'ENTSO-E':
+        return entsoe_pricing.cheapest_window_text(plugin, hours=hours)
     return tibber_pricing.cheapest_window_text(plugin, hours=hours)
 
 
@@ -65,6 +72,8 @@ def dagrapport_cheapest_line(plugin) -> str:
     if source == 'Handmatig':
         provider = get_provider(plugin)
         return provider.dagrapport_cheapest_line()
+    if source == 'ENTSO-E':
+        return entsoe_pricing.dagrapport_cheapest_line(plugin)
     return tibber_pricing.dagrapport_cheapest_line(plugin)
 
 
@@ -76,6 +85,12 @@ def charging_hint(plugin, power_w, session_active=False, eq_lb_active=False, lb_
         )
         if tibber_hint:
             hints.append(tibber_hint)
+    elif easee_helpers.entsoe_enabled(plugin):
+        entsoe_hint = entsoe_pricing.charging_hint(
+            plugin, power_w, session_active, eq_lb_active=eq_lb_active, lb_active=lb_active,
+        )
+        if entsoe_hint:
+            hints.append(entsoe_hint)
     if session_active and power_w > 50:
         import domoticz_energy_hints
         energy_hint = domoticz_energy_hints.charging_context_hint(

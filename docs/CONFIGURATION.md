@@ -232,21 +232,23 @@ Domoticz toont **alle** parameters tegelijk — velden kunnen niet dynamisch ver
 | Prijsbron | Tibber API | Kosten-tegels | Dag overzicht | Beste laden | Status per lader |
 |-----------|------------|---------------|---------------|-------------|------------------|
 | **Tibber** | Ja (Mode7 token) | Sessie/dag € | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster | Sessie/dag € + laadhints |
+| **ENTSO-E** | Ja (Mode24 token) | Sessie/dag € (spot + toeslagen) | kWh, €, laaduren, tarief, goedkoopste uur | Goedkoopste venster (uur) | Sessie/dag € + laadhints |
 | **Handmatig** | Nee | Sessie/dag € (vast / dag/nacht / dal/piek) | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster | Sessie/dag € + energie-hints |
 | **Geen** | Nee | Uit | kWh + laaduren alleen | Geen tegel | Geen € (alleen laadtoestand) |
 
-### UI-volgorde (v0.4.0)
+### UI-volgorde (v0.5.0)
 
-1. **Prijsbron** (Mode9) — Geen | Handmatig | Tibber (default Tibber)
-2. **Handmatig type** (Mode11) — Vast | Dag/nacht | Dal/piek (alleen bij Handmatig)
-3. Handmatig tariefvelden (Mode10, Mode12–19)
-4. Tibber token + link (Mode7, Mode8)
-5. **Beste laden venster uren** (BesteLadenHours) — Tibber en Handmatig
-6. **Energie hints** (Mode20–23) — P1 / Zonnepanelen / Thuisbatterij (optioneel, default aan)
+1. **Prijsbron** (Mode9) — Geen | Handmatig | Tibber (default) | **ENTSO-E**
+2. **Beste laden venster uren** (BesteLadenHours) — Tibber, Handmatig en ENTSO-E
+3. **Handmatig type** (Mode11) — Vast | Dag/nacht | Dal/piek (alleen bij Handmatig)
+4. Handmatig tariefvelden (Mode10, Mode12–19)
+5. Tibber token + link (Mode7, Mode8)
+6. ENTSO-E token + toeslagen (Mode24–27, Mode28 link)
+7. **Energie hints** (Mode20–23) — aparte hardware-groep
 
 ### Prijsbron (Mode9)
 **Type**: Select  
-**Options**: Geen / Handmatig / Tibber (default **Tibber**)  
+**Options**: Geen / Handmatig / Tibber (default **Tibber**) / **ENTSO-E**  
 **Omschrijving**: Bepaalt hoe laadkosten worden berekend en welke tegels worden bijgewerkt.
 
 ### Handmatig type (Mode11) — alleen Handmatig
@@ -323,6 +325,54 @@ Domoticz wist wachtwoordvelden soms bij *Opslaan* op de hardwarepagina (veld lij
 - ✅ Goedkoopste laadwindows
 - ✅ Prijs emoji indicators
 
+## ENTSO-E Integration (Prijsbron = ENTSO-E) — v0.5.0+
+
+ENTSO-E levert **day-ahead spotprijzen** voor Nederland — geen exacte energiefactuur, maar een goede schatting als je zelf opslag, energiebelasting en BTW invult.
+
+### ENTSO-E API Token (Mode24)
+**Type**: Password  
+**Default**: (empty)  
+**Omschrijving**: Gratis security token van ENTSO-E Transparency Platform — **alleen bij Prijsbron ENTSO-E**
+
+**Token aanvragen:**
+1. Registreer op [transparency.entsoe.eu](https://transparency.entsoe.eu/)
+2. Ga naar *Account settings* → *Web API Security Token*
+3. Kopieer token naar Mode24
+
+**Token-backup**  
+Zelfde patroon als Tibber: kopie in `easee_state.json` (`entsoe_token_backup`). Domoticz wist wachtwoordvelden soms bij opslaan — backup herstelt automatisch. Token wordt **nooit** gelogd.
+
+### ENTSO-E token aanvragen (Mode28)
+**Type**: Info link  
+**URL**: https://transparency.entsoe.eu/
+
+### Opslag leverancier €/kWh (Mode25) — alleen ENTSO-E
+**Default**: `0`  
+**Omschrijving**: Vaste opslag van je leverancier per kWh (bijv. `0,02`).
+
+### Energiebelasting €/kWh (Mode26) — alleen ENTSO-E
+**Default**: `0` (label hint: ca. 0,12 in 2026)  
+**Omschrijving**: Energiebelasting per kWh — check je contract of belastingdienst.
+
+### BTW % (Mode27) — alleen ENTSO-E
+**Default**: `21`  
+**Omschrijving**: BTW-percentage op (spot + opslag + energiebelasting).
+
+### Prijsformule (all-in schatting)
+
+```
+spot €/kWh = ENTSO-E prijs (€/MWh) ÷ 1000
+subtotaal = spot + opslag + energiebelasting
+totaal €/kWh = subtotaal × (1 + BTW% / 100)
+energy (Dag overzicht) = spot
+tax (Dag overzicht) = totaal − energy
+```
+
+**Beperkingen:**
+- Uurprijzen (niet kwartier zoals Tibber QH)
+- Morgen-prijzen meestal na ~13:00 CET beschikbaar
+- Geen vaste dagkosten per maand (Mode25–27 zijn per kWh)
+
 ### Tibber Token Ophalen (Mode8)
 **Type**: Info link  
 **URL**: https://developer.tibber.com/settings/access-token  
@@ -330,7 +380,7 @@ Domoticz wist wachtwoordvelden soms bij *Opslaan* op de hardwarepagina (veld lij
 ### Beste laden venster (BesteLadenHours)
 **Type**: Number (1–12)  
 **Default**: `3`  
-**Omschrijving**: Aantal uren voor het sliding-window van de *Beste laden*-tegel. Alleen bij **Prijsbron Tibber** (met token) of **Handmatig**. Bij Tibber kwartierprijzen indien beschikbaar; bij Handmatig dag/nacht over uurcurve.
+**Omschrijving**: Aantal uren voor het sliding-window van de *Beste laden*-tegel. Alleen bij **Prijsbron Tibber** (met token), **Handmatig** of **ENTSO-E**. Bij Tibber kwartierprijzen indien beschikbaar; bij Handmatig/ENTSO-E over uurcurve.
 
 ## Device Naming
 

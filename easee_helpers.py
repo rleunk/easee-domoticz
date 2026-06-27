@@ -119,6 +119,40 @@ def tibber_token(plugin):
         return mode7
     return (plugin.state.get(TIBBER_TOKEN_STATE_KEY) or '').strip()
 
+def _mode24_token(plugin):
+    return (domoticz_runtime.Parameters.get('Mode24', '') or '').strip()
+
+def entsoe_token(plugin):
+    from easee_constants import ENTSOE_TOKEN_STATE_KEY
+    mode24 = _mode24_token(plugin)
+    if mode24:
+        backup = plugin.state.get(ENTSOE_TOKEN_STATE_KEY, '')
+        if backup != mode24:
+            plugin.state[ENTSOE_TOKEN_STATE_KEY] = mode24
+        return mode24
+    return (plugin.state.get(ENTSOE_TOKEN_STATE_KEY) or '').strip()
+
+def entsoe_opslag(plugin):
+    from easee_constants import ENTSOE_OPSLAG_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode25', '') or '').strip()
+    return _parse_tariff_float(plugin, raw, ENTSOE_OPSLAG_DEFAULT)
+
+def entsoe_energiebelasting(plugin):
+    from easee_constants import ENTSOE_ENERGIEBELASTING_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode26', '') or '').strip()
+    return _parse_tariff_float(plugin, raw, ENTSOE_ENERGIEBELASTING_DEFAULT)
+
+def entsoe_btw_pct(plugin):
+    from easee_constants import ENTSOE_BTW_PCT_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode27', '') or '').strip()
+    if not raw:
+        return ENTSOE_BTW_PCT_DEFAULT
+    try:
+        pct = float(str(raw).replace(',', '.'))
+    except Exception:
+        return ENTSOE_BTW_PCT_DEFAULT
+    return max(0.0, min(pct, 100.0))
+
 def pricing_source(plugin):
     """Prijsbron hardware parameter (Mode9). Default Tibber for backward compatibility."""
     raw = (domoticz_runtime.Parameters.get('Mode9', '') or '').strip()
@@ -261,35 +295,47 @@ def manual_rate_at(plugin, dt=None):
     return manual_normal_rate(plugin)
 
 def pricing_enabled(plugin):
-    """True when kWh×tarief kosten actief zijn (Handmatig of Tibber met token)."""
+    """True when kWh×tarief kosten actief zijn (Handmatig, Tibber of ENTSO-E met token)."""
     source = pricing_source(plugin)
     if source == 'Handmatig':
         return True
     if source == 'Geen':
         return False
+    if source == 'ENTSO-E':
+        return bool(entsoe_token(plugin))
     return bool(tibber_token(plugin))
 
 def dag_overzicht_enabled(plugin):
-    """Dag overzicht-tegel: Geen/Handmatig altijd; Tibber alleen met token."""
+    """Dag overzicht-tegel: Geen/Handmatig altijd; Tibber/ENTSO-E alleen met token."""
     source = pricing_source(plugin)
     if source in ('Geen', 'Handmatig'):
         return True
+    if source == 'ENTSO-E':
+        return entsoe_enabled(plugin)
     return tibber_enabled(plugin)
 
 def beste_laden_enabled(plugin):
-    """Beste laden-tegel: uit bij Geen; Handmatig (vast tarief) of Tibber met token."""
+    """Beste laden-tegel: uit bij Geen; Handmatig, Tibber of ENTSO-E met token."""
     source = pricing_source(plugin)
     if source == 'Geen':
         return False
     if source == 'Handmatig':
         return True
+    if source == 'ENTSO-E':
+        return entsoe_enabled(plugin)
     return tibber_enabled(plugin)
 
 def tibber_enabled(plugin):
     source = pricing_source(plugin)
-    if source in ('Geen', 'Handmatig'):
+    if source in ('Geen', 'Handmatig', 'ENTSO-E'):
         return False
     return bool(tibber_token(plugin))
+
+def entsoe_enabled(plugin):
+    source = pricing_source(plugin)
+    if source != 'ENTSO-E':
+        return False
+    return bool(entsoe_token(plugin))
 
 def _parse_besteladen_hours_raw(raw):
     """Parse 1–12 uur; None when leeg, plugin-key of ongeldig."""

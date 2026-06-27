@@ -8,6 +8,27 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-06-27
+
+### Added
+- **Prijsbron ENTSO-E** — day-ahead spotprijzen NL (`10YNL----------L`) via ENTSO-E Transparency Platform API
+- **`pricing/entsoe.py`** — XML-parsing, €/MWh→€/kWh, uurprijzen vandaag+morgen, cache zoals Tibber
+- **Instelbare toeslagen** — opslag leverancier (Mode25), energiebelasting (Mode26), BTW % (Mode27); all-in schatting per uur
+- **Mode24** ENTSO-E API token (password) + state-backup (`entsoe_token_backup`) zoals Tibber Mode7
+- **Mode28** link naar transparency.entsoe.eu voor token-registratie
+- Startup-log: `ENTSO-E actief — kosten na eerste poll` + samenvatting toeslagen (geen token in log)
+
+### Changed
+- Hardware-groep **Energieprijs** logisch geordend: Prijsbron → Beste laden → Handmatig → Tibber → ENTSO-E
+- **`pricing/ui.py`** — emoji, goedkoopste venster en laadhints voor ENTSO-E uurcurve
+- **`pricing_enabled()` / `beste_laden_enabled()`** — ENTSO-E met geldig token
+
+### Notes
+- ENTSO-E = spot/day-ahead, **geen exacte factuur** — vul opslag/belasting/BTW in naar jouw contract
+- Uurprijzen (niet kwartier); morgen meestal beschikbaar na ~13:00 CET
+- Token gratis via registratie op [transparency.entsoe.eu](https://transparency.entsoe.eu/)
+- Na upgrade: kies **Prijsbron ENTSO-E**, vul Mode24 + toeslagen; Tibber-installaties ongewijzigd (default blijft Tibber)
+
 ## [0.4.1] — 2026-06-27
 
 ### Changed
