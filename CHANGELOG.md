@@ -4,7 +4,26 @@ Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+> **v1 changelog** start bij **0.1.0** op branch `v1`. Legacy v10-geschiedenis staat onder de separator **Legacy v10** hieronder.
+
 ## [Unreleased]
+
+## [0.1.0] — 2026-06-27
+
+### Added
+- **v1 ontwikkelingslijn** op branch `v1` — scaffold; runtime-gedrag gelijk aan **v10.11.6-stable**
+- [VERSIONING.md](VERSIONING.md) — beleid v1 vs legacy v10 (geen hernummering v10 → 0.10.x)
+- `pricing/` module-skeleton: `base`, `none`, `manual`, `tibber`, `factory`
+- Hardware-parameter **Prijsbron** (Mode9): `Geen|Handmatig|Tibber` (default Tibber)
+
+### Notes
+- Prijsbron **Geen** — log bij start: *kosten uitgeschakeld (0.2.0)*
+- Prijsbron **Handmatig** — log bij start: *nog niet geïmplementeerd (0.2.0)* — geen crash
+- Tibber-kosten blijven werken bij default (Prijsbron Tibber + token in Mode7)
+
+---
+
+# Legacy v10
 
 ## [10.11.6] — 2026-06-26
 

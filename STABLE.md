@@ -1,20 +1,22 @@
 # Stable releases
 
-Dit project gebruikt **annotated git-tags** met het suffix `-stable` voor aanbevolen productie-baselines. Gewone versietags (`v10.11.6`, `v10.11.5`, `v10.11.4`, `v10.11.2`, …) markeren releases; `-stable` geeft aan welke release Richard als **huidige stabiele baseline** aanbeveelt.
+Dit project heeft **twee versielijnen**: legacy **v10** (productie op `main`) en **v1** (ontwikkeling op branch `v1`). Zie [VERSIONING.md](VERSIONING.md).
 
-## Huidige stable
+## Legacy v10 — productie (main)
+
+Legacy v10 gebruikt **annotated git-tags** met suffix `-stable` voor aanbevolen productie-baselines.
+
+### Huidige stable v10
 
 | Tag | Commit | Status |
 |-----|--------|--------|
-| **`v10.11.6-stable`** | zelfde als `v10.11.6` | **Aanbevolen** — Dag overzicht-migratie fix; idle timer **00:00**; compacte UI (**11 tegels** bij 2 laders + EQ + Tibber) |
-| `v10.11.5-stable` | zelfde als `v10.11.5` | **Bewaard** — rollback-baseline (Dag overzicht-migratie met readonly-fout, v10.11.5) |
-| `v10.11.4-stable` | zelfde als `v10.11.4` | **Bewaard** — rollback-baseline (truthy-fix, v10.11.4) |
-| `v10.11.2-stable` | zelfde als `v10.11.2` | **Bewaard** — rollback-baseline (Status-timer pauze-fix, v10.11.2) |
-| `v10.11.1-stable` | zelfde als `v10.11.1` | **Bewaard** — rollback-baseline (v10.11.1, compacte 11-tegel UI) |
-| `v10.10.8-stable` | zelfde als `v10.10.8` | **Bewaard** — rollback-baseline (v10.10.x, 16 tegels) |
-| `v10.9.32-stable` | zelfde als `v10.9.32` | **Bewaard** — oudere rollback (v10.9.x stable testing line) |
+| **`v10.11.6-stable`** | zelfde als `v10.11.6` | **Aanbevolen productie** — Dag overzicht-migratie fix; idle timer **00:00**; compacte UI (**11 tegels**) |
+| `v10.11.5-stable` | zelfde als `v10.11.5` | **Bewaard** — rollback-baseline |
+| `v10.11.4-stable` | zelfde als `v10.11.4` | **Bewaard** — rollback-baseline |
+| `v10.11.2-stable` | zelfde als `v10.11.2` | **Bewaard** — rollback-baseline |
+| `v10.10.8-stable` | zelfde als `v10.10.8` | **Bewaard** — rollback (16-tegel layout) |
 
-## Installeren of upgraden naar stable
+### Installeren legacy stable
 
 ```bash
 cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
@@ -23,80 +25,49 @@ git checkout v10.11.6-stable
 sudo systemctl restart domoticz
 ```
 
-Of blijf op `main` volgen (`git pull`) — `main` wijst doorgaans naar dezelfde commit als de huidige stable.
+Of blijf op `main` volgen (`git pull`) — `main` wijst naar v10.11.6-stable.
 
 **Na elke upgrade:** herstart het Easee hardware-item in Domoticz (**Setup → Hardware**).
 
-## Rollback naar v10.11.5
+## v1 — ontwikkeling (branch `v1`)
 
-Alleen als v10.11.6 problemen geeft:
+| Item | Status |
+|------|--------|
+| **0.1.0** | Scaffold — **niet stable**; gedrag gelijk aan v10.11.6 bij Tibber + token |
+| **1.0.0** | Gepland eerste publieke stable v1 |
 
 ```bash
 cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+git fetch origin
+git checkout v1
+sudo systemctl restart domoticz
+```
+
+Pre-release tag: `v0.1.0` (optioneel op GitHub).
+
+## Rollback v10
+
+### Naar v10.11.5
+
+```bash
 git fetch --tags origin
 git checkout v10.11.5-stable
 sudo systemctl restart domoticz
 ```
 
-De tag `v10.11.5-stable` blijft op GitHub staan; er wordt niets verwijderd.
-
-## Rollback naar v10.11.4
-
-Alleen als v10.11.5/v10.11.6 problemen geeft:
+### Naar v10.10.8 (16 tegels)
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
-git fetch --tags origin
-git checkout v10.11.4-stable
-sudo systemctl restart domoticz
-```
-
-De tag `v10.11.4-stable` blijft op GitHub staan; er wordt niets verwijderd.
-
-## Rollback naar v10.11.2
-
-Alleen als v10.11.4/v10.11.5/v10.11.6 problemen geeft en je terug wilt naar de vorige stable (zelfde 11-tegel layout, zonder Dag overzicht-migratie):
-
-```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
-git fetch --tags origin
-git checkout v10.11.2-stable
-sudo systemctl restart domoticz
-```
-
-De tag `v10.11.2-stable` blijft op GitHub staan; er wordt niets verwijderd.
-
-## Rollback naar v10.10.8
-
-Alleen als v10.11.x problemen geeft en je terug wilt naar de v10.10.x stable (16-tegel layout):
-
-```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v10.10.8-stable
 sudo systemctl restart domoticz
 ```
 
-De tag `v10.10.8-stable` blijft op GitHub staan; er wordt niets verwijderd.
-
-## Rollback naar v10.9.32
-
-Alleen als v10.10.x óók problemen geeft:
-
-```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
-git fetch --tags origin
-git checkout v10.9.32-stable
-sudo systemctl restart domoticz
-```
-
 ## Releases
 
-- [v10.11.6](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6) — huidige stable (aanbevolen)
-- [v10.11.5](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.5) — vorige stable (rollback)
-- [v10.11.4](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.4) — oudere rollback
-- [v10.11.2](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.2) — oudere rollback
-- [v10.10.8](https://github.com/rleunk/easee-domoticz/releases/tag/v10.10.8) — oudere rollback
-- [v10.9.32](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.32) — oudere rollback
+- [v0.1.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.1.0) — v1 scaffold (pre-release)
+- [v10.11.6](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6) — legacy stable (aanbevolen productie)
+- [v10.11.5](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.5) — rollback
+- [v10.10.8](https://github.com/rleunk/easee-domoticz/releases/tag/v10.10.8) — rollback (16 tegels)
 
 Zie [CHANGELOG.md](CHANGELOG.md) en [README.md](README.md) voor details per versie.

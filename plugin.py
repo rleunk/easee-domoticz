@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.11.6" author="Richard Leunk" version="10.11.6"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.1.0)" author="Richard Leunk" version="0.1.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.11.6</h2><br/>
-        <p>Easee laadpaal integratie met compacte UI (11 tegels), samengevoegde Dag overzicht / Laden / Status-tegels, Tibber kwartierprijzen, laadhints en Equalizer.</p>
+        <h2>Easee Domoticz plugin v1 (0.1.0)</h2><br/>
+        <p>Easee laadpaal integratie met compacte UI (11 tegels), samengevoegde Dag overzicht / Laden / Status-tegels, Tibber kwartierprijzen, laadhints en Equalizer. v1 ontwikkelingslijn — gedrag gelijk aan v10.11.6-stable.</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
@@ -29,7 +29,14 @@
             <param field="Address" label="Naam Equalizer" width="220px" default=""/>
             <param field="IP" label="Equalizer ID (handmatig, optioneel)" width="260px" default=""/>
         </group>
-        <group label="Tibber (optioneel)">
+        <group label="Tibber / Prijsbron (optioneel)">
+            <param field="Mode9" label="Prijsbron" width="160px">
+                <options>
+                    <option label="Tibber" value="Tibber" default="true"/>
+                    <option label="Geen" value="Geen"/>
+                    <option label="Handmatig" value="Handmatig"/>
+                </options>
+            </param>
             <param field="Mode7" label="Tibber Personal Access Token" width="360px" password="true" default=""/>
             <param field="Mode8" label="Tibber token ophalen" width="360px" default="https://developer.tibber.com/settings/access-token"/>
             <param field="Extra" label="Beste laden venster (uren)" width="80px" default="3"/>
@@ -54,6 +61,7 @@ import easee_helpers
 import easee_api
 import easee_state
 import tibber_pricing
+import pricing
 import domoticz_icons
 import domoticz_devices
 import charger_logic
@@ -318,8 +326,9 @@ class BasePlugin:
                 'poll',
             )
         refreshed = easee_helpers.safe_int(self, self.state.get('price_cache_refreshed', 0), 0)
-        if easee_helpers.tibber_enabled(self) and ((easee_state.now_ts(self) - refreshed) > 900 or not (self.state.get('price_cache') or {})):
-            self._heartbeat_step('tibber refresh', lambda: tibber_pricing.refresh_tibber_prices(self))
+        price_provider = pricing.get_provider(self)
+        if price_provider.is_available() and ((easee_state.now_ts(self) - refreshed) > 900 or not (self.state.get('price_cache') or {})):
+            self._heartbeat_step('tibber refresh', lambda: price_provider.refresh())
         for eq in self.equalizers:
             eid = eq.get('id', '?')
             self._heartbeat_step(f'poll equalizer {eid}', lambda eq=eq: equalizer_logic.poll_equalizer(self, eq))
@@ -431,6 +440,12 @@ class BasePlugin:
         easee_api.login(self)
         self.started = True
         easee_logging.info('plugin', f'Plugin v{PLUGIN_VERSION} gestart', 'startup')
+        self.pricing_provider = pricing.get_provider(self)
+        prijsbron = easee_helpers.pricing_source(self)
+        if prijsbron == 'Geen':
+            easee_logging.info('plugin', 'Prijsbron Geen — kosten uitgeschakeld (0.2.0)', 'startup')
+        elif prijsbron == 'Handmatig':
+            easee_logging.info('plugin', 'Prijsbron Handmatig — nog niet geïmplementeerd (0.2.0)', 'startup')
         if easee_helpers.tibber_enabled(self):
             if tibber_src == 'restored':
                 easee_logging.info(

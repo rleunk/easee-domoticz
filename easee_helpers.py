@@ -119,7 +119,17 @@ def tibber_token(plugin):
         return mode7
     return (plugin.state.get(TIBBER_TOKEN_STATE_KEY) or '').strip()
 
+def pricing_source(plugin):
+    """Prijsbron hardware parameter (Mode9). Default Tibber for backward compatibility."""
+    raw = (domoticz_runtime.Parameters.get('Mode9', '') or '').strip()
+    if not raw:
+        return 'Tibber'
+    return raw
+
 def tibber_enabled(plugin):
+    source = pricing_source(plugin)
+    if source in ('Geen', 'Handmatig'):
+        return False
     return bool(tibber_token(plugin))
 
 def beste_laden_hours(plugin):

@@ -1,8 +1,16 @@
 # Roadmap
 
-Kort overzicht — **v10.11.6-stable** is de huidige stabiele baseline; **v10.11.5-stable**, **v10.11.4-stable**, **v10.11.2-stable** en **v10.10.8-stable** blijven bewaard voor rollback. Zie [STABLE.md](../STABLE.md).
+Kort overzicht — **v1** ontwikkeling op branch `v1`; legacy **v10.11.6-stable** blijft productie op `main`. Zie [STABLE.md](../STABLE.md) en [VERSIONING.md](../VERSIONING.md).
 
-## Afgerond — v10.11.x stable (2026-06)
+## v1 (branch `v1`) — indicatief
+
+| Versie | Status | Inhoud |
+|--------|--------|--------|
+| **0.1.0** | Scaffold (huidig) | Versienummering, docs, `pricing/` skeleton, Prijsbron-parameter (stub Geen/Handmatig) |
+| **0.2.0** | Gepland | Prijsbron Geen (kosten uit) en Handmatig (vast tarief); Tibber via `pricing/` refactor |
+| **1.0.0** | Gepland | Eerste publieke stable v1 |
+
+## Afgerond — v10.11.x stable (legacy, 2026-06)
 
 - **v10.11.0** — Compacte UI: **11 tegels** (2 laders + EQ + Tibber). Merge *Kosten & Samenvatting* + *Dagrapport* → **Dag overzicht**; *Totaal & Sessie* → **Laden**; *Kosten (Sessie/Dag)* → **Status**.
 - **v10.11.1** — Fix deprecated-tegel `Used=0`-update; user-testing afgerond → **v10.11.1-stable**.
