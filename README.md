@@ -64,6 +64,7 @@ Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestr
 
 | Versie | Status |
 |--------|--------|
+| **0.6.1** | Status-tegel toont actieve prijsbron (alle Mode9-waarden) |
 | **0.6.0** | EnergyZero prijsbron (geen token) |
 | **0.5.0** | ENTSO-E day-ahead spot + toeslagen |
 | **0.4.1** | Thuisbatterij-labels (generiek i.p.v. Sessy) |
