@@ -57,6 +57,20 @@ def sync_tibber_token_backup(plugin):
         return 'restored'
     return 'missing'
 
+def sync_besteladen_hours_backup(plugin):
+    """Persist Beste laden venster in state; migrate legacy Extra / ignore plugin key."""
+    from easee_constants import BESTE_LADEN_HOURS_STATE_KEY
+    from_params = easee_helpers._read_besteladen_hours_param(plugin)
+    prev = plugin.state.get(BESTE_LADEN_HOURS_STATE_KEY)
+    hours = easee_helpers.beste_laden_hours(plugin)
+    if from_params is not None:
+        if prev != from_params:
+            return 'updated'
+        return 'unchanged'
+    if prev is not None and hours == prev and hours != 3:
+        return 'restored'
+    return 'unchanged'
+
 def save_state(plugin):
     fp = state_path(plugin)
     tmp_fp = fp + '.tmp'

@@ -9,10 +9,11 @@ REFRESH_URL = BASE_URL + '/accounts/refresh_token'
 TIBBER_GQL = 'https://api.tibber.com/v1-beta/gql'
 STATE_FILE = 'easee_state.json'
 LEGACY_STATE_FILE = 'easee_v9_0_state.json'
-PLUGIN_VERSION = '0.2.0'
+PLUGIN_VERSION = '0.2.1'
 MANUAL_RATE_DEFAULT = 0.25
 API_TIMEOUT = 30
 TIBBER_TOKEN_STATE_KEY = 'tibber_token_backup'
+BESTE_LADEN_HOURS_STATE_KEY = 'beste_laden_hours'
 PLUGIN_KEY = 'EaseeCloudAutoDiscoveryV1000'
 ULTRA_DEBUG = False
 

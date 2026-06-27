@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.2.0)" author="Richard Leunk" version="0.2.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.2.1)" author="Richard Leunk" version="0.2.1"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v1 (0.2.0)</h2><br/>
+        <h2>Easee Domoticz plugin v1 (0.2.1)</h2><br/>
         <p>Easee laadpaal integratie met compacte UI (11 tegels), samengevoegde Dag overzicht / Laden / Status-tegels, Prijsbron Tibber/Handmatig/Geen, laadhints en Equalizer. v1 ontwikkelingslijn.</p>
     </description>
     <params>
@@ -30,6 +30,9 @@
             <param field="IP" label="Equalizer ID (handmatig, optioneel)" width="260px" default=""/>
         </group>
         <group label="Tibber / Prijsbron (optioneel)">
+            <param field="Mode7" label="Tibber Personal Access Token" width="360px" password="true" default=""/>
+            <param field="Mode8" label="Tibber token ophalen" width="360px" default="https://developer.tibber.com/settings/access-token"/>
+            <param field="BesteLadenHours" type="number" label="Beste laden venster (uren)" min="1" max="12" default="3" width="80px"/>
             <param field="Mode9" label="Prijsbron" width="160px">
                 <options>
                     <option label="Tibber" value="Tibber" default="true"/>
@@ -37,10 +40,7 @@
                     <option label="Handmatig" value="Handmatig"/>
                 </options>
             </param>
-            <param field="Mode7" label="Tibber Personal Access Token" width="360px" password="true" default=""/>
-            <param field="Mode8" label="Tibber token ophalen" width="360px" default="https://developer.tibber.com/settings/access-token"/>
             <param field="Mode10" label="Tarief €/kWh (Handmatig)" width="100px" default="0.25"/>
-            <param field="Extra" label="Beste laden venster (uren)" width="80px" default="3"/>
         </group>
     </params>
 </plugin>
@@ -456,6 +456,7 @@ class BasePlugin:
         easee_state.migrate_session_baseline(self)
         easee_state.migrate_charging_timer_state(self)
         tibber_src = easee_state.sync_tibber_token_backup(self)
+        beste_src = easee_state.sync_besteladen_hours_backup(self)
         try:
             easee_state.save_state(self)
         except Exception as e:
@@ -472,6 +473,12 @@ class BasePlugin:
         easee_api.login(self)
         self.started = True
         easee_logging.info('plugin', f'Plugin v{PLUGIN_VERSION} gestart', 'startup')
+        if beste_src == 'restored':
+            easee_logging.info(
+                'plugin',
+                f'Beste laden venster hersteld uit state-backup ({easee_helpers.beste_laden_hours(self)} uur)',
+                'startup',
+            )
         self.pricing_provider = pricing.get_provider(self)
         prijsbron = easee_helpers.pricing_source(self)
         if prijsbron == 'Geen':
@@ -507,6 +514,7 @@ class BasePlugin:
 
     def onStop(self):
         easee_state.sync_tibber_token_backup(self)
+        easee_state.sync_besteladen_hours_backup(self)
         easee_state.save_state(self)
         try:
             if self.session:

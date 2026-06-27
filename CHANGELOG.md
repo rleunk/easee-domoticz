@@ -8,6 +8,17 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-06-27
+
+### Fixed
+- **Beste laden venster (uren)** — hardwareveld gebruikt nu `BesteLadenHours` i.p.v. `Extra` (Domoticz `Extra` = plugin-key `EaseeCloudAutoDiscoveryV1000`, waardoor UI *EaseeCloudA* toonde)
+- **Parameter-volgorde** — Mode7/Mode8 vóór Prijsbron (Mode9) en Tarief (Mode10); nieuwe params aan het einde van de Tibber-groep (geen verschuiving t.o.v. v10.11.6)
+- **Migratie** — leest legacy numerische `Extra` of state-backup; negeert plugin-key / non-numeric waarden; default 3, range 1–12
+- Dubbele functiedefinities in `easee_helpers.py` verwijderd
+
+### Notes
+- Na upgrade: controleer **Beste laden venster (uren)** (default 3) en Tibber-token indien nodig opnieuw invullen
+
 ## [0.2.0] — 2026-06-27
 
 ### Added

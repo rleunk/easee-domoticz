@@ -169,53 +169,52 @@ def tibber_enabled(plugin):
         return False
     return bool(tibber_token(plugin))
 
-def pricing_enabled(plugin):
-    """True when kWh×tarief kosten actief zijn (Handmatig of Tibber met token)."""
-    source = pricing_source(plugin)
-    if source == 'Handmatig':
-        return True
-    if source == 'Geen':
-        return False
-    return bool(tibber_token(plugin))
-
-def manual_rate(plugin):
-    """Vast tarief €/kWh uit Mode10 (default 0.25)."""
-    from easee_constants import MANUAL_RATE_DEFAULT
-    raw = (domoticz_runtime.Parameters.get('Mode10', '') or '').strip()
+def _parse_besteladen_hours_raw(raw):
+    """Parse 1–12 uur; None when leeg, plugin-key of ongeldig."""
     if not raw:
-        return MANUAL_RATE_DEFAULT
-    try:
-        rate = float(raw.replace(',', '.'))
-    except Exception:
-        return MANUAL_RATE_DEFAULT
-    return max(0.0, rate)
-
-def dag_overzicht_enabled(plugin):
-    """Dag overzicht-tegel: Geen/Handmatig altijd; Tibber alleen met token."""
-    source = pricing_source(plugin)
-    if source in ('Geen', 'Handmatig'):
-        return True
-    return tibber_enabled(plugin)
-
-def beste_laden_enabled(plugin):
-    """Beste laden-tegel: uit bij Geen; Handmatig (vast tarief) of Tibber met token."""
-    source = pricing_source(plugin)
-    if source == 'Geen':
-        return False
-    if source == 'Handmatig':
-        return True
-    return tibber_enabled(plugin)
-
-def beste_laden_hours(plugin):
-    """Sliding window lengte voor Beste laden (Extra-veld, default 3 uur)."""
-    raw = (domoticz_runtime.Parameters.get('Extra', '') or '').strip()
-    if not raw:
-        return 3
+        return None
+    lowered = str(raw).strip().lower()
+    if 'easee' in lowered or 'autodiscovery' in lowered:
+        return None
     try:
         hours = int(float(raw))
     except Exception:
-        return 3
-    return max(1, min(hours, 12))
+        return None
+    if hours < 1 or hours > 12:
+        return None
+    return hours
+
+def _read_besteladen_hours_param(plugin):
+    """Lees venster uit hardware; migreert legacy Extra indien numerisch."""
+    from easee_constants import PLUGIN_KEY
+    for key in ('BesteLadenHours', 'Extra'):
+        raw = (domoticz_runtime.Parameters.get(key, '') or '').strip()
+        if not raw:
+            continue
+        if key == 'Extra':
+            if raw == PLUGIN_KEY or PLUGIN_KEY.startswith(raw):
+                continue
+        hours = _parse_besteladen_hours_raw(raw)
+        if hours is not None:
+            return hours
+    return None
+
+def beste_laden_hours(plugin):
+    """Sliding window lengte voor Beste laden (BesteLadenHours, default 3 uur)."""
+    from easee_constants import BESTE_LADEN_HOURS_STATE_KEY
+    from_params = _read_besteladen_hours_param(plugin)
+    if from_params is not None:
+        if plugin.state.get(BESTE_LADEN_HOURS_STATE_KEY) != from_params:
+            plugin.state[BESTE_LADEN_HOURS_STATE_KEY] = from_params
+        return from_params
+    backup = plugin.state.get(BESTE_LADEN_HOURS_STATE_KEY)
+    try:
+        hours = int(backup)
+        if 1 <= hours <= 12:
+            return hours
+    except Exception:
+        pass
+    return 3
 
     # ---- emoji & status helpers ----
 
