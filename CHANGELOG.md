@@ -8,6 +8,24 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-06-27
+
+### Added
+- **Prijsbron Geen** — geen Tibber API; kosten uit; *Dag overzicht* toont kWh + laaduren; geen sessie/dag-€ op Status; geen *Beste laden*-tegel
+- **Prijsbron Handmatig** — vast tarief via hardware **Tarief €/kWh (Mode10)**, default 0,25; kostenberekening kWh×tarief; *Beste laden* toont *Vast tarief €X/kWh*
+- **`pricing/ui.py`** — provider-aware UI-helpers (tarief, emoji, laadhints, goedkoopste venster)
+- **`easee_helpers.pricing_enabled()`** — kosten actief bij Tibber+token of Handmatig
+- **`easee_helpers.manual_rate()`**, **`dag_overzicht_enabled()`**, **`beste_laden_enabled()`**
+
+### Changed
+- Kosten-accumulatie en UI via `pricing.get_provider()` / `pricing_ui` i.p.v. directe `tibber_pricing`-aanroepen
+- `ManualPricingProvider` en `NoPricingProvider` volledig geïmplementeerd
+- Startup-log: *Prijsbron Geen — kosten uitgeschakeld*; Handmatig toont ingesteld tarief
+- Versie **0.2.0** in `easee_constants.py` en plugin-metadata
+
+### Notes
+- **Prijsbron Tibber** (default) — ongewijzigd t.o.v. 0.1.0 / v10.11.6-stable bij token in Mode7
+
 ## [0.1.0] — 2026-06-27
 
 ### Added

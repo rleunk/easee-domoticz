@@ -33,6 +33,7 @@ Of blijf op `main` volgen (`git pull`) — `main` wijst naar v10.11.6-stable.
 
 | Item | Status |
 |------|--------|
+| **0.2.0** | Prijsbron Geen/Handmatig/Tibber — **niet stable** (pre-release) |
 | **0.1.0** | Scaffold — **niet stable**; gedrag gelijk aan v10.11.6 bij Tibber + token |
 | **1.0.0** | Gepland eerste publieke stable v1 |
 
@@ -43,7 +44,7 @@ git checkout v1
 sudo systemctl restart domoticz
 ```
 
-Pre-release tag: `v0.1.0` (optioneel op GitHub).
+Pre-release tags: `v0.1.0`, `v0.2.0` (optioneel op GitHub).
 
 ## Rollback v10
 
@@ -65,6 +66,7 @@ sudo systemctl restart domoticz
 
 ## Releases
 
+- [v0.2.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.0) — v1 Prijsbron Geen/Handmatig/Tibber (pre-release)
 - [v0.1.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.1.0) — v1 scaffold (pre-release)
 - [v10.11.6](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6) — legacy stable (aanbevolen productie)
 - [v10.11.5](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.5) — rollback

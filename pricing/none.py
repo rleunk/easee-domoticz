@@ -23,3 +23,8 @@ class NoPricingProvider(PricingProvider):
 
     def get_tomorrow_prices(self) -> list:
         return []
+
+    def refresh(self) -> None:
+        self.plugin.state['price_cache'] = {}
+        self.plugin.state['currency'] = 'EUR'
+        self.plugin.state.pop('price_resolution', None)

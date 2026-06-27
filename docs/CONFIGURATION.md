@@ -158,7 +158,7 @@ Daarnaast: **`[PREFIX] - LoadBal`** (schakelaar, niet meegeteld in de 11 tegel-o
 
 > **v10.11.0:** *Kosten & Samenvatting* + *Dagrapport* → **Dag overzicht**; per laadpaal *Totaal & Sessie* → **Laden** (Description), *Kosten (Sessie/Dag)* → **Status**. Oude tegels: `Used=0` (verborgen), niet auto-verwijderd.
 
-**Geen Tibber?** Dan ontbreken #4–5 en sessie/dag-€ op Status.
+**Geen Tibber?** Bij Prijsbron **Geen**: laadpalen + Equalizer OK; *Dag overzicht* toont kWh + laaduren; geen €. Bij Prijsbron **Handmatig**: kosten via Mode10, geen Tibber-token nodig.
 
 ### Tibber slim laden / Grid Rewards
 
@@ -223,13 +223,32 @@ Legacy: bestaande **Vermogen**-tegel wordt automatisch **Import** (zelfde Device
 | **Vandaag** kWh | observation 45 CumulativeActivePowerImport | Cumulatieve teller (Wh); Domoticz berekent dagtotaal sinds middernacht |
 | Fallback | `power_integrated_kwh` in `easee_state.json` | Als observation 45 ontbreekt: geïntegreerd vermogen over tijd |
 
-## Tibber Integration (vereist voor kosten-tegels)
+## Prijsbron (Mode9) — v0.2.0+
+
+**Type**: Select  
+**Options**: Tibber (default) / Geen / Handmatig  
+**Omschrijving**: Bepaalt hoe laadkosten worden berekend en welke tegels worden bijgewerkt.
+
+| Prijsbron | Tibber API | Kosten-tegels | Dag overzicht | Beste laden | Status per lader |
+|-----------|------------|---------------|---------------|-------------|------------------|
+| **Tibber** | Ja (Mode7 token) | Sessie/dag € | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster | Sessie/dag € + laadhints |
+| **Handmatig** | Nee | Sessie/dag € (vast tarief) | kWh, €, laaduren, vast tarief | *Vast tarief €X/kWh* | Sessie/dag € |
+| **Geen** | Nee | Uit | kWh + laaduren alleen | Geen tegel | Geen € (alleen laadtoestand) |
+
+### Tarief €/kWh (Mode10) — alleen Handmatig
+**Type**: Text  
+**Default**: `0.25`  
+**Omschrijving**: Vast stroomtarief in euro per kWh. Komma of punt (`0,25` of `0.25`). Gebruikt voor kostenberekening en weergave op *Dag overzicht* / *Beste laden*.
+
+**Upgrade van 0.1.0:** bestaande installs met default **Tibber** + Mode7 blijven ongewijzigd.
+
+## Tibber Integration (Prijsbron = Tibber)
 
 ### Tibber Token (Mode7)
 **Type**: Password  
 **Default**: (empty)  
-**Omschrijving**: Je Tibber Personal Access Token — **verplicht voor kosten-tegels**  
-**Zonder token**: *Dag overzicht* en sessie/dag-€ op laadpaal-**Status** worden niet bijgewerkt  
+**Omschrijving**: Je Tibber Personal Access Token — **vereist wanneer Prijsbron = Tibber**  
+**Zonder token (bij Prijsbron Tibber)**: *Dag overzicht* en sessie/dag-€ op laadpaal-**Status** worden niet bijgewerkt  
 
 **Token-backup (v10.9.30+)**  
 Domoticz wist wachtwoordvelden soms bij *Opslaan* op de hardwarepagina (veld lijkt leeg, token verdwijnt uit Mode7). De plugin bewaart een kopie in `easee_state.json` (`tibber_token_backup`) zodra je het token één keer invult. Bij herstart of plugin-update: als Mode7 leeg is maar de backup bestaat, gebruikt de plugin die automatisch — je hoeft het token niet opnieuw in te vullen. In het log: `Tibber actief — token hersteld uit state-backup`. Het token wordt **nooit** gelogd. Nieuw token invullen in Mode7 overschrijft de backup. Tibber uitzetten: verwijder het hardware-item of wis `tibber_token_backup` uit `easee_state.json` op de server.

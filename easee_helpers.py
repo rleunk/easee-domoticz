@@ -126,11 +126,85 @@ def pricing_source(plugin):
         return 'Tibber'
     return raw
 
+def manual_rate(plugin):
+    """Vast tarief €/kWh (Mode10, default 0.25)."""
+    from easee_constants import MANUAL_RATE_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode10', '') or '').strip()
+    if not raw:
+        return MANUAL_RATE_DEFAULT
+    try:
+        rate = float(str(raw).replace(',', '.'))
+    except Exception:
+        return MANUAL_RATE_DEFAULT
+    return max(0.0, rate)
+
+def pricing_enabled(plugin):
+    """True when kWh×tarief kosten actief zijn (Handmatig of Tibber met token)."""
+    source = pricing_source(plugin)
+    if source == 'Handmatig':
+        return True
+    if source == 'Geen':
+        return False
+    return bool(tibber_token(plugin))
+
+def dag_overzicht_enabled(plugin):
+    """Dag overzicht-tegel: Geen/Handmatig altijd; Tibber alleen met token."""
+    source = pricing_source(plugin)
+    if source in ('Geen', 'Handmatig'):
+        return True
+    return tibber_enabled(plugin)
+
+def beste_laden_enabled(plugin):
+    """Beste laden-tegel: uit bij Geen; Handmatig (vast tarief) of Tibber met token."""
+    source = pricing_source(plugin)
+    if source == 'Geen':
+        return False
+    if source == 'Handmatig':
+        return True
+    return tibber_enabled(plugin)
+
 def tibber_enabled(plugin):
     source = pricing_source(plugin)
     if source in ('Geen', 'Handmatig'):
         return False
     return bool(tibber_token(plugin))
+
+def pricing_enabled(plugin):
+    """True when kWh×tarief kosten actief zijn (Handmatig of Tibber met token)."""
+    source = pricing_source(plugin)
+    if source == 'Handmatig':
+        return True
+    if source == 'Geen':
+        return False
+    return bool(tibber_token(plugin))
+
+def manual_rate(plugin):
+    """Vast tarief €/kWh uit Mode10 (default 0.25)."""
+    from easee_constants import MANUAL_RATE_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode10', '') or '').strip()
+    if not raw:
+        return MANUAL_RATE_DEFAULT
+    try:
+        rate = float(raw.replace(',', '.'))
+    except Exception:
+        return MANUAL_RATE_DEFAULT
+    return max(0.0, rate)
+
+def dag_overzicht_enabled(plugin):
+    """Dag overzicht-tegel: Geen/Handmatig altijd; Tibber alleen met token."""
+    source = pricing_source(plugin)
+    if source in ('Geen', 'Handmatig'):
+        return True
+    return tibber_enabled(plugin)
+
+def beste_laden_enabled(plugin):
+    """Beste laden-tegel: uit bij Geen; Handmatig (vast tarief) of Tibber met token."""
+    source = pricing_source(plugin)
+    if source == 'Geen':
+        return False
+    if source == 'Handmatig':
+        return True
+    return tibber_enabled(plugin)
 
 def beste_laden_hours(plugin):
     """Sliding window lengte voor Beste laden (Extra-veld, default 3 uur)."""
