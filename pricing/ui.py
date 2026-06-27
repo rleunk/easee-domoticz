@@ -5,6 +5,7 @@
 import easee_helpers
 import tibber_pricing
 from pricing import entsoe as entsoe_pricing
+from pricing import energyzero as energyzero_pricing
 from pricing.factory import get_provider
 
 
@@ -28,6 +29,8 @@ def price_status_emoji(plugin) -> str:
         return '⚪'
     if source == 'ENTSO-E':
         return entsoe_pricing.price_status_emoji(plugin)
+    if source == 'EnergyZero':
+        return energyzero_pricing.price_status_emoji(plugin)
     return tibber_pricing.price_status_emoji(plugin)
 
 
@@ -50,6 +53,8 @@ def price_emoji(plugin, price_total, cache=None):
         cache = plugin.state.get('price_cache') or {}
     if source == 'ENTSO-E':
         return entsoe_pricing.price_emoji(plugin, price_total, cache)
+    if source == 'EnergyZero':
+        return energyzero_pricing.price_emoji(plugin, price_total, cache)
     return tibber_pricing.price_emoji(plugin, price_total, cache)
 
 
@@ -62,6 +67,8 @@ def cheapest_window_text(plugin, hours=None) -> str:
         return provider.cheapest_window_text(hours=hours)
     if source == 'ENTSO-E':
         return entsoe_pricing.cheapest_window_text(plugin, hours=hours)
+    if source == 'EnergyZero':
+        return energyzero_pricing.cheapest_window_text(plugin, hours=hours)
     return tibber_pricing.cheapest_window_text(plugin, hours=hours)
 
 
@@ -74,6 +81,8 @@ def dagrapport_cheapest_line(plugin) -> str:
         return provider.dagrapport_cheapest_line()
     if source == 'ENTSO-E':
         return entsoe_pricing.dagrapport_cheapest_line(plugin)
+    if source == 'EnergyZero':
+        return energyzero_pricing.dagrapport_cheapest_line(plugin)
     return tibber_pricing.dagrapport_cheapest_line(plugin)
 
 
@@ -91,6 +100,12 @@ def charging_hint(plugin, power_w, session_active=False, eq_lb_active=False, lb_
         )
         if entsoe_hint:
             hints.append(entsoe_hint)
+    elif easee_helpers.energyzero_enabled(plugin):
+        energyzero_hint = energyzero_pricing.charging_hint(
+            plugin, power_w, session_active, eq_lb_active=eq_lb_active, lb_active=lb_active,
+        )
+        if energyzero_hint:
+            hints.append(energyzero_hint)
     if session_active and power_w > 50:
         import domoticz_energy_hints
         energy_hint = domoticz_energy_hints.charging_context_hint(

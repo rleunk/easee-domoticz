@@ -233,22 +233,24 @@ Domoticz toont **alle** parameters tegelijk — velden kunnen niet dynamisch ver
 |-----------|------------|---------------|---------------|-------------|------------------|
 | **Tibber** | Ja (Mode7 token) | Sessie/dag € | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster | Sessie/dag € + laadhints |
 | **ENTSO-E** | Ja (Mode24 token) | Sessie/dag € (spot + toeslagen) | kWh, €, laaduren, tarief, goedkoopste uur | Goedkoopste venster (uur) | Sessie/dag € + laadhints |
+| **EnergyZero** | Nee (publieke API) | Sessie/dag € (indicatief incl. BTW) | kWh, €, laaduren, tarief, goedkoopste uur | Goedkoopste venster (uur) | Sessie/dag € + laadhints |
 | **Handmatig** | Nee | Sessie/dag € (vast / dag/nacht / dal/piek) | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster | Sessie/dag € + energie-hints |
 | **Geen** | Nee | Uit | kWh + laaduren alleen | Geen tegel | Geen € (alleen laadtoestand) |
 
-### UI-volgorde (v0.5.0)
+### UI-volgorde (v0.6.0)
 
-1. **Prijsbron** (Mode9) — Geen | Handmatig | Tibber (default) | **ENTSO-E**
-2. **Beste laden venster uren** (BesteLadenHours) — Tibber, Handmatig en ENTSO-E
+1. **Prijsbron** (Mode9) — Geen | Handmatig | Tibber (default) | **ENTSO-E** | **EnergyZero**
+2. **Beste laden venster uren** (BesteLadenHours) — Tibber, Handmatig, ENTSO-E en **EnergyZero**
 3. **Handmatig type** (Mode11) — Vast | Dag/nacht | Dal/piek (alleen bij Handmatig)
 4. Handmatig tariefvelden (Mode10, Mode12–19)
 5. Tibber token + link (Mode7, Mode8)
 6. ENTSO-E token + toeslagen (Mode24–27, Mode28 link)
-7. **Energie hints** (Mode20–23) — aparte hardware-groep
+7. **EnergyZero info** (Mode29) — geen token nodig
+8. **Energie hints** (Mode20–23) — aparte hardware-groep
 
 ### Prijsbron (Mode9)
 **Type**: Select  
-**Options**: Geen / Handmatig / Tibber (default **Tibber**) / **ENTSO-E**  
+**Options**: Geen / Handmatig / Tibber (default **Tibber**) / **ENTSO-E** / **EnergyZero**  
 **Omschrijving**: Bepaalt hoe laadkosten worden berekend en welke tegels worden bijgewerkt.
 
 ### Handmatig type (Mode11) — alleen Handmatig
@@ -373,6 +375,53 @@ tax (Dag overzicht) = totaal − energy
 - Morgen-prijzen meestal na ~13:00 CET beschikbaar
 - Geen vaste dagkosten per maand (Mode25–27 zijn per kWh)
 
+## EnergyZero Integration (Prijsbron = EnergyZero) — v0.6.0+
+
+EnergyZero levert **publieke NL uurprijzen** via [api.energyzero.nl](https://api.energyzero.nl/v1/energyprices) — **geen registratie of token**. Dezelfde bron als [dynamische-energieprijzen.nl](https://www.dynamische-energieprijzen.nl/).
+
+### EnergyZero — geen token nodig (Mode29)
+**Type**: Info link  
+**Default**: https://www.dynamische-energieprijzen.nl/  
+**Omschrijving**: Alleen bij Prijsbron **EnergyZero** — geen API-token invullen
+
+### API & prijsformule
+
+```
+GET https://api.energyzero.nl/v1/energyprices
+  ?fromDate=YYYY-MM-DDT00:00:00.000Z
+  &tillDate=YYYY-MM-DD+2T00:00:00.000Z
+  &interval=4          (uur)
+  &usageType=1         (elektriciteit)
+  &inclBtw=true        (default)
+
+totaal €/kWh = Prices[].price
+energy (Dag overzicht) = totaal
+tax (Dag overzicht) = 0  (geen split in API)
+```
+
+**JSON-velden:**
+| Veld | Gebruik |
+|------|---------|
+| `Prices[].readingDate` | Start uur (lokale klok, Z-suffix) |
+| `Prices[].price` | All-in €/kWh (incl. BTW) |
+| `average` | Niet gebruikt door plugin |
+| `intervalType` | 4 = uur |
+
+**Vergelijking:**
+
+| | EnergyZero | ENTSO-E | Tibber |
+|---|------------|---------|--------|
+| Token | Nee | Mode24 | Mode7 |
+| Toeslagen | In API-prijs | Mode25–27 | Via Tibber-contract |
+| Resolutie | Uur | Uur | Kwartier (indien beschikbaar) |
+| Exacte factuur | Nee (indicatief) | Nee (schatting) | Contractprijs |
+
+**Beperkingen:**
+- Indicatieve markt-/referentieprijzen — kan afwijken van jouw leverancier
+- Uurprijzen (niet kwartier)
+- Morgen-prijzen meestal rond ~14:00–15:00 CET
+- Geen energie/belasting-split in Dag overzicht (energy = total)
+
 ### Tibber Token Ophalen (Mode8)
 **Type**: Info link  
 **URL**: https://developer.tibber.com/settings/access-token  
@@ -380,7 +429,7 @@ tax (Dag overzicht) = totaal − energy
 ### Beste laden venster (BesteLadenHours)
 **Type**: Number (1–12)  
 **Default**: `3`  
-**Omschrijving**: Aantal uren voor het sliding-window van de *Beste laden*-tegel. Alleen bij **Prijsbron Tibber** (met token), **Handmatig** of **ENTSO-E**. Bij Tibber kwartierprijzen indien beschikbaar; bij Handmatig/ENTSO-E over uurcurve.
+**Omschrijving**: Aantal uren voor het sliding-window van de *Beste laden*-tegel. Alleen bij **Prijsbron Tibber** (met token), **Handmatig**, **ENTSO-E** of **EnergyZero**. Bij Tibber kwartierprijzen indien beschikbaar; bij Handmatig/ENTSO-E/EnergyZero over uurcurve.
 
 ## Device Naming
 

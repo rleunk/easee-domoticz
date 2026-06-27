@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.5.0)" author="Richard Leunk" version="0.5.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.6.0)" author="Richard Leunk" version="0.6.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v1 (0.5.0)</h2><br/>
-        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints en Equalizer. v1 ontwikkelingslijn.</p>
+        <h2>Easee Domoticz plugin v1 (0.6.0)</h2><br/>
+        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E/EnergyZero, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints en Equalizer. v1 ontwikkelingslijn.</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
@@ -36,9 +36,10 @@
                     <option label="Handmatig" value="Handmatig"/>
                     <option label="Tibber" value="Tibber" default="true"/>
                     <option label="ENTSO-E" value="ENTSO-E"/>
+                    <option label="EnergyZero" value="EnergyZero"/>
                 </options>
             </param>
-            <param field="BesteLadenHours" type="number" label="Beste laden venster uren (Tibber/Handmatig/ENTSO-E)" min="1" max="12" default="3" width="80px"/>
+            <param field="BesteLadenHours" type="number" label="Beste laden venster uren (Tibber/Handmatig/ENTSO-E/EnergyZero)" min="1" max="12" default="3" width="80px"/>
             <param field="Mode11" label="Handmatig type (alleen bij Handmatig)" width="160px">
                 <options>
                     <option label="Vast" value="Vast" default="true"/>
@@ -67,6 +68,7 @@
             <param field="Mode25" label="Opslag leverancier €/kWh (alleen bij ENTSO-E)" width="120px" default="0"/>
             <param field="Mode26" label="Energiebelasting €/kWh (alleen bij ENTSO-E, ca. 0,12)" width="120px" default="0"/>
             <param field="Mode27" label="BTW % (alleen bij ENTSO-E)" width="80px" default="21"/>
+            <param field="Mode29" label="EnergyZero — geen token nodig (alleen bij EnergyZero)" width="360px" default="https://www.dynamische-energieprijzen.nl/"/>
         </group>
         <group label="Energie hints (optioneel)">
             <param field="Mode20" label="P1 / zon / thuisbatterij hints" width="100px">
@@ -631,6 +633,12 @@ class BasePlugin:
                     'ENTSO-E uit (Mode24 leeg) — Dag overzicht en laadpaal-kosten in Status worden niet bijgewerkt',
                     'startup',
                 )
+        elif prijsbron == 'EnergyZero':
+            easee_logging.info(
+                'plugin',
+                'EnergyZero actief — kosten na eerste poll',
+                'startup',
+            )
         easee_logging.info('plugin', 'Initiële sync wacht op Domoticz Devices-readiness', 'startup')
 
     def onStop(self):

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import easee_helpers
+from pricing.energyzero import EnergyZeroPricingProvider
 from pricing.entsoe import EntsoePricingProvider
 from pricing.manual import ManualPricingProvider
 from pricing.none import NoPricingProvider
@@ -16,4 +17,6 @@ def get_provider(plugin, config=None):
         return ManualPricingProvider(plugin)
     if source == 'ENTSO-E':
         return EntsoePricingProvider(plugin)
+    if source == 'EnergyZero':
+        return EnergyZeroPricingProvider(plugin)
     return TibberPricingProvider(plugin)

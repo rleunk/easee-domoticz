@@ -8,6 +8,25 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-06-27
+
+### Added
+- **Prijsbron EnergyZero** — publieke NL uurprijzen via EnergyZero API, **geen token**
+- **`pricing/energyzero.py`** — JSON-parsing, uurprijzen vandaag+morgen, cache zoals Tibber/ENTSO-E
+- **Mode29** info-link naar [dynamische-energieprijzen.nl](https://www.dynamische-energieprijzen.nl/) — *EnergyZero — geen token nodig*
+- Startup-log: `EnergyZero actief — kosten na eerste poll` (geen token in log)
+
+### Changed
+- Hardware-groep **Energieprijs**: Prijsbron → Beste laden → Handmatig → Tibber → ENTSO-E → **EnergyZero**
+- **`pricing/ui.py`** — emoji, goedkoopste venster en laadhints voor EnergyZero uurcurve
+- **`pricing_enabled()` / `beste_laden_enabled()`** — EnergyZero zonder token
+
+### Notes
+- EnergyZero levert **indicatieve** uurtarieven (incl. BTW via API) — geen exacte factuur; kan afwijken van jouw leverancier
+- Uurprijzen (niet kwartier); morgen meestal beschikbaar rond ~14:00–15:00 CET
+- Eenvoudiger dan ENTSO-E (geen token/toeslagen) — vergelijkbaar met Tibber maar zonder account
+- Na upgrade: kies **Prijsbron EnergyZero** — geen extra velden invullen
+
 ## [0.5.0] — 2026-06-27
 
 ### Added

@@ -1,12 +1,12 @@
-# Easee Domoticz Plugin **v1** (0.5.0)
+# Easee Domoticz Plugin **v1** (0.6.0)
 
-**Easee-laadpalen, Equalizer (meterkast) en optionele energieprijs (Geen/Handmatig/Tibber/ENTSO-E) in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
+**Easee-laadpalen, Equalizer (meterkast) en optionele energieprijs (Geen/Handmatig/Tibber/ENTSO-E/EnergyZero) in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-0.5.0-orange)
+![Version](https://img.shields.io/badge/version-0.6.0-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status (v1 branch):** **0.5.0** — Prijsbron Geen/Handmatig/Tibber/**ENTSO-E**; handmatig **Vast**, **Dag/nacht** of **Dal/piek**; P1/zon/thuisbatterij-hints. **Niet** productie-stable. Zie [STABLE.md](STABLE.md) en [VERSIONING.md](VERSIONING.md).
+> **Status (v1 branch):** **0.6.0** — Prijsbron Geen/Handmatig/Tibber/**ENTSO-E**/**EnergyZero**; handmatig **Vast**, **Dag/nacht** of **Dal/piek**; P1/zon/thuisbatterij-hints. **Niet** productie-stable. Zie [STABLE.md](STABLE.md) en [VERSIONING.md](VERSIONING.md).
 >
 > **Legacy productie:** branch `main` / tag [**v10.11.6-stable**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6-stable) — aanbevolen voor live Domoticz. v10 blijft bevroren; geen hernummering naar 0.10.x.
 
@@ -21,9 +21,9 @@ git checkout v1   # v1 ontwikkeling; voor productie: git checkout v10.11.6-stabl
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (0.5.0)** → Easee-gebruikersnaam + wachtwoord → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (0.6.0)** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
-**Kosten-tegels:** kies **Prijsbron** (Mode9): **Tibber** (default, Mode7 token) · **ENTSO-E** (Mode24 token + toeslagen) · **Handmatig** (Vast Mode10, Dag/nacht of Dal/piek Mode11–19) · **Geen** (alleen kWh/laaduren, geen €). Hardware-groep **Energieprijs (optioneel)**. Optioneel **Energie hints** (P1 / Zonnepanelen / Thuisbatterij, Mode20–23 — elke merknaam in Domoticz werkt, bijv. Sessy, Powerwall). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
+**Kosten-tegels:** kies **Prijsbron** (Mode9): **Tibber** (default, Mode7 token) · **ENTSO-E** (Mode24 token + toeslagen) · **EnergyZero** (geen token) · **Handmatig** (Vast Mode10, Dag/nacht of Dal/piek Mode11–19) · **Geen** (alleen kWh/laaduren, geen €). Hardware-groep **Energieprijs (optioneel)**. Optioneel **Energie hints** (P1 / Zonnepanelen / Thuisbatterij, Mode20–23 — elke merknaam in Domoticz werkt, bijv. Sessy, Powerwall). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
 > Git-authenticatie: [docs/GIT_SETUP.md](docs/GIT_SETUP.md) · Problemen: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
@@ -51,18 +51,20 @@ In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plug
 | **Equalizer** | 2 tegels per Equalizer: **Status** (LB, limieten, stroom, spanning) + **Vermogen** (import/terug/netto W, vandaag kWh) |
 | **Tibber** | Actueel tarief, **Dag overzicht**, **Beste laden** — **Mode7 + Prijsbron Tibber** |
 | **ENTSO-E** | Day-ahead spot NL + toeslagen — **Mode24 token + Mode25–27** |
-| **Prijsbron** | **Geen** (kWh only) · **Handmatig** (Vast/Dag-nacht/Dal-piek) · **Tibber** (default) · **ENTSO-E** |
+| **EnergyZero** | Publieke NL uurprijzen — **geen token** (Mode29 info-link) |
+| **Prijsbron** | **Geen** (kWh only) · **Handmatig** (Vast/Dag-nacht/Dal-piek) · **Tibber** (default) · **ENTSO-E** · **EnergyZero** |
 | **Energie hints** | P1 (Mode21), Zonnepanelen (Mode22), Thuisbatterij (Mode23) — context op Status/Dag overzicht; elke batterij-merknaam in Domoticz |
 | **Core** | Globale Status, Totaal Laden, Totaal kWh, LoadBal-schakelaar |
 | **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
 
-Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v0.5.0][LEVEL]…`.
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v0.6.0][LEVEL]…`.
 
 ## v1 releases
 
 | Versie | Status |
 |--------|--------|
+| **0.6.0** | EnergyZero prijsbron (geen token) |
 | **0.5.0** | ENTSO-E day-ahead spot + toeslagen |
 | **0.4.1** | Thuisbatterij-labels (generiek i.p.v. Sessy) |
 | **0.4.0** | Handmatig Dal/piek; P1/zon/thuisbatterij hints |
@@ -115,6 +117,7 @@ Zet **Debug logging** (Mode6) alleen aan als je problemen onderzoekt — dan wor
 | **Geen prijsbron / Geen** | Laadpalen + Equalizer OK | Prijsbron **Geen**; *Dag overzicht* kWh+laaduren; log: *kosten uitgeschakeld* |
 | **Handmatig tarief** | Kosten zonder Tibber/ENTSO-E | Prijsbron **Handmatig** + **Vast** (Mode10), **Dag/nacht** of **Dal/piek** (Mode11–19) |
 | **ENTSO-E spot** | Day-ahead zonder Tibber | Prijsbron **ENTSO-E** + Mode24 token + toeslagen Mode25–27 |
+| **EnergyZero** | Uurprijzen zonder token | Prijsbron **EnergyZero** — geen extra velden |
 | **Geen Tibber-token** | Alleen bij Prijsbron Tibber | Geen kosten-tegels; log: *Tibber uit* |
 
 Laat naamvelden leeg voor de Easee-appnaam. De **hardwarenaam** in Domoticz (bijv. `Easee`) is het prefix op alle tegels.
@@ -178,7 +181,7 @@ Volledige LED/badge-tabel: [INSTALL.md — Custom iconen](INSTALL.md#custom-icon
 | Debug (Mode6) | Normal | Zet op *Debug* bij problemen — toont extra DEBUG-regels |
 | Mode2 / Mode3 / Mode4 | — | Laadpaalnamen 1 / 2 / 3+ |
 | Address / IP | — | Equalizer-naam / handmatig ID |
-| Prijsbron (Mode9) | Tibber | **Geen** / **Handmatig** / **Tibber** / **ENTSO-E** |
+| Prijsbron (Mode9) | Tibber | **Geen** / **Handmatig** / **Tibber** / **ENTSO-E** / **EnergyZero** |
 | Handmatig type (Mode11) | Vast | **Vast** / **Dag/nacht** / **Dal/piek** |
 | Vast tarief €/kWh (Mode10) | 0.25 | Alleen **Handmatig — Vast** |
 | Dal/normal/piek €/kWh (Mode12/13/16) | 0.22 / 0.28 / 0.35 | **Dag/nacht** of **Dal/piek** |
@@ -188,6 +191,7 @@ Volledige LED/badge-tabel: [INSTALL.md — Custom iconen](INSTALL.md#custom-icon
 | P1/zon/thuisbatterij hints (Mode20–23) | Aan / Power / Zonnepanelen / Sessy | Mode23 default `Sessy`; zet op jouw batterij-naam (Powerwall, etc.) |
 | Tibber token (Mode7) | — | **Vereist** bij Prijsbron Tibber |
 | ENTSO-E token (Mode24) | — | **Vereist** bij Prijsbron ENTSO-E |
+| EnergyZero info (Mode29) | dynamische-energieprijzen.nl | Alleen bij Prijsbron **EnergyZero** — geen token |
 | Opslag / belasting / BTW (Mode25–27) | 0 / 0 / 21 | Alleen **ENTSO-E** — vul in naar jouw contract |
 
 Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
