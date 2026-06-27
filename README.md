@@ -1,24 +1,29 @@
-# Easee Domoticz plugin v10.11.6
+# Easee Domoticz Plugin **v1** (0.1.0-dev)
 
 **Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.11.6--stable-blue)
+![Version](https://img.shields.io/badge/version-0.1.0--dev-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** **v10.11.6-stable** — aanbevolen productie-baseline. Dag overzicht-migratie fix (legacy *Kosten & Samenvatting* → **Dag overzicht** via `Update()`); idle timer **00:00** op Status; compacte tegels (**11** i.p.v. 16 bij 2 laders + EQ + Tibber). Rollback: [v10.11.5-stable](STABLE.md), [v10.11.4-stable](STABLE.md). Zie [STABLE.md](STABLE.md).
+> **Status (v1 branch):** **0.1.0** — ontwikkelings-scaffold; runtime-gedrag gelijk aan legacy **v10.11.6-stable**. **Niet** productie-stable. Zie [STABLE.md](STABLE.md) en [VERSIONING.md](VERSIONING.md).
+>
+> **Legacy productie:** branch `main` / tag [**v10.11.6-stable**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6-stable) — aanbevolen voor live Domoticz. v10 blijft bevroren; geen hernummering naar 0.10.x.
 
 ## TL;DR — installeren in 2 minuten
 
 ```bash
 cd /home/root/domoticz/plugins
 git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd Easee-Domoticz-plugin
+git fetch origin
+git checkout v1   # v1 ontwikkeling; voor productie: git checkout v10.11.6-stable
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.11.6** → Easee-gebruikersnaam + wachtwoord → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (0.1.0)** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
-Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
+Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7) en Prijsbron **Tibber** (Mode9, default). **Prijsbron** *Geen* en *Handmatig* zijn placeholders (0.2.0). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
 > Git-authenticatie: [docs/GIT_SETUP.md](docs/GIT_SETUP.md) · Problemen: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
@@ -26,7 +31,7 @@ Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder op
 
 - Auto-detectie van laadpalen en Equalizer
 - Live vermogen, status en load balancing in Domoticz
-- Kosten via Tibber (sessie, dag, goedkoopste laadwindow) — **Tibber-token (Mode7) vereist**
+- Kosten via Tibber (sessie, dag, goedkoopste laadwindow) — **Tibber-token (Mode7) + Prijsbron Tibber (Mode9)**
 - 13 custom tegeliconen (P-max laadpaal + Equalizer-puck) — auto-load + handmatige upload als fallback
 - Modulaire codebase (sinds v10.6) — updates via `git pull`
 
@@ -43,12 +48,21 @@ Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder op
 |-----------|---------------|
 | **Laadpalen** | Auto-discovery; per lader: **Laden** (grafiek + sessie in Description), **Status** (incl. kosten bij Tibber) |
 | **Equalizer** | 2 tegels per Equalizer: **Status** (LB, limieten, stroom, spanning) + **Vermogen** (import/terug/netto W, vandaag kWh) |
-| **Tibber** | Actueel tarief, **Dag overzicht**, **Beste laden** (configureerbaar venster) — **Mode7 verplicht** |
+| **Tibber** | Actueel tarief, **Dag overzicht**, **Beste laden** (configureerbaar venster) — **Mode7 + Prijsbron Tibber** |
 | **Core** | Globale Status, Totaal Laden, Totaal kWh, LoadBal-schakelaar |
 | **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
 
-Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.11.6][LEVEL]…`.
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v0.1.0][LEVEL]…`.
+
+## v1 scaffold (0.1.0)
+
+| Onderdeel | Status |
+|-----------|--------|
+| Versienummering v1 | 0.1.0 op branch `v1` |
+| `pricing/` module | Skeleton; Tibber delegeert naar `tibber_pricing.py` |
+| **Prijsbron** (Mode9) | Tibber werkt; Geen/Handmatig stub → 0.2.0 |
+| Gedrag vs v10.11.6 | Identisch bij default Tibber + token |
 
 ## Logniveaus (kort)
 
@@ -154,7 +168,8 @@ Volledige LED/badge-tabel: [INSTALL.md — Custom iconen](INSTALL.md#custom-icon
 | Debug (Mode6) | Normal | Zet op *Debug* bij problemen — toont extra DEBUG-regels |
 | Mode2 / Mode3 / Mode4 | — | Laadpaalnamen 1 / 2 / 3+ |
 | Address / IP | — | Equalizer-naam / handmatig ID |
-| Tibber token (Mode7) | — | **Vereist voor kosten-tegels** (per lader + globaal) |
+| Prijsbron (Mode9) | Tibber | **Geen** / **Handmatig** / **Tibber** — Geen/Handmatig placeholder (0.2.0) |
+| Tibber token (Mode7) | — | **Vereist voor kosten-tegels** bij Prijsbron Tibber |
 
 Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
@@ -163,7 +178,8 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 ```bash
 cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
-git checkout v10.11.6-stable   # aanbevolen stable; of: git pull op main
+git checkout v1              # v1 ontwikkeling
+# of voor productie: git checkout v10.11.6-stable
 sudo systemctl restart domoticz
 ```
 
@@ -175,8 +191,9 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 
 ## Changelog & release
 
-- Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md)
-- **Huidige stable:** **[v10.11.6-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6)** — Dag overzicht-migratie fix, idle timer 00:00, compacte 11-tegel UI
+- Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md) — v1 start bij 0.1.0; legacy v10 hieronder in changelog
+- **v1 (branch `v1`):** [v0.1.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.1.0) — scaffold (pre-release)
+- **Legacy stable:** **[v10.11.6-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6-stable)** — productie op `main`
 - Vorige stable: [v10.11.4-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.4) (rollback)
 - Oudere rollback: [v10.11.2-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.2)
 - Oudere rollback: [v10.9.32-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.32)
@@ -209,7 +226,7 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 | Geen iconen | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — custom iconen |
 | Login mislukt | Credentials + rate limit (5–10 min wachten) |
 | Geen Equalizer | Debug aan; handmatig ID in IP-veld |
-| Kosten 0 € / geen kosten-tegels | **Tibber-token (Mode7)** invullen; tile verwijderen + hardware herstarten |
+| Kosten 0 € / geen kosten-tegels | **Tibber-token (Mode7)** + **Prijsbron Tibber**; tile verwijderen + hardware herstarten |
 | 429 rate limit in log | Poll interval (Mode1) op **60 sec** — [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md#http-429-rate-limit-easee-api)
 | Verkeerd icoon op tegel | Upgrade naar v10.9.18+; zip opnieuw uploaden |
 
@@ -219,7 +236,7 @@ Sinds v10.6.0: 13 Python-modules naast `Easee_icons_v2.zip`. Overzicht: [docs/RE
 
 ## Problemen melden
 
-[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.11.6-stable** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v0.1.0** (v1) of **v10.11.6-stable** (legacy), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
 
 ## Support & credits
 
@@ -231,4 +248,4 @@ MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Versie 10.11.6** (stable: v10.11.6-stable) — Richard Leunk
+**Versie 0.1.0** (v1 branch) — Richard Leunk · Legacy productie: **v10.11.6-stable** op `main`
