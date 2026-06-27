@@ -175,17 +175,18 @@ def charger_state(plugin, cid):
     return st
 
 def migrate_manual_tariff_fields(plugin):
-    """Ensure manual tariff defaults after upgrade to 0.3.0 (Mode11–Mode15)."""
+    """Ensure manual tariff defaults after upgrade (Mode11–Mode19)."""
     from easee_constants import MANUAL_TARIFF_STATE_KEY
     key = 'manual_tariff_version'
-    target = '0.3.0-dag-nacht'
+    target = '0.4.0-dal-piek'
     if plugin.state.get(key) == target:
         return
     backup = plugin.state.setdefault(MANUAL_TARIFF_STATE_KEY, {})
-    if easee_helpers.manual_tariff_type(plugin) == 'Vast':
+    tariff_type = easee_helpers.manual_tariff_type(plugin)
+    if tariff_type == 'Vast':
         backup.setdefault('type', 'Vast')
         backup.setdefault('vast_rate', easee_helpers.manual_rate(plugin))
-    else:
+    elif tariff_type == 'Dag/nacht':
         backup.update({
             'type': 'Dag/nacht',
             'dal_rate': easee_helpers.manual_dal_rate(plugin),
@@ -193,10 +194,22 @@ def migrate_manual_tariff_fields(plugin):
             'dal_start': easee_helpers.manual_dal_start_hour(plugin),
             'dal_end': easee_helpers.manual_dal_end_hour(plugin),
         })
+    else:
+        backup.update({
+            'type': 'Dal/piek',
+            'dal_rate': easee_helpers.manual_dal_rate(plugin),
+            'normal_rate': easee_helpers.manual_normal_rate(plugin),
+            'piek_rate': easee_helpers.manual_piek_rate(plugin),
+            'dal_start': easee_helpers.manual_dal_start_hour(plugin),
+            'dal_end': easee_helpers.manual_dal_end_hour(plugin),
+            'piek_start': easee_helpers.manual_piek_start_hour(plugin),
+            'piek_end': easee_helpers.manual_piek_end_hour(plugin),
+            'weekend_all_dal': easee_helpers.manual_weekend_all_dal(plugin),
+        })
     plugin.state[key] = target
     easee_logging.info(
         'easee_state',
-        f'Handmatig tarief gemigreerd naar {PLUGIN_VERSION} (defaults Mode11–Mode15)',
+        f'Handmatig tarief gemigreerd naar {PLUGIN_VERSION} (defaults Mode11–Mode19)',
         'migration',
     )
 

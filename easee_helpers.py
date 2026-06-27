@@ -146,10 +146,12 @@ def _parse_hour_param(plugin, raw, default):
     return hour
 
 def manual_tariff_type(plugin):
-    """Handmatig subtype (Mode11): Vast (default) or Dag/nacht."""
+    """Handmatig subtype (Mode11): Vast (default), Dag/nacht, or Dal/piek."""
     raw = (domoticz_runtime.Parameters.get('Mode11', '') or '').strip()
     if raw == 'Dag/nacht':
         return 'Dag/nacht'
+    if raw == 'Dal/piek':
+        return 'Dal/piek'
     return 'Vast'
 
 def manual_rate(plugin):
@@ -182,6 +184,31 @@ def manual_dal_end_hour(plugin):
     raw = (domoticz_runtime.Parameters.get('Mode15', '') or '').strip()
     return _parse_hour_param(plugin, raw, MANUAL_DAL_END_HOUR_DEFAULT)
 
+def manual_piek_rate(plugin):
+    """Piek tarief €/kWh (Mode16, default 0.35)."""
+    from easee_constants import MANUAL_PIEK_RATE_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode16', '') or '').strip()
+    return _parse_tariff_float(plugin, raw, MANUAL_PIEK_RATE_DEFAULT)
+
+def manual_piek_start_hour(plugin):
+    """Piek start uur 0–23 (Mode17, default 17)."""
+    from easee_constants import MANUAL_PIEK_START_HOUR_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode17', '') or '').strip()
+    return _parse_hour_param(plugin, raw, MANUAL_PIEK_START_HOUR_DEFAULT)
+
+def manual_piek_end_hour(plugin):
+    """Piek eind uur 0–23 (Mode18, default 21)."""
+    from easee_constants import MANUAL_PIEK_END_HOUR_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode18', '') or '').strip()
+    return _parse_hour_param(plugin, raw, MANUAL_PIEK_END_HOUR_DEFAULT)
+
+def manual_weekend_all_dal(plugin):
+    """Weekend volledig dal (Mode19, default Ja)."""
+    raw = (domoticz_runtime.Parameters.get('Mode19', '') or '').strip().lower()
+    if raw in ('nee', '0', 'false', 'no', 'uit', 'off'):
+        return False
+    return True
+
 def is_dal_period(dt, start_hour, end_hour):
     """True when datetime falls in dal window (supports overnight, e.g. 23–07)."""
     hour = dt.hour
@@ -191,14 +218,46 @@ def is_dal_period(dt, start_hour, end_hour):
         return start_hour <= hour < end_hour
     return hour >= start_hour or hour < end_hour
 
+def is_piek_period(dt, start_hour, end_hour):
+    """True when datetime falls in piek window (e.g. 17–21 on weekdays)."""
+    hour = dt.hour
+    if start_hour == end_hour:
+        return False
+    if start_hour < end_hour:
+        return start_hour <= hour < end_hour
+    return hour >= start_hour or hour < end_hour
+
+def manual_tariff_period(plugin, dt=None):
+    """Return dal, normal, piek, or vast for Handmatig at given datetime."""
+    if dt is None:
+        dt = datetime.now().astimezone()
+    tariff_type = manual_tariff_type(plugin)
+    if tariff_type == 'Vast':
+        return 'vast'
+    is_weekend = dt.weekday() >= 5
+    if tariff_type == 'Dal/piek' and is_weekend and manual_weekend_all_dal(plugin):
+        return 'dal'
+    if is_dal_period(dt, manual_dal_start_hour(plugin), manual_dal_end_hour(plugin)):
+        return 'dal'
+    if tariff_type == 'Dag/nacht':
+        return 'normal'
+    if not is_weekend and is_piek_period(
+        dt, manual_piek_start_hour(plugin), manual_piek_end_hour(plugin),
+    ):
+        return 'piek'
+    return 'normal'
+
 def manual_rate_at(plugin, dt=None):
-    """Current €/kWh for Handmatig (Vast or Dag/nacht at given datetime)."""
+    """Current €/kWh for Handmatig (Vast, Dag/nacht, or Dal/piek at given datetime)."""
     if dt is None:
         dt = datetime.now().astimezone()
     if manual_tariff_type(plugin) == 'Vast':
         return manual_rate(plugin)
-    if is_dal_period(dt, manual_dal_start_hour(plugin), manual_dal_end_hour(plugin)):
+    period = manual_tariff_period(plugin, dt)
+    if period == 'dal':
         return manual_dal_rate(plugin)
+    if period == 'piek':
+        return manual_piek_rate(plugin)
     return manual_normal_rate(plugin)
 
 def pricing_enabled(plugin):

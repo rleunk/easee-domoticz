@@ -8,7 +8,7 @@ from pricing.base import PricingProvider
 
 
 class ManualPricingProvider(PricingProvider):
-    """Manual €/kWh — vast tarief or dag/nacht (Mode10–Mode15)."""
+    """Manual €/kWh — vast, dag/nacht, or dal/piek (Mode10–Mode19)."""
 
     def __init__(self, plugin):
         self.plugin = plugin

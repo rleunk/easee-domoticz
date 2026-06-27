@@ -8,6 +8,25 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-06-27
+
+### Added
+- **Handmatig Dal/piek-tarief** — subtype **Dal/piek** (Mode11); dal/normal/piek €/kWh (Mode12/13/16), dal- en piekuren (Mode14/15, Mode17/18), **Weekend alles dal** (Mode19, default Ja)
+- **`manual_tariff_period()` / `manual_rate_at()`** — dal, normal of piek per uur; kosten via actueel uurtarief per poll
+- **P1 / zon / Sessy hints** — leest optionele Domoticz-apparaten (Mode21–23); contextregels op globale **Status**, **Dag overzicht** en laadpaal-**Status** bij laden
+- **`domoticz_energy_hints.py`** — P1 `sValue`-parsing, Zonne-overschot, Teruglevering (dedupe), Sessy actief, Hoog netverbruik; **Mode20** hints aan/uit (default aan)
+
+### Changed
+- **Beste laden** bij Handmatig Dal/piek: goedkoopste venster over dal/normal/piek-curve
+- Tarief-emoji Handmatig: 🟢 dal · 🟡 normal · 🔴 piek
+- Tibber-laadhints blijven; energie-hints werken ook met Tibber (Richard-setup)
+- Nieuwe hardware-groep **Energie hints (optioneel)** — params aan einde (Mode16–23 na BesteLadenHours)
+
+### Notes
+- **Tibber-pad ongewijzigd** functioneel
+- Ongeldige apparaatnamen → hints stil overgeslagen (DEBUG-log)
+- Na upgrade: controleer P1/zon/Sessy-namen indien afwijkend van defaults
+
 ## [0.3.0] — 2026-06-27
 
 ### Added

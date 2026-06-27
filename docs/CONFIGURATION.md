@@ -232,16 +232,17 @@ Domoticz toont **alle** parameters tegelijk — velden kunnen niet dynamisch ver
 | Prijsbron | Tibber API | Kosten-tegels | Dag overzicht | Beste laden | Status per lader |
 |-----------|------------|---------------|---------------|-------------|------------------|
 | **Tibber** | Ja (Mode7 token) | Sessie/dag € | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster | Sessie/dag € + laadhints |
-| **Handmatig** | Nee | Sessie/dag € (vast of dag/nacht) | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster (dag/nacht) of vast tarief | Sessie/dag € |
+| **Handmatig** | Nee | Sessie/dag € (vast / dag/nacht / dal/piek) | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster | Sessie/dag € + energie-hints |
 | **Geen** | Nee | Uit | kWh + laaduren alleen | Geen tegel | Geen € (alleen laadtoestand) |
 
-### UI-volgorde (v0.3.0)
+### UI-volgorde (v0.4.0)
 
 1. **Prijsbron** (Mode9) — Geen | Handmatig | Tibber (default Tibber)
-2. **Handmatig type** (Mode11) — Vast | Dag/nacht (alleen bij Handmatig)
-3. Handmatig tariefvelden (Mode10, Mode12–15)
+2. **Handmatig type** (Mode11) — Vast | Dag/nacht | Dal/piek (alleen bij Handmatig)
+3. Handmatig tariefvelden (Mode10, Mode12–19)
 4. Tibber token + link (Mode7, Mode8)
 5. **Beste laden venster uren** (BesteLadenHours) — Tibber en Handmatig
+6. **Energie hints** (Mode20–23) — P1 / zon / Sessy (optioneel, default aan)
 
 ### Prijsbron (Mode9)
 **Type**: Select  
@@ -250,33 +251,60 @@ Domoticz toont **alle** parameters tegelijk — velden kunnen niet dynamisch ver
 
 ### Handmatig type (Mode11) — alleen Handmatig
 **Type**: Select  
-**Options**: Vast (default) / Dag/nacht  
+**Options**: Vast (default) / Dag/nacht / Dal/piek  
 **Omschrijving**: Subtype voor handmatige tarieven.
 
 | Type | Velden | Voorbeeld |
 |------|--------|-----------|
 | **Vast** | Mode10 | €0,25/kWh de hele dag |
 | **Dag/nacht** | Mode12 dal, Mode13 normal, Mode14 start, Mode15 eind | Dal 23:00–07:00 €0,22; overige uren €0,28 |
-
-**Niet in v0.3.0** (gepland 0.4.0+): dal/piek weekdag/weekend, enkel + belasting-component, CSV-import.
+| **Dal/piek** | Mode12–13 dal/normal, Mode14–15 dal uren, Mode16 piek €, Mode17–18 piek uren, Mode19 weekend | Weekdag piek 17–21 €0,35; weekend alles dal (default Ja) |
 
 ### Vast tarief €/kWh (Mode10) — Handmatig, type Vast
 **Type**: Text  
 **Default**: `0.25`  
 **Omschrijving**: Vast stroomtarief in euro per kWh. Komma of punt (`0,25` of `0.25`).
 
-### Dal tarief €/kWh (Mode12) — Handmatig, type Dag/nacht
+### Dal tarief €/kWh (Mode12) — Handmatig, type Dag/nacht / Dal/piek
 **Default**: `0.22`
 
-### Normal tarief €/kWh (Mode13) — Handmatig, type Dag/nacht
+### Normal tarief €/kWh (Mode13) — Handmatig, type Dag/nacht / Dal/piek
 **Default**: `0.28`
 
-### Dal start / eind uur (Mode14 / Mode15) — Handmatig, type Dag/nacht
+### Dal start / eind uur (Mode14 / Mode15) — Handmatig, type Dag/nacht / Dal/piek
 **Type**: Text (heel getal 0–23)  
 **Default**: `23` / `7`  
 **Omschrijving**: Dalperiode; overnight ondersteund (bijv. 23→7 = 23:00 t/m 06:59).
 
-**Upgrade van 0.2.x:** bestaande installs met default **Tibber** + Mode7 blijven ongewijzigd. Handmatig blijft **Vast** (Mode10) tot je **Dag/nacht** kiest.
+### Piek tarief €/kWh (Mode16) — Handmatig, type Dal/piek
+**Default**: `0.35`
+
+### Piek start / eind uur (Mode17 / Mode18) — Handmatig, type Dal/piek
+**Default**: `17` / `21` — piek alleen op weekdagen (ma–vr).
+
+### Weekend alles dal (Mode19) — Handmatig, type Dal/piek
+**Options**: Ja (default) / Nee — bij Ja: za/zo gehele dag dal-tarief (geen piek).
+
+**Upgrade van 0.3.x:** bestaande installs met default **Tibber** + Mode7 blijven ongewijzigd. Handmatig blijft **Vast** (Mode10) tot je een ander type kiest. Nieuwe velden Mode16–23 verschijnen onderaan; defaults zijn veilig.
+
+## Energie hints (optioneel, v0.4.0)
+
+Leest bestaande Domoticz-apparaten — **geen laadsturing**, alleen context op **Status** en **Dag overzicht** (en laadpaal-Status bij laden).
+
+| Parameter | Default | Omschrijving |
+|-----------|---------|--------------|
+| **Mode20** P1/zon/Sessy hints | Aan | Uit = geen energie-hints |
+| **Mode21** P1 meter naam/idx | `Power` | Energy/P1 `sValue`: importW;…;exportW;… — fallback zoekt Energy-tegel met "power" |
+| **Mode22** Zonnepanelen naam/idx | `Zonnepanelen` | Vermogen W = eerste veld in sValue |
+| **Mode23** Sessy naam/idx | `Sessy` | Leeg = Sessy-hint uit; \|W\| > drempel → 🔋 Sessy actief |
+
+**Hints (Nederlands):**
+- ☀️ Zonne-overschot — export > drempel of zon W > import
+- ↩️ Teruglevering — P1 export > 0 (niet tegelijk met Zonne-overschot)
+- 🔋 Sessy actief — \|Sessy W\| > 100 W
+- 📥 Hoog netverbruik — import ≥ 3000 W tijdens laden
+
+Ongeldige namen → hint overgeslagen, DEBUG-log (Mode6 = Debug).
 
 ## Tibber Integration (Prijsbron = Tibber)
 

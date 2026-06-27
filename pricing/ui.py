@@ -14,12 +14,14 @@ def current_price(plugin) -> dict:
 def price_status_emoji(plugin) -> str:
     source = easee_helpers.pricing_source(plugin)
     if source == 'Handmatig':
-        if easee_helpers.manual_tariff_type(plugin) == 'Dag/nacht':
-            now_rate = easee_helpers.manual_rate_at(plugin)
-            dal = easee_helpers.manual_dal_rate(plugin)
-            if abs(now_rate - dal) < 0.0001:
-                return '🟢'
+        tariff_type = easee_helpers.manual_tariff_type(plugin)
+        if tariff_type == 'Vast':
             return '🟡'
+        period = easee_helpers.manual_tariff_period(plugin)
+        if period == 'dal':
+            return '🟢'
+        if period == 'piek':
+            return '🔴'
         return '🟡'
     if source == 'Geen' or not easee_helpers.pricing_enabled(plugin):
         return '⚪'
@@ -32,8 +34,12 @@ def price_emoji(plugin, price_total, cache=None):
         if easee_helpers.manual_tariff_type(plugin) == 'Vast':
             return '🟡'
         dal = easee_helpers.manual_dal_rate(plugin)
-        if abs(easee_helpers.safe_float(plugin, price_total, 0.0) - dal) < 0.0001:
+        piek = easee_helpers.manual_piek_rate(plugin)
+        total = easee_helpers.safe_float(plugin, price_total, 0.0)
+        if abs(total - dal) < 0.0001:
             return '🟢'
+        if abs(total - piek) < 0.0001:
+            return '🔴'
         return '🟡'
     if source == 'Geen':
         return '⚪'
@@ -63,8 +69,18 @@ def dagrapport_cheapest_line(plugin) -> str:
 
 
 def charging_hint(plugin, power_w, session_active=False, eq_lb_active=False, lb_active=None) -> str:
-    if not easee_helpers.tibber_enabled(plugin):
-        return ''
-    return tibber_pricing.charging_hint(
-        plugin, power_w, session_active, eq_lb_active=eq_lb_active, lb_active=lb_active,
-    )
+    hints = []
+    if easee_helpers.tibber_enabled(plugin):
+        tibber_hint = tibber_pricing.charging_hint(
+            plugin, power_w, session_active, eq_lb_active=eq_lb_active, lb_active=lb_active,
+        )
+        if tibber_hint:
+            hints.append(tibber_hint)
+    if session_active and power_w > 50:
+        import domoticz_energy_hints
+        energy_hint = domoticz_energy_hints.charging_context_hint(
+            plugin, power_w, session_active=session_active,
+        )
+        if energy_hint:
+            hints.append(energy_hint)
+    return ' · '.join(hints)

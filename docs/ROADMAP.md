@@ -7,7 +7,9 @@ Kort overzicht — **v1** ontwikkeling op branch `v1`; legacy **v10.11.6-stable*
 | Versie | Status | Inhoud |
 |--------|--------|--------|
 | **0.1.0** | Scaffold (afgerond) | Versienummering, docs, `pricing/` skeleton, Prijsbron-parameter (stub Geen/Handmatig) |
-| **0.2.0** | Afgerond (huidig) | Prijsbron Geen (kosten uit) en Handmatig (vast tarief); Tibber via `pricing/` refactor |
+| **0.2.0** | Afgerond | Prijsbron Geen (kosten uit) en Handmatig (vast tarief); Tibber via `pricing/` refactor |
+| **0.3.0** | Afgerond | Handmatig Dag/nacht |
+| **0.4.0** | Afgerond (huidig) | Handmatig Dal/piek; P1/zon/Sessy hints |
 | **1.0.0** | Gepland | Eerste publieke stable v1 |
 
 ## Afgerond — v10.11.x stable (legacy, 2026-06)

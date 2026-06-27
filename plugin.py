@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.3.0)" author="Richard Leunk" version="0.3.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.4.0)" author="Richard Leunk" version="0.4.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v1 (0.3.0)</h2><br/>
-        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber, handmatig vast of dag/nacht-tarief, laadhints en Equalizer. v1 ontwikkelingslijn.</p>
+        <h2>Easee Domoticz plugin v1 (0.4.0)</h2><br/>
+        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/Sessy-hints en Equalizer. v1 ontwikkelingslijn.</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
@@ -41,16 +41,37 @@
                 <options>
                     <option label="Vast" value="Vast" default="true"/>
                     <option label="Dag/nacht" value="Dag/nacht"/>
+                    <option label="Dal/piek" value="Dal/piek"/>
                 </options>
             </param>
             <param field="Mode10" label="Vast tarief €/kWh (Handmatig — Vast)" width="100px" default="0.25"/>
-            <param field="Mode12" label="Dal tarief €/kWh (Handmatig — Dag/nacht)" width="100px" default="0.22"/>
-            <param field="Mode13" label="Normal tarief €/kWh (Handmatig — Dag/nacht)" width="100px" default="0.28"/>
-            <param field="Mode14" label="Dal start uur 0–23 (Handmatig — Dag/nacht)" width="80px" default="23"/>
-            <param field="Mode15" label="Dal eind uur 0–23 (Handmatig — Dag/nacht)" width="80px" default="7"/>
+            <param field="Mode12" label="Dal tarief €/kWh (Handmatig — Dag/nacht / Dal/piek)" width="100px" default="0.22"/>
+            <param field="Mode13" label="Normal tarief €/kWh (Handmatig — Dag/nacht / Dal/piek)" width="100px" default="0.28"/>
+            <param field="Mode14" label="Dal start uur 0–23 (Handmatig — Dag/nacht / Dal/piek)" width="80px" default="23"/>
+            <param field="Mode15" label="Dal eind uur 0–23 (Handmatig — Dag/nacht / Dal/piek)" width="80px" default="7"/>
+            <param field="Mode16" label="Piek tarief €/kWh (Handmatig — Dal/piek)" width="100px" default="0.35"/>
+            <param field="Mode17" label="Piek start uur 0–23 (Handmatig — Dal/piek)" width="80px" default="17"/>
+            <param field="Mode18" label="Piek eind uur 0–23 (Handmatig — Dal/piek)" width="80px" default="21"/>
+            <param field="Mode19" label="Weekend alles dal (Handmatig — Dal/piek)" width="120px">
+                <options>
+                    <option label="Ja" value="Ja" default="true"/>
+                    <option label="Nee" value="Nee"/>
+                </options>
+            </param>
             <param field="Mode7" label="Tibber token (alleen bij Tibber)" width="360px" password="true" default=""/>
             <param field="Mode8" label="Tibber token ophalen (alleen bij Tibber)" width="360px" default="https://developer.tibber.com/settings/access-token"/>
             <param field="BesteLadenHours" type="number" label="Beste laden venster uren (Tibber/Handmatig)" min="1" max="12" default="3" width="80px"/>
+        </group>
+        <group label="Energie hints (optioneel)">
+            <param field="Mode20" label="P1 / zon / Sessy hints" width="100px">
+                <options>
+                    <option label="Aan" value="Aan" default="true"/>
+                    <option label="Uit" value="Uit"/>
+                </options>
+            </param>
+            <param field="Mode21" label="P1 meter apparaatnaam of idx" width="220px" default="Power"/>
+            <param field="Mode22" label="Zonnepanelen apparaatnaam of idx" width="220px" default="Zonnepanelen"/>
+            <param field="Mode23" label="Sessy apparaatnaam of idx (leeg = uit)" width="220px" default="Sessy"/>
         </group>
     </params>
 </plugin>
@@ -77,6 +98,7 @@ import domoticz_icons
 import domoticz_devices
 import charger_logic
 import equalizer_logic
+import domoticz_energy_hints
 from easee_constants import ULTRA_DEBUG, PLUGIN_VERSION
 
 
@@ -332,6 +354,7 @@ class BasePlugin:
                 )
 
     def poll_all(self):
+        domoticz_energy_hints.clear_energy_context_cache(self)
         self.latest_chargers = {}
         self.latest_equalizers = {}
         self.site_fuse_cache = {}
@@ -383,13 +406,13 @@ class BasePlugin:
             if charge_hours >= 1 else f'{int(charge_hours * 60)} min'
         )
 
+        dag_overzicht = None
         if source == 'Geen':
             dag_overzicht = (
                 f'📅 Vandaag\n'
                 f'⚡ {day_kwh:.2f} kWh\n'
                 f'⏱️ Laaduren: {hours_txt}'
             )
-            domoticz_devices.update_core_text(self, 'Dag overzicht', dag_overzicht)
         elif costs_on:
             total_day_cost = round(sum(v.get('day_cost', 0.0) for v in self.latest_chargers.values()), 2)
             total_day_energy = round(sum(v.get('day_energy_cost', 0.0) for v in self.latest_chargers.values()), 2)
@@ -412,13 +435,19 @@ class BasePlugin:
                     f'Belasting: €{easee_helpers.euro_str(self, total_day_tax)}'
                 )
             else:
+                price_emoji = pricing_ui.price_status_emoji(self)
                 dag_overzicht = (
                     f'📅 Vandaag\n'
                     f'⚡ {day_kwh:.2f} kWh | €{easee_helpers.euro_str(self, total_day_cost)}\n'
                     f'⏱️ Laaduren: {hours_txt}\n'
                     f'💰 {pricing_ui.dagrapport_cheapest_line(self)}\n'
-                    f'🟡 Tarief: €{easee_helpers.euro_str(self, rate)}/kWh'
+                    f'{price_emoji} Tarief: €{easee_helpers.euro_str(self, rate)}/kWh'
                 )
+
+        energy_hint = domoticz_energy_hints.global_hints_text(self, any_charging=any_charging)
+        if dag_overzicht is not None and energy_hint:
+            dag_overzicht = f'{dag_overzicht}\n{energy_hint}'
+        if dag_overzicht is not None and easee_helpers.dag_overzicht_enabled(self):
             domoticz_devices.update_core_text(self, 'Dag overzicht', dag_overzicht)
 
         eq_part = f' | EQ: {eq_count}' if eq_count else ' | Geen EQ'
@@ -428,18 +457,19 @@ class BasePlugin:
             status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part + ' | Tibber actief'
         elif source == 'Handmatig' and costs_on:
             lb_part = ' | LB actief' if any_lb else ''
-            if easee_helpers.manual_tariff_type(self) == 'Dag/nacht':
-                rate = easee_helpers.manual_rate_at(self)
-                period = 'dal' if abs(rate - easee_helpers.manual_dal_rate(self)) < 0.0001 else 'normal'
-                status_msg = (
-                    ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
-                    + f' | Handmatig dag/nacht ({period}) €{easee_helpers.euro_str(self, rate)}/kWh'
-                )
-            else:
+            tariff_type = easee_helpers.manual_tariff_type(self)
+            if tariff_type == 'Vast':
                 rate = easee_helpers.manual_rate(self)
                 status_msg = (
                     ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
                     + f' | Handmatig €{easee_helpers.euro_str(self, rate)}/kWh'
+                )
+            else:
+                rate = easee_helpers.manual_rate_at(self)
+                period = easee_helpers.manual_tariff_period(self)
+                status_msg = (
+                    ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
+                    + f' | Handmatig {tariff_type.lower()} ({period}) €{easee_helpers.euro_str(self, rate)}/kWh'
                 )
         else:
             lb_part = ' | LB actief' if any_lb else ''
@@ -447,6 +477,8 @@ class BasePlugin:
 
         if self.icons_upload_required:
             status_msg = '⚠️ Upload Easee_icons_v2.zip (Instellingen) | ' + status_msg
+        if energy_hint:
+            status_msg = f'{status_msg} | {energy_hint}'
         domoticz_devices.update_core_text(self, 'Status', status_msg)
 
         domoticz_devices.update_core_sw(self, 'LoadBal', any_lb)
@@ -503,13 +535,25 @@ class BasePlugin:
         if prijsbron == 'Geen':
             easee_logging.info('plugin', 'Prijsbron Geen — kosten uitgeschakeld', 'startup')
         elif prijsbron == 'Handmatig':
-            if easee_helpers.manual_tariff_type(self) == 'Dag/nacht':
+            tariff_type = easee_helpers.manual_tariff_type(self)
+            if tariff_type == 'Dag/nacht':
                 easee_logging.info(
                     'plugin',
                     f'Prijsbron Handmatig — dag/nacht dal €{easee_helpers.manual_dal_rate(self):.2f}/kWh, '
                     f'normal €{easee_helpers.manual_normal_rate(self):.2f}/kWh '
                     f'({easee_helpers.manual_dal_start_hour(self):02d}:00–'
                     f'{easee_helpers.manual_dal_end_hour(self):02d}:00)',
+                    'startup',
+                )
+            elif tariff_type == 'Dal/piek':
+                easee_logging.info(
+                    'plugin',
+                    f'Prijsbron Handmatig — dal/piek dal €{easee_helpers.manual_dal_rate(self):.2f}, '
+                    f'normal €{easee_helpers.manual_normal_rate(self):.2f}, '
+                    f'piek €{easee_helpers.manual_piek_rate(self):.2f}/kWh '
+                    f'(piek {easee_helpers.manual_piek_start_hour(self):02d}:00–'
+                    f'{easee_helpers.manual_piek_end_hour(self):02d}:00, '
+                    f'weekend alles dal={"ja" if easee_helpers.manual_weekend_all_dal(self) else "nee"})',
                     'startup',
                 )
             else:
@@ -519,7 +563,14 @@ class BasePlugin:
                     f'Prijsbron Handmatig — vast tarief €{rate:.2f}/kWh',
                     'startup',
                 )
-        elif prijsbron == 'Tibber':
+        if domoticz_energy_hints.energy_hints_enabled(self):
+            names = domoticz_energy_hints.configured_device_names(self)
+            easee_logging.info(
+                'plugin',
+                f'Energie hints aan — P1="{names["p1"]}", zon="{names["solar"]}", sessy="{names["sessy"]}"',
+                'startup',
+            )
+        if prijsbron == 'Tibber':
             if easee_helpers.tibber_enabled(self):
                 if tibber_src == 'restored':
                     easee_logging.info(
