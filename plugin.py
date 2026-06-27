@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.6.0)" author="Richard Leunk" version="0.6.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.6.1)" author="Richard Leunk" version="0.6.1"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v1 (0.6.0)</h2><br/>
+        <h2>Easee Domoticz plugin v1 (0.6.1)</h2><br/>
         <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E/EnergyZero, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints en Equalizer. v1 ontwikkelingslijn.</p>
     </description>
     <params>
@@ -459,36 +459,13 @@ class BasePlugin:
             domoticz_devices.update_core_text(self, 'Dag overzicht', dag_overzicht)
 
         eq_part = f' | EQ: {eq_count}' if eq_count else ' | Geen EQ'
-        if source == 'Tibber' and costs_on:
-            tibber_stuurt = bool(not any_lb and any_charging)
-            lb_part = ' | LB actief' if any_lb else (' | Tibber stuurt' if tibber_stuurt else '')
-            status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part + ' | Tibber actief'
-        elif source == 'ENTSO-E' and costs_on:
-            lb_part = ' | LB actief' if any_lb else ''
-            rate = easee_helpers.safe_float(self, pricing_ui.current_price(self).get('total'), 0.0)
-            status_msg = (
-                ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
-                + f' | ENTSO-E spot €{easee_helpers.euro_str(self, rate)}/kWh'
-            )
-        elif source == 'Handmatig' and costs_on:
-            lb_part = ' | LB actief' if any_lb else ''
-            tariff_type = easee_helpers.manual_tariff_type(self)
-            if tariff_type == 'Vast':
-                rate = easee_helpers.manual_rate(self)
-                status_msg = (
-                    ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
-                    + f' | Handmatig €{easee_helpers.euro_str(self, rate)}/kWh'
-                )
-            else:
-                rate = easee_helpers.manual_rate_at(self)
-                period = easee_helpers.manual_tariff_period(self)
-                status_msg = (
-                    ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
-                    + f' | Handmatig {tariff_type.lower()} ({period}) €{easee_helpers.euro_str(self, rate)}/kWh'
-                )
-        else:
-            lb_part = ' | LB actief' if any_lb else ''
-            status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
+        lb_part = ' | LB actief' if any_lb else ''
+        if source == 'Tibber' and costs_on and not any_lb and any_charging:
+            lb_part = ' | Tibber stuurt'
+        prijsbron_part = pricing_ui.status_prijsbron_part(self)
+        status_msg = (
+            ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part + prijsbron_part
+        )
 
         if self.icons_upload_required:
             status_msg = '⚠️ Upload Easee_icons_v2.zip (Instellingen) | ' + status_msg

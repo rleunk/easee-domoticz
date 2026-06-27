@@ -86,6 +86,37 @@ def dagrapport_cheapest_line(plugin) -> str:
     return tibber_pricing.dagrapport_cheapest_line(plugin)
 
 
+def status_prijsbron_part(plugin) -> str:
+    """Leading ' | ...' fragment for Status tile — all five Prijsbron (Mode9) values."""
+    source = easee_helpers.pricing_source(plugin)
+    if source == 'Geen':
+        return ' | Prijsbron: Geen'
+    if source == 'Tibber':
+        if easee_helpers.pricing_enabled(plugin):
+            return ' | Tibber actief'
+        return ' | Prijsbron: Tibber'
+    if source == 'ENTSO-E':
+        if easee_helpers.pricing_enabled(plugin):
+            rate = easee_helpers.safe_float(plugin, current_price(plugin).get('total'), 0.0)
+            return f' | ENTSO-E spot €{easee_helpers.euro_str(plugin, rate)}/kWh'
+        return ' | Prijsbron: ENTSO-E'
+    if source == 'EnergyZero':
+        rate = easee_helpers.safe_float(plugin, current_price(plugin).get('total'), 0.0)
+        return f' | EnergyZero €{easee_helpers.euro_str(plugin, rate)}/kWh'
+    if source == 'Handmatig':
+        tariff_type = easee_helpers.manual_tariff_type(plugin)
+        if tariff_type == 'Vast':
+            rate = easee_helpers.manual_rate(plugin)
+            return f' | Handmatig €{easee_helpers.euro_str(plugin, rate)}/kWh'
+        rate = easee_helpers.manual_rate_at(plugin)
+        period = easee_helpers.manual_tariff_period(plugin)
+        return (
+            f' | Handmatig {tariff_type.lower()} ({period}) '
+            f'€{easee_helpers.euro_str(plugin, rate)}/kWh'
+        )
+    return ''
+
+
 def charging_hint(plugin, power_w, session_active=False, eq_lb_active=False, lb_active=None) -> str:
     hints = []
     if easee_helpers.tibber_enabled(plugin):

@@ -1,12 +1,12 @@
-# Easee Domoticz Plugin **v1** (0.6.0)
+# Easee Domoticz Plugin **v1** (0.6.1)
 
 **Easee-laadpalen, Equalizer (meterkast) en optionele energieprijs (Geen/Handmatig/Tibber/ENTSO-E/EnergyZero) in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-0.6.0-orange)
+![Version](https://img.shields.io/badge/version-0.6.1-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status (v1 branch):** **0.6.0** — Prijsbron Geen/Handmatig/Tibber/**ENTSO-E**/**EnergyZero**; handmatig **Vast**, **Dag/nacht** of **Dal/piek**; P1/zon/thuisbatterij-hints. **Niet** productie-stable. Zie [STABLE.md](STABLE.md) en [VERSIONING.md](VERSIONING.md).
+> **Status (v1 branch):** **0.6.1** — Prijsbron Geen/Handmatig/Tibber/**ENTSO-E**/**EnergyZero**; handmatig **Vast**, **Dag/nacht** of **Dal/piek**; P1/zon/thuisbatterij-hints. **Niet** productie-stable. Zie [STABLE.md](STABLE.md) en [VERSIONING.md](VERSIONING.md).
 >
 > **Legacy productie:** branch `main` / tag [**v10.11.6-stable**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6-stable) — aanbevolen voor live Domoticz. v10 blijft bevroren; geen hernummering naar 0.10.x.
 
@@ -21,7 +21,7 @@ git checkout v1   # v1 ontwikkeling; voor productie: git checkout v10.11.6-stabl
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (0.6.0)** → Easee-gebruikersnaam + wachtwoord → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (0.6.1)** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
 **Kosten-tegels:** kies **Prijsbron** (Mode9): **Tibber** (default, Mode7 token) · **ENTSO-E** (Mode24 token + toeslagen) · **EnergyZero** (geen token) · **Handmatig** (Vast Mode10, Dag/nacht of Dal/piek Mode11–19) · **Geen** (alleen kWh/laaduren, geen €). Hardware-groep **Energieprijs (optioneel)**. Optioneel **Energie hints** (P1 / Zonnepanelen / Thuisbatterij, Mode20–23 — elke merknaam in Domoticz werkt, bijv. Sessy, Powerwall). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
@@ -58,7 +58,7 @@ In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plug
 | **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
 
-Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v0.6.0][LEVEL]…`.
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v0.6.1][LEVEL]…`.
 
 ## v1 releases
 

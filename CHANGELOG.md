@@ -8,6 +8,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-06-27
+
+### Changed
+- **Status-tegel** — toont actieve prijsbron voor alle vijf Mode9-waarden (Geen, Handmatig, Tibber, ENTSO-E, EnergyZero); EnergyZero en Geen ontbraken eerder
+
 ## [0.6.0] — 2026-06-27
 
 ### Added
