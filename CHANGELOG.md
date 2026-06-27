@@ -8,6 +8,23 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-06-27
+
+### Added
+- **Handmatig dag/nacht-tarief** — subtype **Vast** | **Dag/nacht** (Mode11); dal/normal €/kWh (Mode12/13), dal start/eind uur (Mode14/15, default 23:00–07:00)
+- **`ManualPricingProvider`** — uurprijzen per kwartier/poll via `manual_rate_at()`; goedkoopste venster en dagregel voor dag/nacht
+- **State-migratie** `migrate_manual_tariff_fields()` — defaults voor Mode11–Mode15 bij upgrade
+
+### Changed
+- Hardware-groep hernoemd naar **Energieprijs (optioneel)**; **Prijsbron** staat eerst (Geen | Handmatig | Tibber)
+- Velden gegroepeerd per bron met labels *alleen bij …* — Domoticz toont alle velden; labels/documentatie geven aan welke van toepassing zijn
+- **Beste laden** bij Handmatig dag/nacht: sliding-window over handmatige uurcurve (niet alleen vast-tarieftekst)
+- Versie **0.3.0** in `easee_constants.py` en plugin-metadata
+
+### Notes
+- **Tibber-pad ongewijzigd** functioneel; **BesteLadenHours** veldnaam behouden
+- Na upgrade: controleer **Handmatig type** en dal/normal-tarieven indien je dag/nacht wilt gebruiken (default blijft **Vast** + Mode10)
+
 ## [0.2.1] — 2026-06-27
 
 ### Fixed

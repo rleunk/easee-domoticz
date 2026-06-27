@@ -223,31 +223,67 @@ Legacy: bestaande **Vermogen**-tegel wordt automatisch **Import** (zelfde Device
 | **Vandaag** kWh | observation 45 CumulativeActivePowerImport | Cumulatieve teller (Wh); Domoticz berekent dagtotaal sinds middernacht |
 | Fallback | `power_integrated_kwh` in `easee_state.json` | Als observation 45 ontbreekt: geïntegreerd vermogen over tijd |
 
-## Prijsbron (Mode9) — v0.2.0+
+## Prijsbron & energieprijs (Mode9) — v0.2.0+
 
-**Type**: Select  
-**Options**: Tibber (default) / Geen / Handmatig  
-**Omschrijving**: Bepaalt hoe laadkosten worden berekend en welke tegels worden bijgewerkt.
+Hardware-groep **Energieprijs (optioneel)** (sinds v0.3.0; voorheen *Tibber / Prijsbron*).
+
+Domoticz toont **alle** parameters tegelijk — velden kunnen niet dynamisch verborgen worden per dropdown-keuze. Gebruik onderstaande tabel om te zien welke velden bij welke **Prijsbron** horen.
 
 | Prijsbron | Tibber API | Kosten-tegels | Dag overzicht | Beste laden | Status per lader |
 |-----------|------------|---------------|---------------|-------------|------------------|
 | **Tibber** | Ja (Mode7 token) | Sessie/dag € | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster | Sessie/dag € + laadhints |
-| **Handmatig** | Nee | Sessie/dag € (vast tarief) | kWh, €, laaduren, vast tarief | *Vast tarief €X/kWh* | Sessie/dag € |
+| **Handmatig** | Nee | Sessie/dag € (vast of dag/nacht) | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster (dag/nacht) of vast tarief | Sessie/dag € |
 | **Geen** | Nee | Uit | kWh + laaduren alleen | Geen tegel | Geen € (alleen laadtoestand) |
 
-### Tarief €/kWh (Mode10) — alleen Handmatig
+### UI-volgorde (v0.3.0)
+
+1. **Prijsbron** (Mode9) — Geen | Handmatig | Tibber (default Tibber)
+2. **Handmatig type** (Mode11) — Vast | Dag/nacht (alleen bij Handmatig)
+3. Handmatig tariefvelden (Mode10, Mode12–15)
+4. Tibber token + link (Mode7, Mode8)
+5. **Beste laden venster uren** (BesteLadenHours) — Tibber en Handmatig
+
+### Prijsbron (Mode9)
+**Type**: Select  
+**Options**: Geen / Handmatig / Tibber (default **Tibber**)  
+**Omschrijving**: Bepaalt hoe laadkosten worden berekend en welke tegels worden bijgewerkt.
+
+### Handmatig type (Mode11) — alleen Handmatig
+**Type**: Select  
+**Options**: Vast (default) / Dag/nacht  
+**Omschrijving**: Subtype voor handmatige tarieven.
+
+| Type | Velden | Voorbeeld |
+|------|--------|-----------|
+| **Vast** | Mode10 | €0,25/kWh de hele dag |
+| **Dag/nacht** | Mode12 dal, Mode13 normal, Mode14 start, Mode15 eind | Dal 23:00–07:00 €0,22; overige uren €0,28 |
+
+**Niet in v0.3.0** (gepland 0.4.0+): dal/piek weekdag/weekend, enkel + belasting-component, CSV-import.
+
+### Vast tarief €/kWh (Mode10) — Handmatig, type Vast
 **Type**: Text  
 **Default**: `0.25`  
-**Omschrijving**: Vast stroomtarief in euro per kWh. Komma of punt (`0,25` of `0.25`). Gebruikt voor kostenberekening en weergave op *Dag overzicht* / *Beste laden*.
+**Omschrijving**: Vast stroomtarief in euro per kWh. Komma of punt (`0,25` of `0.25`).
 
-**Upgrade van 0.1.0:** bestaande installs met default **Tibber** + Mode7 blijven ongewijzigd.
+### Dal tarief €/kWh (Mode12) — Handmatig, type Dag/nacht
+**Default**: `0.22`
+
+### Normal tarief €/kWh (Mode13) — Handmatig, type Dag/nacht
+**Default**: `0.28`
+
+### Dal start / eind uur (Mode14 / Mode15) — Handmatig, type Dag/nacht
+**Type**: Text (heel getal 0–23)  
+**Default**: `23` / `7`  
+**Omschrijving**: Dalperiode; overnight ondersteund (bijv. 23→7 = 23:00 t/m 06:59).
+
+**Upgrade van 0.2.x:** bestaande installs met default **Tibber** + Mode7 blijven ongewijzigd. Handmatig blijft **Vast** (Mode10) tot je **Dag/nacht** kiest.
 
 ## Tibber Integration (Prijsbron = Tibber)
 
 ### Tibber Token (Mode7)
 **Type**: Password  
 **Default**: (empty)  
-**Omschrijving**: Je Tibber Personal Access Token — **vereist wanneer Prijsbron = Tibber**  
+**Omschrijving**: Je Tibber Personal Access Token — **alleen wanneer Prijsbron = Tibber**  
 **Zonder token (bij Prijsbron Tibber)**: *Dag overzicht* en sessie/dag-€ op laadpaal-**Status** worden niet bijgewerkt  
 
 **Token-backup (v10.9.30+)**  
@@ -263,22 +299,10 @@ Domoticz wist wachtwoordvelden soms bij *Opslaan* op de hardwarepagina (veld lij
 **Type**: Info link  
 **URL**: https://developer.tibber.com/settings/access-token  
 
-### Beste laden venster (Extra)
-**Type**: Text  
+### Beste laden venster (BesteLadenHours)
+**Type**: Number (1–12)  
 **Default**: `3`  
-**Omschrijving**: Aantal uren voor het goedkoopste laadvenster op de *Beste laden*-tegel (1–12). Gebruikt Tibber kwartierprijzen indien beschikbaar.
-
-**Instructies Mode8**:
-1. Ga naar link
-2. Log in met je Tibber account
-3. Klik "Create Personal Access Token"
-4. Kopieer token
-5. Plak in Mode7
-
-### Beste laden venster (Extra)
-**Type**: Text  
-**Default**: `3`  
-**Omschrijving**: Aantal uren voor het sliding-window van de *Beste laden*-tegel (1–12). Bij kwartierprijzen gebruikt de plugin 4× zoveel slots per uur.
+**Omschrijving**: Aantal uren voor het sliding-window van de *Beste laden*-tegel. Alleen bij **Prijsbron Tibber** (met token) of **Handmatig**. Bij Tibber kwartierprijzen indien beschikbaar; bij Handmatig dag/nacht over uurcurve.
 
 ## Device Naming
 

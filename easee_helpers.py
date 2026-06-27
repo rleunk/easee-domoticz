@@ -126,17 +126,80 @@ def pricing_source(plugin):
         return 'Tibber'
     return raw
 
+def _parse_tariff_float(plugin, raw, default):
+    if not raw:
+        return default
+    try:
+        return max(0.0, float(str(raw).replace(',', '.')))
+    except Exception:
+        return default
+
+def _parse_hour_param(plugin, raw, default):
+    if not raw:
+        return default
+    try:
+        hour = int(float(str(raw).strip()))
+    except Exception:
+        return default
+    if hour < 0 or hour > 23:
+        return default
+    return hour
+
+def manual_tariff_type(plugin):
+    """Handmatig subtype (Mode11): Vast (default) or Dag/nacht."""
+    raw = (domoticz_runtime.Parameters.get('Mode11', '') or '').strip()
+    if raw == 'Dag/nacht':
+        return 'Dag/nacht'
+    return 'Vast'
+
 def manual_rate(plugin):
     """Vast tarief €/kWh (Mode10, default 0.25)."""
     from easee_constants import MANUAL_RATE_DEFAULT
     raw = (domoticz_runtime.Parameters.get('Mode10', '') or '').strip()
-    if not raw:
-        return MANUAL_RATE_DEFAULT
-    try:
-        rate = float(str(raw).replace(',', '.'))
-    except Exception:
-        return MANUAL_RATE_DEFAULT
-    return max(0.0, rate)
+    return _parse_tariff_float(plugin, raw, MANUAL_RATE_DEFAULT)
+
+def manual_dal_rate(plugin):
+    """Dal tarief €/kWh (Mode12, default 0.22)."""
+    from easee_constants import MANUAL_DAL_RATE_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode12', '') or '').strip()
+    return _parse_tariff_float(plugin, raw, MANUAL_DAL_RATE_DEFAULT)
+
+def manual_normal_rate(plugin):
+    """Normal tarief €/kWh (Mode13, default 0.28)."""
+    from easee_constants import MANUAL_NORMAL_RATE_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode13', '') or '').strip()
+    return _parse_tariff_float(plugin, raw, MANUAL_NORMAL_RATE_DEFAULT)
+
+def manual_dal_start_hour(plugin):
+    """Dal start uur 0–23 (Mode14, default 23)."""
+    from easee_constants import MANUAL_DAL_START_HOUR_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode14', '') or '').strip()
+    return _parse_hour_param(plugin, raw, MANUAL_DAL_START_HOUR_DEFAULT)
+
+def manual_dal_end_hour(plugin):
+    """Dal eind uur 0–23 (Mode15, default 7)."""
+    from easee_constants import MANUAL_DAL_END_HOUR_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode15', '') or '').strip()
+    return _parse_hour_param(plugin, raw, MANUAL_DAL_END_HOUR_DEFAULT)
+
+def is_dal_period(dt, start_hour, end_hour):
+    """True when datetime falls in dal window (supports overnight, e.g. 23–07)."""
+    hour = dt.hour
+    if start_hour == end_hour:
+        return False
+    if start_hour < end_hour:
+        return start_hour <= hour < end_hour
+    return hour >= start_hour or hour < end_hour
+
+def manual_rate_at(plugin, dt=None):
+    """Current €/kWh for Handmatig (Vast or Dag/nacht at given datetime)."""
+    if dt is None:
+        dt = datetime.now().astimezone()
+    if manual_tariff_type(plugin) == 'Vast':
+        return manual_rate(plugin)
+    if is_dal_period(dt, manual_dal_start_hour(plugin), manual_dal_end_hour(plugin)):
+        return manual_dal_rate(plugin)
+    return manual_normal_rate(plugin)
 
 def pricing_enabled(plugin):
     """True when kWh×tarief kosten actief zijn (Handmatig of Tibber met token)."""

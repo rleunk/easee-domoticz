@@ -174,6 +174,32 @@ def charger_state(plugin, cid):
     _normalize_charger_session_fields(st)
     return st
 
+def migrate_manual_tariff_fields(plugin):
+    """Ensure manual tariff defaults after upgrade to 0.3.0 (Mode11–Mode15)."""
+    from easee_constants import MANUAL_TARIFF_STATE_KEY
+    key = 'manual_tariff_version'
+    target = '0.3.0-dag-nacht'
+    if plugin.state.get(key) == target:
+        return
+    backup = plugin.state.setdefault(MANUAL_TARIFF_STATE_KEY, {})
+    if easee_helpers.manual_tariff_type(plugin) == 'Vast':
+        backup.setdefault('type', 'Vast')
+        backup.setdefault('vast_rate', easee_helpers.manual_rate(plugin))
+    else:
+        backup.update({
+            'type': 'Dag/nacht',
+            'dal_rate': easee_helpers.manual_dal_rate(plugin),
+            'normal_rate': easee_helpers.manual_normal_rate(plugin),
+            'dal_start': easee_helpers.manual_dal_start_hour(plugin),
+            'dal_end': easee_helpers.manual_dal_end_hour(plugin),
+        })
+    plugin.state[key] = target
+    easee_logging.info(
+        'easee_state',
+        f'Handmatig tarief gemigreerd naar {PLUGIN_VERSION} (defaults Mode11–Mode15)',
+        'migration',
+    )
+
 def migrate_charging_timer_state(plugin):
     """One-time normalize charging_active / session flags (v10.11.2 timer fix upgrade)."""
     key = 'charging_timer_version'

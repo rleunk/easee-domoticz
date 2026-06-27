@@ -14,6 +14,12 @@ def current_price(plugin) -> dict:
 def price_status_emoji(plugin) -> str:
     source = easee_helpers.pricing_source(plugin)
     if source == 'Handmatig':
+        if easee_helpers.manual_tariff_type(plugin) == 'Dag/nacht':
+            now_rate = easee_helpers.manual_rate_at(plugin)
+            dal = easee_helpers.manual_dal_rate(plugin)
+            if abs(now_rate - dal) < 0.0001:
+                return '🟢'
+            return '🟡'
         return '🟡'
     if source == 'Geen' or not easee_helpers.pricing_enabled(plugin):
         return '⚪'
@@ -23,6 +29,11 @@ def price_status_emoji(plugin) -> str:
 def price_emoji(plugin, price_total, cache=None):
     source = easee_helpers.pricing_source(plugin)
     if source == 'Handmatig':
+        if easee_helpers.manual_tariff_type(plugin) == 'Vast':
+            return '🟡'
+        dal = easee_helpers.manual_dal_rate(plugin)
+        if abs(easee_helpers.safe_float(plugin, price_total, 0.0) - dal) < 0.0001:
+            return '🟢'
         return '🟡'
     if source == 'Geen':
         return '⚪'
@@ -36,8 +47,8 @@ def cheapest_window_text(plugin, hours=None) -> str:
     if source == 'Geen':
         return '—'
     if source == 'Handmatig':
-        rate = easee_helpers.manual_rate(plugin)
-        return f'Vast tarief €{rate:.2f}/kWh'
+        provider = get_provider(plugin)
+        return provider.cheapest_window_text(hours=hours)
     return tibber_pricing.cheapest_window_text(plugin, hours=hours)
 
 
@@ -46,8 +57,8 @@ def dagrapport_cheapest_line(plugin) -> str:
     if source == 'Geen':
         return ''
     if source == 'Handmatig':
-        rate = easee_helpers.manual_rate(plugin)
-        return f'Vast tarief €{rate:.2f}/kWh'
+        provider = get_provider(plugin)
+        return provider.dagrapport_cheapest_line()
     return tibber_pricing.dagrapport_cheapest_line(plugin)
 
 

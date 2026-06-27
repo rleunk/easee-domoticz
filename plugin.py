@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.2.1)" author="Richard Leunk" version="0.2.1"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.3.0)" author="Richard Leunk" version="0.3.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v1 (0.2.1)</h2><br/>
-        <p>Easee laadpaal integratie met compacte UI (11 tegels), samengevoegde Dag overzicht / Laden / Status-tegels, Prijsbron Tibber/Handmatig/Geen, laadhints en Equalizer. v1 ontwikkelingslijn.</p>
+        <h2>Easee Domoticz plugin v1 (0.3.0)</h2><br/>
+        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber, handmatig vast of dag/nacht-tarief, laadhints en Equalizer. v1 ontwikkelingslijn.</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
@@ -29,18 +29,28 @@
             <param field="Address" label="Naam Equalizer" width="220px" default=""/>
             <param field="IP" label="Equalizer ID (handmatig, optioneel)" width="260px" default=""/>
         </group>
-        <group label="Tibber / Prijsbron (optioneel)">
-            <param field="Mode7" label="Tibber Personal Access Token" width="360px" password="true" default=""/>
-            <param field="Mode8" label="Tibber token ophalen" width="360px" default="https://developer.tibber.com/settings/access-token"/>
-            <param field="BesteLadenHours" type="number" label="Beste laden venster (uren)" min="1" max="12" default="3" width="80px"/>
+        <group label="Energieprijs (optioneel)">
             <param field="Mode9" label="Prijsbron" width="160px">
                 <options>
-                    <option label="Tibber" value="Tibber" default="true"/>
                     <option label="Geen" value="Geen"/>
                     <option label="Handmatig" value="Handmatig"/>
+                    <option label="Tibber" value="Tibber" default="true"/>
                 </options>
             </param>
-            <param field="Mode10" label="Tarief €/kWh (Handmatig)" width="100px" default="0.25"/>
+            <param field="Mode11" label="Handmatig type (alleen bij Handmatig)" width="160px">
+                <options>
+                    <option label="Vast" value="Vast" default="true"/>
+                    <option label="Dag/nacht" value="Dag/nacht"/>
+                </options>
+            </param>
+            <param field="Mode10" label="Vast tarief €/kWh (Handmatig — Vast)" width="100px" default="0.25"/>
+            <param field="Mode12" label="Dal tarief €/kWh (Handmatig — Dag/nacht)" width="100px" default="0.22"/>
+            <param field="Mode13" label="Normal tarief €/kWh (Handmatig — Dag/nacht)" width="100px" default="0.28"/>
+            <param field="Mode14" label="Dal start uur 0–23 (Handmatig — Dag/nacht)" width="80px" default="23"/>
+            <param field="Mode15" label="Dal eind uur 0–23 (Handmatig — Dag/nacht)" width="80px" default="7"/>
+            <param field="Mode7" label="Tibber token (alleen bij Tibber)" width="360px" password="true" default=""/>
+            <param field="Mode8" label="Tibber token ophalen (alleen bij Tibber)" width="360px" default="https://developer.tibber.com/settings/access-token"/>
+            <param field="BesteLadenHours" type="number" label="Beste laden venster uren (Tibber/Handmatig)" min="1" max="12" default="3" width="80px"/>
         </group>
     </params>
 </plugin>
@@ -418,11 +428,19 @@ class BasePlugin:
             status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part + ' | Tibber actief'
         elif source == 'Handmatig' and costs_on:
             lb_part = ' | LB actief' if any_lb else ''
-            rate = easee_helpers.manual_rate(self)
-            status_msg = (
-                ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
-                + f' | Handmatig €{easee_helpers.euro_str(self, rate)}/kWh'
-            )
+            if easee_helpers.manual_tariff_type(self) == 'Dag/nacht':
+                rate = easee_helpers.manual_rate_at(self)
+                period = 'dal' if abs(rate - easee_helpers.manual_dal_rate(self)) < 0.0001 else 'normal'
+                status_msg = (
+                    ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
+                    + f' | Handmatig dag/nacht ({period}) €{easee_helpers.euro_str(self, rate)}/kWh'
+                )
+            else:
+                rate = easee_helpers.manual_rate(self)
+                status_msg = (
+                    ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
+                    + f' | Handmatig €{easee_helpers.euro_str(self, rate)}/kWh'
+                )
         else:
             lb_part = ' | LB actief' if any_lb else ''
             status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
@@ -455,6 +473,7 @@ class BasePlugin:
         easee_state.migrate_cost_tracking(self)
         easee_state.migrate_session_baseline(self)
         easee_state.migrate_charging_timer_state(self)
+        easee_state.migrate_manual_tariff_fields(self)
         tibber_src = easee_state.sync_tibber_token_backup(self)
         beste_src = easee_state.sync_besteladen_hours_backup(self)
         try:
@@ -484,12 +503,22 @@ class BasePlugin:
         if prijsbron == 'Geen':
             easee_logging.info('plugin', 'Prijsbron Geen — kosten uitgeschakeld', 'startup')
         elif prijsbron == 'Handmatig':
-            rate = easee_helpers.manual_rate(self)
-            easee_logging.info(
-                'plugin',
-                f'Prijsbron Handmatig — vast tarief €{rate:.2f}/kWh',
-                'startup',
-            )
+            if easee_helpers.manual_tariff_type(self) == 'Dag/nacht':
+                easee_logging.info(
+                    'plugin',
+                    f'Prijsbron Handmatig — dag/nacht dal €{easee_helpers.manual_dal_rate(self):.2f}/kWh, '
+                    f'normal €{easee_helpers.manual_normal_rate(self):.2f}/kWh '
+                    f'({easee_helpers.manual_dal_start_hour(self):02d}:00–'
+                    f'{easee_helpers.manual_dal_end_hour(self):02d}:00)',
+                    'startup',
+                )
+            else:
+                rate = easee_helpers.manual_rate(self)
+                easee_logging.info(
+                    'plugin',
+                    f'Prijsbron Handmatig — vast tarief €{rate:.2f}/kWh',
+                    'startup',
+                )
         elif prijsbron == 'Tibber':
             if easee_helpers.tibber_enabled(self):
                 if tibber_src == 'restored':
