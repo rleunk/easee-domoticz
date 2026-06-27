@@ -8,6 +8,15 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-06-27
+
+### Changed
+- **Thuisbatterij-labels** — hardware- en hintteksten generiek i.p.v. Sessy-specifiek (Mode20/23, statusregel 🔋 Thuisbatterij actief, startup-log `thuisbatterij=`)
+- **Mode23 default blijft `Sessy`** — backward compat; wijzig naar jouw Domoticz-apparaatnaam (Powerwall, etc.)
+
+### Notes
+- Geen parameter-hernoeming (Mode23 binding ongewijzigd); alleen UI-labels en gebruikerszichtbare teksten
+
 ## [0.4.0] — 2026-06-27
 
 ### Added

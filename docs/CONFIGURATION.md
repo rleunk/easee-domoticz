@@ -242,7 +242,7 @@ Domoticz toont **alle** parameters tegelijk — velden kunnen niet dynamisch ver
 3. Handmatig tariefvelden (Mode10, Mode12–19)
 4. Tibber token + link (Mode7, Mode8)
 5. **Beste laden venster uren** (BesteLadenHours) — Tibber en Handmatig
-6. **Energie hints** (Mode20–23) — P1 / zon / Sessy (optioneel, default aan)
+6. **Energie hints** (Mode20–23) — P1 / Zonnepanelen / Thuisbatterij (optioneel, default aan)
 
 ### Prijsbron (Mode9)
 **Type**: Select  
@@ -287,21 +287,21 @@ Domoticz toont **alle** parameters tegelijk — velden kunnen niet dynamisch ver
 
 **Upgrade van 0.3.x:** bestaande installs met default **Tibber** + Mode7 blijven ongewijzigd. Handmatig blijft **Vast** (Mode10) tot je een ander type kiest. Nieuwe velden Mode16–23 verschijnen onderaan; defaults zijn veilig.
 
-## Energie hints (optioneel, v0.4.0)
+## Energie hints (optioneel, v0.4.0+)
 
-Leest bestaande Domoticz-apparaten — **geen laadsturing**, alleen context op **Status** en **Dag overzicht** (en laadpaal-Status bij laden).
+Leest bestaande Domoticz-apparaten — **geen laadsturing**, alleen context op **Status** en **Dag overzicht** (en laadpaal-Status bij laden). **Mode23** accepteert elke thuisbatterij-merknaam of idx (Sessy, Powerwall, Tesla, etc.).
 
 | Parameter | Default | Omschrijving |
 |-----------|---------|--------------|
-| **Mode20** P1/zon/Sessy hints | Aan | Uit = geen energie-hints |
+| **Mode20** P1/zon/thuisbatterij hints | Aan | Uit = geen energie-hints |
 | **Mode21** P1 meter naam/idx | `Power` | Energy/P1 `sValue`: importW;…;exportW;… — fallback zoekt Energy-tegel met "power" |
 | **Mode22** Zonnepanelen naam/idx | `Zonnepanelen` | Vermogen W = eerste veld in sValue |
-| **Mode23** Sessy naam/idx | `Sessy` | Leeg = Sessy-hint uit; \|W\| > drempel → 🔋 Sessy actief |
+| **Mode23** Thuisbatterij naam/idx | `Sessy` | Leeg = batterij-hint uit; \|W\| > drempel → 🔋 Thuisbatterij actief. Default `Sessy` voor backward compat — wijzig naar jouw Domoticz-apparaatnaam |
 
 **Hints (Nederlands):**
 - ☀️ Zonne-overschot — export > drempel of zon W > import
 - ↩️ Teruglevering — P1 export > 0 (niet tegelijk met Zonne-overschot)
-- 🔋 Sessy actief — \|Sessy W\| > 100 W
+- 🔋 Thuisbatterij actief — \|batterij W\| > 100 W
 - 📥 Hoog netverbruik — import ≥ 3000 W tijdens laden
 
 Ongeldige namen → hint overgeslagen, DEBUG-log (Mode6 = Debug).

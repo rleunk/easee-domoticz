@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.4.0)" author="Richard Leunk" version="0.4.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (0.4.1)" author="Richard Leunk" version="0.4.1"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v1 (0.4.0)</h2><br/>
-        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/Sessy-hints en Equalizer. v1 ontwikkelingslijn.</p>
+        <h2>Easee Domoticz plugin v1 (0.4.1)</h2><br/>
+        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints en Equalizer. v1 ontwikkelingslijn.</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
@@ -63,7 +63,7 @@
             <param field="BesteLadenHours" type="number" label="Beste laden venster uren (Tibber/Handmatig)" min="1" max="12" default="3" width="80px"/>
         </group>
         <group label="Energie hints (optioneel)">
-            <param field="Mode20" label="P1 / zon / Sessy hints" width="100px">
+            <param field="Mode20" label="P1 / zon / thuisbatterij hints" width="100px">
                 <options>
                     <option label="Aan" value="Aan" default="true"/>
                     <option label="Uit" value="Uit"/>
@@ -71,7 +71,7 @@
             </param>
             <param field="Mode21" label="P1 meter apparaatnaam of idx" width="220px" default="Power"/>
             <param field="Mode22" label="Zonnepanelen apparaatnaam of idx" width="220px" default="Zonnepanelen"/>
-            <param field="Mode23" label="Sessy apparaatnaam of idx (leeg = uit)" width="220px" default="Sessy"/>
+            <param field="Mode23" label="Thuisbatterij apparaatnaam of idx (leeg = uit)" width="220px" default="Sessy"/>
         </group>
     </params>
 </plugin>
@@ -567,7 +567,7 @@ class BasePlugin:
             names = domoticz_energy_hints.configured_device_names(self)
             easee_logging.info(
                 'plugin',
-                f'Energie hints aan — P1="{names["p1"]}", zon="{names["solar"]}", sessy="{names["sessy"]}"',
+                f'Energie hints aan — P1="{names["p1"]}", zon="{names["solar"]}", thuisbatterij="{names["thuisbatterij"]}"',
                 'startup',
             )
         if prijsbron == 'Tibber':

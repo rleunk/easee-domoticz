@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Read optional P1 / solar / Sessy Domoticz devices for context hints (no control)."""
+"""Read optional P1 / solar / home battery Domoticz devices for context hints (no control)."""
 
 import domoticz_runtime
 import easee_helpers
@@ -21,7 +21,7 @@ def configured_device_names(plugin):
     return {
         'p1': _param_name('Mode21', P1_DEFAULT_NAME),
         'solar': _param_name('Mode22', SOLAR_DEFAULT_NAME),
-        'sessy': sessy_raw or '(uit)',
+        'thuisbatterij': sessy_raw or '(uit)',
     }
 
 
@@ -156,7 +156,7 @@ def _find_p1_fallback(plugin):
 
 
 def read_energy_context(plugin):
-    """Read P1 / solar / Sessy watts from Domoticz Devices (cached per poll)."""
+    """Read P1 / solar / home battery watts from Domoticz Devices (cached per poll)."""
     cache_key = '_energy_hint_context'
     cached = getattr(plugin, cache_key, None)
     if cached is not None:
@@ -194,7 +194,7 @@ def read_energy_context(plugin):
 
     sessy_raw = (domoticz_runtime.Parameters.get('Mode23', '') or '').strip()
     if sessy_raw:
-        unit, dev = _resolve_device(plugin, sessy_raw, 'Sessy')
+        unit, dev = _resolve_device(plugin, sessy_raw, 'Thuisbatterij')
         if dev is not None:
             ctx['sessy_w'] = _parse_energy_svalue(getattr(dev, 'sValue', ''))
             ctx['sessy_ok'] = True
@@ -233,7 +233,7 @@ def _collect_hints(plugin, ctx, charging=False):
         hints.append('↩️ Teruglevering')
 
     if ctx.get('sessy_ok') and abs(sessy_w) > SESSY_THRESHOLD_W:
-        hints.append('🔋 Sessy actief')
+        hints.append('🔋 Thuisbatterij actief')
 
     if charging and ctx.get('p1_ok') and import_w >= HIGH_IMPORT_THRESHOLD_W:
         hints.append('📥 Hoog netverbruik')
