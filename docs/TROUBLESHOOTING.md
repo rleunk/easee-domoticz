@@ -1,6 +1,7 @@
 # Troubleshooting Gids
 
-> **Huidige versie:** v10.11.6 (stable: **v10.11.6-stable**) · Volledige installatie: [INSTALL.md](../INSTALL.md) · Stable-tags: [STABLE.md](../STABLE.md)
+> **Versies:** **v1** branch — **0.6.1** (pre-release) · Legacy **v10.11.6-stable** op `main`  
+> Installatie: [INSTALL.md](../INSTALL.md) · Stable-tags: [STABLE.md](../STABLE.md) · Configuratie: [CONFIGURATION.md](CONFIGURATION.md)
 
 ## Veelvoorkomende Problemen
 
@@ -148,9 +149,67 @@ Zie ook [ROADMAP — Equalizer stap 2+](ROADMAP.md#equalizer--stap-1-afgerond-vs
 
 Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 
-### Tibber / kosten-tegels
+### Prijsbron & kosten (v1 — branch `v1`)
 
-- **Tibber-token (Mode7) is verplicht** voor kosten — zonder token worden *Dag overzicht*, *Beste laden* en sessie/dag-€ op laadpaal-**Status** niet bijgewerkt. Bij start zie je `Tibber uit (Mode7 leeg)`.
+De plugin ondersteunt vijf **Prijsbron**-waarden (Mode9): **Geen**, **Handmatig**, **Tibber**, **ENTSO-E**, **EnergyZero**. Kosten-tegels (*Dag overzicht*, *Beste laden*, sessie/dag-€ op laadpaal-**Status**) zijn alleen actief bij een prijsbron die kosten berekent.
+
+| Prijsbron | Vereist | Startup-log (INFO) |
+|-----------|---------|-------------------|
+| **Geen** | — | `Prijsbron Geen — kosten uitgeschakeld` |
+| **Handmatig** | Mode10–19 naar type | Handmatig tarief zichtbaar |
+| **Tibber** | Mode7 token | `Tibber actief — kosten na eerste poll` |
+| **ENTSO-E** | Mode24 token + toeslagen | `ENTSO-E actief — kosten na eerste poll` |
+| **EnergyZero** | Niets (geen token) | `EnergyZero actief — kosten na eerste poll` |
+
+**Globale Status-tegel (v0.6.1+)** toont de actieve prijsbron, bijv. `Tibber €0,23/kWh` of `EnergyZero €0,17/kWh`.
+
+#### Kosten blijven €0,00
+
+1. Controleer **Prijsbron (Mode9)** — staat die op **Geen**?
+2. Bij **Tibber**: Mode7 ingevuld? Log: `Tibber uit (Mode7 leeg)` → token invullen of backup in `easee_state.json`
+3. Bij **ENTSO-E**: Mode24 ingevuld en token goedgekeurd? Zie [ENTSO-E unauthorized](#entso-e-unauthorized--geen-token-menu)
+4. Bij **Handmatig**: Mode10 (Vast) of Mode11–19 (Dag/nacht / Dal-piek) correct?
+5. Bij **EnergyZero**: geen token nodig — wacht 1–2 polls na start; controleer internettoegang naar `api.energyzero.nl`
+6. Herstart hardware-item; controleer **Dag overzicht** en laadpaal-**Status** (niet legacy *Kosten (Sessie/Dag)*)
+
+#### ENTSO-E unauthorized / geen token-menu
+
+**Symptoom:** Log `ENTSO-E API mislukt (401/403)` of *Unauthorized*; in ENTSO-E-portaal geen menu *Web API Security Token*
+
+**Oorzaak:** ENTSO-E verleent API-toegang pas na handmatige goedkeuring per e-mail.
+
+**Oplossing:**
+1. Registreer op [transparency.entsoe.eu](https://transparency.entsoe.eu/)
+2. E-mail **transparency@entsoe.eu** — onderwerp **`Restful API access`**, vermeld je account-e-mail
+3. Wacht ~**3 werkdagen** op goedkeuringsmail
+4. Daarna: **My Account** → **Web API Security Token** → kopieer naar **Mode24**
+5. Vul toeslagen in (Mode25–27) naar jouw contract
+
+Zolang goedkeuring uitstaat: schakel tijdelijk naar **Tibber**, **EnergyZero** of **Handmatig**.
+
+#### EnergyZero — geen prijzen / lege tegel
+
+**Symptoom:** *Dag overzicht* toont geen tarief; log geen `EnergyZero actief`
+
+**Oplossing:**
+1. **Prijsbron** = **EnergyZero** (Mode9) — geen Mode24/Mode7 nodig
+2. Controleer dat de server `https://api.energyzero.nl` kan bereiken (firewall/DNS)
+3. Morgen-prijzen verschijnen meestal rond ~14:00–15:00 CET — tot die tijd alleen vandaag
+4. Prijzen zijn **indicatief** (incl. BTW via API) — kunnen afwijken van jouw leverancier
+
+#### Geen *Beste laden*-tegel
+
+Verschijnt alleen bij **Tibber** (met token), **Handmatig**, **ENTSO-E** of **EnergyZero**. Bij **Geen** ontbreekt deze tegel — verwacht gedrag.
+
+#### Token verloren na hardware-opslaan (Tibber / ENTSO-E)
+
+Domoticz wist wachtwoordvelden soms bij *Opslaan*. Sinds v0.5.0/v10.9.30 bewaart de plugin backups in `easee_state.json` (`tibber_token_backup`, `entsoe_token_backup`). Log: *token hersteld uit state-backup*. Zonder backup: opnieuw invullen in Mode7 resp. Mode24.
+
+### Tibber / kosten-tegels (legacy v10 — alleen Tibber)
+
+Op branch **`main`** / tag **v10.11.6-stable** geldt alleen Tibber voor kosten. Op branch **`v1`** zie [Prijsbron & kosten](#prijsbron--kosten-v1--branch-v1) hierboven.
+
+- **Tibber-token (Mode7) is verplicht** voor kosten op legacy v10 — zonder token worden *Dag overzicht*, *Beste laden* en sessie/dag-€ op laadpaal-**Status** niet bijgewerkt. Bij start zie je `Tibber uit (Mode7 leeg)`.
 - **Token verloren na hardware-opslag?** Sinds v10.9.30 bewaart de plugin een backup in `easee_state.json`. Na `git pull` + herstart zou Tibber automatisch actief moeten blijven (log: *token hersteld uit state-backup*). Zonder backup: token opnieuw invullen in Mode7.
 - Met Tibber: token op [developer.tibber.com](https://developer.tibber.com/settings/access-token). Bij start: `Tibber actief — kosten-tegels worden bijgewerkt na eerste poll`.
 - Kosten *0 €* terwijl Tibber actief is: herstart hardware-item; controleer of laadpaal-**Status** en **Dag overzicht** bestaan (niet de verouderde *Kosten (Sessie/Dag)* / *Kosten & Samenvatting*).
@@ -163,7 +222,7 @@ Sinds **v10.11** staat sessie/vandaag/totaal kWh op de **Laden**-tegel (Descript
 
 | Niveau | Wanneer | Voorbeelden |
 |--------|---------|-------------|
-| INFO | Altijd (Mode6 = Normal) | Plugin gestart, Tibber actief/uit, `image_ids: 13/13`, state migratie |
+| INFO | Altijd (Mode6 = Normal) | Plugin gestart, prijsbron actief/uit (Tibber/ENTSO-E/EnergyZero/Geen), `image_ids: 13/13`, state migratie |
 | DEBUG | Alleen Mode6 = *Debug* | `Poll voltooid`, kosten-tegel bijgewerkt, siteStructure, verwachte optionele API 403/404/405/429 |
 | WARNING | Altijd | Kosten-tegel niet gevonden, HTTP 429 op verplichte endpoints, iconen ontbreken |
 | ERROR | Altijd | Login mislukt, zip laden mislukt |
@@ -200,4 +259,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Configuratie**: [CONFIGURATION.md](CONFIGURATION.md)
 
-Bij een issue: pluginversie **v10.11.6-stable** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden/tokens).
+Bij een issue: pluginversie **v0.6.1** (v1) of **v10.11.6-stable** (legacy), Domoticz-versie, **Prijsbron (Mode9)** indien van toepassing, en logregels `[Easee v…]` (geen wachtwoorden/tokens).

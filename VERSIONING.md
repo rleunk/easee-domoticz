@@ -17,13 +17,14 @@ De v10-lijn blijft beschikbaar voor bestaande installaties. Wijzigingen aan v10 
 | Item | Waarde |
 |------|--------|
 | **Branch** | `v1` |
+| **Huidige versie** | **0.6.1** (pre-release) |
 | **Startversie** | `0.1.0` (scaffold; gedrag gelijk aan v10.11.6-stable) |
 | **0.x** | Ontwikkeling — pre-release, niet productie-stable |
 | **1.0.0** | Eerste publieke stable release (gepland) |
 
 ### Semver v1
 
-- **0.x.y** — ontwikkeling op branch `v1`; pre-releases (`v0.1.0`, `v0.2.0`, …)
+- **0.x.y** — ontwikkeling op branch `v1`; pre-releases (`v0.1.0` t/m `v0.6.1`, …)
 - **1.0.0** — eerste stable v1 voor productie
 - **Geen** hernummering van v10 naar 0.10.x — v10 en v1 zijn parallel
 

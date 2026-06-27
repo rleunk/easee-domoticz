@@ -6,12 +6,26 @@ Kort overzicht — **v1** ontwikkeling op branch `v1`; legacy **v10.11.6-stable*
 
 | Versie | Status | Inhoud |
 |--------|--------|--------|
-| **0.1.0** | Scaffold (afgerond) | Versienummering, docs, `pricing/` skeleton, Prijsbron-parameter (stub Geen/Handmatig) |
-| **0.2.0** | Afgerond | Prijsbron Geen (kosten uit) en Handmatig (vast tarief); Tibber via `pricing/` refactor |
-| **0.3.0** | Afgerond | Handmatig Dag/nacht |
-| **0.4.1** | Afgerond (huidig) | Thuisbatterij-labels (generiek i.p.v. Sessy) |
-| **0.4.0** | Afgerond | Handmatig Dal/piek; P1/zon/thuisbatterij hints |
+| **0.6.1** | **Huidig pre-release** | Status-tegel toont actieve prijsbron (Geen/Handmatig/Tibber/ENTSO-E/EnergyZero) |
+| **0.6.0** | Afgerond | Prijsbron **EnergyZero** — publieke NL uurprijzen, geen token |
+| **0.5.0** | Afgerond | Prijsbron **ENTSO-E** — day-ahead spot NL + toeslagen (Mode24–27) |
+| **0.4.1** | Afgerond | Thuisbatterij-labels (generiek i.p.v. Sessy) |
+| **0.4.0** | Afgerond | Handmatig Dal/piek; P1/zon/thuisbatterij hints (Mode20–23) |
+| **0.3.0** | Afgerond | Handmatig Dag/nacht; Energieprijs UI-reorder |
+| **0.2.1** | Afgerond | BesteLadenHours fix; parameter-volgorde |
+| **0.2.0** | Afgerond | Prijsbron Geen/Handmatig/Tibber; `pricing/` end-to-end |
+| **0.1.0** | Afgerond | Scaffold; Tibber-only runtime gelijk aan v10.11.6-stable |
 | **1.0.0** | Gepland | Eerste publieke stable v1 |
+
+### Prijsbronnen (v0.6.1)
+
+| Prijsbron | Mode | Token / config |
+|-----------|------|----------------|
+| Geen | Mode9 | — |
+| Handmatig | Mode9 + Mode10–19 | Vast / Dag-nacht / Dal-piek |
+| Tibber | Mode9 + Mode7 | Tibber PAT |
+| ENTSO-E | Mode9 + Mode24–27 | ENTSO-E API token (na e-mail goedkeuring) |
+| EnergyZero | Mode9 | Geen token (`api.energyzero.nl`) |
 
 ## Afgerond — v10.11.x stable (legacy, 2026-06)
 
@@ -38,13 +52,15 @@ Kort overzicht — **v1** ontwikkeling op branch `v1`; legacy **v10.11.6-stable*
 
 ## Gepland / onderzoek
 
+- **1.0.0-stable** — v1 promotie na user-testing (alle prijsbronnen)
+- **ENTSO-E token goedkeuring** — wachten op API-toegang na e-mail naar transparency@entsoe.eu (~3 werkdagen)
 - **Equalizer fase-detail** — verdere verfijning LB-weergave
 - **Domoticz Energy-tegel icoon-beperking** — documentatie/alternatief
 - **API rate limit** — adaptieve poll-interval bij 429
 
 ## Testomgeving Richard
 
-2× Charge Lite, 1× Equalizer, Tibber (Mode7) — **11 actieve tegels** (zie [CONFIGURATION.md](CONFIGURATION.md#verwachte-tegels-referentie)). v10.11.0 tegel-merge getest en goedgekeurd (24-06-2026); v10.10.8-stable sessie-kWh fixes getest (20-06-2026); v10.11.6 Dag overzicht-migratie fix getest (26-06-2026).
+2× Charge Lite, 1× Equalizer, Tibber (Mode7) — **11 actieve tegels** (zie [CONFIGURATION.md](CONFIGURATION.md#verwachte-tegels-referentie)). v10.11.0 tegel-merge getest en goedgekeurd (24-06-2026); v10.10.8-stable sessie-kWh fixes getest (20-06-2026); v10.11.6 Dag overzicht-migratie fix getest (26-06-2026). v1 **0.6.0** EnergyZero getest; **0.5.0** ENTSO-E wacht op token-goedkeuring.
 
 ## Oudere milestones (samenvatting)
 

@@ -337,9 +337,16 @@ ENTSO-E levert **day-ahead spotprijzen** voor Nederland — geen exacte energief
 **Omschrijving**: Gratis security token van ENTSO-E Transparency Platform — **alleen bij Prijsbron ENTSO-E**
 
 **Token aanvragen:**
+
 1. Registreer op [transparency.entsoe.eu](https://transparency.entsoe.eu/)
-2. Ga naar *Account settings* → *Web API Security Token*
-3. Kopieer token naar Mode24
+2. Stuur een e-mail naar **transparency@entsoe.eu**
+   - **Onderwerp:** `Restful API access`
+   - **Inhoud:** vermeld je ENTSO-E-account e-mailadres en dat je RESTful API-toegang wilt voor day-ahead prijzen
+3. Wacht op goedkeuring (~3 werkdagen) — je ontvangt een bevestigingsmail
+4. Log in op [transparency.entsoe.eu](https://transparency.entsoe.eu/) → **My Account** → **Web API Security Token**
+5. Kopieer het token naar **Mode24** in Domoticz
+
+> **Geen token-menu zichtbaar?** Het menu *Web API Security Token* verschijnt pas **na** goedkeuring van je e-mail. Zonder goedkeuring krijg je bij API-calls *Unauthorized* — zie [TROUBLESHOOTING.md](TROUBLESHOOTING.md#entso-e-unauthorized--geen-token-menu).
 
 **Token-backup**  
 Zelfde patroon als Tibber: kopie in `easee_state.json` (`entsoe_token_backup`). Domoticz wist wachtwoordvelden soms bij opslaan — backup herstelt automatisch. Token wordt **nooit** gelogd.

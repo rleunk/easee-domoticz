@@ -15,9 +15,22 @@ De canonieke installatiehandleiding staat in **[INSTALL.md](../INSTALL.md)** (Ne
 
 Selecteer bij **Setup → Hardware → Python plugins**:
 
-**Easee Domoticz plugin v10.11.6**
+| Lijn | Pluginnaam in Domoticz | Branch / tag |
+|------|------------------------|--------------|
+| **v1 ontwikkeling** | **Easee Domoticz plugin v1 (0.6.1)** | `v1` |
+| **Legacy productie** | **Easee Domoticz plugin v10.11.6** | `main` / `v10.11.6-stable` |
 
-### Updates (stable)
+### Updates v1 (ontwikkeling)
+
+```bash
+cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+git fetch origin
+git checkout v1
+git pull origin v1
+sudo systemctl restart domoticz
+```
+
+### Updates legacy (stable)
 
 ```bash
 cd /home/root/domoticz/plugins/Easee-Domoticz-plugin

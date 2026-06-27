@@ -126,9 +126,9 @@ Laat naamvelden leeg voor de Easee-appnaam. De **hardwarenaam** in Domoticz (bij
 ## Devices
 
 ### Core
-- **Easee - Status** — online, Equalizer-aantal, load balancing, Tibber
+- **Easee - Status** — online, Equalizer-aantal, load balancing, actieve prijsbron (Mode9)
 - **Totaal Laden**, **Totaal kWh**, **LoadBal**
-- **Beste laden**, **Dag overzicht** (met Tibber, Mode7)
+- **Beste laden**, **Dag overzicht** (bij actieve prijsbron: Tibber, ENTSO-E, EnergyZero of Handmatig)
 
 ### Per Equalizer
 - **[Naam] - Status** — verbinding, LB (fase-detail), limieten, stroom L1/L2/L3, spanning
@@ -136,7 +136,7 @@ Laat naamvelden leeg voor de Easee-appnaam. De **hardwarenaam** in Domoticz (bij
 
 ### Per laadpaal
 - **[Naam] - Laden** — vermogen + grafiek; sessie/vandaag/totaal kWh in Description (v10.11+)
-- **[Naam] - Status** — laadtoestand, timer, laadhint + sessie/dag € bij Tibber (v10.11+)
+- **[Naam] - Status** — laadtoestand, timer, laadhint + sessie/dag € bij actieve prijsbron (v10.11+)
 
 **Verouderd sinds v10.11** (verborgen na upgrade, `Used=0`): *Kosten & Samenvatting*, *Dagrapport*, *Totaal & Sessie*, *Kosten (Sessie/Dag)*.
 
@@ -216,7 +216,7 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 ## Changelog & release
 
 - Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md) — v1 start bij 0.1.0; legacy v10 hieronder in changelog
-- **v1 (branch `v1`):** [v0.4.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.1) — Thuisbatterij-labels (pre-release) · [v0.4.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.0) · [v0.3.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.3.0) · [v0.2.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.1) · [v0.2.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.0) · [v0.1.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.1.0)
+- **v1 (branch `v1`):** [v0.6.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.6.1) · [v0.6.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.6.0) · [v0.5.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.5.0) · [v0.4.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.1) · [v0.4.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.0) · [v0.3.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.3.0) · [v0.2.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.1) · [v0.2.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.0) · [v0.1.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.1.0)
 - **Legacy stable:** **[v10.11.6-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6-stable)** — productie op `main`
 - Vorige stable: [v10.11.4-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.4) (rollback)
 - Oudere rollback: [v10.11.2-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.2)
@@ -250,7 +250,7 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 | Geen iconen | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — custom iconen |
 | Login mislukt | Credentials + rate limit (5–10 min wachten) |
 | Geen Equalizer | Debug aan; handmatig ID in IP-veld |
-| Kosten 0 € / geen kosten-tegels | **Tibber-token (Mode7)** + **Prijsbron Tibber**; tile verwijderen + hardware herstarten |
+| Kosten 0 € / geen kosten-tegels | Controleer **Prijsbron (Mode9)** + bijbehorend token (Tibber Mode7 / ENTSO-E Mode24); tile verwijderen + hardware herstarten |
 | 429 rate limit in log | Poll interval (Mode1) op **60 sec** — [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md#http-429-rate-limit-easee-api)
 | Verkeerd icoon op tegel | Upgrade naar v10.9.18+; zip opnieuw uploaden |
 
@@ -260,7 +260,7 @@ Sinds v10.6.0: 13 Python-modules naast `Easee_icons_v2.zip`. Overzicht: [docs/RE
 
 ## Problemen melden
 
-[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v0.4.1** (v1) of **v10.11.6-stable** (legacy), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v0.6.1** (v1) of **v10.11.6-stable** (legacy), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
 
 ## Support & credits
 
@@ -272,4 +272,4 @@ MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Versie 0.1.0** (v1 branch) — Richard Leunk · Legacy productie: **v10.11.6-stable** op `main`
+**Versie 0.6.1** (v1 branch) — Richard Leunk · Legacy productie: **v10.11.6-stable** op `main`
