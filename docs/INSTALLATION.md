@@ -7,7 +7,7 @@ De canonieke installatiehandleiding staat in **[INSTALL.md](../INSTALL.md)** (Ne
 | Onderwerp | Document |
 |-----------|----------|
 | Installatie & upgrade | [INSTALL.md](../INSTALL.md) |
-| Git-authenticatie (SSH/PAT) | [GIT_SETUP.md](GIT_SETUP.md) |
+| Git-authenticatie (HTTPS/PAT, SSH optioneel) | [GIT_SETUP.md](GIT_SETUP.md) |
 | Configuratie | [CONFIGURATION.md](CONFIGURATION.md) |
 | Probleemoplossing | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 | 1.0.0 readiness | [RELEASE_1.0.0.md](RELEASE_1.0.0.md) |

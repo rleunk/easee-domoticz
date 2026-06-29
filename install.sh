@@ -10,13 +10,16 @@ PLUGIN_DIR="/home/root/domoticz/plugins/Easee-Domoticz-plugin"
 REPO_SSH="git@github.com:rleunk/easee-domoticz.git"
 REPO_HTTPS="https://github.com/rleunk/easee-domoticz.git"
 RESTART=true
+USE_SSH=false
 
 for arg in "$@"; do
     case "$arg" in
         --no-restart) RESTART=false ;;
+        --ssh) USE_SSH=true ;;
         -h|--help)
-            echo "Usage: $0 [--no-restart]"
+            echo "Usage: $0 [--no-restart] [--ssh]"
             echo "  Installs or updates the Easee Domoticz plugin via git."
+            echo "  Default clone URL: HTTPS. Use --ssh if GitHub SSH keys are configured."
             exit 0
             ;;
     esac
@@ -38,10 +41,13 @@ elif [[ -d "$PLUGIN_DIR" ]]; then
     exit 1
 else
     echo "==> Cloning repository into $PLUGIN_DIR"
-    if ssh -o BatchMode=yes -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+    if $USE_SSH && ssh -o BatchMode=yes -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
         git clone "$REPO_SSH" "$PLUGIN_DIR"
+    elif $USE_SSH; then
+        echo "ERROR: --ssh requested but GitHub SSH authentication failed."
+        echo "       Configure SSH (see docs/GIT_SETUP.md) or omit --ssh to clone via HTTPS."
+        exit 1
     else
-        echo "SSH not configured — trying HTTPS (you may need username + PAT)."
         git clone "$REPO_HTTPS" "$PLUGIN_DIR"
     fi
 fi

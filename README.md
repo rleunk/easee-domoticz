@@ -14,9 +14,8 @@
 
 ```bash
 cd /home/USER/domoticz/plugins
-git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
+git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
-git fetch origin
 git checkout v1   # v1 ontwikkeling; voor productie: git checkout v10.11.6-stable
 sudo systemctl restart domoticz
 ```

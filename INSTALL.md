@@ -21,9 +21,8 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 ```bash
 cd /home/USER/domoticz/plugins
-git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
+git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
-git fetch origin
 git checkout v1
 sudo systemctl restart domoticz
 ```
@@ -123,29 +122,28 @@ Deze methode maakt toekomstige updates eenvoudig via `git pull`.
 
 ### Stap 1: Git-authenticatie instellen
 
-Kies één optie:
+- **HTTPS (standaard):** clone werkt direct; bij inlogprompt een Personal Access Token gebruiken — zie [docs/GIT_SETUP.md](docs/GIT_SETUP.md)
+- **SSH (optioneel):** als je GitHub SSH-sleutels hebt geconfigureerd — zie [docs/GIT_SETUP.md](docs/GIT_SETUP.md) → *Optioneel: SSH*
 
-- **SSH (aanbevolen):** volg [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — Optie A
-- **HTTPS + PAT:** volg [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — Optie B
-
-> Heb je eerder een foutmelding gehad zoals *"Password authentication is not supported"*? Dan moet je een SSH-sleutel of Personal Access Token gebruiken — niet je GitHub-wachtwoord.
+> Heb je eerder een foutmelding gehad zoals *"Password authentication is not supported"*? Gebruik dan een Personal Access Token (HTTPS) of SSH-sleutel — niet je GitHub-wachtwoord.
 
 ### Stap 2: Plugin clonen
 
 ```bash
 cd /home/USER/domoticz/plugins
-git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
+git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
-git fetch origin
 git checkout v1              # v1 ontwikkeling (0.6.1)
 # of: git checkout v10.11.6-stable   # legacy productie
 ```
 
-Of met HTTPS (na PAT-instelling):
+**Optioneel: SSH** (als je GitHub SSH-sleutels hebt geconfigureerd):
 
 ```bash
 cd /home/USER/domoticz/plugins
-git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
+git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd Easee-Domoticz-plugin
+git checkout v1
 ```
 
 > **Belangrijk:** de mapnaam `Easee-Domoticz-plugin` aan het einde van het commando zorgt dat `plugin.py` direct op de juiste plek staat.
@@ -188,7 +186,9 @@ Als `install.sh` al in de repo staat (of je hebt het gekopieerd):
 ```bash
 # Eerst eenmalig clonen (als de map nog niet bestaat)
 cd /home/USER/domoticz/plugins
-git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
+git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd Easee-Domoticz-plugin
+git checkout v1
 
 # Daarna voor updates
 cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
