@@ -73,7 +73,7 @@ If you already have P1 meter, solar, or home battery devices in Domoticz, you ca
 ### Quick install
 
 ```bash
-cd /path/to/domoticz/plugins
+cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
 git checkout v1

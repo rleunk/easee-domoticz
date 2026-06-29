@@ -60,7 +60,7 @@ Verwachte melding: *"Hi rleunk! You've successfully authenticated..."*
 ### Stap 6: Repository clonen
 
 ```bash
-cd /home/root/domoticz/plugins
+cd /home/USER/domoticz/plugins
 git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
 ```
 
@@ -69,7 +69,7 @@ git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
 ### Updates ophalen
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git pull
 sudo systemctl restart domoticz
 ```
@@ -93,7 +93,7 @@ Gebruik dit als je geen SSH wilt instellen.
 ### Stap 2: Repository clonen
 
 ```bash
-cd /home/root/domoticz/plugins
+cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 ```
 
@@ -110,7 +110,7 @@ Zodat je niet bij elke `git pull` opnieuw het token hoeft in te voeren:
 
 ```bash
 git config --global credential.helper store
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git pull
 # Voer eenmalig username + PAT in; daarna wordt het opgeslagen in ~/.git-credentials
 ```
@@ -120,7 +120,7 @@ git pull
 ### Updates ophalen
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git pull
 sudo systemctl restart domoticz
 ```
@@ -134,14 +134,14 @@ sudo systemctl restart domoticz
 | `Password authentication is not supported` | HTTPS met GitHub-wachtwoord | Gebruik PAT (Optie B) of SSH (Optie A) |
 | `Permission denied (publickey)` | SSH-sleutel niet op GitHub | Voeg publieke sleutel toe (Optie A, stap 3) |
 | `Repository not found` | Verkeerde URL of geen toegang | Controleer repo-URL; bij HTTPS: PAT met `repo`-scope; bij SSH: sleutel op GitHub |
-| `fatal: not a git repository` | Verkeerde map | `cd` naar `/home/root/domoticz/plugins/Easee-Domoticz-plugin` |
+| `fatal: not a git repository` | Verkeerde map | `cd` naar `/home/USER/domoticz/plugins/Easee-Domoticz-plugin` |
 
 ---
 
 ## Mapstructuur na clone
 
 ```
-/home/root/domoticz/plugins/Easee-Domoticz-plugin/
+/home/USER/domoticz/plugins/Easee-Domoticz-plugin/
 ├── plugin.py              ← Domoticz entrypoint
 ├── easee_constants.py
 ├── easee_logging.py

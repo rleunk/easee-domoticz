@@ -24,7 +24,7 @@ Selecteer bij **Setup → Hardware → Python plugins**:
 ### Updates v1 (ontwikkeling)
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch origin
 git checkout v1
 git pull origin v1
@@ -34,7 +34,7 @@ sudo systemctl restart domoticz
 ### Updates legacy (stable)
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v10.11.6-stable
 sudo systemctl restart domoticz

@@ -45,7 +45,7 @@ Use this as the gate for **1.0.0-stable** — adjust duration if you want a long
 Do **not** run until soak sign-off:
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch origin
 git checkout v1
 git pull origin v1

@@ -13,7 +13,7 @@
 ## TL;DR — installeren in 2 minuten
 
 ```bash
-cd /home/root/domoticz/plugins
+cd /home/USER/domoticz/plugins
 git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
 git fetch origin
@@ -201,7 +201,7 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 ## Updates & upgrade
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v1              # v1 ontwikkeling
 # of voor productie: git checkout v10.11.6-stable

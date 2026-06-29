@@ -19,7 +19,7 @@ Legacy v10 gebruikt **annotated git-tags** met suffix `-stable` voor aanbevolen 
 ### Installeren legacy stable
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v10.11.6-stable
 sudo systemctl restart domoticz
@@ -61,7 +61,7 @@ Code blijft **0.6.1** tot soak is afgerond en de tag wordt gezet — geen premat
 ### Installeren v1 (ontwikkeling)
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch origin
 git checkout v1
 sudo systemctl restart domoticz

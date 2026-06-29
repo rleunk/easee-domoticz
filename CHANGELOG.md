@@ -556,7 +556,7 @@ Getest met 2× Charge Lite, 1× Equalizer, Tibber. Zie [README.md](README.md).
 
 ### Opgelost
 - **Icon refresh bug (v10.9.2 regressie)** — dubbele `refresh_images_dict()` overschreef de werkende implementatie; aanroep zonder `plugin_globals` deed niets, waardoor `Images` niet ververst werd en `image_ids` leeg bleef.
-- **Zip auto-load op Linux** — `Image().Create()` probeert nu het volledige pad (`/home/root/domoticz/plugins/.../Easee_icons_v2.zip`) naast relatieve bestandsnaam.
+- **Zip auto-load op Linux** — `Image().Create()` probeert nu het volledige pad (`/home/USER/domoticz/plugins/.../Easee_icons_v2.zip`) naast relatieve bestandsnaam.
 - **Icon lookup** — fuzzy match op alle `Images`-keys (case-insensitive, suffix-match) naast vaste kandidaten (`EaseeCharger`, `EaseeCloudAutoDiscoveryV1000EaseeCharger`, …).
 - **Timing** — custom iconen worden vóór `initial_sync()` geladen zodat nieuwe tegels meteen `Image=` bij `Device.Create()` krijgen.
 - **Update verificatie** — na `Device.Update(Image=…)` wordt gecontroleerd of `Image` daadwerkelijk gewijzigd is; `UpdateProperties` eerst (Domoticz 2024.4+).
