@@ -2,6 +2,8 @@
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
+> **Paden:** Vervang `USER` door je Linux-gebruikersnaam (bijv. `root`, `pi`, `domoticz`). De pluginmap is `/home/USER/domoticz/plugins/Easee-Domoticz-plugin/`.
+
 ---
 
 ## Overzicht
@@ -10,7 +12,7 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 |------|--------|
 | Plugin | Easee Domoticz plugin v10.11.6 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
-| Doelmap op server | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/` |
+| Doelmap op server | `/home/USER/domoticz/plugins/Easee-Domoticz-plugin/` |
 | Hoofdbestand | `plugin.py` (+ 12 Python-modules = 13 `.py`-bestanden sinds v10.6.0) |
 | Custom iconen | `Easee_icons_v2.zip` (automatisch geladen bij pluginstart; zie [handmatige upload](#custom-iconen-handmatig-uploaden) als dat mislukt) |
 | GitHub-repo | https://github.com/rleunk/easee-domoticz |
@@ -62,23 +64,24 @@ Deze methode maakt toekomstige updates eenvoudig via `git pull`.
 
 Kies één optie:
 
-- **SSH (aanbevolen):** volg [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — Optie A
-- **HTTPS + PAT:** volg [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — Optie B
+- **HTTPS (standaard):** volg [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — clone werkt direct voor publieke repos
+- **HTTPS + PAT:** volg [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — als Git om inloggegevens vraagt
+- **SSH (optioneel):** volg [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — als je GitHub SSH-sleutels hebt geconfigureerd
 
-> Heb je eerder een foutmelding gehad zoals *"Password authentication is not supported"*? Dan moet je een SSH-sleutel of Personal Access Token gebruiken — niet je GitHub-wachtwoord.
+> Heb je eerder een foutmelding gehad zoals *"Password authentication is not supported"*? Gebruik dan een Personal Access Token (PAT) — niet je GitHub-wachtwoord.
 
 ### Stap 2: Plugin clonen
 
 ```bash
-cd /home/root/domoticz/plugins
-git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins
+git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 ```
 
-Of met HTTPS (na PAT-instelling):
+**Optioneel: SSH** (als je GitHub SSH-sleutels hebt geconfigureerd):
 
 ```bash
-cd /home/root/domoticz/plugins
-git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins
+git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
 ```
 
 > **Belangrijk:** de mapnaam `Easee-Domoticz-plugin` aan het einde van het commando zorgt dat `plugin.py` direct op de juiste plek staat.
@@ -86,9 +89,9 @@ git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 ### Stap 3: Controleren
 
 ```bash
-ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
-ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/*.py
-ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip
+ls -la /home/USER/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
+ls -la /home/USER/domoticz/plugins/Easee-Domoticz-plugin/*.py
+ls -la /home/USER/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip
 ```
 
 Je moet **13 `.py`-bestanden** (inclusief `plugin.py`) en de icon-zip zien met een recente datum. De icon-zip wordt bij pluginstart automatisch geladen; bestaande tegels krijgen de Easee-iconen na een herstart van het hardware-item (of Domoticz). Als automatisch laden mislukt, upload de zip eenmalig handmatig — zie [Custom iconen handmatig uploaden](#custom-iconen-handmatig-uploaden).
@@ -119,11 +122,11 @@ Als `install.sh` al in de repo staat (of je hebt het gekopieerd):
 
 ```bash
 # Eerst eenmalig clonen (als de map nog niet bestaat)
-cd /home/root/domoticz/plugins
-git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins
+git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 
 # Daarna voor updates
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 chmod +x install.sh
 sudo ./install.sh
 ```
@@ -160,7 +163,7 @@ Als iconen na start niet verschijnen, upload `Easee_icons_v2.zip` eenmalig handm
 ### Stap 3: Map aanmaken (indien nodig)
 
 ```bash
-mkdir -p /home/root/domoticz/plugins/Easee-Domoticz-plugin
+mkdir -p /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 ```
 
 ### Stap 4: Bestand plaatsen
@@ -275,7 +278,7 @@ Zet Debug alleen aan bij problemen — het log wordt dan veel langer.
 ### Via git (aanbevolen)
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git pull
 sudo systemctl restart domoticz
 ```
@@ -381,7 +384,7 @@ Geen schone installatie nodig. Vervang `plugin.py`, herstart. Als een kosten-til
 ## Updates in de toekomst
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git pull
 sudo systemctl restart domoticz
 ```
@@ -422,7 +425,7 @@ De plugin laadt `Easee_icons_v2.zip` automatisch uit de pluginmap. Sommige Domot
 3. Ga naar **Setup** → **Instellingen** → **Meer opties** → **Aangepaste pictogrammen**
 4. Klik **Upload** en kies `Easee_icons_v2.zip` uit de pluginmap:
    ```
-   /home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip
+   /home/USER/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip
    ```
 5. Herstart het Easee hardware-item (of Domoticz)
 
@@ -444,7 +447,7 @@ Na een succesvolle upload herkent de plugin de iconen als *Custom icons uit Domo
 
 ### Plugin verschijnt niet in hardwarelijst
 
-1. Controleer pad: `ls /home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py`
+1. Controleer pad: `ls /home/USER/domoticz/plugins/Easee-Domoticz-plugin/plugin.py`
 2. Herstart Domoticz: `sudo systemctl restart domoticz`
 3. Bekijk log: `sudo journalctl -u domoticz -f`
 
@@ -482,9 +485,9 @@ De plugin wacht bij opstarten tot Domoticz de Devices-lijst heeft geladen (minim
 
 | Bestand | Pad |
 |---------|-----|
-| Plugin | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py` |
-| Custom iconen | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip` |
-| State (runtime) | `/home/root/domoticz/plugins/Easee-Domoticz-plugin/easee_state.json` |
+| Plugin | `/home/USER/domoticz/plugins/Easee-Domoticz-plugin/plugin.py` |
+| Custom iconen | `/home/USER/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip` |
+| State (runtime) | `/home/USER/domoticz/plugins/Easee-Domoticz-plugin/easee_state.json` |
 | Domoticz-log | `sudo journalctl -u domoticz` |
 
 ---
@@ -492,5 +495,5 @@ De plugin wacht bij opstarten tot Domoticz de Devices-lijst heeft geladen (minim
 ## Meer hulp
 
 - [README.md](README.md) — overzicht en snelle start
-- [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — git-authenticatie (SSH / PAT)
+- [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — git-authenticatie (HTTPS/PAT, SSH optioneel)
 - [CHANGELOG.md](CHANGELOG.md) — versiegeschiedenis

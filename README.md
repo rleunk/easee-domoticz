@@ -11,8 +11,8 @@
 ## TL;DR — installeren in 2 minuten
 
 ```bash
-cd /home/root/domoticz/plugins
-git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins
+git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 sudo systemctl restart domoticz
 ```
 
@@ -161,7 +161,7 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 ## Updates & upgrade
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v10.11.6-stable   # aanbevolen stable; of: git pull op main
 sudo systemctl restart domoticz

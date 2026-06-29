@@ -17,7 +17,7 @@ Dit project gebruikt **annotated git-tags** met het suffix `-stable` voor aanbev
 ## Installeren of upgraden naar stable
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v10.11.6-stable
 sudo systemctl restart domoticz
@@ -32,7 +32,7 @@ Of blijf op `main` volgen (`git pull`) — `main` wijst doorgaans naar dezelfde 
 Alleen als v10.11.6 problemen geeft:
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v10.11.5-stable
 sudo systemctl restart domoticz
@@ -45,7 +45,7 @@ De tag `v10.11.5-stable` blijft op GitHub staan; er wordt niets verwijderd.
 Alleen als v10.11.5/v10.11.6 problemen geeft:
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v10.11.4-stable
 sudo systemctl restart domoticz
@@ -58,7 +58,7 @@ De tag `v10.11.4-stable` blijft op GitHub staan; er wordt niets verwijderd.
 Alleen als v10.11.4/v10.11.5/v10.11.6 problemen geeft en je terug wilt naar de vorige stable (zelfde 11-tegel layout, zonder Dag overzicht-migratie):
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v10.11.2-stable
 sudo systemctl restart domoticz
@@ -71,7 +71,7 @@ De tag `v10.11.2-stable` blijft op GitHub staan; er wordt niets verwijderd.
 Alleen als v10.11.x problemen geeft en je terug wilt naar de v10.10.x stable (16-tegel layout):
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v10.10.8-stable
 sudo systemctl restart domoticz
@@ -84,7 +84,7 @@ De tag `v10.10.8-stable` blijft op GitHub staan; er wordt niets verwijderd.
 Alleen als v10.10.x óók problemen geeft:
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v10.9.32-stable
 sudo systemctl restart domoticz

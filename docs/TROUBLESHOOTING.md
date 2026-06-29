@@ -11,7 +11,7 @@
 **Oplossing**:
 
 ```bash
-ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
+ls -la /home/USER/domoticz/plugins/Easee-Domoticz-plugin/plugin.py
 sudo apt install -y python3-requests
 sudo systemctl restart domoticz
 sudo journalctl -u domoticz -f | grep Easee
@@ -190,7 +190,7 @@ Laat Debug op *Normal* staan tenzij je troubleshoott.
 
 ```bash
 sudo systemctl stop domoticz
-rm /home/root/domoticz/plugins/Easee-Domoticz-plugin/easee_state.json
+rm /home/USER/domoticz/plugins/Easee-Domoticz-plugin/easee_state.json
 sudo systemctl start domoticz
 ```
 

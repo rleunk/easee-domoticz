@@ -7,7 +7,7 @@ De canonieke installatiehandleiding staat in **[INSTALL.md](../INSTALL.md)** (Ne
 | Onderwerp | Document |
 |-----------|----------|
 | Installatie & upgrade | [INSTALL.md](../INSTALL.md) |
-| Git-authenticatie (SSH/PAT) | [GIT_SETUP.md](GIT_SETUP.md) |
+| Git-authenticatie (HTTPS/PAT, SSH optioneel) | [GIT_SETUP.md](GIT_SETUP.md) |
 | Configuratie | [CONFIGURATION.md](CONFIGURATION.md) |
 | Probleemoplossing | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 
@@ -20,7 +20,7 @@ Selecteer bij **Setup → Hardware → Python plugins**:
 ### Updates (stable)
 
 ```bash
-cd /home/root/domoticz/plugins/Easee-Domoticz-plugin
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout v10.11.6-stable
 sudo systemctl restart domoticz
