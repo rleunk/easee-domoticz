@@ -73,6 +73,7 @@ Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestr
 | **0.2.1** | BesteLadenHours fix; parameter-volgorde |
 | **0.2.0** | Prijsbron Geen/Handmatig/Tibber; `pricing/` end-to-end |
 | **0.1.0** | Scaffold; Tibber-only runtime gelijk aan v10.11.6-stable |
+| **1.0.0-stable** | Gepland (na soak test) — [checklist](docs/RELEASE_1.0.0.md) |
 
 ## Logniveaus (kort)
 

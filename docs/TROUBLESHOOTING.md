@@ -138,7 +138,7 @@ Sinds v10.9.13 blokkeert 429 de hardware-thread niet meer. Sinds v10.9.17 blokke
 
 **Oplossing**: geen actie nodig. Zet Debug uit (Mode6 = *Normal*) als je deze regels niet wilt zien. **HTTP 429 op verplichte endpoints** (bijv. `/chargers/{id}/state`) blijft WARNING — verhoog dan het poll-interval.
 
-Zie ook [ROADMAP — Equalizer stap 2+](ROADMAP.md#equalizer--stap-1-afgerond-vs-stap-2-beperkt-door-account-api).
+Zie ook [ROADMAP — Gepland / onderzoek](ROADMAP.md#gepland--onderzoek) (Equalizer fase-detail, API rate limit).
 
 ### Geen Equalizer gevonden
 
