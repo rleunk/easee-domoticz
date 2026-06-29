@@ -9,7 +9,7 @@ Hi all,
 We've been building a **Domoticz hardware plugin** for **Easee** EV chargers and **Equalizers** together and wanted to share an overview for anyone looking for native Domoticz integration (no MQTT bridge).
 
 **GitHub:** https://github.com/rleunk/easee-domoticz  
-**Status:** Active development on branch `v1` (currently v0.6.1 pre-release). Legacy v10 remains on `main` for existing installs.
+**Status:** Active development on branch `v1` (**v0.6.1** pre-release). Legacy v10 remains on `main` (**v10.11.6-stable**) for existing installs. Preparing **1.0.0-stable** — see [docs/RELEASE_1.0.0.md](https://github.com/rleunk/easee-domoticz/blob/v1/docs/RELEASE_1.0.0.md).
 
 ---
 
@@ -47,8 +47,8 @@ In hardware settings, group **"Energy price (optional)"**:
 | **None** | kWh and time only |
 | **Manual** | Fixed, day/night, or off-peak/peak tariffs |
 | **Tibber** | Dynamic prices via API token (quarter-hourly when available) |
-| **ENTSO-E** | Day-ahead spot + configurable markup, tax, VAT |
-| **EnergyZero** | Public hourly prices — no token needed |
+| **ENTSO-E** | Day-ahead spot + configurable markup, tax, VAT — **tested** (e-mail approval + token backup) |
+| **EnergyZero** | Public hourly prices — no token needed — **tested** |
 
 The **Status** tile shows the active source (e.g. `EnergyZero €0.17/kWh`).
 
@@ -82,4 +82,4 @@ git checkout v1
 
 ---
 
-We're still working toward a **1.0.0 stable** release. Feedback from other Domoticz + Easee users is very welcome — issues and suggestions on GitHub.
+We're working toward **1.0.0-stable** (all five price sources verified on a live Domoticz setup). Feedback from other Domoticz + Easee users is very welcome — issues and suggestions on GitHub.

@@ -44,7 +44,19 @@ Of blijf op `main` volgen (`git pull`) — `main` wijst naar v10.11.6-stable.
 | **0.1.0** | Pre-release | Scaffold; Tibber-only runtime gelijk aan v10.11.6-stable |
 | **1.0.0** | Gepland | Eerste publieke stable v1 |
 
-**Niet productie-stable** — gebruik voor testen en feedback. Prijsbronnen: Geen, Handmatig, Tibber, ENTSO-E, EnergyZero.
+**Niet productie-stable** — gebruik voor testen en feedback. Prijsbronnen: Geen, Handmatig, Tibber, ENTSO-E, EnergyZero — **alle getest** op Richard-setup (ENTSO-E bevestigd 2026-06-29).
+
+### Klaar voor 1.0.0-stable?
+
+Volledige checklist, soak-testcriteria en tag-procedure: **[docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md)**.
+
+| Gereed | Open |
+|--------|------|
+| ✅ Alle prijsbronnen werkend | ⏳ Soak test op productie-Domoticz |
+| ✅ Docs gesynchroniseerd (0.6.1) | ⏳ Tag `1.0.0-stable` + GitHub release |
+| ✅ Forumdraft ([FORUM_POST.md](docs/FORUM_POST.md)) | ⏳ Forum post bij go-live |
+
+Code blijft **0.6.1** tot soak is afgerond en de tag wordt gezet — geen premature version bump.
 
 ### Installeren v1 (ontwikkeling)
 

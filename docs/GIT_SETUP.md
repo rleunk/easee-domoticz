@@ -152,9 +152,20 @@ sudo systemctl restart domoticz
 ├── domoticz_runtime.py
 ├── domoticz_devices.py
 ├── domoticz_icons.py
+├── domoticz_energy_hints.py   ← v0.4.0+ (P1/zon/thuisbatterij hints)
 ├── charger_logic.py
 ├── equalizer_logic.py
 ├── tibber_pricing.py
+├── pricing/                   ← v0.2.0+ (prijsbronnen)
+│   ├── __init__.py
+│   ├── base.py
+│   ├── none.py
+│   ├── manual.py
+│   ├── tibber.py
+│   ├── entsoe.py
+│   ├── energyzero.py
+│   ├── factory.py
+│   └── ui.py
 ├── Easee_icons_v2.zip     ← custom iconen (automatisch geladen)
 ├── easee_state.json       ← runtime state (aangemaakt bij eerste run)
 ├── README.md
@@ -163,4 +174,4 @@ sudo systemctl restart domoticz
 └── docs/
 ```
 
-Domoticz laadt `plugin.py`; alle **13 `.py`-bestanden** in dezelfde map zijn verplicht sinds v10.6.0. Overige bestanden zijn documentatie en hulpscripts.
+Domoticz laadt `plugin.py`; alle **14 root `.py`-bestanden** plus map **`pricing/`** (9 bestanden) zijn verplicht op branch `v1`. Legacy v10 op `main` heeft geen `pricing/` of `domoticz_energy_hints.py`. Overige bestanden zijn documentatie en hulpscripts.

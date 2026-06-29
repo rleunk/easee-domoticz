@@ -15,7 +15,7 @@ Kort overzicht — **v1** ontwikkeling op branch `v1`; legacy **v10.11.6-stable*
 | **0.2.1** | Afgerond | BesteLadenHours fix; parameter-volgorde |
 | **0.2.0** | Afgerond | Prijsbron Geen/Handmatig/Tibber; `pricing/` end-to-end |
 | **0.1.0** | Afgerond | Scaffold; Tibber-only runtime gelijk aan v10.11.6-stable |
-| **1.0.0** | Gepland | Eerste publieke stable v1 |
+| **1.0.0** | Gepland | Eerste publieke stable v1 — checklist [RELEASE_1.0.0.md](RELEASE_1.0.0.md) |
 
 ### Prijsbronnen (v0.6.1)
 
@@ -52,15 +52,30 @@ Kort overzicht — **v1** ontwikkeling op branch `v1`; legacy **v10.11.6-stable*
 
 ## Gepland / onderzoek
 
-- **1.0.0-stable** — v1 promotie na user-testing (alle prijsbronnen)
-- **ENTSO-E token goedkeuring** — wachten op API-toegang na e-mail naar transparency@entsoe.eu (~3 werkdagen)
+- **1.0.0-stable** — volgende milestone; soak test op productie-Domoticz, daarna tag + forum post — zie [RELEASE_1.0.0.md](RELEASE_1.0.0.md)
 - **Equalizer fase-detail** — verdere verfijning LB-weergave
 - **Domoticz Energy-tegel icoon-beperking** — documentatie/alternatief
 - **API rate limit** — adaptieve poll-interval bij 429
 
+## Afgerond — prijsbronnen v1 (2026-06)
+
+- **ENTSO-E (0.5.0)** — day-ahead spot + toeslagen; token via e-mail naar transparency@entsoe.eu; backup in `easee_state.json` — **getest 2026-06-29**
+- **EnergyZero (0.6.0)** — token-vrij; publieke uurprijzen — getest
+- **Geen / Handmatig / Tibber** — sinds 0.2.0–0.4.0 — getest
+
 ## Testomgeving Richard
 
-2× Charge Lite, 1× Equalizer, Tibber (Mode7) — **11 actieve tegels** (zie [CONFIGURATION.md](CONFIGURATION.md#verwachte-tegels-referentie)). v10.11.0 tegel-merge getest en goedgekeurd (24-06-2026); v10.10.8-stable sessie-kWh fixes getest (20-06-2026); v10.11.6 Dag overzicht-migratie fix getest (26-06-2026). v1 **0.6.0** EnergyZero getest; **0.5.0** ENTSO-E wacht op token-goedkeuring.
+2× Charge Lite, 1× Equalizer — **11 actieve tegels + LoadBal** (zie [CONFIGURATION.md](CONFIGURATION.md#verwachte-tegels-referentie)).
+
+| Datum | Wat |
+|-------|-----|
+| 24-06-2026 | v10.11.0 tegel-merge goedgekeurd |
+| 20-06-2026 | v10.10.8-stable sessie-kWh fixes |
+| 26-06-2026 | v10.11.6 Dag overzicht-migratie |
+| 27-06-2026 | v1 **0.2.0–0.6.0** prijsbronnen (incl. EnergyZero) |
+| 29-06-2026 | v1 **0.5.0 / 0.6.1** ENTSO-E bevestigd (token + backup) |
+
+**Soak test:** v0.6.1 op branch `v1` — ongoing tot 1.0.0-stable tag.
 
 ## Oudere milestones (samenvatting)
 

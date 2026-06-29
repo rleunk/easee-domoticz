@@ -156,7 +156,7 @@ ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/*.py
 ls -la /home/root/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip
 ```
 
-Je moet **13 `.py`-bestanden** (inclusief `plugin.py`) en de icon-zip zien met een recente datum. De icon-zip wordt bij pluginstart automatisch geladen; bestaande tegels krijgen de Easee-iconen na een herstart van het hardware-item (of Domoticz). Als automatisch laden mislukt, upload de zip eenmalig handmatig — zie [Custom iconen handmatig uploaden](#custom-iconen-handmatig-uploaden).
+Je moet **alle `.py`-bestanden** (root + map `pricing/`), **`domoticz_energy_hints.py`** en de icon-zip zien met een recente datum. Op v1: **14** root-modules + **9** bestanden in `pricing/` (totaal **23** Python-bestanden). De icon-zip wordt bij pluginstart automatisch geladen; bestaande tegels krijgen de Easee-iconen na een herstart van het hardware-item (of Domoticz). Als automatisch laden mislukt, upload de zip eenmalig handmatig — zie [Custom iconen handmatig uploaden](#custom-iconen-handmatig-uploaden).
 
 ### Stap 4: Domoticz herstarten
 
@@ -214,10 +214,11 @@ Op GitHub: **Code** → **Download ZIP**. GitHub levert een archief met een naam
 
 ### Stap 2: Uploaden naar de server
 
-Via SCP, SFTP of WinSCP kopieer **alle `.py`-bestanden** en **`Easee_icons_v2.zip`** naar de pluginmap (sinds v10.6.0 is de plugin modulair — niet alleen `plugin.py`):
+Via SCP, SFTP of WinSCP kopieer **alle `.py`-bestanden** (root + map `pricing/`), **`domoticz_energy_hints.py`** en **`Easee_icons_v2.zip`** naar de pluginmap (sinds v10.6.0 modulair — niet alleen `plugin.py`; sinds v1 ook `pricing/`):
 
 ```
 Lokaal:  *.py                 → Server: .../Easee-Domoticz-plugin/
+Lokaal:  pricing/*.py         → Server: .../Easee-Domoticz-plugin/pricing/
 Lokaal:  Easee_icons_v2.zip  → Server: .../Easee-Domoticz-plugin/Easee_icons_v2.zip
 ```
 
@@ -245,10 +246,21 @@ Easee-Domoticz-plugin/
 ├── domoticz_runtime.py
 ├── domoticz_devices.py
 ├── domoticz_icons.py
+├── domoticz_energy_hints.py    ← v0.4.0+ (P1/zon/thuisbatterij hints)
 ├── charger_logic.py
 ├── equalizer_logic.py
 ├── tibber_pricing.py
-└── Easee_icons_v2.zip     ← custom tegeliconen (zelfde map)
+├── pricing/                    ← v0.2.0+ (prijsbronnen)
+│   ├── __init__.py
+│   ├── base.py
+│   ├── none.py
+│   ├── manual.py
+│   ├── tibber.py
+│   ├── entsoe.py
+│   ├── energyzero.py
+│   ├── factory.py
+│   └── ui.py
+└── Easee_icons_v2.zip          ← custom tegeliconen (zelfde map)
 ```
 
 **Fout** (submap te diep):

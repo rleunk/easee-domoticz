@@ -8,6 +8,15 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+### Preparing 1.0.0-stable
+
+Documentation and release-readiness for v1 **1.0.0-stable** (code version remains **0.6.1** until tag). See [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md).
+
+- Public docs audited and synced to **0.6.1** (README, INSTALL, STABLE, VERSIONING, ROADMAP, CONFIGURATION, TROUBLESHOOTING, FORUM_POST)
+- ENTSO-E marked tested (e-mail approval + token backup, 2026-06-29)
+- Install/module lists include `pricing/` and `domoticz_energy_hints.py`
+- 1.0.0 readiness checklist and soak-test criteria documented
+
 ## [0.6.1] — 2026-06-27
 
 ### Changed

@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status (v1 branch):** **0.6.1** — Prijsbron Geen/Handmatig/Tibber/**ENTSO-E**/**EnergyZero**; handmatig **Vast**, **Dag/nacht** of **Dal/piek**; P1/zon/thuisbatterij-hints. **Niet** productie-stable. Zie [STABLE.md](STABLE.md) en [VERSIONING.md](VERSIONING.md).
+> **Status (v1 branch):** **0.6.1** — Prijsbron Geen/Handmatig/Tibber/**ENTSO-E**/**EnergyZero** (alle getest); handmatig **Vast**, **Dag/nacht** of **Dal/piek**; P1/zon/thuisbatterij-hints. **Niet** productie-stable — **gereed voor 1.0.0-stable** na soak test. Zie [STABLE.md](STABLE.md), [VERSIONING.md](VERSIONING.md), [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md).
 >
 > **Legacy productie:** branch `main` / tag [**v10.11.6-stable**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6-stable) — aanbevolen voor live Domoticz. v10 blijft bevroren; geen hernummering naar 0.10.x.
 
@@ -256,7 +256,7 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 
 ## Module structuur
 
-Sinds v10.6.0: 13 Python-modules naast `Easee_icons_v2.zip`. Overzicht: [docs/REFACTOR_MAPPING.md](docs/REFACTOR_MAPPING.md).
+Sinds v10.6.0 modulair; v1 (0.2.0+) voegt **`pricing/`** (prijsbronnen) en **`domoticz_energy_hints.py`** toe — **14** root-modules + `pricing/` (9 bestanden, **23** totaal). Overzicht: [docs/REFACTOR_MAPPING.md](docs/REFACTOR_MAPPING.md). Pad naar **1.0.0-stable**: [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md).
 
 ## Problemen melden
 

@@ -448,8 +448,8 @@ Devices krijgen automatisch deze namen:
 [PREFIX] - Totaal Laden
 [PREFIX] - Totaal kWh
 [PREFIX] - LoadBal
-[PREFIX] - Beste laden (Tibber)
-[PREFIX] - Dag overzicht (Tibber)
+[PREFIX] - Beste laden (actieve prijsbron)
+[PREFIX] - Dag overzicht (actieve prijsbron)
 ```
 
 Legacy (v10.10.x, niet meer bijgewerkt sinds v10.11): *Kosten & Samenvatting*, *Dagrapport*.
