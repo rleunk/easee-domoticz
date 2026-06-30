@@ -119,19 +119,279 @@ def tibber_token(plugin):
         return mode7
     return (plugin.state.get(TIBBER_TOKEN_STATE_KEY) or '').strip()
 
-def tibber_enabled(plugin):
+def _mode24_token(plugin):
+    return (domoticz_runtime.Parameters.get('Mode24', '') or '').strip()
+
+def entsoe_token(plugin):
+    from easee_constants import ENTSOE_TOKEN_STATE_KEY
+    mode24 = _mode24_token(plugin)
+    if mode24:
+        backup = plugin.state.get(ENTSOE_TOKEN_STATE_KEY, '')
+        if backup != mode24:
+            plugin.state[ENTSOE_TOKEN_STATE_KEY] = mode24
+        return mode24
+    return (plugin.state.get(ENTSOE_TOKEN_STATE_KEY) or '').strip()
+
+def entsoe_opslag(plugin):
+    from easee_constants import ENTSOE_OPSLAG_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode25', '') or '').strip()
+    return _parse_tariff_float(plugin, raw, ENTSOE_OPSLAG_DEFAULT)
+
+def entsoe_energiebelasting(plugin):
+    from easee_constants import ENTSOE_ENERGIEBELASTING_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode26', '') or '').strip()
+    return _parse_tariff_float(plugin, raw, ENTSOE_ENERGIEBELASTING_DEFAULT)
+
+def entsoe_btw_pct(plugin):
+    from easee_constants import ENTSOE_BTW_PCT_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode27', '') or '').strip()
+    if not raw:
+        return ENTSOE_BTW_PCT_DEFAULT
+    try:
+        pct = float(str(raw).replace(',', '.'))
+    except Exception:
+        return ENTSOE_BTW_PCT_DEFAULT
+    return max(0.0, min(pct, 100.0))
+
+def pricing_source(plugin):
+    """Prijsbron hardware parameter (Mode9). Default Tibber for backward compatibility."""
+    raw = (domoticz_runtime.Parameters.get('Mode9', '') or '').strip()
+    if not raw:
+        return 'Tibber'
+    return raw
+
+def _parse_tariff_float(plugin, raw, default):
+    if not raw:
+        return default
+    try:
+        return max(0.0, float(str(raw).replace(',', '.')))
+    except Exception:
+        return default
+
+def _parse_hour_param(plugin, raw, default):
+    if not raw:
+        return default
+    try:
+        hour = int(float(str(raw).strip()))
+    except Exception:
+        return default
+    if hour < 0 or hour > 23:
+        return default
+    return hour
+
+def manual_tariff_type(plugin):
+    """Handmatig subtype (Mode11): Vast (default), Dag/nacht, or Dal/piek."""
+    raw = (domoticz_runtime.Parameters.get('Mode11', '') or '').strip()
+    if raw == 'Dag/nacht':
+        return 'Dag/nacht'
+    if raw == 'Dal/piek':
+        return 'Dal/piek'
+    return 'Vast'
+
+def manual_rate(plugin):
+    """Vast tarief €/kWh (Mode10, default 0.25)."""
+    from easee_constants import MANUAL_RATE_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode10', '') or '').strip()
+    return _parse_tariff_float(plugin, raw, MANUAL_RATE_DEFAULT)
+
+def manual_dal_rate(plugin):
+    """Dal tarief €/kWh (Mode12, default 0.22)."""
+    from easee_constants import MANUAL_DAL_RATE_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode12', '') or '').strip()
+    return _parse_tariff_float(plugin, raw, MANUAL_DAL_RATE_DEFAULT)
+
+def manual_normal_rate(plugin):
+    """Normal tarief €/kWh (Mode13, default 0.28)."""
+    from easee_constants import MANUAL_NORMAL_RATE_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode13', '') or '').strip()
+    return _parse_tariff_float(plugin, raw, MANUAL_NORMAL_RATE_DEFAULT)
+
+def manual_dal_start_hour(plugin):
+    """Dal start uur 0–23 (Mode14, default 23)."""
+    from easee_constants import MANUAL_DAL_START_HOUR_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode14', '') or '').strip()
+    return _parse_hour_param(plugin, raw, MANUAL_DAL_START_HOUR_DEFAULT)
+
+def manual_dal_end_hour(plugin):
+    """Dal eind uur 0–23 (Mode15, default 7)."""
+    from easee_constants import MANUAL_DAL_END_HOUR_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode15', '') or '').strip()
+    return _parse_hour_param(plugin, raw, MANUAL_DAL_END_HOUR_DEFAULT)
+
+def manual_piek_rate(plugin):
+    """Piek tarief €/kWh (Mode16, default 0.35)."""
+    from easee_constants import MANUAL_PIEK_RATE_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode16', '') or '').strip()
+    return _parse_tariff_float(plugin, raw, MANUAL_PIEK_RATE_DEFAULT)
+
+def manual_piek_start_hour(plugin):
+    """Piek start uur 0–23 (Mode17, default 17)."""
+    from easee_constants import MANUAL_PIEK_START_HOUR_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode17', '') or '').strip()
+    return _parse_hour_param(plugin, raw, MANUAL_PIEK_START_HOUR_DEFAULT)
+
+def manual_piek_end_hour(plugin):
+    """Piek eind uur 0–23 (Mode18, default 21)."""
+    from easee_constants import MANUAL_PIEK_END_HOUR_DEFAULT
+    raw = (domoticz_runtime.Parameters.get('Mode18', '') or '').strip()
+    return _parse_hour_param(plugin, raw, MANUAL_PIEK_END_HOUR_DEFAULT)
+
+def manual_weekend_all_dal(plugin):
+    """Weekend volledig dal (Mode19, default Ja)."""
+    raw = (domoticz_runtime.Parameters.get('Mode19', '') or '').strip().lower()
+    if raw in ('nee', '0', 'false', 'no', 'uit', 'off'):
+        return False
+    return True
+
+def is_dal_period(dt, start_hour, end_hour):
+    """True when datetime falls in dal window (supports overnight, e.g. 23–07)."""
+    hour = dt.hour
+    if start_hour == end_hour:
+        return False
+    if start_hour < end_hour:
+        return start_hour <= hour < end_hour
+    return hour >= start_hour or hour < end_hour
+
+def is_piek_period(dt, start_hour, end_hour):
+    """True when datetime falls in piek window (e.g. 17–21 on weekdays)."""
+    hour = dt.hour
+    if start_hour == end_hour:
+        return False
+    if start_hour < end_hour:
+        return start_hour <= hour < end_hour
+    return hour >= start_hour or hour < end_hour
+
+def manual_tariff_period(plugin, dt=None):
+    """Return dal, normal, piek, or vast for Handmatig at given datetime."""
+    if dt is None:
+        dt = datetime.now().astimezone()
+    tariff_type = manual_tariff_type(plugin)
+    if tariff_type == 'Vast':
+        return 'vast'
+    is_weekend = dt.weekday() >= 5
+    if tariff_type == 'Dal/piek' and is_weekend and manual_weekend_all_dal(plugin):
+        return 'dal'
+    if is_dal_period(dt, manual_dal_start_hour(plugin), manual_dal_end_hour(plugin)):
+        return 'dal'
+    if tariff_type == 'Dag/nacht':
+        return 'normal'
+    if not is_weekend and is_piek_period(
+        dt, manual_piek_start_hour(plugin), manual_piek_end_hour(plugin),
+    ):
+        return 'piek'
+    return 'normal'
+
+def manual_rate_at(plugin, dt=None):
+    """Current €/kWh for Handmatig (Vast, Dag/nacht, or Dal/piek at given datetime)."""
+    if dt is None:
+        dt = datetime.now().astimezone()
+    if manual_tariff_type(plugin) == 'Vast':
+        return manual_rate(plugin)
+    period = manual_tariff_period(plugin, dt)
+    if period == 'dal':
+        return manual_dal_rate(plugin)
+    if period == 'piek':
+        return manual_piek_rate(plugin)
+    return manual_normal_rate(plugin)
+
+def pricing_enabled(plugin):
+    """True when kWh×tarief kosten actief zijn (Handmatig, EnergyZero, Tibber of ENTSO-E met token)."""
+    source = pricing_source(plugin)
+    if source == 'Handmatig':
+        return True
+    if source == 'Geen':
+        return False
+    if source == 'EnergyZero':
+        return True
+    if source == 'ENTSO-E':
+        return bool(entsoe_token(plugin))
     return bool(tibber_token(plugin))
 
-def beste_laden_hours(plugin):
-    """Sliding window lengte voor Beste laden (Extra-veld, default 3 uur)."""
-    raw = (domoticz_runtime.Parameters.get('Extra', '') or '').strip()
+def dag_overzicht_enabled(plugin):
+    """Dag overzicht-tegel: Geen/Handmatig altijd; EnergyZero/Tibber/ENTSO-E met token of API."""
+    source = pricing_source(plugin)
+    if source in ('Geen', 'Handmatig'):
+        return True
+    if source == 'EnergyZero':
+        return energyzero_enabled(plugin)
+    if source == 'ENTSO-E':
+        return entsoe_enabled(plugin)
+    return tibber_enabled(plugin)
+
+def beste_laden_enabled(plugin):
+    """Beste laden-tegel: uit bij Geen; Handmatig, EnergyZero, Tibber of ENTSO-E met token."""
+    source = pricing_source(plugin)
+    if source == 'Geen':
+        return False
+    if source == 'Handmatig':
+        return True
+    if source == 'EnergyZero':
+        return energyzero_enabled(plugin)
+    if source == 'ENTSO-E':
+        return entsoe_enabled(plugin)
+    return tibber_enabled(plugin)
+
+def tibber_enabled(plugin):
+    source = pricing_source(plugin)
+    if source in ('Geen', 'Handmatig', 'ENTSO-E', 'EnergyZero'):
+        return False
+    return bool(tibber_token(plugin))
+
+def entsoe_enabled(plugin):
+    source = pricing_source(plugin)
+    if source != 'ENTSO-E':
+        return False
+    return bool(entsoe_token(plugin))
+
+def energyzero_enabled(plugin):
+    return pricing_source(plugin) == 'EnergyZero'
+
+def _parse_besteladen_hours_raw(raw):
+    """Parse 1–12 uur; None when leeg, plugin-key of ongeldig."""
     if not raw:
-        return 3
+        return None
+    lowered = str(raw).strip().lower()
+    if 'easee' in lowered or 'autodiscovery' in lowered:
+        return None
     try:
         hours = int(float(raw))
     except Exception:
-        return 3
-    return max(1, min(hours, 12))
+        return None
+    if hours < 1 or hours > 12:
+        return None
+    return hours
+
+def _read_besteladen_hours_param(plugin):
+    """Lees venster uit hardware; migreert legacy Extra indien numerisch."""
+    from easee_constants import PLUGIN_KEY
+    for key in ('BesteLadenHours', 'Extra'):
+        raw = (domoticz_runtime.Parameters.get(key, '') or '').strip()
+        if not raw:
+            continue
+        if key == 'Extra':
+            if raw == PLUGIN_KEY or PLUGIN_KEY.startswith(raw):
+                continue
+        hours = _parse_besteladen_hours_raw(raw)
+        if hours is not None:
+            return hours
+    return None
+
+def beste_laden_hours(plugin):
+    """Sliding window lengte voor Beste laden (BesteLadenHours, default 3 uur)."""
+    from easee_constants import BESTE_LADEN_HOURS_STATE_KEY
+    from_params = _read_besteladen_hours_param(plugin)
+    if from_params is not None:
+        if plugin.state.get(BESTE_LADEN_HOURS_STATE_KEY) != from_params:
+            plugin.state[BESTE_LADEN_HOURS_STATE_KEY] = from_params
+        return from_params
+    backup = plugin.state.get(BESTE_LADEN_HOURS_STATE_KEY)
+    try:
+        hours = int(backup)
+        if 1 <= hours <= 12:
+            return hours
+    except Exception:
+        pass
+    return 3
 
     # ---- emoji & status helpers ----
 

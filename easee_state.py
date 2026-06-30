@@ -2,7 +2,7 @@
 
 import os, json, time
 from datetime import datetime
-from easee_constants import STATE_FILE, LEGACY_STATE_FILE, PLUGIN_VERSION, TIBBER_TOKEN_STATE_KEY
+from easee_constants import STATE_FILE, LEGACY_STATE_FILE, PLUGIN_VERSION, TIBBER_TOKEN_STATE_KEY, ENTSOE_TOKEN_STATE_KEY
 import easee_logging
 import easee_helpers
 
@@ -56,6 +56,34 @@ def sync_tibber_token_backup(plugin):
     if backup:
         return 'restored'
     return 'missing'
+
+def sync_entsoe_token_backup(plugin):
+    """Persist Mode24 token in state; use backup when Domoticz clears password on save."""
+    import domoticz_runtime
+    mode24 = (domoticz_runtime.Parameters.get('Mode24', '') or '').strip()
+    backup = (plugin.state.get(ENTSOE_TOKEN_STATE_KEY) or '').strip()
+    if mode24:
+        if backup != mode24:
+            plugin.state[ENTSOE_TOKEN_STATE_KEY] = mode24
+            return 'updated'
+        return 'unchanged'
+    if backup:
+        return 'restored'
+    return 'missing'
+
+def sync_besteladen_hours_backup(plugin):
+    """Persist Beste laden venster in state; migrate legacy Extra / ignore plugin key."""
+    from easee_constants import BESTE_LADEN_HOURS_STATE_KEY
+    from_params = easee_helpers._read_besteladen_hours_param(plugin)
+    prev = plugin.state.get(BESTE_LADEN_HOURS_STATE_KEY)
+    hours = easee_helpers.beste_laden_hours(plugin)
+    if from_params is not None:
+        if prev != from_params:
+            return 'updated'
+        return 'unchanged'
+    if prev is not None and hours == prev and hours != 3:
+        return 'restored'
+    return 'unchanged'
 
 def save_state(plugin):
     fp = state_path(plugin)
@@ -159,6 +187,45 @@ def charger_state(plugin, cid):
         st['day_energy_reset'] = True
     _normalize_charger_session_fields(st)
     return st
+
+def migrate_manual_tariff_fields(plugin):
+    """Ensure manual tariff defaults after upgrade (Mode11–Mode19)."""
+    from easee_constants import MANUAL_TARIFF_STATE_KEY
+    key = 'manual_tariff_version'
+    target = '0.4.0-dal-piek'
+    if plugin.state.get(key) == target:
+        return
+    backup = plugin.state.setdefault(MANUAL_TARIFF_STATE_KEY, {})
+    tariff_type = easee_helpers.manual_tariff_type(plugin)
+    if tariff_type == 'Vast':
+        backup.setdefault('type', 'Vast')
+        backup.setdefault('vast_rate', easee_helpers.manual_rate(plugin))
+    elif tariff_type == 'Dag/nacht':
+        backup.update({
+            'type': 'Dag/nacht',
+            'dal_rate': easee_helpers.manual_dal_rate(plugin),
+            'normal_rate': easee_helpers.manual_normal_rate(plugin),
+            'dal_start': easee_helpers.manual_dal_start_hour(plugin),
+            'dal_end': easee_helpers.manual_dal_end_hour(plugin),
+        })
+    else:
+        backup.update({
+            'type': 'Dal/piek',
+            'dal_rate': easee_helpers.manual_dal_rate(plugin),
+            'normal_rate': easee_helpers.manual_normal_rate(plugin),
+            'piek_rate': easee_helpers.manual_piek_rate(plugin),
+            'dal_start': easee_helpers.manual_dal_start_hour(plugin),
+            'dal_end': easee_helpers.manual_dal_end_hour(plugin),
+            'piek_start': easee_helpers.manual_piek_start_hour(plugin),
+            'piek_end': easee_helpers.manual_piek_end_hour(plugin),
+            'weekend_all_dal': easee_helpers.manual_weekend_all_dal(plugin),
+        })
+    plugin.state[key] = target
+    easee_logging.info(
+        'easee_state',
+        f'Handmatig tarief gemigreerd naar {PLUGIN_VERSION} (defaults Mode11–Mode19)',
+        'migration',
+    )
 
 def migrate_charging_timer_state(plugin):
     """One-time normalize charging_active / session flags (v10.11.2 timer fix upgrade)."""

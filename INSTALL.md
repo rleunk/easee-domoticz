@@ -1,21 +1,82 @@
-# Installatiehandleiding — Easee Domoticz plugin v10.11.6
+# Installatiehandleiding — Easee Domoticz plugin
 
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
 > **Paden:** Vervang `USER` door je Linux-gebruikersnaam (bijv. `root`, `pi`, `domoticz`). De pluginmap is `/home/USER/domoticz/plugins/Easee-Domoticz-plugin/`.
 
+> **Versielijnen:** branch **`main`** = productie **1.0.0**; branch **`v1`** = toekomstige ontwikkeling (1.1.x); legacy v10 op **`legacy/v10`** / tag **v10.11.6**. Zie [STABLE.md](STABLE.md) en [VERSIONING.md](VERSIONING.md).
+
 ---
+
+## v1 productie (branch `main`) — 1.0.0
+
+| Item | Waarde |
+|------|--------|
+| Plugin | **Easee Domoticz plugin v1 (1.0.0)** |
+| Branch | `main` (of tag `v1.0.0`) |
+| Prijsbronnen | Geen, Handmatig, Tibber, ENTSO-E, EnergyZero |
+| Status | **Stable productie** |
+
+### Snel installeren (productie)
+
+```bash
+cd /home/USER/domoticz/plugins
+git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd Easee-Domoticz-plugin
+git checkout main
+sudo systemctl restart domoticz
+```
+
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.0.0)** → Easee-gebruikersnaam + wachtwoord → **Add**.
+
+Kies **Prijsbron (Mode9)** in hardware-instellingen. Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor Tibber (Mode7), ENTSO-E (Mode24 + e-mail goedkeuring), EnergyZero (geen token) en Handmatig.
+
+### Upgrade naar nieuwste v1
+
+```bash
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
+git fetch --tags origin
+git checkout main
+git pull origin main
+sudo systemctl restart domoticz
+```
+
+Herstart daarna het Easee hardware-item in Domoticz. Zie [CHANGELOG.md](CHANGELOG.md) voor wijzigingen per versie.
+
+---
+
+## Legacy v10 (branch `legacy/v10`)
+
+| Item | Waarde |
+|------|--------|
+| Plugin | Easee Domoticz plugin v10.11.6 |
+| Branch / tag | `legacy/v10` of `v10.11.6` / `v10.11.6-stable` |
+| Kosten | Alleen via **Tibber** (Mode7) |
+| Status | Bevroren — rollback / bestaande installaties |
+
+### Checkout legacy v10
+
+```bash
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
+git fetch --tags origin
+git checkout legacy/v10
+# of: git checkout v10.11.6-stable
+sudo systemctl restart domoticz
+```
+
+In Domoticz: **Easee Domoticz plugin v10.11.6**. Onderstaande secties beschrijven installatie en upgrade voor **beide** lijnen (zelfde pluginmap en bestandsstructuur).
 
 ## Overzicht
 
 | Item | Waarde |
 |------|--------|
-| Plugin | Easee Domoticz plugin v10.11.6 |
 | Plugin-key | `EaseeCloudAutoDiscoveryV1000` |
 | Doelmap op server | `/home/USER/domoticz/plugins/Easee-Domoticz-plugin/` |
-| Hoofdbestand | `plugin.py` (+ 12 Python-modules = 13 `.py`-bestanden sinds v10.6.0) |
+| Hoofdbestand | `plugin.py` (+ modules + `pricing/` op v1) |
 | Custom iconen | `Easee_icons_v2.zip` (automatisch geladen bij pluginstart; zie [handmatige upload](#custom-iconen-handmatig-uploaden) als dat mislukt) |
 | GitHub-repo | https://github.com/rleunk/easee-domoticz |
+| v1 pluginnaam | **Easee Domoticz plugin v1 (1.0.0)** — branch `main` |
+| Legacy pluginnaam | **Easee Domoticz plugin v10.11.6** — `legacy/v10` / `v10.11.6-stable` |
 
 ---
 
@@ -62,19 +123,19 @@ Deze methode maakt toekomstige updates eenvoudig via `git pull`.
 
 ### Stap 1: Git-authenticatie instellen
 
-Kies één optie:
+- **HTTPS (standaard):** clone werkt direct; bij inlogprompt een Personal Access Token gebruiken — zie [docs/GIT_SETUP.md](docs/GIT_SETUP.md)
+- **SSH (optioneel):** als je GitHub SSH-sleutels hebt geconfigureerd — zie [docs/GIT_SETUP.md](docs/GIT_SETUP.md) → *Optioneel: SSH*
 
-- **HTTPS (standaard):** volg [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — clone werkt direct voor publieke repos
-- **HTTPS + PAT:** volg [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — als Git om inloggegevens vraagt
-- **SSH (optioneel):** volg [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — als je GitHub SSH-sleutels hebt geconfigureerd
-
-> Heb je eerder een foutmelding gehad zoals *"Password authentication is not supported"*? Gebruik dan een Personal Access Token (PAT) — niet je GitHub-wachtwoord.
+> Heb je eerder een foutmelding gehad zoals *"Password authentication is not supported"*? Gebruik dan een Personal Access Token (HTTPS) of SSH-sleutel — niet je GitHub-wachtwoord.
 
 ### Stap 2: Plugin clonen
 
 ```bash
 cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd Easee-Domoticz-plugin
+git checkout main              # productie 1.0.0
+# of: git checkout legacy/v10  # legacy v10.11.6
 ```
 
 **Optioneel: SSH** (als je GitHub SSH-sleutels hebt geconfigureerd):
@@ -82,6 +143,8 @@ git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 ```bash
 cd /home/USER/domoticz/plugins
 git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd Easee-Domoticz-plugin
+git checkout main
 ```
 
 > **Belangrijk:** de mapnaam `Easee-Domoticz-plugin` aan het einde van het commando zorgt dat `plugin.py` direct op de juiste plek staat.
@@ -94,7 +157,7 @@ ls -la /home/USER/domoticz/plugins/Easee-Domoticz-plugin/*.py
 ls -la /home/USER/domoticz/plugins/Easee-Domoticz-plugin/Easee_icons_v2.zip
 ```
 
-Je moet **13 `.py`-bestanden** (inclusief `plugin.py`) en de icon-zip zien met een recente datum. De icon-zip wordt bij pluginstart automatisch geladen; bestaande tegels krijgen de Easee-iconen na een herstart van het hardware-item (of Domoticz). Als automatisch laden mislukt, upload de zip eenmalig handmatig — zie [Custom iconen handmatig uploaden](#custom-iconen-handmatig-uploaden).
+Je moet **alle `.py`-bestanden** (root + map `pricing/`), **`domoticz_energy_hints.py`** en de icon-zip zien met een recente datum. Op v1: **14** root-modules + **9** bestanden in `pricing/` (totaal **23** Python-bestanden). De icon-zip wordt bij pluginstart automatisch geladen; bestaande tegels krijgen de Easee-iconen na een herstart van het hardware-item (of Domoticz). Als automatisch laden mislukt, upload de zip eenmalig handmatig — zie [Custom iconen handmatig uploaden](#custom-iconen-handmatig-uploaden).
 
 ### Stap 4: Domoticz herstarten
 
@@ -107,10 +170,11 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee Domoticz plugin v10.11.6**
+4. Selecteer **Easee Domoticz plugin v1 (1.0.0)** (branch `main`) of **Easee Domoticz plugin v10.11.6** (legacy `legacy/v10`)
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
-6. Optioneel: vul Tibber-token, laadpaalnamen en Equalizer-naam in
-7. Klik **Add**
+6. Optioneel: kies **Prijsbron (Mode9)** en vul token/tarief in (v1); legacy v10 alleen Tibber (Mode7)
+7. Optioneel: laadpaalnamen en Equalizer-naam
+8. Klik **Add**
 
 Na enkele seconden verschijnen de devices automatisch.
 
@@ -124,6 +188,8 @@ Als `install.sh` al in de repo staat (of je hebt het gekopieerd):
 # Eerst eenmalig clonen (als de map nog niet bestaat)
 cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd Easee-Domoticz-plugin
+git checkout main
 
 # Daarna voor updates
 cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
@@ -151,10 +217,11 @@ Op GitHub: **Code** → **Download ZIP**. GitHub levert een archief met een naam
 
 ### Stap 2: Uploaden naar de server
 
-Via SCP, SFTP of WinSCP kopieer **alle `.py`-bestanden** en **`Easee_icons_v2.zip`** naar de pluginmap (sinds v10.6.0 is de plugin modulair — niet alleen `plugin.py`):
+Via SCP, SFTP of WinSCP kopieer **alle `.py`-bestanden** (root + map `pricing/`), **`domoticz_energy_hints.py`** en **`Easee_icons_v2.zip`** naar de pluginmap (sinds v10.6.0 modulair — niet alleen `plugin.py`; sinds v1 ook `pricing/`):
 
 ```
 Lokaal:  *.py                 → Server: .../Easee-Domoticz-plugin/
+Lokaal:  pricing/*.py         → Server: .../Easee-Domoticz-plugin/pricing/
 Lokaal:  Easee_icons_v2.zip  → Server: .../Easee-Domoticz-plugin/Easee_icons_v2.zip
 ```
 
@@ -182,10 +249,21 @@ Easee-Domoticz-plugin/
 ├── domoticz_runtime.py
 ├── domoticz_devices.py
 ├── domoticz_icons.py
+├── domoticz_energy_hints.py    ← v0.4.0+ (P1/zon/thuisbatterij hints)
 ├── charger_logic.py
 ├── equalizer_logic.py
 ├── tibber_pricing.py
-└── Easee_icons_v2.zip     ← custom tegeliconen (zelfde map)
+├── pricing/                    ← v0.2.0+ (prijsbronnen)
+│   ├── __init__.py
+│   ├── base.py
+│   ├── none.py
+│   ├── manual.py
+│   ├── tibber.py
+│   ├── entsoe.py
+│   ├── energyzero.py
+│   ├── factory.py
+│   └── ui.py
+└── Easee_icons_v2.zip          ← custom tegeliconen (zelfde map)
 ```
 
 **Fout** (submap te diep):
@@ -243,9 +321,19 @@ Laat leeg om de naam uit de Easee-app te gebruiken. De **hardwarenaam** in Domot
 
 De plugin werkt volledig zonder Equalizer. Er verschijnen dan geen meterkast-tegels; Status toont `Geen EQ`. Load balancing en fuse-limieten zijn niet zichtbaar in Domoticz.
 
-### Geen Tibber
+### Geen Tibber / andere prijsbron (v1)
 
-Zonder Tibber-token werken laadpalen en Equalizer normaal. Je mist alleen **Dag overzicht**, **Beste laden** en sessie/dag-€ op laadpaal-**Status**.
+Op branch **`v1`**: kies **Prijsbron (Mode9)** — **Geen** (alleen kWh), **Handmatig**, **Tibber**, **ENTSO-E** of **EnergyZero**. Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
+
+Op **legacy v10** (`main`): alleen Tibber voor kosten. Zonder Tibber-token werken laadpalen en Equalizer normaal; je mist **Dag overzicht**, **Beste laden** en sessie/dag-€ op laadpaal-**Status**.
+
+### Tibber (Prijsbron Tibber of legacy v10)
+
+| Veld | Wat invullen |
+|------|--------------|
+| Tibber Personal Access Token (Mode7) | Token van [developer.tibber.com](https://developer.tibber.com/settings/access-token) — **vereist bij Prijsbron Tibber** (v1) of legacy v10 |
+
+Bij start zie je in het log: `Tibber actief — kosten na eerste poll` of `Tibber uit (Mode7 leeg)`.
 
 ### Optioneel — Equalizer
 
@@ -254,19 +342,11 @@ Zonder Tibber-token werken laadpalen en Equalizer normaal. Je mist alleen **Dag 
 | Naam Equalizer (Address) | Weergavenaam | `Meterkast` |
 | Equalizer ID (IP) | Handmatig ID bij detectieproblemen | `EQ-...` |
 
-### Tibber (vereist voor kosten-tegels)
-
-| Veld | Wat invullen |
-|------|--------------|
-| Tibber Personal Access Token (Mode7) | Token van [developer.tibber.com](https://developer.tibber.com/settings/access-token) — **zonder token geen kosten-tegels** |
-
-Bij start zie je in het log: `Tibber actief — kosten-tegels worden bijgewerkt` of `Tibber uit (Mode7 leeg)`.
-
 ### Logniveaus (Mode6)
 
 | Mode6 | Wat je ziet |
 |-------|-------------|
-| **Normal** (standaard) | Startup, Tibber-status, `image_ids: 13/13`, migratie, WARNING/ERROR |
+| **Normal** (standaard) | Startup, prijsbron/Tibber-status, `image_ids: 13/13`, migratie, WARNING/ERROR |
 | **Debug** | Extra: `Poll voltooid`, kosten-tegel updates, siteStructure, per-tegel iconen |
 
 Zet Debug alleen aan bij problemen — het log wordt dan veel langer.
@@ -279,18 +359,29 @@ Zet Debug alleen aan bij problemen — het log wordt dan veel langer.
 
 ```bash
 cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
-git pull
+git fetch --tags origin
+git checkout main
+git pull origin main
 sudo systemctl restart domoticz
 ```
 
-Sinds v10.6.0 haalt `git pull` alle `.py`-modules op — niet alleen `plugin.py`. State migreert automatisch naar `easee_state.json`.
+Sinds v10.6.0 haalt `git pull` alle `.py`-modules op — niet alleen `plugin.py`. Op v1 komt ook de map `pricing/` mee. State migreert automatisch naar `easee_state.json`.
+
+### Specifiek: v1 (1.0.0 productie)
+
+- Checkout branch **`main`** — pluginnaam **Easee Domoticz plugin v1 (1.0.0)**
+- **Prijsbron (Mode9):** Geen, Handmatig, Tibber, ENTSO-E, EnergyZero
+- **ENTSO-E:** e-mail naar **transparency@entsoe.eu** (onderwerp *Restful API access*), wacht ~3 werkdagen, daarna Mode24 token
+- **EnergyZero:** geen token — kies Prijsbron EnergyZero
+- **1.0.0:** Eerste stable v1 op `main` — vijf prijsbronnen, hints, 11 tegels
+- Zie [CHANGELOG.md](CHANGELOG.md) en [docs/CONFIGURATION.md](docs/CONFIGURATION.md)
 
 Custom iconen uit `Easee_icons_v2.zip` worden bij start automatisch geladen en op bestaande devices toegepast.
 
 ### Handmatig (zip of losse bestanden)
 
 1. Stop het hardware-item in Domoticz (**Setup → Hardware** → disablen)
-2. Vervang **alle `.py`-modules** en `Easee_icons_v2.zip` op de server (sinds v10.6.0 niet alleen `plugin.py`)
+2. Vervang **alle `.py`-modules** en `Easee_icons_v2.zip` op de server (sinds v10.6.0 niet alleen `plugin.py`; op v1 ook map `pricing/`)
 3. Start het hardware-item weer
 
 > State-bestand (`easee_state.json`; legacy `easee_v9_0_state.json` wordt automatisch hernoemd) en bestaande devices blijven behouden bij upgrade.
@@ -301,19 +392,20 @@ Custom iconen uit `Easee_icons_v2.zip` worden bij start automatisch geladen en o
 - State migreert automatisch naar `easee_state.json` (atomisch opslaan sinds v10.6.1).
 - Upload **`Easee_icons_v2.zip` opnieuw** als badges/iconen niet veranderen (Domoticz cached iconen).
 
-### Specifiek: v10.11.x (huidige stable — v10.11.6-stable)
+### Specifiek: v10.11.x (legacy — branch `legacy/v10`)
 
 - **v10.11.0** — Compacte UI: **11 tegels** (2 laders + EQ + Tibber). *Kosten & Samenvatting* + *Dagrapport* → **Dag overzicht**; *Totaal & Sessie* → **Laden**; *Kosten (Sessie/Dag)* → **Status**. Oude tegels verborgen (`Used=0`).
 - **v10.11.1** — Fix deprecated-tegel `Used=0`-update; stable promotion.
 - **v10.11.2** — Status-timer pauze-fix; stable promotion.
 - **v10.11.4** — truthy()-fix in laad-timer; stable tag `v10.11.4-stable`.
-- **v10.11.6** — Dag overzicht-migratie fix (`Device.Update(Name=…)` i.p.v. readonly direct assignment); idle timer **00:00**; stable promotion.
+- **v10.11.6** — Dag overzicht-migratie fix (`Device.Update(Name=…)` i.p.v. readonly direct assignment); idle timer **00:00**; legacy baseline.
 - **v10.11.5** — Dag overzicht-migratie (legacy tegel hernoemen); idle timer **00:00** (readonly-fout op nieuwere Domoticz).
-- **Stable tag** — `v10.11.6-stable` is de aanbevolen baseline; zie [STABLE.md](STABLE.md). Vorige stable tags blijven voor rollback.
+- **Legacy branch** — `legacy/v10` of tag `v10.11.6` / `v10.11.6-stable`; zie [STABLE.md](STABLE.md). Vorige stable tags blijven voor rollback.
 
 ```bash
 git fetch --tags origin
-git checkout v10.11.6-stable
+git checkout legacy/v10
+# of: git checkout v10.11.6-stable
 sudo systemctl restart domoticz
 ```
 
@@ -495,5 +587,5 @@ De plugin wacht bij opstarten tot Domoticz de Devices-lijst heeft geladen (minim
 ## Meer hulp
 
 - [README.md](README.md) — overzicht en snelle start
-- [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — git-authenticatie (HTTPS/PAT, SSH optioneel)
+- [docs/GIT_SETUP.md](docs/GIT_SETUP.md) — git-authenticatie (SSH / PAT)
 - [CHANGELOG.md](CHANGELOG.md) — versiegeschiedenis

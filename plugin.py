@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v10.11.6" author="Richard Leunk" version="10.11.6"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (1.0.0)" author="Richard Leunk" version="1.0.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v10.11.6</h2><br/>
-        <p>Easee laadpaal integratie met compacte UI (11 tegels), samengevoegde Dag overzicht / Laden / Status-tegels, Tibber kwartierprijzen, laadhints en Equalizer.</p>
+        <h2>Easee Domoticz plugin v1 (1.0.0)</h2><br/>
+        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E/EnergyZero, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints en Equalizer. v1 ontwikkelingslijn.</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
@@ -29,10 +29,57 @@
             <param field="Address" label="Naam Equalizer" width="220px" default=""/>
             <param field="IP" label="Equalizer ID (handmatig, optioneel)" width="260px" default=""/>
         </group>
-        <group label="Tibber (optioneel)">
-            <param field="Mode7" label="Tibber Personal Access Token" width="360px" password="true" default=""/>
-            <param field="Mode8" label="Tibber token ophalen" width="360px" default="https://developer.tibber.com/settings/access-token"/>
-            <param field="Extra" label="Beste laden venster (uren)" width="80px" default="3"/>
+        <group label="Energieprijs (optioneel)">
+            <param field="Mode9" label="Prijsbron" width="160px">
+                <options>
+                    <option label="Geen" value="Geen"/>
+                    <option label="Handmatig" value="Handmatig"/>
+                    <option label="Tibber" value="Tibber" default="true"/>
+                    <option label="ENTSO-E" value="ENTSO-E"/>
+                    <option label="EnergyZero" value="EnergyZero"/>
+                </options>
+            </param>
+            <param field="BesteLadenHours" type="number" label="Beste laden venster uren (Tibber/Handmatig/ENTSO-E/EnergyZero)" min="1" max="12" default="3" width="80px"/>
+            <param field="Mode11" label="Handmatig type (alleen bij Handmatig)" width="160px">
+                <options>
+                    <option label="Vast" value="Vast" default="true"/>
+                    <option label="Dag/nacht" value="Dag/nacht"/>
+                    <option label="Dal/piek" value="Dal/piek"/>
+                </options>
+            </param>
+            <param field="Mode10" label="Vast tarief €/kWh (Handmatig — Vast)" width="100px" default="0.25"/>
+            <param field="Mode12" label="Dal tarief €/kWh (Handmatig — Dag/nacht / Dal/piek)" width="100px" default="0.22"/>
+            <param field="Mode13" label="Normal tarief €/kWh (Handmatig — Dag/nacht / Dal/piek)" width="100px" default="0.28"/>
+            <param field="Mode14" label="Dal start uur 0–23 (Handmatig — Dag/nacht / Dal/piek)" width="80px" default="23"/>
+            <param field="Mode15" label="Dal eind uur 0–23 (Handmatig — Dag/nacht / Dal/piek)" width="80px" default="7"/>
+            <param field="Mode16" label="Piek tarief €/kWh (Handmatig — Dal/piek)" width="100px" default="0.35"/>
+            <param field="Mode17" label="Piek start uur 0–23 (Handmatig — Dal/piek)" width="80px" default="17"/>
+            <param field="Mode18" label="Piek eind uur 0–23 (Handmatig — Dal/piek)" width="80px" default="21"/>
+            <param field="Mode19" label="Weekend alles dal (Handmatig — Dal/piek)" width="120px">
+                <options>
+                    <option label="Ja" value="Ja" default="true"/>
+                    <option label="Nee" value="Nee"/>
+                </options>
+            </param>
+            <param field="Mode7" label="Tibber token (alleen bij Tibber)" width="360px" password="true" default=""/>
+            <param field="Mode8" label="Tibber token ophalen (alleen bij Tibber)" width="360px" default="https://developer.tibber.com/settings/access-token"/>
+            <param field="Mode24" label="ENTSO-E API token (alleen bij ENTSO-E)" width="360px" password="true" default=""/>
+            <param field="Mode28" label="ENTSO-E token aanvragen (alleen bij ENTSO-E)" width="360px" default="https://transparency.entsoe.eu/"/>
+            <param field="Mode25" label="Opslag leverancier €/kWh (alleen bij ENTSO-E)" width="120px" default="0"/>
+            <param field="Mode26" label="Energiebelasting €/kWh (alleen bij ENTSO-E, ca. 0,12)" width="120px" default="0"/>
+            <param field="Mode27" label="BTW % (alleen bij ENTSO-E)" width="80px" default="21"/>
+            <param field="Mode29" label="EnergyZero — geen token nodig (alleen bij EnergyZero)" width="360px" default="https://www.dynamische-energieprijzen.nl/"/>
+        </group>
+        <group label="Energie hints (optioneel)">
+            <param field="Mode20" label="P1 / zon / thuisbatterij hints" width="100px">
+                <options>
+                    <option label="Aan" value="Aan" default="true"/>
+                    <option label="Uit" value="Uit"/>
+                </options>
+            </param>
+            <param field="Mode21" label="P1 meter apparaatnaam of idx" width="220px" default="Power"/>
+            <param field="Mode22" label="Zonnepanelen apparaatnaam of idx" width="220px" default="Zonnepanelen"/>
+            <param field="Mode23" label="Thuisbatterij apparaatnaam of idx (leeg = uit)" width="220px" default="Sessy"/>
         </group>
     </params>
 </plugin>
@@ -53,11 +100,13 @@ import easee_logging
 import easee_helpers
 import easee_api
 import easee_state
-import tibber_pricing
+import pricing
+from pricing import ui as pricing_ui
 import domoticz_icons
 import domoticz_devices
 import charger_logic
 import equalizer_logic
+import domoticz_energy_hints
 from easee_constants import ULTRA_DEBUG, PLUGIN_VERSION
 
 
@@ -301,13 +350,19 @@ class BasePlugin:
                 'device_count': len(Devices),
                 'created_cycle': created,
                 'tibber_enabled': easee_helpers.tibber_enabled(self),
+                'pricing_enabled': easee_helpers.pricing_enabled(self),
+                'pricing_source': easee_helpers.pricing_source(self),
             }
             domoticz_devices.update_text(self, easee_helpers.pref(self, 'Debug'), json.dumps(dbg, ensure_ascii=False)[:4000])
             domoticz_devices.update_text(self, easee_helpers.pref(self, 'Counts'), f'chargers={len(self.chargers)}, equalizers={len(self.equalizers)}, devices={len(Devices)}')
-            if easee_helpers.tibber_enabled(self):
-                domoticz_devices.update_text(self, easee_helpers.pref(self, 'Tibber prijs'), json.dumps(tibber_pricing.current_tibber_price(self), ensure_ascii=False)[:4000])
+            if easee_helpers.pricing_enabled(self):
+                domoticz_devices.update_text(
+                    self, easee_helpers.pref(self, 'Tibber prijs'),
+                    json.dumps(pricing_ui.current_price(self), ensure_ascii=False)[:4000],
+                )
 
     def poll_all(self):
+        domoticz_energy_hints.clear_energy_context_cache(self)
         self.latest_chargers = {}
         self.latest_equalizers = {}
         self.site_fuse_cache = {}
@@ -318,8 +373,9 @@ class BasePlugin:
                 'poll',
             )
         refreshed = easee_helpers.safe_int(self, self.state.get('price_cache_refreshed', 0), 0)
-        if easee_helpers.tibber_enabled(self) and ((easee_state.now_ts(self) - refreshed) > 900 or not (self.state.get('price_cache') or {})):
-            self._heartbeat_step('tibber refresh', lambda: tibber_pricing.refresh_tibber_prices(self))
+        price_provider = pricing.get_provider(self)
+        if price_provider.is_available() and ((easee_state.now_ts(self) - refreshed) > 900 or not (self.state.get('price_cache') or {})):
+            self._heartbeat_step('pricing refresh', lambda: price_provider.refresh())
         for eq in self.equalizers:
             eid = eq.get('id', '?')
             self._heartbeat_step(f'poll equalizer {eid}', lambda eq=eq: equalizer_logic.poll_equalizer(self, eq))
@@ -342,53 +398,80 @@ class BasePlugin:
         any_online = any(bool(v.get('online')) for v in self.latest_chargers.values())
         any_lb = any(bool(v.get('loadbal')) for v in self.latest_equalizers.values())
         eq_count = len(self.equalizers)
+        source = easee_helpers.pricing_source(self)
+        costs_on = easee_helpers.pricing_enabled(self)
 
         domoticz_devices.update_core_energy(self, 'Totaal Laden', total_power, total_wh)
         domoticz_devices.update_core_custom(self, 'Totaal kWh', int(round(total_kwh)))
 
-        if easee_helpers.tibber_enabled(self):
+        g = easee_state.global_day_state(self)
+        day_kwh = round(sum(v.get('day_kwh', 0.0) for v in self.latest_chargers.values()), 3)
+        any_charging = any(v.get('power', 0) > 50 for v in self.latest_chargers.values())
+        easee_state.track_global_charge(self, 0, 0, any_charging)
+        charge_hours = easee_helpers.safe_float(self, g.get('charge_hours'), 0.0)
+        hours_txt = (
+            f'{int(charge_hours)}u {int((charge_hours % 1) * 60):02d}m'
+            if charge_hours >= 1 else f'{int(charge_hours * 60)} min'
+        )
+
+        dag_overzicht = None
+        if source == 'Geen':
+            dag_overzicht = (
+                f'📅 Vandaag\n'
+                f'⚡ {day_kwh:.2f} kWh\n'
+                f'⏱️ Laaduren: {hours_txt}'
+            )
+        elif costs_on:
             total_day_cost = round(sum(v.get('day_cost', 0.0) for v in self.latest_chargers.values()), 2)
             total_day_energy = round(sum(v.get('day_energy_cost', 0.0) for v in self.latest_chargers.values()), 2)
             total_day_tax = round(sum(v.get('day_tax_cost', 0.0) for v in self.latest_chargers.values()), 2)
-
-            price_emoji = tibber_pricing.price_status_emoji(self)
-            current_price = tibber_pricing.current_tibber_price(self)
+            current_price = pricing_ui.current_price(self)
             rate = easee_helpers.safe_float(self, current_price.get('total'), 0.0)
 
-            domoticz_devices.update_core_text(self, 'Beste laden', tibber_pricing.cheapest_window_text(self))
+            if easee_helpers.beste_laden_enabled(self):
+                domoticz_devices.update_core_text(self, 'Beste laden', pricing_ui.cheapest_window_text(self))
 
-            g = easee_state.global_day_state(self)
-            day_kwh = round(sum(v.get('day_kwh', 0.0) for v in self.latest_chargers.values()), 3)
-            charge_hours = easee_helpers.safe_float(self, g.get('charge_hours'), 0.0)
-            any_charging = any(v.get('power', 0) > 50 for v in self.latest_chargers.values())
-            easee_state.track_global_charge(self, 0, 0, any_charging)
-            charge_hours = easee_helpers.safe_float(self, g.get('charge_hours'), 0.0)
-            hours_txt = f'{int(charge_hours)}u {int((charge_hours % 1) * 60):02d}m' if charge_hours >= 1 else f'{int(charge_hours * 60)} min'
-            dag_overzicht = (
-                f'📅 Vandaag\n'
-                f'⚡ {day_kwh:.2f} kWh | €{easee_helpers.euro_str(self, total_day_cost)}\n'
-                f'⏱️ Laaduren: {hours_txt}\n'
-                f'💰 {tibber_pricing.dagrapport_cheapest_line(self)}\n'
-                f'{price_emoji} Tarief: €{easee_helpers.euro_str(self, rate)}/kWh\n'
-                f'Energy: €{easee_helpers.euro_str(self, total_day_energy)} | '
-                f'Belasting: €{easee_helpers.euro_str(self, total_day_tax)}'
-            )
+            if source in ('Tibber', 'ENTSO-E'):
+                price_emoji = pricing_ui.price_status_emoji(self)
+                dag_overzicht = (
+                    f'📅 Vandaag\n'
+                    f'⚡ {day_kwh:.2f} kWh | €{easee_helpers.euro_str(self, total_day_cost)}\n'
+                    f'⏱️ Laaduren: {hours_txt}\n'
+                    f'💰 {pricing_ui.dagrapport_cheapest_line(self)}\n'
+                    f'{price_emoji} Tarief: €{easee_helpers.euro_str(self, rate)}/kWh\n'
+                    f'Energy: €{easee_helpers.euro_str(self, total_day_energy)} | '
+                    f'Belasting: €{easee_helpers.euro_str(self, total_day_tax)}'
+                )
+            else:
+                price_emoji = pricing_ui.price_status_emoji(self)
+                dag_overzicht = (
+                    f'📅 Vandaag\n'
+                    f'⚡ {day_kwh:.2f} kWh | €{easee_helpers.euro_str(self, total_day_cost)}\n'
+                    f'⏱️ Laaduren: {hours_txt}\n'
+                    f'💰 {pricing_ui.dagrapport_cheapest_line(self)}\n'
+                    f'{price_emoji} Tarief: €{easee_helpers.euro_str(self, rate)}/kWh'
+                )
+
+        energy_hint = domoticz_energy_hints.global_hints_text(self, any_charging=any_charging)
+        if dag_overzicht is not None and energy_hint:
+            dag_overzicht = f'{dag_overzicht}\n{energy_hint}'
+        if dag_overzicht is not None and easee_helpers.dag_overzicht_enabled(self):
             domoticz_devices.update_core_text(self, 'Dag overzicht', dag_overzicht)
 
-            tibber_stuurt = bool(not any_lb and any_charging)
-            eq_part = f' | EQ: {eq_count}' if eq_count else ' | Geen EQ'
-            lb_part = ' | LB actief' if any_lb else (' | Tibber stuurt' if tibber_stuurt else '')
-            status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part + ' | Tibber actief'
-            if self.icons_upload_required:
-                status_msg = '⚠️ Upload Easee_icons_v2.zip (Instellingen) | ' + status_msg
-            domoticz_devices.update_core_text(self, 'Status', status_msg)
-        else:
-            eq_part = f' | EQ: {eq_count}' if eq_count else ' | Geen EQ'
-            lb_part = ' | LB actief' if any_lb else ''
-            status_msg = ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part
-            if self.icons_upload_required:
-                status_msg = '⚠️ Upload Easee_icons_v2.zip (Instellingen) | ' + status_msg
-            domoticz_devices.update_core_text(self, 'Status', status_msg)
+        eq_part = f' | EQ: {eq_count}' if eq_count else ' | Geen EQ'
+        lb_part = ' | LB actief' if any_lb else ''
+        if source == 'Tibber' and costs_on and not any_lb and any_charging:
+            lb_part = ' | Tibber stuurt'
+        prijsbron_part = pricing_ui.status_prijsbron_part(self)
+        status_msg = (
+            ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part + prijsbron_part
+        )
+
+        if self.icons_upload_required:
+            status_msg = '⚠️ Upload Easee_icons_v2.zip (Instellingen) | ' + status_msg
+        if energy_hint:
+            status_msg = f'{status_msg} | {energy_hint}'
+        domoticz_devices.update_core_text(self, 'Status', status_msg)
 
         domoticz_devices.update_core_sw(self, 'LoadBal', any_lb)
 
@@ -414,7 +497,10 @@ class BasePlugin:
         easee_state.migrate_cost_tracking(self)
         easee_state.migrate_session_baseline(self)
         easee_state.migrate_charging_timer_state(self)
+        easee_state.migrate_manual_tariff_fields(self)
         tibber_src = easee_state.sync_tibber_token_backup(self)
+        entsoe_src = easee_state.sync_entsoe_token_backup(self)
+        beste_src = easee_state.sync_besteladen_hours_backup(self)
         try:
             easee_state.save_state(self)
         except Exception as e:
@@ -431,25 +517,111 @@ class BasePlugin:
         easee_api.login(self)
         self.started = True
         easee_logging.info('plugin', f'Plugin v{PLUGIN_VERSION} gestart', 'startup')
-        if easee_helpers.tibber_enabled(self):
-            if tibber_src == 'restored':
+        if beste_src == 'restored':
+            easee_logging.info(
+                'plugin',
+                f'Beste laden venster hersteld uit state-backup ({easee_helpers.beste_laden_hours(self)} uur)',
+                'startup',
+            )
+        self.pricing_provider = pricing.get_provider(self)
+        prijsbron = easee_helpers.pricing_source(self)
+        if prijsbron == 'Geen':
+            easee_logging.info('plugin', 'Prijsbron Geen — kosten uitgeschakeld', 'startup')
+        elif prijsbron == 'Handmatig':
+            tariff_type = easee_helpers.manual_tariff_type(self)
+            if tariff_type == 'Dag/nacht':
                 easee_logging.info(
                     'plugin',
-                    'Tibber actief — token hersteld uit state-backup (Mode7 leeg na opslag/herstart)',
+                    f'Prijsbron Handmatig — dag/nacht dal €{easee_helpers.manual_dal_rate(self):.2f}/kWh, '
+                    f'normal €{easee_helpers.manual_normal_rate(self):.2f}/kWh '
+                    f'({easee_helpers.manual_dal_start_hour(self):02d}:00–'
+                    f'{easee_helpers.manual_dal_end_hour(self):02d}:00)',
+                    'startup',
+                )
+            elif tariff_type == 'Dal/piek':
+                easee_logging.info(
+                    'plugin',
+                    f'Prijsbron Handmatig — dal/piek dal €{easee_helpers.manual_dal_rate(self):.2f}, '
+                    f'normal €{easee_helpers.manual_normal_rate(self):.2f}, '
+                    f'piek €{easee_helpers.manual_piek_rate(self):.2f}/kWh '
+                    f'(piek {easee_helpers.manual_piek_start_hour(self):02d}:00–'
+                    f'{easee_helpers.manual_piek_end_hour(self):02d}:00, '
+                    f'weekend alles dal={"ja" if easee_helpers.manual_weekend_all_dal(self) else "nee"})',
                     'startup',
                 )
             else:
-                easee_logging.info('plugin', 'Tibber actief — kosten in Status/Dag overzicht na eerste poll', 'startup')
-        else:
+                rate = easee_helpers.manual_rate(self)
+                easee_logging.info(
+                    'plugin',
+                    f'Prijsbron Handmatig — vast tarief €{rate:.2f}/kWh',
+                    'startup',
+                )
+        if domoticz_energy_hints.energy_hints_enabled(self):
+            names = domoticz_energy_hints.configured_device_names(self)
             easee_logging.info(
                 'plugin',
-                'Tibber uit (Mode7 leeg) — Dag overzicht en laadpaal-kosten in Status worden niet bijgewerkt',
+                f'Energie hints aan — P1="{names["p1"]}", zon="{names["solar"]}", thuisbatterij="{names["thuisbatterij"]}"',
+                'startup',
+            )
+        if prijsbron == 'Tibber':
+            if easee_helpers.tibber_enabled(self):
+                if tibber_src == 'restored':
+                    easee_logging.info(
+                        'plugin',
+                        'Tibber actief — token hersteld uit state-backup (Mode7 leeg na opslag/herstart)',
+                        'startup',
+                    )
+                else:
+                    easee_logging.info(
+                        'plugin',
+                        'Tibber actief — kosten in Status/Dag overzicht na eerste poll',
+                        'startup',
+                    )
+            else:
+                easee_logging.info(
+                    'plugin',
+                    'Tibber uit (Mode7 leeg) — Dag overzicht en laadpaal-kosten in Status worden niet bijgewerkt',
+                    'startup',
+                )
+        elif prijsbron == 'ENTSO-E':
+            if easee_helpers.entsoe_enabled(self):
+                if entsoe_src == 'restored':
+                    easee_logging.info(
+                        'plugin',
+                        'ENTSO-E actief — token hersteld uit state-backup (Mode24 leeg na opslag/herstart)',
+                        'startup',
+                    )
+                else:
+                    easee_logging.info(
+                        'plugin',
+                        'ENTSO-E actief — kosten na eerste poll',
+                        'startup',
+                    )
+                easee_logging.info(
+                    'plugin',
+                    f'ENTSO-E opslag €{easee_helpers.entsoe_opslag(self):.4f}/kWh, '
+                    f'energiebelasting €{easee_helpers.entsoe_energiebelasting(self):.4f}/kWh, '
+                    f'BTW {easee_helpers.entsoe_btw_pct(self):.0f}%',
+                    'startup',
+                )
+            else:
+                easee_logging.info(
+                    'plugin',
+                    'ENTSO-E uit (Mode24 leeg) — Dag overzicht en laadpaal-kosten in Status worden niet bijgewerkt',
+                    'startup',
+                )
+        elif prijsbron == 'EnergyZero':
+            easee_logging.info(
+                'plugin',
+                'EnergyZero actief — kosten na eerste poll',
                 'startup',
             )
         easee_logging.info('plugin', 'Initiële sync wacht op Domoticz Devices-readiness', 'startup')
 
     def onStop(self):
         easee_state.sync_tibber_token_backup(self)
+        easee_state.sync_entsoe_token_backup(self)
+        easee_state.sync_besteladen_hours_backup(self)
         easee_state.save_state(self)
         try:
             if self.session:

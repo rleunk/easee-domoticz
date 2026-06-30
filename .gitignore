@@ -6,6 +6,7 @@ __pycache__/
 
 # Plugin runtime state (created on Domoticz server)
 easee_state.json
+easee_state.json.tmp
 easee_v9_0_state.json
 *.state.json
 

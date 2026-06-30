@@ -13,7 +13,7 @@ import charger_logic
 import domoticz_icons
 import easee_helpers
 import equalizer_logic
-import tibber_pricing
+from pricing import ui as pricing_ui
 
 _DEVICE_LOG_FIELDS = frozenset({
     'Name', 'Unit', 'DeviceID', 'Type', 'TypeName', 'Subtype', 'Switchtype', 'Options', 'Image',
@@ -634,9 +634,11 @@ def update_charger_costs(plugin, cid, session_cost, day_cost, session_kwh, sessi
             )
         return
     try:
-        tibber_rate = easee_helpers.safe_float(plugin, tibber_pricing.current_tibber_price(plugin).get('total'), 0.0)
-        rate = session_cost / session_kwh if session_kwh > 0 else tibber_rate
-        price_emoji = tibber_pricing.price_emoji(plugin, rate, plugin.state.get('price_cache', {}))
+        rate_fallback = easee_helpers.safe_float(
+            plugin, pricing_ui.current_price(plugin).get('total'), 0.0,
+        )
+        rate = session_cost / session_kwh if session_kwh > 0 else rate_fallback
+        price_emoji = pricing_ui.price_emoji(plugin, rate, plugin.state.get('price_cache', {}))
         session_label = 'Sessie' if session_active else 'Laatste sessie'
         text = f'{price_emoji} {session_label}: €{easee_helpers.euro_str(plugin, session_cost)} | Dag: €{easee_helpers.euro_str(plugin, day_cost)}'
         try:
@@ -854,12 +856,11 @@ def ensure_core_devices(plugin):
         ('Totaal kWh', 'CustomkWh'),
         ('LoadBal', 'Switch'),
     ]
-    if easee_helpers.tibber_enabled(plugin):
-        core.extend([
-            ('Beste laden', 'Text'),
-            ('Dag overzicht', 'Text'),
-        ])
+    if easee_helpers.dag_overzicht_enabled(plugin):
+        core.append(('Dag overzicht', 'Text'))
         migrate_dag_overzicht_core_tile(plugin)
+    if easee_helpers.beste_laden_enabled(plugin):
+        core.append(('Beste laden', 'Text'))
     for label, typ in core:
         devid = CORE_DEVICE_IDS.get(label)
         legacy = _core_legacy_names(plugin, label) if label == 'Dag overzicht' else [
@@ -877,12 +878,12 @@ def ensure_core_devices(plugin):
             plugin, label, typ, device_id=devid,
             legacy_names=legacy, legacy_device_ids=legacy_devids,
         )
-    if easee_helpers.tibber_enabled(plugin):
+    if easee_helpers.pricing_enabled(plugin):
         deprecate_core_tiles(plugin)
     if ULTRA_DEBUG:
         ensure_device_once(plugin, easee_helpers.pref(plugin, 'Debug'),'Text')
         ensure_device_once(plugin, easee_helpers.pref(plugin, 'Counts'),'Text')
-        if easee_helpers.tibber_enabled(plugin):
+        if easee_helpers.pricing_enabled(plugin):
             ensure_device_once(plugin, easee_helpers.pref(plugin, 'Tibber prijs'),'Text')
 
 def ensure_charger_devices(plugin, charger, index):

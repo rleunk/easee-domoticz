@@ -1,24 +1,30 @@
-# Easee Domoticz plugin v10.11.6
+# Easee Domoticz Plugin **v1** (1.0.0)
 
-**Easee-laadpalen, Equalizer (meterkast) en Tibber in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
+**Easee-laadpalen, Equalizer (meterkast) en optionele energieprijs (Geen/Handmatig/Tibber/ENTSO-E/EnergyZero) in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-10.11.6--stable-blue)
+![Version](https://img.shields.io/badge/version-1.0.0-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status:** **v10.11.6-stable** — aanbevolen productie-baseline. Dag overzicht-migratie fix (legacy *Kosten & Samenvatting* → **Dag overzicht** via `Update()`); idle timer **00:00** op Status; compacte tegels (**11** i.p.v. 16 bij 2 laders + EQ + Tibber). Rollback: [v10.11.5-stable](STABLE.md), [v10.11.4-stable](STABLE.md). Zie [STABLE.md](STABLE.md).
+> **Status (productie):** **`main`** = **1.0.0** — Prijsbron Geen/Handmatig/Tibber/**ENTSO-E**/**EnergyZero** (alle getest); handmatig **Vast**, **Dag/nacht** of **Dal/piek**; P1/zon/thuisbatterij-hints; **11 tegels + LoadBal**. Zie [STABLE.md](STABLE.md), [VERSIONING.md](VERSIONING.md).
+>
+> **Legacy v10:** branch **`legacy/v10`** / tag [**v10.11.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6) — voor bestaande v10-installaties of rollback. v10 blijft bevroren.
+>
+> **Ontwikkeling:** branch **`v1`** voor toekomstige 1.1.x releases.
 
 ## TL;DR — installeren in 2 minuten
 
 ```bash
 cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
+cd Easee-Domoticz-plugin
+git checkout main   # productie 1.0.0; legacy v10: git checkout legacy/v10
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v10.11.6** → Easee-gebruikersnaam + wachtwoord → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.0.0)** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
-Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
+**Kosten-tegels:** kies **Prijsbron** (Mode9): **Tibber** (default, Mode7 token) · **ENTSO-E** (Mode24 token + toeslagen) · **EnergyZero** (geen token) · **Handmatig** (Vast Mode10, Dag/nacht of Dal/piek Mode11–19) · **Geen** (alleen kWh/laaduren, geen €). Hardware-groep **Energieprijs (optioneel)**. Optioneel **Energie hints** (P1 / Zonnepanelen / Thuisbatterij, Mode20–23 — elke merknaam in Domoticz werkt, bijv. Sessy, Powerwall). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
 > Git-authenticatie: [docs/GIT_SETUP.md](docs/GIT_SETUP.md) · Problemen: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
@@ -26,7 +32,8 @@ Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder op
 
 - Auto-detectie van laadpalen en Equalizer
 - Live vermogen, status en load balancing in Domoticz
-- Kosten via Tibber (sessie, dag, goedkoopste laadwindow) — **Tibber-token (Mode7) vereist**
+- Kosten via **Prijsbron Tibber** (sessie, dag, goedkoopste laadwindow), **ENTSO-E** (day-ahead spot + toeslagen) of **Handmatig** (vast Mode10, dag/nacht of dal/piek Mode11–19); **Geen** = geen €
+- **P1 / zon / thuisbatterij hints** op Status en Dag overzicht (geen laadsturing)
 - 13 custom tegeliconen (P-max laadpaal + Equalizer-puck) — auto-load + handmatige upload als fallback
 - Modulaire codebase (sinds v10.6) — updates via `git pull`
 
@@ -43,12 +50,31 @@ Optioneel maar **verplicht voor kosten-tegels**: Tibber-token (Mode7). Verder op
 |-----------|---------------|
 | **Laadpalen** | Auto-discovery; per lader: **Laden** (grafiek + sessie in Description), **Status** (incl. kosten bij Tibber) |
 | **Equalizer** | 2 tegels per Equalizer: **Status** (LB, limieten, stroom, spanning) + **Vermogen** (import/terug/netto W, vandaag kWh) |
-| **Tibber** | Actueel tarief, **Dag overzicht**, **Beste laden** (configureerbaar venster) — **Mode7 verplicht** |
+| **Tibber** | Actueel tarief, **Dag overzicht**, **Beste laden** — **Mode7 + Prijsbron Tibber** |
+| **ENTSO-E** | Day-ahead spot NL + toeslagen — **Mode24 token + Mode25–27** |
+| **EnergyZero** | Publieke NL uurprijzen — **geen token** (Mode29 info-link) |
+| **Prijsbron** | **Geen** (kWh only) · **Handmatig** (Vast/Dag-nacht/Dal-piek) · **Tibber** (default) · **ENTSO-E** · **EnergyZero** |
+| **Energie hints** | P1 (Mode21), Zonnepanelen (Mode22), Thuisbatterij (Mode23) — context op Status/Dag overzicht; elke batterij-merknaam in Domoticz |
 | **Core** | Globale Status, Totaal Laden, Totaal kWh, LoadBal-schakelaar |
 | **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
 
-Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v10.11.6][LEVEL]…`.
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v1.0.0][LEVEL]…`.
+
+## v1 releases
+
+| Versie | Status |
+|--------|--------|
+| **1.0.0** | **Stable productie** (`main`) — vijf prijsbronnen, hints, 11 tegels |
+| **0.6.1** | Status-tegel toont actieve prijsbron (alle Mode9-waarden) |
+| **0.6.0** | EnergyZero prijsbron (geen token) |
+| **0.5.0** | ENTSO-E day-ahead spot + toeslagen |
+| **0.4.1** | Thuisbatterij-labels (generiek i.p.v. Sessy) |
+| **0.4.0** | Handmatig Dal/piek; P1/zon/thuisbatterij hints |
+| **0.3.0** | Energieprijs UI-reorder; Handmatig Vast + Dag/nacht |
+| **0.2.1** | BesteLadenHours fix; parameter-volgorde |
+| **0.2.0** | Prijsbron Geen/Handmatig/Tibber; `pricing/` end-to-end |
+| **0.1.0** | Scaffold; Tibber-only runtime gelijk aan v10.11.6 |
 
 ## Logniveaus (kort)
 
@@ -91,16 +117,20 @@ Zet **Debug logging** (Mode6) alleen aan als je problemen onderzoekt — dan wor
 | **2 laadpalen** | Per lader eigen tegels | **Mode2** + **Mode3** (optioneel) |
 | **3+ laadpalen** | Auto-discovery + tegels per lader | **Mode4** (komma-gescheiden vanaf lader 3) |
 | **Geen Equalizer** | Plugin werkt volledig | Geen meterkast-tegels; Status toont `Geen EQ` |
-| **Geen Tibber** | Laadpalen + Equalizer OK | Geen kosten-/tarief-tegels; log: *Tibber uit* |
+| **Geen prijsbron / Geen** | Laadpalen + Equalizer OK | Prijsbron **Geen**; *Dag overzicht* kWh+laaduren; log: *kosten uitgeschakeld* |
+| **Handmatig tarief** | Kosten zonder Tibber/ENTSO-E | Prijsbron **Handmatig** + **Vast** (Mode10), **Dag/nacht** of **Dal/piek** (Mode11–19) |
+| **ENTSO-E spot** | Day-ahead zonder Tibber | Prijsbron **ENTSO-E** + Mode24 token + toeslagen Mode25–27 |
+| **EnergyZero** | Uurprijzen zonder token | Prijsbron **EnergyZero** — geen extra velden |
+| **Geen Tibber-token** | Alleen bij Prijsbron Tibber | Geen kosten-tegels; log: *Tibber uit* |
 
 Laat naamvelden leeg voor de Easee-appnaam. De **hardwarenaam** in Domoticz (bijv. `Easee`) is het prefix op alle tegels.
 
 ## Devices
 
 ### Core
-- **Easee - Status** — online, Equalizer-aantal, load balancing, Tibber
+- **Easee - Status** — online, Equalizer-aantal, load balancing, actieve prijsbron (Mode9)
 - **Totaal Laden**, **Totaal kWh**, **LoadBal**
-- **Beste laden**, **Dag overzicht** (met Tibber, Mode7)
+- **Beste laden**, **Dag overzicht** (bij actieve prijsbron: Tibber, ENTSO-E, EnergyZero of Handmatig)
 
 ### Per Equalizer
 - **[Naam] - Status** — verbinding, LB (fase-detail), limieten, stroom L1/L2/L3, spanning
@@ -108,7 +138,7 @@ Laat naamvelden leeg voor de Easee-appnaam. De **hardwarenaam** in Domoticz (bij
 
 ### Per laadpaal
 - **[Naam] - Laden** — vermogen + grafiek; sessie/vandaag/totaal kWh in Description (v10.11+)
-- **[Naam] - Status** — laadtoestand, timer, laadhint + sessie/dag € bij Tibber (v10.11+)
+- **[Naam] - Status** — laadtoestand, timer, laadhint + sessie/dag € bij actieve prijsbron (v10.11+)
 
 **Verouderd sinds v10.11** (verborgen na upgrade, `Used=0`): *Kosten & Samenvatting*, *Dagrapport*, *Totaal & Sessie*, *Kosten (Sessie/Dag)*.
 
@@ -154,7 +184,18 @@ Volledige LED/badge-tabel: [INSTALL.md — Custom iconen](INSTALL.md#custom-icon
 | Debug (Mode6) | Normal | Zet op *Debug* bij problemen — toont extra DEBUG-regels |
 | Mode2 / Mode3 / Mode4 | — | Laadpaalnamen 1 / 2 / 3+ |
 | Address / IP | — | Equalizer-naam / handmatig ID |
-| Tibber token (Mode7) | — | **Vereist voor kosten-tegels** (per lader + globaal) |
+| Prijsbron (Mode9) | Tibber | **Geen** / **Handmatig** / **Tibber** / **ENTSO-E** / **EnergyZero** |
+| Handmatig type (Mode11) | Vast | **Vast** / **Dag/nacht** / **Dal/piek** |
+| Vast tarief €/kWh (Mode10) | 0.25 | Alleen **Handmatig — Vast** |
+| Dal/normal/piek €/kWh (Mode12/13/16) | 0.22 / 0.28 / 0.35 | **Dag/nacht** of **Dal/piek** |
+| Dal start/eind uur (Mode14/15) | 23 / 7 | **Dag/nacht** / **Dal/piek** |
+| Piek start/eind uur (Mode17/18) | 17 / 21 | Alleen **Dal/piek** |
+| Weekend alles dal (Mode19) | Ja | Alleen **Dal/piek** |
+| P1/zon/thuisbatterij hints (Mode20–23) | Aan / Power / Zonnepanelen / Sessy | Mode23 default `Sessy`; zet op jouw batterij-naam (Powerwall, etc.) |
+| Tibber token (Mode7) | — | **Vereist** bij Prijsbron Tibber |
+| ENTSO-E token (Mode24) | — | **Vereist** bij Prijsbron ENTSO-E |
+| EnergyZero info (Mode29) | dynamische-energieprijzen.nl | Alleen bij Prijsbron **EnergyZero** — geen token |
+| Opslag / belasting / BTW (Mode25–27) | 0 / 0 / 21 | Alleen **ENTSO-E** — vul in naar jouw contract |
 
 Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
@@ -163,11 +204,12 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 ```bash
 cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
-git checkout v10.11.6-stable   # aanbevolen stable; of: git pull op main
+git checkout main
+git pull origin main
 sudo systemctl restart domoticz
 ```
 
-**Na elke upgrade:** herstart het Easee hardware-item in Domoticz. Zie [STABLE.md](STABLE.md) voor stable-tags en rollback.
+**Na elke upgrade:** herstart het Easee hardware-item in Domoticz. Zie [STABLE.md](STABLE.md) voor tags en rollback (legacy v10 op `legacy/v10`).
 
 **Bij icon-wijzigingen (v10.9.5+):** upload **`Easee_icons_v2.zip` opnieuw** via Aangepaste pictogrammen. Controleer log: `image_ids: 13/13 sets`.
 
@@ -175,8 +217,10 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 
 ## Changelog & release
 
-- Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md)
-- **Huidige stable:** **[v10.11.6-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6)** — Dag overzicht-migratie fix, idle timer 00:00, compacte 11-tegel UI
+- Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md) — v1 start bij 0.1.0; legacy v10 hieronder in changelog
+- **v1 productie:** [**v1.0.0**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.0.0) op `main`
+- **v1 pre-release:** [v0.6.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.6.1) · [v0.6.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.6.0) · [v0.5.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.5.0) · [v0.4.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.1) · [v0.4.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.0) · [v0.3.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.3.0) · [v0.2.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.1) · [v0.2.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.0) · [v0.1.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.1.0)
+- **Legacy v10:** [**v10.11.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6) op branch `legacy/v10`
 - Vorige stable: [v10.11.4-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.4) (rollback)
 - Oudere rollback: [v10.11.2-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.2)
 - Oudere rollback: [v10.9.32-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.32)
@@ -209,17 +253,17 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 | Geen iconen | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — custom iconen |
 | Login mislukt | Credentials + rate limit (5–10 min wachten) |
 | Geen Equalizer | Debug aan; handmatig ID in IP-veld |
-| Kosten 0 € / geen kosten-tegels | **Tibber-token (Mode7)** invullen; tile verwijderen + hardware herstarten |
+| Kosten 0 € / geen kosten-tegels | Controleer **Prijsbron (Mode9)** + bijbehorend token (Tibber Mode7 / ENTSO-E Mode24); tile verwijderen + hardware herstarten |
 | 429 rate limit in log | Poll interval (Mode1) op **60 sec** — [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md#http-429-rate-limit-easee-api)
 | Verkeerd icoon op tegel | Upgrade naar v10.9.18+; zip opnieuw uploaden |
 
 ## Module structuur
 
-Sinds v10.6.0: 13 Python-modules naast `Easee_icons_v2.zip`. Overzicht: [docs/REFACTOR_MAPPING.md](docs/REFACTOR_MAPPING.md).
+Sinds v10.6.0 modulair; v1 (0.2.0+) voegt **`pricing/`** (prijsbronnen) en **`domoticz_energy_hints.py`** toe — **14** root-modules + `pricing/` (9 bestanden, **23** totaal). Overzicht: [docs/REFACTOR_MAPPING.md](docs/REFACTOR_MAPPING.md). Release **1.0.0**: [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md).
 
 ## Problemen melden
 
-[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v10.11.6-stable** (of stable-tag), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v1.0.0** (main) of **v10.11.6** (legacy), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
 
 ## Support & credits
 
@@ -231,4 +275,4 @@ MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Versie 10.11.6** (stable: v10.11.6-stable) — Richard Leunk
+**Versie 1.0.0** (main) — Richard Leunk · Legacy v10: **v10.11.6** op branch `legacy/v10`

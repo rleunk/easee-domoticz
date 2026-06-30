@@ -510,3 +510,18 @@ Alle 8 aanbevolen opties zijn gekozen en geïmplementeerd:
 | **Totaal** | **2988** |
 
 Import-grafiek: `constants → helpers → api, state, tibber → icons → devices → charger, equalizer → plugin`
+
+---
+
+## v1 uitbreidingen (0.2.0 – 0.6.1)
+
+| Module / map | Versie | Rol |
+|--------------|--------|-----|
+| **`pricing/`** | 0.2.0+ | Prijsbron-factory: `none`, `manual`, `tibber`, `entsoe`, `energyzero`; UI-helpers in `ui.py` |
+| **`domoticz_energy_hints.py`** | 0.4.0+ | P1 / zon / thuisbatterij context-hints (Mode20–23) |
+| **`pricing/entsoe.py`** | 0.5.0 | ENTSO-E day-ahead + Mode24 token backup |
+| **`pricing/energyzero.py`** | 0.6.0 | EnergyZero publieke uurprijzen (geen token) |
+
+**Totaal v1:** 14 root `.py` + `pricing/` (9 bestanden) = **23** Python-bestanden naast `plugin.py` entrypoint. Legacy v10.6 split = 13 modules zonder `pricing/` of energy hints.
+
+Release-readiness: [RELEASE_1.0.0.md](RELEASE_1.0.0.md).

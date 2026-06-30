@@ -4,7 +4,162 @@ Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).
 
+> **v1 changelog** start bij **0.1.0** op branch `v1`. Legacy v10-geschiedenis staat onder de separator **Legacy v10** hieronder.
+
 ## [Unreleased]
+
+## [1.0.0] — 2026-06-30
+
+### Added
+- **v1.0.0 production release** — eerste stable v1-lijn op branch `main`, tag **`v1.0.0`**
+- Vijf prijsbronnen: Geen, Handmatig (Vast/Dag-nacht/Dal-piek), Tibber, ENTSO-E, EnergyZero
+- P1/zon/thuisbatterij-hints (Mode20–23); compacte **11 tegels + LoadBal** layout
+
+### Changed
+- **main** wijst nu naar v1 **1.0.0** (productie); legacy v10.11.6 bewaard op branch **`legacy/v10`**
+- Status-tegel toont actieve prijsbron voor alle Mode9-waarden
+- Documentatie gesynchroniseerd; soak test afgerond
+
+### Notes
+- Upgrade van legacy v10: checkout `legacy/v10` of tag `v10.11.6` / `v10.11.6-stable` voor rollback
+- Toekomstige v1-ontwikkeling (1.1.x) op branch **`v1`**
+- Zie [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md) voor volledige checklist
+
+## [0.6.1] — 2026-06-27
+
+### Changed
+- **Status-tegel** — toont actieve prijsbron voor alle vijf Mode9-waarden (Geen, Handmatig, Tibber, ENTSO-E, EnergyZero); EnergyZero en Geen ontbraken eerder
+
+## [0.6.0] — 2026-06-27
+
+### Added
+- **Prijsbron EnergyZero** — publieke NL uurprijzen via EnergyZero API, **geen token**
+- **`pricing/energyzero.py`** — JSON-parsing, uurprijzen vandaag+morgen, cache zoals Tibber/ENTSO-E
+- **Mode29** info-link naar [dynamische-energieprijzen.nl](https://www.dynamische-energieprijzen.nl/) — *EnergyZero — geen token nodig*
+- Startup-log: `EnergyZero actief — kosten na eerste poll` (geen token in log)
+
+### Changed
+- Hardware-groep **Energieprijs**: Prijsbron → Beste laden → Handmatig → Tibber → ENTSO-E → **EnergyZero**
+- **`pricing/ui.py`** — emoji, goedkoopste venster en laadhints voor EnergyZero uurcurve
+- **`pricing_enabled()` / `beste_laden_enabled()`** — EnergyZero zonder token
+
+### Notes
+- EnergyZero levert **indicatieve** uurtarieven (incl. BTW via API) — geen exacte factuur; kan afwijken van jouw leverancier
+- Uurprijzen (niet kwartier); morgen meestal beschikbaar rond ~14:00–15:00 CET
+- Eenvoudiger dan ENTSO-E (geen token/toeslagen) — vergelijkbaar met Tibber maar zonder account
+- Na upgrade: kies **Prijsbron EnergyZero** — geen extra velden invullen
+
+## [0.5.0] — 2026-06-27
+
+### Added
+- **Prijsbron ENTSO-E** — day-ahead spotprijzen NL (`10YNL----------L`) via ENTSO-E Transparency Platform API
+- **`pricing/entsoe.py`** — XML-parsing, €/MWh→€/kWh, uurprijzen vandaag+morgen, cache zoals Tibber
+- **Instelbare toeslagen** — opslag leverancier (Mode25), energiebelasting (Mode26), BTW % (Mode27); all-in schatting per uur
+- **Mode24** ENTSO-E API token (password) + state-backup (`entsoe_token_backup`) zoals Tibber Mode7
+- **Mode28** link naar transparency.entsoe.eu voor token-registratie
+- Startup-log: `ENTSO-E actief — kosten na eerste poll` + samenvatting toeslagen (geen token in log)
+
+### Changed
+- Hardware-groep **Energieprijs** logisch geordend: Prijsbron → Beste laden → Handmatig → Tibber → ENTSO-E
+- **`pricing/ui.py`** — emoji, goedkoopste venster en laadhints voor ENTSO-E uurcurve
+- **`pricing_enabled()` / `beste_laden_enabled()`** — ENTSO-E met geldig token
+
+### Notes
+- ENTSO-E = spot/day-ahead, **geen exacte factuur** — vul opslag/belasting/BTW in naar jouw contract
+- Uurprijzen (niet kwartier); morgen meestal beschikbaar na ~13:00 CET
+- Token gratis via registratie op [transparency.entsoe.eu](https://transparency.entsoe.eu/)
+- Na upgrade: kies **Prijsbron ENTSO-E**, vul Mode24 + toeslagen; Tibber-installaties ongewijzigd (default blijft Tibber)
+
+## [0.4.1] — 2026-06-27
+
+### Changed
+- **Thuisbatterij-labels** — hardware- en hintteksten generiek i.p.v. Sessy-specifiek (Mode20/23, statusregel 🔋 Thuisbatterij actief, startup-log `thuisbatterij=`)
+- **Mode23 default blijft `Sessy`** — backward compat; wijzig naar jouw Domoticz-apparaatnaam (Powerwall, etc.)
+
+### Notes
+- Geen parameter-hernoeming (Mode23 binding ongewijzigd); alleen UI-labels en gebruikerszichtbare teksten
+
+## [0.4.0] — 2026-06-27
+
+### Added
+- **Handmatig Dal/piek-tarief** — subtype **Dal/piek** (Mode11); dal/normal/piek €/kWh (Mode12/13/16), dal- en piekuren (Mode14/15, Mode17/18), **Weekend alles dal** (Mode19, default Ja)
+- **`manual_tariff_period()` / `manual_rate_at()`** — dal, normal of piek per uur; kosten via actueel uurtarief per poll
+- **P1 / zon / Sessy hints** — leest optionele Domoticz-apparaten (Mode21–23); contextregels op globale **Status**, **Dag overzicht** en laadpaal-**Status** bij laden
+- **`domoticz_energy_hints.py`** — P1 `sValue`-parsing, Zonne-overschot, Teruglevering (dedupe), Sessy actief, Hoog netverbruik; **Mode20** hints aan/uit (default aan)
+
+### Changed
+- **Beste laden** bij Handmatig Dal/piek: goedkoopste venster over dal/normal/piek-curve
+- Tarief-emoji Handmatig: 🟢 dal · 🟡 normal · 🔴 piek
+- Tibber-laadhints blijven; energie-hints werken ook met Tibber (Richard-setup)
+- Nieuwe hardware-groep **Energie hints (optioneel)** — params aan einde (Mode16–23 na BesteLadenHours)
+
+### Notes
+- **Tibber-pad ongewijzigd** functioneel
+- Ongeldige apparaatnamen → hints stil overgeslagen (DEBUG-log)
+- Na upgrade: controleer P1/zon/Sessy-namen indien afwijkend van defaults
+
+## [0.3.0] — 2026-06-27
+
+### Added
+- **Handmatig dag/nacht-tarief** — subtype **Vast** | **Dag/nacht** (Mode11); dal/normal €/kWh (Mode12/13), dal start/eind uur (Mode14/15, default 23:00–07:00)
+- **`ManualPricingProvider`** — uurprijzen per kwartier/poll via `manual_rate_at()`; goedkoopste venster en dagregel voor dag/nacht
+- **State-migratie** `migrate_manual_tariff_fields()` — defaults voor Mode11–Mode15 bij upgrade
+
+### Changed
+- Hardware-groep hernoemd naar **Energieprijs (optioneel)**; **Prijsbron** staat eerst (Geen | Handmatig | Tibber)
+- Velden gegroepeerd per bron met labels *alleen bij …* — Domoticz toont alle velden; labels/documentatie geven aan welke van toepassing zijn
+- **Beste laden** bij Handmatig dag/nacht: sliding-window over handmatige uurcurve (niet alleen vast-tarieftekst)
+- Versie **0.3.0** in `easee_constants.py` en plugin-metadata
+
+### Notes
+- **Tibber-pad ongewijzigd** functioneel; **BesteLadenHours** veldnaam behouden
+- Na upgrade: controleer **Handmatig type** en dal/normal-tarieven indien je dag/nacht wilt gebruiken (default blijft **Vast** + Mode10)
+
+## [0.2.1] — 2026-06-27
+
+### Fixed
+- **Beste laden venster (uren)** — hardwareveld gebruikt nu `BesteLadenHours` i.p.v. `Extra` (Domoticz `Extra` = plugin-key `EaseeCloudAutoDiscoveryV1000`, waardoor UI *EaseeCloudA* toonde)
+- **Parameter-volgorde** — Mode7/Mode8 vóór Prijsbron (Mode9) en Tarief (Mode10); nieuwe params aan het einde van de Tibber-groep (geen verschuiving t.o.v. v10.11.6)
+- **Migratie** — leest legacy numerische `Extra` of state-backup; negeert plugin-key / non-numeric waarden; default 3, range 1–12
+- Dubbele functiedefinities in `easee_helpers.py` verwijderd
+
+### Notes
+- Na upgrade: controleer **Beste laden venster (uren)** (default 3) en Tibber-token indien nodig opnieuw invullen
+
+## [0.2.0] — 2026-06-27
+
+### Added
+- **Prijsbron Geen** — geen Tibber API; kosten uit; *Dag overzicht* toont kWh + laaduren; geen sessie/dag-€ op Status; geen *Beste laden*-tegel
+- **Prijsbron Handmatig** — vast tarief via hardware **Tarief €/kWh (Mode10)**, default 0,25; kostenberekening kWh×tarief; *Beste laden* toont *Vast tarief €X/kWh*
+- **`pricing/ui.py`** — provider-aware UI-helpers (tarief, emoji, laadhints, goedkoopste venster)
+- **`easee_helpers.pricing_enabled()`** — kosten actief bij Tibber+token of Handmatig
+- **`easee_helpers.manual_rate()`**, **`dag_overzicht_enabled()`**, **`beste_laden_enabled()`**
+
+### Changed
+- Kosten-accumulatie en UI via `pricing.get_provider()` / `pricing_ui` i.p.v. directe `tibber_pricing`-aanroepen
+- `ManualPricingProvider` en `NoPricingProvider` volledig geïmplementeerd
+- Startup-log: *Prijsbron Geen — kosten uitgeschakeld*; Handmatig toont ingesteld tarief
+- Versie **0.2.0** in `easee_constants.py` en plugin-metadata
+
+### Notes
+- **Prijsbron Tibber** (default) — ongewijzigd t.o.v. 0.1.0 / v10.11.6-stable bij token in Mode7
+
+## [0.1.0] — 2026-06-27
+
+### Added
+- **v1 ontwikkelingslijn** op branch `v1` — scaffold; runtime-gedrag gelijk aan **v10.11.6-stable**
+- [VERSIONING.md](VERSIONING.md) — beleid v1 vs legacy v10 (geen hernummering v10 → 0.10.x)
+- `pricing/` module-skeleton: `base`, `none`, `manual`, `tibber`, `factory`
+- Hardware-parameter **Prijsbron** (Mode9): `Geen|Handmatig|Tibber` (default Tibber)
+
+### Notes
+- Prijsbron **Geen** — log bij start: *kosten uitgeschakeld (0.2.0)*
+- Prijsbron **Handmatig** — log bij start: *nog niet geïmplementeerd (0.2.0)* — geen crash
+- Tibber-kosten blijven werken bij default (Prijsbron Tibber + token in Mode7)
+
+---
+
+# Legacy v10
 
 ## [10.11.6] — 2026-06-26
 

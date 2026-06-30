@@ -8,7 +8,7 @@ import domoticz_devices
 import easee_api
 import easee_helpers
 import easee_state
-import tibber_pricing
+from pricing import ui as pricing_ui
 
 def session_energy_kwh(plugin, values, session, ongoing_fetched=False):
     # Prefer /sessions/ongoing over /state — state sessionEnergy can stay stale after 429 or day change.
@@ -583,14 +583,14 @@ def poll_charger(plugin, charger):
         elif prev_sess is None and not resuming and ongoing_fetched and session:
             st['prev_session_kwh'] = api_session_kwh
 
-    if easee_helpers.tibber_enabled(plugin) and delta_kwh > 0:
+    if easee_helpers.pricing_enabled(plugin) and delta_kwh > 0:
         st['cost_delta_warned'] = False
         easee_logging.debug(
             'charger_logic',
             f'Kosten delta lader {cid}: {delta_kwh:.6f} kWh via {delta_source}',
             'cost',
         )
-        price = tibber_pricing.current_tibber_price(plugin)
+        price = pricing_ui.current_price(plugin)
         p_total = easee_helpers.safe_float(plugin, price.get('total'), 0.0)
         p_energy = easee_helpers.safe_float(plugin, price.get('energy'), 0.0)
         p_tax = easee_helpers.safe_float(plugin, price.get('tax'), 0.0)
@@ -682,7 +682,7 @@ def poll_charger(plugin, charger):
 
     st['prev_total_kwh'] = total_kwh
 
-    if easee_helpers.tibber_enabled(plugin) and session_active and power_w > 50 and delta_kwh <= 0:
+    if easee_helpers.pricing_enabled(plugin) and session_active and power_w > 50 and delta_kwh <= 0:
         if not st.get('cost_delta_warned'):
             st['cost_delta_warned'] = True
             easee_logging.warning(
@@ -701,12 +701,12 @@ def poll_charger(plugin, charger):
     )
 
     eq_lb = any(bool(v.get('loadbal')) for v in (plugin.latest_equalizers or {}).values())
-    hint = tibber_pricing.charging_hint(plugin, power_w, session_active, eq_lb_active=eq_lb)
+    hint = pricing_ui.charging_hint(plugin, power_w, session_active, eq_lb_active=eq_lb)
     status_text = build_charger_status_text(
         plugin, online, session_active, power_w, status_label, laadduur, hint,
-        session_cost=session_cost if easee_helpers.tibber_enabled(plugin) else None,
+        session_cost=session_cost if easee_helpers.pricing_enabled(plugin) else None,
         day_cost=easee_helpers.safe_float(plugin, st.get('day_cost_total', 0.0), 0.0)
-        if easee_helpers.tibber_enabled(plugin) else None,
+        if easee_helpers.pricing_enabled(plugin) else None,
         session_active_for_cost=charging_active,
     )
     domoticz_devices.update_charger_text(plugin, cid, 'Status', status_text)
