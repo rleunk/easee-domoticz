@@ -1,8 +1,8 @@
-# Release readiness — v1 **1.0.0-stable**
+# Release — v1 **1.0.0** ✅
 
-Branch **`v1`**, code version **0.6.1** (pre-release). This document tracks what is done and what remains before tagging **`1.0.0-stable`** and promoting the GitHub release from pre-release.
+Branch **`main`**, code version **1.0.0**, tag **`v1.0.0`**. Released **2026-06-30**.
 
-Legacy productie stays on **`main`** / [**v10.11.6-stable**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6-stable) until v1 is explicitly promoted.
+Legacy v10.11.6 is bewaard op branch **`legacy/v10`** (tags `v10.11.6` / `v10.11.6-stable`). Toekomstige v1-ontwikkeling (1.1.x) op branch **`v1`**.
 
 See also [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELOG.md](../CHANGELOG.md).
 
@@ -14,48 +14,40 @@ See also [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELO
 |------|--------|-------|
 | v1 line **0.1.0 → 0.6.1** pre-releases tagged | ✅ | GitHub releases `v0.1.0` … `v0.6.1` |
 | All price sources implemented | ✅ | Geen, Handmatig, Tibber, ENTSO-E, EnergyZero |
-| All price sources tested on live Domoticz | ✅ | Richard setup — ENTSO-E confirmed 2026-06-29 (e-mail approval + token backup) |
+| All price sources tested on live Domoticz | ✅ | Richard setup — ENTSO-E confirmed 2026-06-29 |
 | EnergyZero token-free | ✅ | `api.energyzero.nl` |
-| Status tile shows prijsbron (0.6.1) | ✅ | All Mode9 values |
+| Status tile shows prijsbron | ✅ | All Mode9 values |
 | Energy hints (P1, solar, thuisbatterij) | ✅ | Mode20–23 |
 | 11 tiles + LoadBal layout | ✅ | 2 laders + EQ + pricing |
-| Legacy v10 frozen on `main` | ✅ | v10.11.6-stable |
-| Public docs synced to 0.6.1 | ✅ | README, INSTALL, CONFIGURATION, TROUBLESHOOTING, … |
-| Soak test on production Domoticz | ⏳ | Richard — ongoing on v0.6.1; no critical regressions required before tag |
-| Tag **`1.0.0-stable`** + GitHub release | ⏳ | After soak sign-off; promote from last pre-release |
+| Legacy v10 preserved on `legacy/v10` | ✅ | v10.11.6 content + tags intact |
+| Public docs synced to 1.0.0 | ✅ | README, INSTALL, STABLE, VERSIONING, … |
+| Soak test on production Domoticz | ✅ | Completed 2026-06-30 |
+| Tag **`v1.0.0`** + GitHub release | ✅ | Latest release on GitHub |
 | Domoticz forum announcement | ⏳ | Draft: [FORUM_POST.md](FORUM_POST.md) |
 
 ---
 
-## Soak-test criteria (before tag)
-
-Use this as the gate for **1.0.0-stable** — adjust duration if you want a longer burn-in:
-
-1. **Branch `v1`**, version **0.6.1** (or final pre-release commit) on the production Domoticz server.
-2. **Minimum soak period** — e.g. 7–14 days continuous operation without hardware-thread crashes (`heartbeat exception` in log).
-3. **Core behaviour** — login, poll loop, laadpalen + Equalizer tiles update; `image_ids: 13/13` after start (or handmatige zip).
-4. **Pricing** — at least one full day with your chosen **Prijsbron**; *Dag overzicht* and laadpaal-**Status** show plausible € (not stuck at €0,00).
-5. **Optional checks** — switch Prijsbron once (e.g. Tibber ↔ EnergyZero) and confirm Status tile label updates; ENTSO-E/ Tibber token survives hardware *Save* (state backup).
-6. **No open P0/P1 issues** on GitHub for v1 scope.
-
----
-
-## Tag procedure (when ready)
-
-Do **not** run until soak sign-off:
+## Release procedure (executed)
 
 ```bash
-cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
-git fetch origin
-git checkout v1
-git pull origin v1
-# Bump PLUGIN_VERSION to 1.0.0 in easee_constants.py + plugin.xml if not done in a prior commit
-git tag -a 1.0.0-stable -m "v1 stable: all price sources, docs complete"
-git push origin v1
-git push origin 1.0.0-stable
-```
+# 1. Preserve legacy
+git checkout main
+git branch legacy/v10
+git push origin legacy/v10
 
-On GitHub: create release **1.0.0-stable** from tag, mark as **latest** for v1, copy notes from CHANGELOG. Post [FORUM_POST.md](FORUM_POST.md) on the Domoticz forum.
+# 2. Version bump + docs on v1, merge to main
+git checkout v1
+# bump PLUGIN_VERSION to 1.0.0, update docs
+git commit -m "release: v1.0.0"
+git checkout main
+git merge v1
+git push origin main v1 legacy/v10
+
+# 3. Tag and release
+git tag -a v1.0.0 -m "v1.0.0: first stable v1 release"
+git push origin v1.0.0
+gh release create v1.0.0 --title "v1.0.0" --latest
+```
 
 ---
 

@@ -1,14 +1,16 @@
-# Easee Domoticz Plugin **v1** (0.6.1)
+# Easee Domoticz Plugin **v1** (1.0.0)
 
 **Easee-laadpalen, Equalizer (meterkast) en optionele energieprijs (Geen/Handmatig/Tibber/ENTSO-E/EnergyZero) in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-0.6.1-orange)
+![Version](https://img.shields.io/badge/version-1.0.0-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status (v1 branch):** **0.6.1** — Prijsbron Geen/Handmatig/Tibber/**ENTSO-E**/**EnergyZero** (alle getest); handmatig **Vast**, **Dag/nacht** of **Dal/piek**; P1/zon/thuisbatterij-hints. **Niet** productie-stable — **gereed voor 1.0.0-stable** na soak test. Zie [STABLE.md](STABLE.md), [VERSIONING.md](VERSIONING.md), [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md).
+> **Status (productie):** **`main`** = **1.0.0** — Prijsbron Geen/Handmatig/Tibber/**ENTSO-E**/**EnergyZero** (alle getest); handmatig **Vast**, **Dag/nacht** of **Dal/piek**; P1/zon/thuisbatterij-hints; **11 tegels + LoadBal**. Zie [STABLE.md](STABLE.md), [VERSIONING.md](VERSIONING.md).
 >
-> **Legacy productie:** branch `main` / tag [**v10.11.6-stable**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6-stable) — aanbevolen voor live Domoticz. v10 blijft bevroren; geen hernummering naar 0.10.x.
+> **Legacy v10:** branch **`legacy/v10`** / tag [**v10.11.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6) — voor bestaande v10-installaties of rollback. v10 blijft bevroren.
+>
+> **Ontwikkeling:** branch **`v1`** voor toekomstige 1.1.x releases.
 
 ## TL;DR — installeren in 2 minuten
 
@@ -16,11 +18,11 @@
 cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
-git checkout v1   # v1 ontwikkeling; voor productie: git checkout v10.11.6-stable
+git checkout main   # productie 1.0.0; legacy v10: git checkout legacy/v10
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (0.6.1)** → Easee-gebruikersnaam + wachtwoord → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.0.0)** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
 **Kosten-tegels:** kies **Prijsbron** (Mode9): **Tibber** (default, Mode7 token) · **ENTSO-E** (Mode24 token + toeslagen) · **EnergyZero** (geen token) · **Handmatig** (Vast Mode10, Dag/nacht of Dal/piek Mode11–19) · **Geen** (alleen kWh/laaduren, geen €). Hardware-groep **Energieprijs (optioneel)**. Optioneel **Energie hints** (P1 / Zonnepanelen / Thuisbatterij, Mode20–23 — elke merknaam in Domoticz werkt, bijv. Sessy, Powerwall). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
@@ -57,12 +59,13 @@ In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plug
 | **Iconen** | 13 sets in `Easee_icons_v2.zip`; zie [Custom iconen](#-custom-iconen) |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
 
-Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v0.6.1][LEVEL]…`.
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v1.0.0][LEVEL]…`.
 
 ## v1 releases
 
 | Versie | Status |
 |--------|--------|
+| **1.0.0** | **Stable productie** (`main`) — vijf prijsbronnen, hints, 11 tegels |
 | **0.6.1** | Status-tegel toont actieve prijsbron (alle Mode9-waarden) |
 | **0.6.0** | EnergyZero prijsbron (geen token) |
 | **0.5.0** | ENTSO-E day-ahead spot + toeslagen |
@@ -71,8 +74,7 @@ Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestr
 | **0.3.0** | Energieprijs UI-reorder; Handmatig Vast + Dag/nacht |
 | **0.2.1** | BesteLadenHours fix; parameter-volgorde |
 | **0.2.0** | Prijsbron Geen/Handmatig/Tibber; `pricing/` end-to-end |
-| **0.1.0** | Scaffold; Tibber-only runtime gelijk aan v10.11.6-stable |
-| **1.0.0-stable** | Gepland (na soak test) — [checklist](docs/RELEASE_1.0.0.md) |
+| **0.1.0** | Scaffold; Tibber-only runtime gelijk aan v10.11.6 |
 
 ## Logniveaus (kort)
 
@@ -202,12 +204,12 @@ Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 ```bash
 cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
-git checkout v1              # v1 ontwikkeling
-# of voor productie: git checkout v10.11.6-stable
+git checkout main
+git pull origin main
 sudo systemctl restart domoticz
 ```
 
-**Na elke upgrade:** herstart het Easee hardware-item in Domoticz. Zie [STABLE.md](STABLE.md) voor stable-tags en rollback.
+**Na elke upgrade:** herstart het Easee hardware-item in Domoticz. Zie [STABLE.md](STABLE.md) voor tags en rollback (legacy v10 op `legacy/v10`).
 
 **Bij icon-wijzigingen (v10.9.5+):** upload **`Easee_icons_v2.zip` opnieuw** via Aangepaste pictogrammen. Controleer log: `image_ids: 13/13 sets`.
 
@@ -216,8 +218,9 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 ## Changelog & release
 
 - Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md) — v1 start bij 0.1.0; legacy v10 hieronder in changelog
-- **v1 (branch `v1`):** [v0.6.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.6.1) · [v0.6.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.6.0) · [v0.5.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.5.0) · [v0.4.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.1) · [v0.4.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.0) · [v0.3.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.3.0) · [v0.2.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.1) · [v0.2.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.0) · [v0.1.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.1.0)
-- **Legacy stable:** **[v10.11.6-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6-stable)** — productie op `main`
+- **v1 productie:** [**v1.0.0**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.0.0) op `main`
+- **v1 pre-release:** [v0.6.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.6.1) · [v0.6.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.6.0) · [v0.5.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.5.0) · [v0.4.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.1) · [v0.4.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.0) · [v0.3.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.3.0) · [v0.2.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.1) · [v0.2.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.0) · [v0.1.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.1.0)
+- **Legacy v10:** [**v10.11.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6) op branch `legacy/v10`
 - Vorige stable: [v10.11.4-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.4) (rollback)
 - Oudere rollback: [v10.11.2-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.2)
 - Oudere rollback: [v10.9.32-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.9.32)
@@ -256,11 +259,11 @@ Stap-voor-stap: [INSTALL.md](INSTALL.md).
 
 ## Module structuur
 
-Sinds v10.6.0 modulair; v1 (0.2.0+) voegt **`pricing/`** (prijsbronnen) en **`domoticz_energy_hints.py`** toe — **14** root-modules + `pricing/` (9 bestanden, **23** totaal). Overzicht: [docs/REFACTOR_MAPPING.md](docs/REFACTOR_MAPPING.md). Pad naar **1.0.0-stable**: [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md).
+Sinds v10.6.0 modulair; v1 (0.2.0+) voegt **`pricing/`** (prijsbronnen) en **`domoticz_energy_hints.py`** toe — **14** root-modules + `pricing/` (9 bestanden, **23** totaal). Overzicht: [docs/REFACTOR_MAPPING.md](docs/REFACTOR_MAPPING.md). Release **1.0.0**: [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md).
 
 ## Problemen melden
 
-[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v0.6.1** (v1) of **v10.11.6-stable** (legacy), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v1.0.0** (main) of **v10.11.6** (legacy), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
 
 ## Support & credits
 
@@ -272,4 +275,4 @@ MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Versie 0.6.1** (v1 branch) — Richard Leunk · Legacy productie: **v10.11.6-stable** op `main`
+**Versie 1.0.0** (main) — Richard Leunk · Legacy v10: **v10.11.6** op branch `legacy/v10`

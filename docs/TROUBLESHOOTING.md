@@ -1,6 +1,6 @@
 # Troubleshooting Gids
 
-> **Versies:** **v1** branch — **0.6.1** (pre-release) · Legacy **v10.11.6-stable** op `main`  
+> **Versies:** **main** — **1.0.0** (productie) · Legacy **v10.11.6** op branch `legacy/v10`  
 > Installatie: [INSTALL.md](../INSTALL.md) · Stable-tags: [STABLE.md](../STABLE.md) · Configuratie: [CONFIGURATION.md](CONFIGURATION.md)
 
 ## Veelvoorkomende Problemen
@@ -62,7 +62,7 @@ sudo journalctl -u domoticz -f | grep Easee
 **Oplossing** (v10.9.28+):
 1. **Verwijder oude Easee custom icons** via **Instellingen → Aangepaste pictogrammen**
 2. Controleer `Easee_icons_v2.zip` en map `icons/` (13 mini-zips) in pluginmap
-3. `git pull` of `git checkout v10.11.6-stable` en herstart hardware-item
+3. `git pull` op `main` of `git checkout legacy/v10` / `v10.11.6-stable` en herstart hardware-item
 4. Log controleren:
    - `Custom icons geladen: 13 sets`
    - `image_ids: 13/13 sets`
@@ -149,7 +149,7 @@ Zie ook [ROADMAP — Gepland / onderzoek](ROADMAP.md#gepland--onderzoek) (Equali
 
 Zonder Equalizer werkt de plugin volledig; Status toont `Geen EQ`.
 
-### Prijsbron & kosten (v1 — branch `v1`)
+### Prijsbron & kosten (v1 — branch `main`)
 
 De plugin ondersteunt vijf **Prijsbron**-waarden (Mode9): **Geen**, **Handmatig**, **Tibber**, **ENTSO-E**, **EnergyZero**. Kosten-tegels (*Dag overzicht*, *Beste laden*, sessie/dag-€ op laadpaal-**Status**) zijn alleen actief bij een prijsbron die kosten berekent.
 
@@ -161,7 +161,7 @@ De plugin ondersteunt vijf **Prijsbron**-waarden (Mode9): **Geen**, **Handmatig*
 | **ENTSO-E** | Mode24 token + toeslagen | `ENTSO-E actief — kosten na eerste poll` |
 | **EnergyZero** | Niets (geen token) | `EnergyZero actief — kosten na eerste poll` |
 
-**Globale Status-tegel (v0.6.1+)** toont de actieve prijsbron, bijv. `Tibber €0,23/kWh` of `EnergyZero €0,17/kWh`.
+**Globale Status-tegel (v1.0.0+)** toont de actieve prijsbron, bijv. `Tibber €0,23/kWh` of `EnergyZero €0,17/kWh`.
 
 #### Kosten blijven €0,00
 
@@ -207,7 +207,7 @@ Domoticz wist wachtwoordvelden soms bij *Opslaan*. Sinds v0.5.0/v10.9.30 bewaart
 
 ### Tibber / kosten-tegels (legacy v10 — alleen Tibber)
 
-Op branch **`main`** / tag **v10.11.6-stable** geldt alleen Tibber voor kosten. Op branch **`v1`** zie [Prijsbron & kosten](#prijsbron--kosten-v1--branch-v1) hierboven.
+Op branch **`legacy/v10`** / tag **v10.11.6-stable** geldt alleen Tibber voor kosten. Op branch **`main`** (v1.0.0) zie [Prijsbron & kosten](#prijsbron--kosten-v1--branch-main) hierboven.
 
 - **Tibber-token (Mode7) is verplicht** voor kosten op legacy v10 — zonder token worden *Dag overzicht*, *Beste laden* en sessie/dag-€ op laadpaal-**Status** niet bijgewerkt. Bij start zie je `Tibber uit (Mode7 leeg)`.
 - **Token verloren na hardware-opslag?** Sinds v10.9.30 bewaart de plugin een backup in `easee_state.json`. Na `git pull` + herstart zou Tibber automatisch actief moeten blijven (log: *token hersteld uit state-backup*). Zonder backup: token opnieuw invullen in Mode7.
@@ -216,7 +216,7 @@ Op branch **`main`** / tag **v10.11.6-stable** geldt alleen Tibber voor kosten. 
 
 ### Sessie-kWh / Totaal & Sessie (v10.10.x — superseded in v10.11)
 
-Sinds **v10.11** staat sessie/vandaag/totaal kWh op de **Laden**-tegel (Description), niet meer op *Totaal & Sessie*. Problemen met *Totaal & Sessie header 0 kWh* (v10.10.4–10.10.8) zijn opgelost in v10.10.8 maar die tegel is **verouderd** — upgrade naar **v10.11.6-stable** en kijk op **Laden**.
+Sinds **v10.11** staat sessie/vandaag/totaal kWh op de **Laden**-tegel (Description), niet meer op *Totaal & Sessie*. Problemen met *Totaal & Sessie header 0 kWh* (v10.10.4–10.10.8) zijn opgelost in v10.10.8 maar die tegel is **verouderd** — upgrade naar **`main`** (v1.0.0) of **`legacy/v10`** (v10.11.6) en kijk op **Laden**.
 
 ### Logniveaus
 
@@ -259,4 +259,4 @@ sudo systemctl start domoticz
 - **Installatie**: [INSTALL.md](../INSTALL.md)
 - **Configuratie**: [CONFIGURATION.md](CONFIGURATION.md)
 
-Bij een issue: pluginversie **v0.6.1** (v1) of **v10.11.6-stable** (legacy), Domoticz-versie, **Prijsbron (Mode9)** indien van toepassing, en logregels `[Easee v…]` (geen wachtwoorden/tokens).
+Bij een issue: pluginversie **v1.0.0** (main) of **v10.11.6** (legacy), Domoticz-versie, **Prijsbron (Mode9)** indien van toepassing, en logregels `[Easee v…]` (geen wachtwoorden/tokens).

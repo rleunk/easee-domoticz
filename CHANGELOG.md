@@ -8,14 +8,22 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
-### Preparing 1.0.0-stable
+## [1.0.0] — 2026-06-30
 
-Documentation and release-readiness for v1 **1.0.0-stable** (code version remains **0.6.1** until tag). See [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md).
+### Added
+- **v1.0.0 production release** — eerste stable v1-lijn op branch `main`, tag **`v1.0.0`**
+- Vijf prijsbronnen: Geen, Handmatig (Vast/Dag-nacht/Dal-piek), Tibber, ENTSO-E, EnergyZero
+- P1/zon/thuisbatterij-hints (Mode20–23); compacte **11 tegels + LoadBal** layout
 
-- Public docs audited and synced to **0.6.1** (README, INSTALL, STABLE, VERSIONING, ROADMAP, CONFIGURATION, TROUBLESHOOTING, FORUM_POST)
-- ENTSO-E marked tested (e-mail approval + token backup, 2026-06-29)
-- Install/module lists include `pricing/` and `domoticz_energy_hints.py`
-- 1.0.0 readiness checklist and soak-test criteria documented
+### Changed
+- **main** wijst nu naar v1 **1.0.0** (productie); legacy v10.11.6 bewaard op branch **`legacy/v10`**
+- Status-tegel toont actieve prijsbron voor alle Mode9-waarden
+- Documentatie gesynchroniseerd; soak test afgerond
+
+### Notes
+- Upgrade van legacy v10: checkout `legacy/v10` of tag `v10.11.6` / `v10.11.6-stable` voor rollback
+- Toekomstige v1-ontwikkeling (1.1.x) op branch **`v1`**
+- Zie [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md) voor volledige checklist
 
 ## [0.6.1] — 2026-06-27
 

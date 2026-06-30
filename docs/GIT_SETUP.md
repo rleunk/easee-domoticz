@@ -12,7 +12,7 @@ GitHub accepteert sinds augustus 2021 **geen wachtwoord meer** bij HTTPS-clones.
 cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
-git checkout v1
+git checkout main
 ```
 
 > De mapnaam `Easee-Domoticz-plugin` is belangrijk: Domoticz verwacht `plugin.py` direct in die map.
@@ -47,7 +47,7 @@ Gebruik dit wanneer Git om inloggegevens vraagt (private fork, of GitHub vraagt 
 cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
-git checkout v1
+git checkout main
 ```
 
 Wanneer Git om inloggegevens vraagt:
@@ -131,7 +131,7 @@ Verwachte melding: *"Hi rleunk! You've successfully authenticated..."*
 cd /home/USER/domoticz/plugins
 git clone git@github.com:rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
-git checkout v1
+git checkout main
 ```
 
 ### Updates ophalen (SSH)

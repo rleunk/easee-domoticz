@@ -2,14 +2,14 @@
 
 ---
 
-**Subject:** Easee EV chargers + Equalizer — Domoticz hardware plugin
+**Subject:** Easee EV chargers + Equalizer — Domoticz hardware plugin v1.0.0
 
 Hi all,
 
 We've been building a **Domoticz hardware plugin** for **Easee** EV chargers and **Equalizers** together and wanted to share an overview for anyone looking for native Domoticz integration (no MQTT bridge).
 
 **GitHub:** https://github.com/rleunk/easee-domoticz  
-**Status:** Active development on branch `v1` (**v0.6.1** pre-release). Legacy v10 remains on `main` (**v10.11.6-stable**) for existing installs. Preparing **1.0.0-stable** — see [docs/RELEASE_1.0.0.md](https://github.com/rleunk/easee-domoticz/blob/v1/docs/RELEASE_1.0.0.md).
+**Status:** **v1.0.0** released on branch `main` — five price sources, energy hints, compact 11-tile dashboard. Legacy v10.11.6 preserved on branch `legacy/v10` for existing installs. See [docs/RELEASE_1.0.0.md](https://github.com/rleunk/easee-domoticz/blob/main/docs/RELEASE_1.0.0.md).
 
 ---
 
@@ -76,10 +76,10 @@ If you already have P1 meter, solar, or home battery devices in Domoticz, you ca
 cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
-git checkout v1
+git checkout main
 # Restart Domoticz → Setup → Hardware → Add Easee → restart hardware
 ```
 
 ---
 
-We're working toward **1.0.0-stable** (all five price sources verified on a live Domoticz setup). Feedback from other Domoticz + Easee users is very welcome — issues and suggestions on GitHub.
+**v1.0.0** is the first stable v1 release — all five price sources verified on a live Domoticz setup. Feedback from other Domoticz + Easee users is very welcome — issues and suggestions on GitHub.

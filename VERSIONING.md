@@ -2,54 +2,47 @@
 
 Dit project heeft twee versielijnen naast elkaar.
 
+## v1 (productie)
+
+| Item | Waarde |
+|------|--------|
+| **Huidige versie** | **1.0.0** (released 2026-06-30) |
+| **Branch productie** | `main` |
+| **Branch ontwikkeling** | `v1` (1.1.x en verder) |
+| **Tag** | `v1.0.0` (semver, geen `-stable` suffix) |
+
+### Semver v1
+
+- **0.x.y** — pre-release ontwikkeling op branch `v1` (`v0.1.0` t/m `v0.6.1`)
+- **1.0.0** — eerste publieke stable v1 op `main`
+- **1.x.y** — toekomstige releases; ontwikkeling start op branch `v1`, merge naar `main` bij release
+
 ## Legacy v10 (bevroren)
 
 | Item | Waarde |
 |------|--------|
-| **Huidige stable** | `v10.11.6-stable` op branch `main` |
-| **Status** | Bevroren productie-baseline — geen hernummering naar 0.10.x |
-| **Tags** | `v10.x.y` en `v10.x.y-stable` blijven op `main` |
+| **Laatste versie** | `v10.11.6` |
+| **Branch** | `legacy/v10` |
+| **Tags** | `v10.11.6`, `v10.11.6-stable` (en oudere `v10.x.y` / `-stable`) |
+| **Status** | Bevroren — geen hernummering naar 0.10.x |
 
-De v10-lijn blijft beschikbaar voor bestaande installaties. Wijzigingen aan v10 gaan alleen via hotfixes op `main` tot Richard v1 als stable promoot.
-
-## v1 (nieuwe publieke lijn)
-
-| Item | Waarde |
-|------|--------|
-| **Branch** | `v1` |
-| **Huidige versie** | **0.6.1** (pre-release) |
-| **Startversie** | `0.1.0` (scaffold; gedrag gelijk aan v10.11.6-stable) |
-| **0.x** | Ontwikkeling — pre-release, niet productie-stable |
-| **1.0.0-stable** | Eerste publieke stable v1 (gepland — na soak test) |
-
-### Semver v1
-
-- **0.x.y** — ontwikkeling op branch `v1`; pre-releases (`v0.1.0` t/m `v0.6.1`, …)
-- **1.0.0-stable** — eerste stable v1 voor productie (annotated tag, suffix `-stable` zoals v10)
-- **Geen** hernummering van v10 naar 0.10.x — v10 en v1 zijn parallel
-
-### Criteria voor 1.0.0-stable
-
-| Criterium | Status (0.6.1) |
-|-----------|----------------|
-| Prijsbronnen Geen / Handmatig / Tibber / ENTSO-E / EnergyZero | ✅ Getest |
-| 11 tegels + LoadBal, energy hints, status prijsbron | ✅ |
-| Docs gesynchroniseerd | ✅ |
-| Soak test op productie-Domoticz | ⏳ Richard — ongoing |
-| Tag + GitHub release + forum post | ⏳ Na soak |
-
-Details: [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md).
+Legacy v10 blijft beschikbaar voor bestaande installaties en rollback. Nieuwe installaties: gebruik **`main`** / **`v1.0.0`**.
 
 ## Checkout
 
 ```bash
-# Legacy productie (v10)
+# v1 productie (aanbevolen)
+git fetch --tags origin
 git checkout main
-git checkout v10.11.6-stable
+# of: git checkout v1.0.0
 
-# v1 ontwikkeling
+# v1 ontwikkeling (1.1.x)
 git fetch origin
 git checkout v1
+
+# Legacy v10
+git checkout legacy/v10
+# of: git checkout v10.11.6-stable
 ```
 
-Zie [STABLE.md](STABLE.md) voor aanbevolen stable-tags en [CHANGELOG.md](CHANGELOG.md) voor release-notes.
+Zie [STABLE.md](STABLE.md) voor aanbevolen tags en rollback, [CHANGELOG.md](CHANGELOG.md) voor release-notes, [docs/RELEASE_1.0.0.md](docs/RELEASE_1.0.0.md) voor de 1.0.0 release-checklist.
