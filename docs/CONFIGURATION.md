@@ -114,7 +114,7 @@ Gegroepeerde weergave op één teksttegel:
 🔌 Spanning L1/L2/L3: 231 / 230 / 229 V
 ```
 
-*Bij Tibber-LB of ontbrekende Vrij/Laad API-data toont de plugin **Gemeten L1/L2/L3** als fallback (sinds v1.1.0).*
+*Bij Tibber-LB of ontbrekende Vrij/Laad API-data toont de plugin **Gemeten L1/L2/L3** als fallback (sinds v1.1.0). Sinds v1.1.4: **Vrij≈** = geschatte vrije capaciteit per fase (`limiet − gemeten`).*
 
 | Regel | API-bron | Betekenis |
 |-------|----------|-----------|

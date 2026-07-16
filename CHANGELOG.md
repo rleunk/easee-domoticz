@@ -8,6 +8,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [1.1.4] — 2026-07-16
+
+### Added
+- **Vrij≈ schatting bij Tibber/LB** — als `availableCurrent*` ontbreekt: per fase `hoofdzekering-limiet − gemeten netstroom` (getoond als **Vrij≈**)
+
 ## [1.1.3] — 2026-07-16
 
 ### Fixed

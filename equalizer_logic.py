@@ -1695,11 +1695,21 @@ def _enrich_lb_phase_values(plugin, values, state_payload=None):
 def _eq_phases_have_current(phases, threshold=0.05):
     return any(p is not None and p > threshold for p in phases)
 
-def _lb_phase_compact(plugin, values, lb_active=False, tibber_controls=False, charger_laad=None):
+def _estimate_vrij_phases(plugin, measured, fuse_limit_a):
+    """Schat vrij per fase: hoofdzekering-limiet − gemeten netstroom (laad zit al in gemeten)."""
+    est = []
+    for val in measured:
+        m = easee_helpers.safe_float(plugin, val, 0.0) if val is not None else 0.0
+        est.append(max(0.0, fuse_limit_a - m))
+    return est, True
+
+def _lb_phase_compact(plugin, values, lb_active=False, tibber_controls=False, charger_laad=None,
+                      main_fuse_limit_a=0.0):
     avail, has_avail = _phase_values_from_key_list(plugin, values, phase_available_current_keys())
     eq, has_eq = _phase_values_from_key_list(plugin, values, phase_equalized_charge_keys())
     measured, has_measured = _phase_values_from_key_list(plugin, values, EQUALIZER_KEYS['phase_current'])
     lb_on = bool(lb_active or tibber_controls)
+    vrij_estimated = False
 
     if charger_laad and len(charger_laad) == 3 and _eq_phases_have_current(charger_laad):
         if not has_eq or not _eq_phases_have_current(eq):
@@ -1712,13 +1722,28 @@ def _lb_phase_compact(plugin, values, lb_active=False, tibber_controls=False, ch
                     'poll',
                 )
 
+    if not has_avail and lb_on and has_measured and main_fuse_limit_a > 0:
+        est_avail, has_est = _estimate_vrij_phases(plugin, measured, main_fuse_limit_a)
+        if has_est:
+            avail = est_avail
+            has_avail = True
+            vrij_estimated = True
+            if domoticz_runtime.Parameters.get('Mode6') == 'Debug':
+                easee_logging.debug(
+                    'equalizer_logic',
+                    f'LB Vrij schatting (limiet {main_fuse_limit_a:.0f}A − gemeten): '
+                    f'{_format_phase_triple(plugin, avail, "A")} A',
+                    'poll',
+                )
+
     lines = []
     skip_measured_dup = False
+    vrij_label = 'Vrij≈' if vrij_estimated else 'Vrij'
 
     if has_avail or has_eq:
         vrij = _format_phase_triple(plugin, avail, 'A') if has_avail else '— / — / —'
         laad = _format_phase_triple(plugin, eq, 'A') if has_eq else '— / — / —'
-        lines.append(f'   ⚖️ Vrij: {vrij} | Laad: {laad} A')
+        lines.append(f'   ⚖️ {vrij_label}: {vrij} | Laad: {laad} A')
         skip_measured_dup = True
         if has_measured and lb_on and (not has_eq or not has_avail):
             stroom = _format_phase_triple(plugin, measured, 'A')
@@ -1779,7 +1804,7 @@ def _build_status_text(plugin, values, online, lb_active, max_alloc, main_fuse_a
         charger_laad = laad_phases
     lb_line, skip_measured_dup = _lb_phase_compact(
         plugin, values, lb_active=lb_active, tibber_controls=tibber_controls,
-        charger_laad=charger_laad,
+        charger_laad=charger_laad, main_fuse_limit_a=main_fuse_limit_a,
     )
     lines.append(lb_line)
     lines.append(_limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a))
