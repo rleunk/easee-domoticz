@@ -1692,11 +1692,26 @@ def _enrich_lb_phase_values(plugin, values, state_payload=None):
                 if norm_key == canon.lower().replace('_', ''):
                     values[canon] = val
 
-def _lb_phase_compact(plugin, values, lb_active=False, tibber_controls=False):
+def _eq_phases_have_current(phases, threshold=0.05):
+    return any(p is not None and p > threshold for p in phases)
+
+def _lb_phase_compact(plugin, values, lb_active=False, tibber_controls=False, charger_laad=None):
     avail, has_avail = _phase_values_from_key_list(plugin, values, phase_available_current_keys())
     eq, has_eq = _phase_values_from_key_list(plugin, values, phase_equalized_charge_keys())
     measured, has_measured = _phase_values_from_key_list(plugin, values, EQUALIZER_KEYS['phase_current'])
     lb_on = bool(lb_active or tibber_controls)
+
+    if charger_laad and len(charger_laad) == 3 and _eq_phases_have_current(charger_laad):
+        if not has_eq or not _eq_phases_have_current(eq):
+            eq = list(charger_laad)
+            has_eq = True
+            if domoticz_runtime.Parameters.get('Mode6') == 'Debug':
+                easee_logging.debug(
+                    'equalizer_logic',
+                    f'LB Laad fallback via laadpaal-fasedata: {_format_phase_triple(plugin, eq, "A")} A',
+                    'poll',
+                )
+
     lines = []
     skip_measured_dup = False
 
@@ -1758,8 +1773,13 @@ def _build_status_text(plugin, values, online, lb_active, max_alloc, main_fuse_a
         f'{status_emoji} Equalizer {"online" if online else "offline"}',
         f'{lb_emoji} Load balancing: {lb_text}',
     ]
+    charger_laad = None
+    laad_phases, has_charger_laad = charger_logic.aggregate_charger_laad_phases(plugin)
+    if has_charger_laad:
+        charger_laad = laad_phases
     lb_line, skip_measured_dup = _lb_phase_compact(
         plugin, values, lb_active=lb_active, tibber_controls=tibber_controls,
+        charger_laad=charger_laad,
     )
     lines.append(lb_line)
     lines.append(_limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a))

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (1.1.1)" author="Richard Leunk" version="1.1.1"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (1.1.2)" author="Richard Leunk" version="1.1.2"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v1 (1.1.1)</h2><br/>
+        <h2>Easee Domoticz plugin v1 (1.1.2)</h2><br/>
         <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E/EnergyZero, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints en Equalizer. v1 ontwikkelingslijn.</p>
     </description>
     <params>
@@ -379,12 +379,12 @@ class BasePlugin:
         price_provider = pricing.get_provider(self)
         if price_provider.is_available() and ((easee_state.now_ts(self) - refreshed) > 900 or not (self.state.get('price_cache') or {})):
             self._heartbeat_step('pricing refresh', lambda: price_provider.refresh())
-        for eq in self.equalizers:
-            eid = eq.get('id', '?')
-            self._heartbeat_step(f'poll equalizer {eid}', lambda eq=eq: equalizer_logic.poll_equalizer(self, eq))
         for c in self.chargers:
             cid = c.get('id', '?')
             self._heartbeat_step(f'poll charger {cid}', lambda c=c: charger_logic.poll_charger(self, c))
+        for eq in self.equalizers:
+            eid = eq.get('id', '?')
+            self._heartbeat_step(f'poll equalizer {eid}', lambda eq=eq: equalizer_logic.poll_equalizer(self, eq))
         total_power = sum(v.get('power', 0) for v in self.latest_chargers.values())
         online = sum(1 for v in self.latest_chargers.values() if v.get('online'))
         easee_logging.debug(

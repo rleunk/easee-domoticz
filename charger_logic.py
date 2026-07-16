@@ -10,6 +10,94 @@ import easee_helpers
 import easee_state
 from pricing import ui as pricing_ui
 
+# Easee outputPhase enum (obs 110) → L1/L2/L3 indices (0-based)
+_OUTPUT_PHASE_L123 = {
+    10: (0,),       # 1-phase N+L1
+    12: (1,),       # 1-phase N+L2
+    14: (2,),       # 1-phase N+L3
+    20: (0, 1),     # 2-phase N+L1, N+L2
+    21: (1, 2),     # 2-phase N+L2, N+L3
+    30: (0, 1, 2),  # 3-phase
+}
+
+
+def _phase_values_from_charger_keys(plugin, values, keys):
+    phases = []
+    any_val = False
+    for key in keys:
+        val = easee_helpers.first_dict_value(plugin, values, (key,))
+        if val is not None:
+            any_val = True
+            phases.append(easee_helpers.safe_float(plugin, val, 0.0))
+        else:
+            phases.append(None)
+    return phases, any_val
+
+
+def _phases_have_current(phases, threshold=0.05):
+    return any(p is not None and p > threshold for p in phases)
+
+
+def _estimate_laad_phases_from_power(plugin, power_w, output_phase):
+    phases = [None, None, None]
+    if power_w <= 50:
+        return phases
+    op = easee_helpers.safe_int(plugin, output_phase, 0)
+    indices = _OUTPUT_PHASE_L123.get(op)
+    if not indices:
+        return phases
+    per_phase = power_w / 230.0 / len(indices)
+    for i in indices:
+        phases[i] = per_phase
+    return phases
+
+
+def charger_laad_phases_from_state(plugin, values, power_w):
+    """Per-fase laadstroom uit charger /state (circuit totals, allocatie, of schatting)."""
+    for key_name in ('circuit_phase_current', 'circuit_allocated_current', 'dynamic_circuit_current'):
+        phases, has = _phase_values_from_charger_keys(plugin, values, CHARGER_KEYS[key_name])
+        if has and _phases_have_current(phases):
+            return phases, key_name
+    out_phase = easee_helpers.first_dict_value(plugin, values, CHARGER_KEYS['output_phase'])
+    est = _estimate_laad_phases_from_power(plugin, power_w, out_phase)
+    if _phases_have_current(est):
+        return est, 'power_estimate'
+    return [None, None, None], None
+
+
+def aggregate_charger_laad_phases(plugin):
+    """Aggregeer laad-fasen over actieve laders voor equalizer LB-tegel fallback."""
+    circuit_best = [None, None, None]
+    has_circuit = False
+    summed = [0.0, 0.0, 0.0]
+    has_summed = False
+
+    for snap in (getattr(plugin, 'latest_chargers', None) or {}).values():
+        if easee_helpers.safe_float(plugin, snap.get('power', 0), 0) <= 50:
+            continue
+        laad = snap.get('laad_phases')
+        src = str(snap.get('laad_phases_source') or '')
+        if not laad or not _phases_have_current(laad):
+            continue
+        if src in ('circuit_phase_current', 'circuit_allocated_current'):
+            has_circuit = True
+            for i, v in enumerate(laad):
+                if v is not None and v > 0:
+                    cur = circuit_best[i]
+                    circuit_best[i] = v if cur is None else max(cur, v)
+        else:
+            has_summed = True
+            for i, v in enumerate(laad):
+                if v is not None and v > 0:
+                    summed[i] += v
+
+    if has_circuit and _phases_have_current(circuit_best):
+        return circuit_best, True
+    if has_summed and _phases_have_current(summed):
+        return summed, True
+    return [None, None, None], False
+
+
 def session_energy_kwh(plugin, values, session, ongoing_fetched=False):
     # Prefer /sessions/ongoing over /state — state sessionEnergy can stay stale after 429 or day change.
     def _positive_kwh(raw):
@@ -710,6 +798,7 @@ def poll_charger(plugin, charger):
         session_active_for_cost=charging_active,
     )
     domoticz_devices.update_charger_text(plugin, cid, 'Status', status_text)
+    laad_phases, laad_phases_source = charger_laad_phases_from_state(plugin, values, power_w)
     plugin.latest_chargers[cid] = {
         'power': power_w,
         'kwh': total_kwh,
@@ -721,4 +810,6 @@ def poll_charger(plugin, charger):
         'day_energy_cost': easee_helpers.safe_float(plugin, st.get('day_cost_energy', 0.0), 0.0),
         'day_tax_cost': easee_helpers.safe_float(plugin, st.get('day_cost_tax', 0.0), 0.0),
         'online': online,
+        'laad_phases': laad_phases,
+        'laad_phases_source': laad_phases_source,
     }

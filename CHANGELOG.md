@@ -8,6 +8,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [1.1.2] — 2026-07-16
+
+### Added
+- **LB Laad fallback via laadpaal** — wanneer Tibber/cloud-LB geen `equalizedChargeCurrent*` levert, toont Meterkast-Status **Laad** per fase uit charger `/state` (`circuitTotalPhaseConductorCurrent*`, allocatie, of vermogen×fase-schatting)
+
+### Changed
+- **Poll-volgorde** — laders vóór equalizer in heartbeat, zodat LB-fase fallback in dezelfde poll-cyclus actuele data gebruikt
+
 ## [1.1.1] — 2026-07-16
 
 ### Fixed

@@ -127,7 +127,35 @@ CHARGER_KEYS = {
     'online': ('isOnline',),
     'op_mode': ('chargerOpMode',),
     'session_status': ('status', 'state'),
+    'circuit_phase_current': (
+        'circuitTotalPhaseConductorCurrentL1',
+        'circuitTotalPhaseConductorCurrentL2',
+        'circuitTotalPhaseConductorCurrentL3',
+    ),
+    'circuit_allocated_current': (
+        'circuitTotalAllocatedPhaseConductorCurrentL1',
+        'circuitTotalAllocatedPhaseConductorCurrentL2',
+        'circuitTotalAllocatedPhaseConductorCurrentL3',
+    ),
+    'dynamic_circuit_current': (
+        'dynamicCircuitCurrentP1',
+        'dynamicCircuitCurrentP2',
+        'dynamicCircuitCurrentP3',
+    ),
+    'output_phase': ('outputPhase',),
 }
+
+
+def phase_charger_circuit_current_keys():
+    return CHARGER_KEYS['circuit_phase_current']
+
+
+def phase_charger_allocated_current_keys():
+    return CHARGER_KEYS['circuit_allocated_current']
+
+
+def phase_charger_dynamic_circuit_keys():
+    return CHARGER_KEYS['dynamic_circuit_current']
 
 # ---- Site / state API paths (emobility source labels) ----
 
