@@ -56,11 +56,44 @@ def mark_rate_limited(plugin, retry_after_header=None):
     _set_category_until(plugin, category, until)
     if category == 'charger' and '/sessions/ongoing' in path:
         plugin.ongoing_skip_until = max(getattr(plugin, 'ongoing_skip_until', 0), until)
+    if not _is_expected_optional_failure(path, 429):
+        _bump_adaptive_poll(plugin, secs, path)
     easee_logging.debug(
         'easee_api',
         f'Rate limit ({category}) tot +{secs}s na GET {path}',
         'api',
     )
+
+
+def _bump_adaptive_poll(plugin, cooldown_secs, path):
+    import easee_helpers
+    from easee_constants import (
+        POLL_INTERVAL_ADAPTIVE_FLOOR,
+        POLL_INTERVAL_ADAPTIVE_MAX,
+        POLL_INTERVAL_ADAPTIVE_STEP,
+    )
+
+    base = easee_helpers.poll_interval_sec(plugin)
+    prev = int(getattr(plugin, 'adaptive_poll_sec', 0) or 0)
+    if prev > 0:
+        target = min(POLL_INTERVAL_ADAPTIVE_MAX, prev + POLL_INTERVAL_ADAPTIVE_STEP)
+    else:
+        target = min(
+            POLL_INTERVAL_ADAPTIVE_MAX,
+            max(base, POLL_INTERVAL_ADAPTIVE_FLOOR, base + POLL_INTERVAL_ADAPTIVE_STEP),
+        )
+    if target <= base:
+        return
+    plugin.adaptive_poll_sec = target
+    plugin.adaptive_poll_until = time.time() + cooldown_secs
+    logged = int(getattr(plugin, '_adaptive_poll_logged_sec', 0) or 0)
+    if target != logged:
+        plugin._adaptive_poll_logged_sec = target
+        easee_logging.info(
+            'easee_api',
+            f'Adaptief poll-interval: {target}s (Mode1={base}s) na HTTP 429 op {path}',
+            'poll',
+        )
 
 
 def is_charger_rate_limited(plugin):

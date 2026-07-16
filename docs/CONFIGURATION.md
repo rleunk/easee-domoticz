@@ -106,13 +106,15 @@ Gegroepeerde weergave op één teksttegel:
 
 ```
 ✅ Equalizer online
-⚖️ Load balancing: Uit
-   Vrij: - / - / - A  |  Laad: - / - / -
+⚖️ Load balancing: Tibber
+   ⚖️ Vrij: 12.0 / 8.0 / 15.0 | Laad: 4.0 / 3.0 / 0.0 A
+   📊 Gemeten L1/L2/L3: 1.0 / 3.0 / 0.0 A
 🛡️ eMobility: 20 A | Hoofd: 25 A | Limiet: 24 A
 ⚡ Max import: 17.2 kW
-📊 Stroom L1/L2/L3: 0.0 / 4.0 / 0.0 A
 🔌 Spanning L1/L2/L3: 231 / 230 / 229 V
 ```
+
+*Bij Tibber-LB of ontbrekende Vrij/Laad API-data toont de plugin **Gemeten L1/L2/L3** als fallback (sinds v1.1.0).*
 
 | Regel | API-bron | Betekenis |
 |-------|----------|-----------|
@@ -485,6 +487,25 @@ Legacy (v10.10.x): *Totaal & Sessie*, *Kosten (Sessie/Dag)* — verborgen (`Used
 
 Auto-load bij start; anders handmatige upload — zie [INSTALL.md](../INSTALL.md#custom-iconen-handmatig-uploaden).
 
+### Energy-tegels en custom iconen (Domoticz-beperking)
+
+Sommige **Energy**-subtype tegels (Subtype 29) negeren het `Image`-veld in Domoticz en tonen altijd het **standaard bliksem-icoon** (of globe), ook als de plugin `EaseeCharger` / `EaseePower` correct toepast.
+
+| Tegel | Type | Custom icoon werkt? |
+|-------|------|---------------------|
+| **[Naam] - Laden** | Energy (Subtype 29) | **Soms niet** — bekende Domoticz-beperking |
+| **Totaal Laden** | Energy (Subtype 29) | **Soms niet** |
+| **Totaal kWh** | Custom Sensor | ✅ Ja |
+| **Status / Vermogen / Dag overzicht** | Text | ✅ Ja |
+| **Equalizer Status / Vermogen** | Text | ✅ Ja |
+
+**Wat je wél kunt doen:**
+- Controleer log: `image_ids: 13/13 sets` — de plugin past iconen correct toe waar Domoticz dat ondersteunt
+- Functionele data (W, kWh, €) is **niet** afhankelijk van het icoon
+- Geen bug in de plugin — Domoticz rendert Energy-tegels intern anders dan Text-tegels
+
+**Workaround:** geen structurele fix mogelijk zonder Domoticz-core wijziging. Accepteer het bliksem-icoon op *Laden* / *Totaal Laden*, of gebruik een Text-tegel (niet aanbevolen — verliest grafiek).
+
 ## State Persistence
 
 De plugin bewaart automatisch in **`easee_state.json`** (pluginmap):
@@ -496,7 +517,7 @@ Bij upgrade van oudere versies wordt `easee_v9_0_state.json` automatisch hernoem
 ## Best Practices
 
 ### Performance
-- **Poll interval**: 30-60 sec aanbevolen
+- **Poll interval**: 30–60 sec aanbevolen; bij HTTP 429 verhoogt de plugin **automatisch** tijdelijk (max. 120s) — zie [TROUBLESHOOTING.md](TROUBLESHOOTING.md#http-429-rate-limit-easee-api)
 - **Meer chargers** = eventueel hogere interval
 - **CPU load**: Check met `top` command
 

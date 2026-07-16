@@ -8,6 +8,15 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-07-16
+
+### Added
+- **Adaptief poll-interval** — bij HTTP 429 op verplichte endpoints verhoogt de plugin tijdelijk het poll-interval (min. 60s, max. 120s); keert automatisch terug naar Mode1 zodra rate limits verlopen
+- **Equalizer LB fase-detail** — duidelijkere labels (Vrij/Laad, Gemeten L1/L2/L3 bij Tibber/LB), aanvullende state-key scan, geen dubbele stroomregel op Status
+
+### Changed
+- **Documentatie Energy-tegel iconen** — bekende Domoticz-beperking uitgebreid beschreven in CONFIGURATION en TROUBLESHOOTING
+
 ## [1.0.0] — 2026-06-30
 
 ### Added

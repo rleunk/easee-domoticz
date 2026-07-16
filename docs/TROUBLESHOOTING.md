@@ -109,16 +109,27 @@ Sinds v10.9.17 blijft de laatste geldige waarde op de tegel staan bij een misluk
 **Oorzaak**: Te veel API-aanroepen naar Easee binnen korte tijd (meerdere laders + Equalizer + discovery).
 
 **Oplossing**:
-1. Zet **Poll interval (Mode1)** op **60 seconden**:
+1. **Automatisch (sinds v1.1.0):** de plugin verhoogt het poll-interval tijdelijk bij HTTP 429 op verplichte endpoints. Log: `Adaptief poll-interval: 60s (Mode1=30s) na HTTP 429`. Keert vanzelf terug naar Mode1.
+2. **Handmatig:** zet **Poll interval (Mode1)** op **60 seconden**:
    - **Setup → Hardware** → klik je Easee hardware-item
    - Wijzig **Poll interval (sec)** van `30` naar `60`
    - Klik **Save**
-2. Wacht enkele minuten — Easee rate limit verloopt vanzelf
-3. Blijven 429-waarschuwingen? Probeer **90–120 sec** (zie [CONFIGURATION.md](CONFIGURATION.md))
+3. Wacht enkele minuten — Easee rate limit verloopt vanzelf
+4. Blijven 429-waarschuwingen? Zet Mode1 op **90–120 sec** (zie [CONFIGURATION.md](CONFIGURATION.md))
 
-**Niet nodig:** Domoticz of server herstarten alleen voor 429 — verhoog het poll-interval.
+**Niet nodig:** Domoticz of server herstarten alleen voor 429.
 
 Sinds v10.9.13 blokkeert 429 de hardware-thread niet meer. Sinds v10.9.17 blokkeert een charger-429 de Equalizer-poll niet meer.
+
+### Custom iconen: Energy-tegel toont bliksem (Domoticz-beperking)
+
+**Symptoom**: *Laden* of *Totaal Laden* tonen het **standaard bliksem-icoon** ondanks `Easee_icons_v2.zip` en log `image_ids: 13/13 sets`.
+
+**Oorzaak**: Domoticz **Energy**-subtype tegels (Subtype 29) negeren soms het custom `Image`-veld. Text-tegels (Status, Vermogen, Dag overzicht) werken wel.
+
+**Oplossing**: geen actie nodig voor functionaliteit — W/kWh/€ kloppen. Zie [CONFIGURATION.md — Energy-tegels](CONFIGURATION.md#energy-tegels-en-custom-iconen-domoticz-beperking) voor volledige tabel.
+
+**Niet helpen:** opnieuw uploaden van de zip of hardware herstarten (icoon blijft bliksem op Energy-tegels).
 
 ### Optionele API 403/404/405/429 (normaal — alleen Debug)
 
@@ -138,7 +149,7 @@ Sinds v10.9.13 blokkeert 429 de hardware-thread niet meer. Sinds v10.9.17 blokke
 
 **Oplossing**: geen actie nodig. Zet Debug uit (Mode6 = *Normal*) als je deze regels niet wilt zien. **HTTP 429 op verplichte endpoints** (bijv. `/chargers/{id}/state`) blijft WARNING — verhoog dan het poll-interval.
 
-Zie ook [ROADMAP — Gepland / onderzoek](ROADMAP.md#gepland--onderzoek) (Equalizer fase-detail, API rate limit).
+Zie ook [ROADMAP — Gepland / onderzoek](ROADMAP.md#gepland--onderzoek).
 
 ### Geen Equalizer gevonden
 

@@ -1669,18 +1669,58 @@ def _phase_values_from_key_list(plugin, values, keys):
             phases.append(None)
     return phases, any_val
 
-def _lb_phase_compact(plugin, values):
+def _enrich_lb_phase_values(plugin, values, state_payload=None):
+    """Vul LB-fase keys aan uit geneste equalizer.state varianten."""
+    if not isinstance(values, dict):
+        return
+    canon_keys = list(phase_available_current_keys()) + list(phase_equalized_charge_keys())
+    flats = [values]
+    if isinstance(state_payload, dict):
+        flat = {}
+        _flatten_equalizer_payload(plugin, state_payload, flat)
+        flats.append(flat)
+    for flat in flats:
+        if not isinstance(flat, dict):
+            continue
+        for key, val in flat.items():
+            if not isinstance(key, str) or val in (None, ''):
+                continue
+            norm_key = key.lower().replace('_', '')
+            for canon in canon_keys:
+                if values.get(canon) not in (None, ''):
+                    continue
+                if norm_key == canon.lower().replace('_', ''):
+                    values[canon] = val
+
+def _lb_phase_compact(plugin, values, lb_active=False, tibber_controls=False):
     avail, has_avail = _phase_values_from_key_list(plugin, values, phase_available_current_keys())
     eq, has_eq = _phase_values_from_key_list(plugin, values, phase_equalized_charge_keys())
+    measured, has_measured = _phase_values_from_key_list(plugin, values, EQUALIZER_KEYS['phase_current'])
+    lb_on = bool(lb_active or tibber_controls)
+    lines = []
+    skip_measured_dup = False
+
     if has_avail or has_eq:
         vrij = _format_phase_triple(plugin, avail, 'A') if has_avail else '— / — / —'
         laad = _format_phase_triple(plugin, eq, 'A') if has_eq else '— / — / —'
-        return f'   Vrij: {vrij} A  |  Laad: {laad} A'
-    measured, has_measured = _phase_values_from_key_list(plugin, values, EQUALIZER_KEYS['phase_current'])
-    if has_measured:
+        lines.append(f'   ⚖️ Vrij: {vrij} | Laad: {laad} A')
+        skip_measured_dup = True
+        if has_measured and lb_on and (not has_eq or not has_avail):
+            stroom = _format_phase_triple(plugin, measured, 'A')
+            lines.append(f'   📊 Gemeten L1/L2/L3: {stroom} A')
+    elif has_measured:
         stroom = _format_phase_triple(plugin, measured, 'A')
-        return f'   📊 Stroom L1/L2/L3: {stroom} A'
-    return '   Fase-data: nog niet beschikbaar'
+        if lb_on:
+            lines.append(f'   📊 Gemeten L1/L2/L3: {stroom} A')
+        else:
+            lines.append(f'   📊 Stroom L1/L2/L3: {stroom} A')
+        skip_measured_dup = True
+    elif lb_on:
+        lines.append('   LB-fase: wacht op API-data')
+    else:
+        lines.append('   Fase-data: nog niet beschikbaar')
+
+    return '\n'.join(lines), skip_measured_dup
 
 def _limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a):
     emob = easee_helpers.format_amp(plugin, max_alloc) or 'n/b'
@@ -1717,15 +1757,18 @@ def _build_status_text(plugin, values, online, lb_active, max_alloc, main_fuse_a
     lines = [
         f'{status_emoji} Equalizer {"online" if online else "offline"}',
         f'{lb_emoji} Load balancing: {lb_text}',
-        _lb_phase_compact(plugin, values),
-        _limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a),
     ]
+    lb_line, skip_measured_dup = _lb_phase_compact(
+        plugin, values, lb_active=lb_active, tibber_controls=tibber_controls,
+    )
+    lines.append(lb_line)
+    lines.append(_limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a))
     if max_import_kw > 0:
         kw_text = easee_helpers.format_kw(plugin, max_import_kw) or f'{max_import_kw:.1f} kW'
         lines.append(f'⚡ Max import: {kw_text}')
     current_line = _current_status_line(plugin, values, power_w)
-    if current_line:
-        lines.append(current_line)
+    if current_line and not skip_measured_dup:
+        lines.append(current_line[0])
     lines.append(_voltage_status_line(plugin, values))
     return '\n'.join(lines)
 
@@ -2000,6 +2043,7 @@ def poll_equalizer(plugin, equalizer):
     if isinstance(state_data, dict):
         state_payload = state_data
         _flatten_equalizer_payload(plugin, state_data, values)
+        _enrich_lb_phase_values(plugin, values, state_payload)
         _apply_state_power(plugin, eid, values, state_data, 'equalizer.state(poll)')
         if not site_id:
             site_id = state_data.get('siteId')
@@ -2018,6 +2062,7 @@ def poll_equalizer(plugin, equalizer):
         plugin, eid, values, site_id=site_id, state_payload=state_payload,
         skip_obs_api=state_failed_429,
     )
+    _enrich_lb_phase_values(plugin, values, state_payload)
 
     site_info = fetch_site_fuse_info(plugin, 
         site_id,

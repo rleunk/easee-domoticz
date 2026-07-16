@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (1.0.0)" author="Richard Leunk" version="1.0.0"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (1.1.0)" author="Richard Leunk" version="1.1.0"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v1 (1.0.0)</h2><br/>
+        <h2>Easee Domoticz plugin v1 (1.1.0)</h2><br/>
         <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E/EnergyZero, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints en Equalizer. v1 ontwikkelingslijn.</p>
     </description>
     <params>
@@ -125,6 +125,9 @@ class BasePlugin:
         self.last_devices_count = -1
         self.last_poll = 0
         self.last_discovery = 0
+        self.adaptive_poll_sec = 0
+        self.adaptive_poll_until = 0
+        self._adaptive_poll_logged_sec = 0
         self.charger_rate_limited_until = 0
         self.equalizer_rate_limited_until = 0
         self.general_rate_limited_until = 0
@@ -301,7 +304,7 @@ class BasePlugin:
         self.write_debug(True)
 
     def refresh_entity_cache_only(self):
-        poll_interval = max(10, easee_helpers.safe_int(self, Parameters.get('Mode1', '30'), 30))
+        poll_interval = easee_helpers.effective_poll_interval_sec(self)
         discovery_interval = max(300, poll_interval * 10)
         since_discovery = time.time() - self.last_discovery
         if self.last_discovery > 0 and since_discovery < discovery_interval:
@@ -653,7 +656,7 @@ class BasePlugin:
                     domoticz_icons.apply_images_to_devices(self, force=True)
                     self.icon_reapply_remaining -= 1
                 self._heartbeat_step('icon reapply', _reapply_icons)
-            interval = max(10, easee_helpers.safe_int(self, Parameters.get('Mode1', '30'), 30))
+            interval = easee_helpers.effective_poll_interval_sec(self)
             since_poll = time.time() - self.last_poll
             if since_poll < interval:
                 easee_logging.debug(

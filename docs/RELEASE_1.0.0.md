@@ -53,9 +53,7 @@ gh release create v1.0.0 --title "v1.0.0" --latest
 
 ## Intentionally open after 1.0.0
 
-- Equalizer LB fase-detail refinements
-- Domoticz Energy-tegel default bliksem icoon (platform limitation)
-- Adaptieve poll-interval bij 429 (research)
+- Domoticz forum announcement — draft: [FORUM_POST.md](FORUM_POST.md)
 - Tibber smart charging / Grid Rewards (no public API — display hints only)
 
-See [ROADMAP.md](ROADMAP.md).
+See [ROADMAP.md](ROADMAP.md) for completed v1.1.0 items (LB fase-detail, Energy icon docs, adaptive poll).

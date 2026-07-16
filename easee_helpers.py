@@ -92,7 +92,35 @@ def wh_from_kwh(plugin, value):
         return 0
 
 def poll_interval_sec(plugin):
-    return max(10, safe_int(plugin, domoticz_runtime.Parameters.get('Mode1', '30'), 30))
+    from easee_constants import POLL_INTERVAL_MIN
+    return max(POLL_INTERVAL_MIN, safe_int(plugin, domoticz_runtime.Parameters.get('Mode1', '30'), 30))
+
+
+def effective_poll_interval_sec(plugin):
+    """Mode1-interval, tijdelijk verhoogd na HTTP 429 op verplichte endpoints."""
+    import time
+    import easee_api
+    import easee_logging
+    from easee_constants import POLL_INTERVAL_ADAPTIVE_MAX
+
+    base = poll_interval_sec(plugin)
+    adaptive = int(getattr(plugin, 'adaptive_poll_sec', 0) or 0)
+    if adaptive <= 0:
+        return base
+    now = time.time()
+    until = float(getattr(plugin, 'adaptive_poll_until', 0) or 0)
+    if easee_api.is_rate_limited(plugin) or now < until:
+        return min(POLL_INTERVAL_ADAPTIVE_MAX, max(base, adaptive))
+    logged = int(getattr(plugin, '_adaptive_poll_logged_sec', 0) or 0)
+    if logged > 0:
+        easee_logging.info(
+            'easee_helpers',
+            f'Adaptief poll-interval terug naar {base}s (Mode1)',
+            'poll',
+        )
+        plugin._adaptive_poll_logged_sec = 0
+    plugin.adaptive_poll_sec = 0
+    return base
 
 def short_id(plugin, full_id):
     s = str(full_id).strip()
