@@ -52,16 +52,55 @@ def _estimate_laad_phases_from_power(plugin, power_w, output_phase):
     return phases
 
 
+def _expected_charge_amps(plugin, power_w):
+    if power_w <= 50:
+        return 0.0
+    return power_w / 230.0
+
+
+def _phases_plausible_for_power(plugin, phases, power_w, factor=0.35):
+    """Reject LB-limiet/allocatie-waarden die veel lager zijn dan het laadvermogen."""
+    expected = _expected_charge_amps(plugin, power_w)
+    if expected <= 0:
+        return True
+    max_a = max((p or 0.0) for p in phases)
+    return max_a >= expected * factor
+
+
+def _laad_from_output_current(plugin, output_current, output_phase):
+    phases = [None, None, None]
+    amps = easee_helpers.safe_float(plugin, output_current, 0.0)
+    if amps <= 0.05:
+        return phases
+    op = easee_helpers.safe_int(plugin, output_phase, 0)
+    indices = _OUTPUT_PHASE_L123.get(op)
+    if not indices:
+        return phases
+    for i in indices:
+        phases[i] = amps
+    return phases
+
+
 def charger_laad_phases_from_state(plugin, values, power_w):
-    """Per-fase laadstroom uit charger /state (circuit totals, allocatie, of schatting)."""
-    for key_name in ('circuit_phase_current', 'circuit_allocated_current', 'dynamic_circuit_current'):
-        phases, has = _phase_values_from_charger_keys(plugin, values, CHARGER_KEYS[key_name])
-        if has and _phases_have_current(phases):
-            return phases, key_name
+    """Per-fase laadstroom uit charger /state (werkelijke circuit-stromen of schatting)."""
     out_phase = easee_helpers.first_dict_value(plugin, values, CHARGER_KEYS['output_phase'])
+
+    phases, has = _phase_values_from_charger_keys(plugin, values, CHARGER_KEYS['circuit_phase_current'])
+    if has and _phases_have_current(phases) and _phases_plausible_for_power(plugin, phases, power_w):
+        return phases, 'circuit_phase_current'
+
+    out_amps = easee_helpers.first_dict_value(plugin, values, CHARGER_KEYS['output_current'])
+    from_output = _laad_from_output_current(plugin, out_amps, out_phase)
+    if _phases_have_current(from_output) and _phases_plausible_for_power(plugin, from_output, power_w):
+        return from_output, 'output_current'
+
     est = _estimate_laad_phases_from_power(plugin, power_w, out_phase)
     if _phases_have_current(est):
         return est, 'power_estimate'
+
+    if has and _phases_have_current(phases):
+        return phases, 'circuit_phase_current'
+
     return [None, None, None], None
 
 
@@ -79,7 +118,7 @@ def aggregate_charger_laad_phases(plugin):
         src = str(snap.get('laad_phases_source') or '')
         if not laad or not _phases_have_current(laad):
             continue
-        if src in ('circuit_phase_current', 'circuit_allocated_current'):
+        if src in ('circuit_phase_current',):
             has_circuit = True
             for i, v in enumerate(laad):
                 if v is not None and v > 0:

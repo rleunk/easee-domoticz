@@ -8,6 +8,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [1.1.3] — 2026-07-16
+
+### Fixed
+- **LB Laad fallback te laag** — `dynamicCircuitCurrent*` en allocatie-keys zijn limieten, geen werkelijke laadstroom; fallback gebruikt nu `circuitTotalPhaseConductorCurrent*`, `outputCurrent`, of vermogen×fase met plausibiliteitscheck
+
 ## [1.1.2] — 2026-07-16
 
 ### Added

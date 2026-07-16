@@ -143,6 +143,7 @@ CHARGER_KEYS = {
         'dynamicCircuitCurrentP3',
     ),
     'output_phase': ('outputPhase',),
+    'output_current': ('outputCurrent',),
 }
 
 
