@@ -1674,15 +1674,15 @@ def _enrich_lb_phase_values(plugin, values, state_payload=None):
     if not isinstance(values, dict):
         return
     canon_keys = list(phase_available_current_keys()) + list(phase_equalized_charge_keys())
-    flats = [values]
+    sources = [dict(values)]
     if isinstance(state_payload, dict):
         flat = {}
         _flatten_equalizer_payload(plugin, state_payload, flat)
-        flats.append(flat)
-    for flat in flats:
-        if not isinstance(flat, dict):
+        sources.append(flat)
+    for src in sources:
+        if not isinstance(src, dict):
             continue
-        for key, val in flat.items():
+        for key, val in src.items():
             if not isinstance(key, str) or val in (None, ''):
                 continue
             norm_key = key.lower().replace('_', '')

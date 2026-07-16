@@ -8,6 +8,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [1.1.1] — 2026-07-16
+
+### Fixed
+- **Equalizer poll crash** — `dictionary changed size during iteration` in `_enrich_lb_phase_values` (v1.1.0 regressie)
+
 ## [1.1.0] — 2026-07-16
 
 ### Added
