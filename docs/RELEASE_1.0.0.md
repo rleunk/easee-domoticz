@@ -56,4 +56,4 @@ gh release create v1.0.0 --title "v1.0.0" --latest
 - Domoticz forum announcement — draft: [FORUM_POST.md](FORUM_POST.md)
 - Tibber smart charging / Grid Rewards (no public API — display hints only)
 
-See [ROADMAP.md](ROADMAP.md) for completed v1.1.0 items (LB fase-detail, Energy icon docs, adaptive poll).
+See [ROADMAP.md](ROADMAP.md) for v1.1.x items (released as **1.1.5** on `main`). Successor: [RELEASE_1.1.5.md](RELEASE_1.1.5.md).

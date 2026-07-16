@@ -13,6 +13,9 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 ### Fixed
 - **Gemeten L1/L2/L3 verdween bij Vrij≈** — regressie v1.1.4: Gemeten blijft zichtbaar bij geschatte Vrij of laadpaal-fallback; alleen verborgen bij volledige Easee API LB-data
 
+### Released
+- **Promoted to `main`** — productie **1.1.5**, tag **`v1.1.5`** (2026-07-16). Zie [docs/RELEASE_1.1.5.md](docs/RELEASE_1.1.5.md).
+
 ## [1.1.4] — 2026-07-16
 
 ### Added

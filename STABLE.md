@@ -4,13 +4,14 @@ Dit project heeft **twee versielijnen**: **v1** (productie op `main`) en legacy 
 
 ## v1 — productie (main)
 
-v1 gebruikt **semver-tags** zonder `-stable` suffix (bijv. **`v1.0.0`**).
+v1 gebruikt **semver-tags** zonder `-stable` suffix (bijv. **`v1.1.5`**).
 
 ### Huidige stable v1
 
 | Tag | Branch | Status |
 |-----|--------|--------|
-| **`v1.0.0`** | `main` | **Aanbevolen productie** — vijf prijsbronnen, energy hints, 11 tegels + LoadBal |
+| **`v1.1.5`** | `main` | **Aanbevolen productie** — LB fase-detail, Tibber Vrij≈/Laad fallbacks, adaptief poll |
+| **`v1.0.0`** | `main` | Rollback-baseline (2026-06-30) |
 
 ### Installeren v1 (productie)
 
@@ -18,11 +19,11 @@ v1 gebruikt **semver-tags** zonder `-stable` suffix (bijv. **`v1.0.0`**).
 cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout main
-# of: git checkout v1.0.0
+# of: git checkout v1.1.5
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.0.0)**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.1.5)**.
 
 **Na elke upgrade:** herstart het Easee hardware-item in Domoticz (**Setup → Hardware**).
 
@@ -38,11 +39,12 @@ sudo systemctl restart domoticz
 
 ## v1 — ontwikkeling (branch `v1`)
 
-Branch **`v1`** blijft beschikbaar voor toekomstige v1-ontwikkeling (1.1.x). Na release **1.0.0** staan `main` en `v1` op dezelfde commit; nieuwe features komen eerst op `v1`.
+Branch **`v1`** blijft beschikbaar voor toekomstige v1-ontwikkeling (1.2.x). Na release **1.1.5** staan `main` en `v1` op dezelfde commit; nieuwe features komen eerst op `v1`.
 
 | Versie | Status | Inhoud (kort) |
 |--------|--------|---------------|
-| **1.0.0** | **Released** | Eerste stable v1 — alle prijsbronnen, hints, 11 tegels |
+| **1.1.5** | **Released** | LB fase-detail, Vrij≈/Laad fallbacks, adaptief poll |
+| **1.0.0** | Released | Eerste stable v1 — alle prijsbronnen, hints, 11 tegels |
 | **0.6.1** | Pre-release | Status-tegel toont actieve prijsbron |
 | **0.6.0** | Pre-release | Prijsbron **EnergyZero** |
 | **0.5.0** | Pre-release | Prijsbron **ENTSO-E** |
@@ -100,7 +102,8 @@ sudo systemctl restart domoticz
 
 ### v1 (productie)
 
-- [**v1.0.0**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.0.0) — Eerste stable v1 (main)
+- [**v1.1.5**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.5) — Huidige productie (main)
+- [**v1.0.0**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.0.0) — Eerste stable v1 (rollback)
 
 ### v1 (pre-release)
 

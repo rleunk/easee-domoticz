@@ -1,13 +1,14 @@
 # Roadmap
 
-Kort overzicht — **v1** productie op branch `main` (**1.0.0**); ontwikkeling op branch `v1`; legacy **v10.11.6** op `legacy/v10`. Zie [STABLE.md](../STABLE.md) en [VERSIONING.md](../VERSIONING.md).
+Kort overzicht — **v1** productie op branch `main` (**1.1.5**); ontwikkeling op branch `v1`; legacy **v10.11.6** op `legacy/v10`. Zie [STABLE.md](../STABLE.md) en [VERSIONING.md](../VERSIONING.md).
 
 ## v1 (branch `main` / `v1`) — indicatief
 
 | Versie | Status | Inhoud |
 |--------|--------|--------|
-| **1.1.0** | **Huidig (v1 branch)** | LB fase-detail, adaptief poll bij 429, Energy-icoon docs |
-| **1.0.0** | **Released** | Eerste stable v1 — vijf prijsbronnen, hints, 11 tegels + LoadBal |
+| **1.1.5** | **Released (main)** | Vrij≈/Laad/Gemeten fallbacks bij Tibber; fixes 1.1.1–1.1.4 |
+| **1.1.0** | Afgerond | LB fase-detail, adaptief poll bij 429, Energy-icoon docs |
+| **1.0.0** | Released | Eerste stable v1 — vijf prijsbronnen, hints, 11 tegels + LoadBal |
 | **0.6.1** | Pre-release | Status-tegel toont actieve prijsbron (Geen/Handmatig/Tibber/ENTSO-E/EnergyZero) |
 | **0.6.0** | Afgerond | Prijsbron **EnergyZero** — publieke NL uurprijzen, geen token |
 | **0.5.0** | Afgerond | Prijsbron **ENTSO-E** — day-ahead spot NL + toeslagen (Mode24–27) |
@@ -18,7 +19,7 @@ Kort overzicht — **v1** productie op branch `main` (**1.0.0**); ontwikkeling o
 | **0.2.0** | Afgerond | Prijsbron Geen/Handmatig/Tibber; `pricing/` end-to-end |
 | **0.1.0** | Afgerond | Scaffold; Tibber-only runtime gelijk aan v10.11.6 |
 
-### Prijsbronnen (v1.0.0)
+### Prijsbronnen (v1.0.0+)
 
 | Prijsbron | Mode | Token / config |
 |-----------|------|----------------|
@@ -27,6 +28,15 @@ Kort overzicht — **v1** productie op branch `main` (**1.0.0**); ontwikkeling o
 | Tibber | Mode9 + Mode7 | Tibber PAT |
 | ENTSO-E | Mode9 + Mode24–27 | ENTSO-E API token (na e-mail goedkeuring) |
 | EnergyZero | Mode9 | Geen token (`api.energyzero.nl`) |
+
+## Afgerond — v1.1.x (2026-07)
+
+- **1.1.0** — Equalizer LB fase-detail; adaptief poll-interval bij HTTP 429; Energy-tegel icoon docs
+- **1.1.1** — Fix equalizer poll crash in `_enrich_lb_phase_values`
+- **1.1.2** — Laad-fallback via laadpaal-fasedata; poll-volgorde laders vóór equalizer
+- **1.1.3** — Laad-fallback: werkelijke stroom i.p.v. LB-limiet-keys
+- **1.1.4** — **Vrij≈** schatting (`limiet − gemeten` per fase)
+- **1.1.5** — Gemeten-regel hersteld naast Vrij≈; **released op `main`** — [RELEASE_1.1.5.md](RELEASE_1.1.5.md)
 
 ## Afgerond — v10.11.x (legacy, 2026-06)
 
@@ -55,12 +65,6 @@ Kort overzicht — **v1** productie op branch `main` (**1.0.0**); ontwikkeling o
 
 - **1.2.x** — volgende v1 releases op branch `v1`
 
-## Afgerond — v1.1.0 (2026-07)
-
-- **Equalizer LB fase-detail** — Vrij/Laad labels, Gemeten-fallback bij Tibber/LB, geen dubbele stroomregel
-- **Domoticz Energy-tegel icoon-beperking** — gedocumenteerd in CONFIGURATION en TROUBLESHOOTING
-- **Adaptief poll-interval** — automatische verhoging bij HTTP 429 (60–120s), terug naar Mode1 na cooldown
-
 ## Afgerond — prijsbronnen v1 (2026-06)
 
 - **ENTSO-E (0.5.0)** — day-ahead spot + toeslagen; token via e-mail naar transparency@entsoe.eu; backup in `easee_state.json` — **getest 2026-06-29**
@@ -80,7 +84,8 @@ Kort overzicht — **v1** productie op branch `main` (**1.0.0**); ontwikkeling o
 | 27-06-2026 | v1 **0.2.0–0.6.0** prijsbronnen (incl. EnergyZero) |
 | 29-06-2026 | v1 **0.5.0 / 0.6.1** ENTSO-E bevestigd (token + backup) |
 | 30-06-2026 | v1 **1.0.0** released op `main` |
-| 16-07-2026 | v1 **1.1.0** LB-fase, adaptief poll, Energy-icoon docs |
+| 16-07-2026 | v1 **1.1.0–1.1.5** LB-fase, Tibber fallbacks, adaptief poll |
+| 16-07-2026 | v1 **1.1.5** released op `main` |
 
 ## Oudere milestones (samenvatting)
 
