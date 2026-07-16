@@ -1710,11 +1710,13 @@ def _lb_phase_compact(plugin, values, lb_active=False, tibber_controls=False, ch
     measured, has_measured = _phase_values_from_key_list(plugin, values, EQUALIZER_KEYS['phase_current'])
     lb_on = bool(lb_active or tibber_controls)
     vrij_estimated = False
+    laad_from_fallback = False
 
     if charger_laad and len(charger_laad) == 3 and _eq_phases_have_current(charger_laad):
         if not has_eq or not _eq_phases_have_current(eq):
             eq = list(charger_laad)
             has_eq = True
+            laad_from_fallback = True
             if domoticz_runtime.Parameters.get('Mode6') == 'Debug':
                 easee_logging.debug(
                     'equalizer_logic',
@@ -1745,7 +1747,11 @@ def _lb_phase_compact(plugin, values, lb_active=False, tibber_controls=False, ch
         laad = _format_phase_triple(plugin, eq, 'A') if has_eq else '— / — / —'
         lines.append(f'   ⚖️ {vrij_label}: {vrij} | Laad: {laad} A')
         skip_measured_dup = True
-        if has_measured and lb_on and (not has_eq or not has_avail):
+        api_lb_complete = (
+            has_avail and not vrij_estimated
+            and has_eq and _eq_phases_have_current(eq) and not laad_from_fallback
+        )
+        if has_measured and lb_on and not api_lb_complete:
             stroom = _format_phase_triple(plugin, measured, 'A')
             lines.append(f'   📊 Gemeten L1/L2/L3: {stroom} A')
     elif has_measured:
