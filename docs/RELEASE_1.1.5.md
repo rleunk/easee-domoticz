@@ -34,14 +34,27 @@ Zie ook [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELOG
 |------|--------|-------|
 | v1.1.0–1.1.5 ontwikkeld op branch `v1` | ✅ | 6 commits na 1.0.0 |
 | Live test 2× lader + 1× EQ + Tibber | ✅ | Richard — 2026-07-16 |
-| Geen heartbeat-crashes na 1.1.1 | ✅ | Soak + laden/idle |
+| **Soak test productie** | ✅ | **2026-07-16 → 2026-08-09** (~3 weken) — geen foutmeldingen |
+| Geen heartbeat-crashes na 1.1.1 | ✅ | Soak + laden/idle/teruglevering |
 | Public docs synced naar 1.1.5 | ✅ | README, STABLE, VERSIONING, … |
 | Tag **`v1.1.5`** + GitHub release | ✅ | Latest release |
 | Domoticz forum announcement | ⏳ | Draft: [FORUM_POST.md](FORUM_POST.md) |
 
 ---
 
-## Upgrade vanaf 1.0.0
+## Soak test (bevestigd 2026-08-09)
+
+Richard setup: **2× Charge Lite**, **1× Equalizer**, **Tibber LB**, **11 tegels + LoadBal**.
+
+| Periode | Scenario | Resultaat |
+|---------|----------|-----------|
+| 2026-07-17 | Laden op L3 (~3 kW), Grid Rewards, kosten | Vrij/Laad/Gemeten correct |
+| 2026-07-23 | Laden + teruglevering (941 W) | Vrij≈/Laad/Gemeten stabiel |
+| 2026-08-09 | Idle, teruglevering actief | Geen crashes, geen plugin-fouten in log |
+
+**Conclusie:** v1.1.5 is **productie-klaar** — aanbevolen voor alle v1-installaties.
+
+---
 
 ```bash
 cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin

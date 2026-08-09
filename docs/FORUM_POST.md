@@ -9,7 +9,7 @@ Hi all,
 We've been building a **Domoticz hardware plugin** for **Easee** EV chargers and **Equalizers** together and wanted to share an overview for anyone looking for native Domoticz integration (no MQTT bridge).
 
 **GitHub:** https://github.com/rleunk/easee-domoticz  
-**Status:** **v1.1.5** released on branch `main` — five price sources, energy hints, Equalizer LB phase detail with Tibber fallbacks (**Vrij≈**, **Laad**, **Gemeten**), adaptive poll on HTTP 429. Legacy v10.11.6 on `legacy/v10`. See [docs/RELEASE_1.1.5.md](https://github.com/rleunk/easee-domoticz/blob/main/docs/RELEASE_1.1.5.md).
+**Status:** **v1.1.5** on branch `main` — production-ready (soak confirmed aug 2026). Five price sources, energy hints, Equalizer LB phase detail with Tibber fallbacks (**Vrij≈**, **Laad**, **Gemeten**), adaptive poll on HTTP 429. Legacy v10.11.6 on `legacy/v10`. See [docs/RELEASE_1.1.5.md](https://github.com/rleunk/easee-domoticz/blob/main/docs/RELEASE_1.1.5.md).
 
 ---
 
@@ -82,4 +82,4 @@ git checkout main
 
 ---
 
-**v1.1.5** is the current stable v1 release — five price sources and Equalizer LB detail verified on a live Domoticz setup with Tibber. Feedback from other Domoticz + Easee users is very welcome — issues and suggestions on GitHub.
+**v1.1.5** is the current stable v1 release — five price sources and Equalizer LB detail verified on a live Domoticz setup with Tibber (~3 weeks soak, no errors). Feedback from other Domoticz + Easee users is very welcome — issues and suggestions on GitHub.

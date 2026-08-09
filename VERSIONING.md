@@ -6,7 +6,7 @@ Dit project heeft twee versielijnen naast elkaar.
 
 | Item | Waarde |
 |------|--------|
-| **Huidige versie** | **1.1.5** (released 2026-07-16) |
+| **Huidige versie** | **1.1.5** (released 2026-07-16, soak bevestigd 2026-08-09) |
 | **Branch productie** | `main` |
 | **Branch ontwikkeling** | `v1` (1.2.x en verder) |
 | **Tag** | `v1.1.5` (semver, geen `-stable` suffix) |

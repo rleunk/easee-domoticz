@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status (productie):** **`main`** = **1.1.5** — Prijsbron Geen/Handmatig/Tibber/**ENTSO-E**/**EnergyZero**; Equalizer LB fase-detail met **Vrij≈**, **Laad**- en **Gemeten**-fallback bij Tibber; adaptief poll bij HTTP 429; **11 tegels + LoadBal**. Zie [STABLE.md](STABLE.md), [VERSIONING.md](VERSIONING.md), [docs/RELEASE_1.1.5.md](docs/RELEASE_1.1.5.md).
+> **Status (productie):** **`main`** = **1.1.5** — bevestigd stable sinds release (soak **2026-07-16 → 2026-08-09**, geen fouten). Prijsbron Geen/Handmatig/Tibber/**ENTSO-E**/**EnergyZero**; Equalizer LB fase-detail met **Vrij≈**, **Laad**- en **Gemeten**-fallback bij Tibber; adaptief poll bij HTTP 429; **11 tegels + LoadBal**. Zie [STABLE.md](STABLE.md), [VERSIONING.md](VERSIONING.md), [docs/RELEASE_1.1.5.md](docs/RELEASE_1.1.5.md).
 >
 > **Legacy v10:** branch **`legacy/v10`** / tag [**v10.11.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6) — voor bestaande v10-installaties of rollback. v10 blijft bevroren.
 >
@@ -65,7 +65,7 @@ Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestr
 
 | Versie | Status |
 |--------|--------|
-| **1.1.5** | **Stable productie** (`main`) — LB fase-detail, Tibber Vrij≈/Laad fallbacks, adaptief poll |
+| **1.1.5** | **Stable productie** (`main`) — LB fase-detail, Tibber Vrij≈/Laad fallbacks, adaptief poll; soak bevestigd aug 2026 |
 | **1.0.0** | Vorige stable — vijf prijsbronnen, hints, 11 tegels |
 | **0.6.1** | Status-tegel toont actieve prijsbron (alle Mode9-waarden) |
 | **0.6.0** | EnergyZero prijsbron (geen token) |

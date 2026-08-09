@@ -16,6 +16,9 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 ### Released
 - **Promoted to `main`** — productie **1.1.5**, tag **`v1.1.5`** (2026-07-16). Zie [docs/RELEASE_1.1.5.md](docs/RELEASE_1.1.5.md).
 
+### Notes
+- **Soak test bevestigd (2026-08-09)** — 2× lader + 1× Equalizer + Tibber LB, ~3 weken productie zonder heartbeat-crashes of plugin-fouten; laden, idle, teruglevering en LB-fase-detail stabiel
+
 ## [1.1.4] — 2026-07-16
 
 ### Added

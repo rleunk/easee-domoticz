@@ -10,7 +10,7 @@ v1 gebruikt **semver-tags** zonder `-stable` suffix (bijv. **`v1.1.5`**).
 
 | Tag | Branch | Status |
 |-----|--------|--------|
-| **`v1.1.5`** | `main` | **Aanbevolen productie** — LB fase-detail, Tibber Vrij≈/Laad fallbacks, adaptief poll |
+| **`v1.1.5`** | `main` | **Aanbevolen productie** — LB fase-detail, Tibber Vrij≈/Laad fallbacks, adaptief poll; **soak bevestigd** (jul–aug 2026) |
 | **`v1.0.0`** | `main` | Rollback-baseline (2026-06-30) |
 
 ### Installeren v1 (productie)
@@ -43,7 +43,7 @@ Branch **`v1`** blijft beschikbaar voor toekomstige v1-ontwikkeling (1.2.x). Na 
 
 | Versie | Status | Inhoud (kort) |
 |--------|--------|---------------|
-| **1.1.5** | **Released** | LB fase-detail, Vrij≈/Laad fallbacks, adaptief poll |
+| **1.1.5** | **Released / soak OK** | LB fase-detail, Vrij≈/Laad fallbacks, adaptief poll |
 | **1.0.0** | Released | Eerste stable v1 — alle prijsbronnen, hints, 11 tegels |
 | **0.6.1** | Pre-release | Status-tegel toont actieve prijsbron |
 | **0.6.0** | Pre-release | Prijsbron **EnergyZero** |
