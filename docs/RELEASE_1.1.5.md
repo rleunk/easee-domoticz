@@ -38,7 +38,7 @@ Zie ook [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELOG
 | Geen heartbeat-crashes na 1.1.1 | ✅ | Soak + laden/idle/teruglevering |
 | Public docs synced naar 1.1.5 | ✅ | README, STABLE, VERSIONING, … |
 | Tag **`v1.1.5`** + GitHub release | ✅ | Latest release |
-| Domoticz forum announcement | ⏳ | Draft: [FORUM_POST.md](FORUM_POST.md) |
+| Domoticz forum announcement | ✅ | Geplaatst aug 2026 (v1.1.5) |
 
 ---
 

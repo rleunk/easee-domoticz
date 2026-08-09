@@ -23,7 +23,7 @@ Zie ook [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELOG
 | Public docs synced to 1.0.0 | ✅ | README, INSTALL, STABLE, VERSIONING, … |
 | Soak test on production Domoticz | ✅ | Completed 2026-06-30 |
 | Tag **`v1.0.0`** + GitHub release | ✅ | Superseded by **`v1.1.5`** (latest) |
-| Domoticz forum announcement | ⏳ | Draft verplaatst naar [FORUM_POST.md](FORUM_POST.md) — zie [RELEASE_1.1.5.md](RELEASE_1.1.5.md) |
+| Domoticz forum announcement | ✅ | Geplaatst met v1.1.5 (aug 2026) |
 
 ---
 
@@ -53,7 +53,7 @@ gh release create v1.0.0 --title "v1.0.0" --latest
 
 ## Intentionally open (historisch)
 
-- Domoticz forum announcement — draft: [FORUM_POST.md](FORUM_POST.md) (nog open; zie [RELEASE_1.1.5.md](RELEASE_1.1.5.md))
+- Domoticz forum announcement — geplaatst aug 2026 bij v1.1.5 (zie [RELEASE_1.1.5.md](RELEASE_1.1.5.md))
 - Tibber smart charging / Grid Rewards (no public API — display hints only)
 
 See [ROADMAP.md](ROADMAP.md) for v1.1.x items (released as **1.1.5** on `main`). Successor: [RELEASE_1.1.5.md](RELEASE_1.1.5.md).
