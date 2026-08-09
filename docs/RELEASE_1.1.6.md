@@ -1,5 +1,7 @@
 # Release — v1 **1.1.6** ✅
 
+**Language / Taal:** [English](en/RELEASE_1.1.6.md) · **Nederlands** (this page)
+
 Branch **`main`**, code version **1.1.6**, tag **`v1.1.6`**. Released **2026-08-09**.
 
 Volgt op **1.1.5** (2026-07-16). Ontwikkeling op branch **`v1`**, gemerged naar **`main`**.

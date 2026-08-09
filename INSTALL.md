@@ -1,5 +1,7 @@
 # Installatiehandleiding — Easee Domoticz plugin
 
+**Language / Taal:** [English](INSTALL.en.md) · **Nederlands** (this page)
+
 Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian Linux).
 
 > **Paden:** Vervang `USER` door je Linux-gebruikersnaam (bijv. `root`, `pi`, `domoticz`). De pluginmap is `/home/USER/domoticz/plugins/Easee-Domoticz-plugin/`.

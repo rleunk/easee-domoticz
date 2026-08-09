@@ -1,5 +1,7 @@
 # Stable releases
 
+**Language / Taal:** [English](STABLE.en.md) · **Nederlands** (this page)
+
 Dit project heeft **twee versielijnen**: **v1** (productie op `main`) en legacy **v10** (bewaard op branch `legacy/v10`). Zie [VERSIONING.md](VERSIONING.md).
 
 ## v1 — productie (main)

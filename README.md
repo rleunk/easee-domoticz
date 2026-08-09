@@ -1,5 +1,7 @@
 # Easee Domoticz Plugin **v1** (1.1.6)
 
+**Language / Taal:** [English](README.en.md) · **Nederlands** (this page)
+
 **Easee-laadpalen, Equalizer (meterkast) en optionele energieprijs (Geen/Handmatig/Tibber/ENTSO-E/EnergyZero) in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
 ![Version](https://img.shields.io/badge/version-1.1.6-brightgreen)
@@ -26,7 +28,7 @@ In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plug
 
 **Kosten-tegels:** kies **Prijsbron** (Mode9): **Tibber** (default, Mode7 token) · **ENTSO-E** (Mode24 token + toeslagen) · **EnergyZero** (geen token) · **Handmatig** (Vast Mode10, Dag/nacht of Dal/piek Mode11–19) · **Geen** (alleen kWh/laaduren, geen €). Hardware-groep **Energieprijs (optioneel)**. Optioneel **Energie hints** (P1 / Zonnepanelen / Thuisbatterij, Mode20–23 — elke merknaam in Domoticz werkt, bijv. Sessy, Powerwall). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
-> Git-authenticatie: [docs/GIT_SETUP.md](docs/GIT_SETUP.md) · Problemen: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+> Git-authenticatie: [docs/GIT_SETUP.md](docs/GIT_SETUP.md) · English: [docs/en/GIT_SETUP.md](docs/en/GIT_SETUP.md) · Problemen: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) · [docs/en/TROUBLESHOOTING.md](docs/en/TROUBLESHOOTING.md)
 
 ## Wat doet deze plugin?
 

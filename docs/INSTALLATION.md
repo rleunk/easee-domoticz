@@ -1,6 +1,10 @@
 # Installatie
 
+**Language / Taal:** [English](en/README.md) · **Nederlands** — [INSTALL.md](../INSTALL.md)
+
 De canonieke installatiehandleiding staat in **[INSTALL.md](../INSTALL.md)** (Nederlands, stap-voor-stap voor Debian/Domoticz).
+
+English: **[INSTALL.en.md](../INSTALL.en.md)**
 
 ## Snelle verwijzing
 

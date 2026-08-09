@@ -1,5 +1,7 @@
 # Configuratie Gids
 
+**Language / Taal:** [English](en/CONFIGURATION.md) · **Nederlands** (this page)
+
 ## Basis Parameters
 
 ### Username (Verplicht)

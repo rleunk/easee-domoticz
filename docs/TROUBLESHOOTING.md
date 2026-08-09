@@ -1,7 +1,9 @@
 # Troubleshooting Gids
 
-> **Versies:** **main** — **1.1.5** (productie) · Legacy **v10.11.6** op branch `legacy/v10`  
-> Installatie: [INSTALL.md](../INSTALL.md) · Stable-tags: [STABLE.md](../STABLE.md) · Configuratie: [CONFIGURATION.md](CONFIGURATION.md)
+**Language / Taal:** [English](en/TROUBLESHOOTING.md) · **Nederlands** (this page)
+
+> **Versies:** **main** — **1.1.6** (productie) · Legacy **v10.11.6** op branch `legacy/v10`  
+> Installatie: [INSTALL.md](../INSTALL.md) · English: [INSTALL.en.md](../INSTALL.en.md) · Configuratie: [CONFIGURATION.md](CONFIGURATION.md)
 
 ## Veelvoorkomende Problemen
 

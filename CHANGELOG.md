@@ -1,5 +1,7 @@
 # Changelog
 
+**Language:** Release notes in English: [docs/en/RELEASE_1.1.6.md](docs/en/RELEASE_1.1.6.md) · Index: [docs/en/README.md](docs/en/README.md)
+
 Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
 Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1.0/).

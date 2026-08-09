@@ -1,5 +1,7 @@
 # Versioning
 
+**Language / Taal:** [English](VERSIONING.en.md) · **Nederlands** (this page)
+
 Dit project heeft twee versielijnen naast elkaar.
 
 ## v1 (productie)
