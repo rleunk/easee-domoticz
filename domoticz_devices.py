@@ -12,6 +12,7 @@ from easee_constants import (
 import charger_logic
 import domoticz_icons
 import easee_helpers
+import easee_i18n
 import equalizer_logic
 from pricing import ui as pricing_ui
 
@@ -524,7 +525,7 @@ def update_core_sw(plugin, label, value):
     u = resolve_core_unit(plugin, easee_helpers.clean_label(plugin, label))
     if u is not None:
         state = easee_helpers.truthy(plugin, value)
-        domoticz_runtime.Devices[u].Update(nValue=1 if state else 0, sValue='Aan' if state else 'Uit')
+        domoticz_runtime.Devices[u].Update(nValue=1 if state else 0, sValue=easee_i18n.switch_value(plugin, state))
 
 def update_text(plugin, name, value):
     u = resolve_unit(plugin, name)
@@ -548,7 +549,7 @@ def update_sw(plugin, name, value):
     u = resolve_unit(plugin, name)
     if u is not None:
         state = easee_helpers.truthy(plugin, value)
-        domoticz_runtime.Devices[u].Update(nValue=1 if state else 0, sValue='Aan' if state else 'Uit')
+        domoticz_runtime.Devices[u].Update(nValue=1 if state else 0, sValue=easee_i18n.switch_value(plugin, state))
 
 def update_charger_text(plugin, cid, label_key, value):
     u = resolve_charger_unit(plugin, cid, label_key)
@@ -875,7 +876,7 @@ def ensure_core_devices(plugin):
                 CORE_DEVICE_IDS.get('Kosten & Samenvatting'),
             ]
         ensure_device_once(
-            plugin, label, typ, device_id=devid,
+            plugin, easee_i18n.pref_tile(plugin, label), typ, device_id=devid,
             legacy_names=legacy, legacy_device_ids=legacy_devids,
         )
     if easee_helpers.pricing_enabled(plugin):

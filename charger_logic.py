@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import domoticz_runtime
-from easee_constants import OP_MODE_LABELS
 from easee_api_keys import CHARGER_KEYS
 import easee_logging
 import domoticz_devices
 import easee_api
 import easee_helpers
+import easee_i18n
 import easee_state
 from pricing import ui as pricing_ui
 
@@ -277,19 +277,13 @@ def charger_display_name(plugin, charger, index):
     cid = str(charger.get('id') or '').strip()
     if api_name and api_name.lower() not in (cid.lower(), easee_helpers.short_id(plugin, cid).lower()):
         return api_name
-    return f'Laadpaal {index + 1}'
+    return easee_i18n.t(plugin, 'charger_default', n=index + 1)
 
 def charger_dev_name(plugin, display, label):
-    return easee_helpers.clean_label(plugin, f'{display} - {label}')
+    return easee_helpers.clean_label(plugin, f'{display} - {easee_i18n.tile_name(plugin, label)}')
 
 def op_mode_label(plugin, value):
-    if value is None or value == '':
-        return 'Onbekend'
-    try:
-        return OP_MODE_LABELS.get(int(value), f'Modus {int(value)}')
-    except Exception:
-        text = str(value).strip()
-        return text if text else 'Onbekend'
+    return easee_i18n.op_mode_label(plugin, value)
 
 def power_emoji(plugin, power_w):
     """Emoji based on power level"""
@@ -334,9 +328,9 @@ def build_charger_status_text(
     if hint:
         parts.append(hint)
     if session_cost is not None and day_cost is not None:
-        sess_label = 'Sessie' if session_active_for_cost else 'Laatste sessie'
+        sess_label = easee_i18n.t(plugin, 'session' if session_active_for_cost else 'last_session')
         parts.append(f'{sess_label} €{easee_helpers.euro_str(plugin, session_cost)}')
-        parts.append(f'Dag €{easee_helpers.euro_str(plugin, day_cost)}')
+        parts.append(easee_i18n.t(plugin, 'day_eur', cost=easee_helpers.euro_str(plugin, day_cost)))
     return ' · '.join(parts)
 
 def session_elapsed_hours(plugin, start_ts):
@@ -820,8 +814,9 @@ def poll_charger(plugin, charger):
             )
 
     # UPDATE DEVICES — v10.11: Laden (Energy + Description), Status (incl. kosten)
-    laden_detail = (
-        f'Sessie: {display_kwh:.3f} kWh | Vandaag: {day_kwh:.3f} kWh | Totaal: {total_kwh:.1f} kWh'
+    laden_detail = easee_i18n.t(
+        plugin, 'laden_desc',
+        session=display_kwh, day=day_kwh, total=total_kwh,
     )
     domoticz_devices.update_charger_energy(
         plugin, cid, 'Laden', power_w, counter_wh, description=laden_detail,

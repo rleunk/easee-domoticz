@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 
 import easee_helpers
+import easee_i18n
 import easee_state
 from pricing.base import PricingProvider
 
@@ -73,16 +74,16 @@ class ManualPricingProvider(PricingProvider):
     def cheapest_window_text(self, hours=None) -> str:
         if easee_helpers.manual_tariff_type(self.plugin) == 'Vast':
             rate = easee_helpers.manual_rate(self.plugin)
-            return f'Vast tarief €{rate:.2f}/kWh'
+            return easee_i18n.t(self.plugin, 'manual.fixed_tariff', rate=rate)
         if hours is None:
             hours = easee_helpers.beste_laden_hours(self.plugin)
         hours = max(1, min(int(hours), 12))
         points = self.sorted_price_points()
         if not points:
-            return 'Onvoldoende prijsdata'
+            return easee_i18n.t(self.plugin, 'insufficient_prices')
         window_slots = hours
         if len(points) < window_slots:
-            return 'Onvoldoende prijsdata'
+            return easee_i18n.t(self.plugin, 'insufficient_prices')
         best_idx = None
         best_avg = None
         for i in range(0, len(points) - window_slots + 1):
@@ -91,19 +92,23 @@ class ManualPricingProvider(PricingProvider):
                 best_avg = avg
                 best_idx = i
         if best_idx is None:
-            return 'Onvoldoende prijsdata'
+            return easee_i18n.t(self.plugin, 'insufficient_prices')
         start = points[best_idx][0]
         end_dt = points[best_idx + window_slots - 1][0] + timedelta(hours=1)
-        return f'{start.strftime("%H:%M")} - {end_dt.strftime("%H:%M")} ({hours}u) | €{best_avg:.2f}/kWh'
+        return easee_i18n.t(
+            self.plugin, 'best_window',
+            start=start.strftime('%H:%M'), end=end_dt.strftime('%H:%M'),
+            hours=hours, avg=best_avg,
+        )
 
     def dagrapport_cheapest_line(self) -> str:
         if easee_helpers.manual_tariff_type(self.plugin) == 'Vast':
             rate = easee_helpers.manual_rate(self.plugin)
-            return f'Vast tarief €{rate:.2f}/kWh'
+            return easee_i18n.t(self.plugin, 'manual.fixed_tariff', rate=rate)
         hour, price = self.cheapest_hour_today()
         if hour and price is not None:
-            return f'Goedkoopste: {hour} (€{price:.2f}/kWh)'
-        return 'Goedkoopste: onbekend'
+            return easee_i18n.t(self.plugin, 'cheapest', time=hour, price=price)
+        return easee_i18n.t(self.plugin, 'cheapest_unknown')
 
     def refresh(self) -> None:
         cache = {}

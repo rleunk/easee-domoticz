@@ -3,6 +3,7 @@
 """Provider-aware pricing UI helpers — use instead of direct tibber_pricing imports."""
 
 import easee_helpers
+import easee_i18n
 import tibber_pricing
 from pricing import entsoe as entsoe_pricing
 from pricing import energyzero as energyzero_pricing
@@ -90,29 +91,30 @@ def status_prijsbron_part(plugin) -> str:
     """Leading ' | ...' fragment for Status tile — all five Prijsbron (Mode9) values."""
     source = easee_helpers.pricing_source(plugin)
     if source == 'Geen':
-        return ' | Prijsbron: Geen'
+        return easee_i18n.t(plugin, 'price.none')
     if source == 'Tibber':
         if easee_helpers.pricing_enabled(plugin):
-            return ' | Tibber actief'
-        return ' | Prijsbron: Tibber'
+            return easee_i18n.t(plugin, 'price.tibber_active')
+        return easee_i18n.t(plugin, 'price.tibber')
     if source == 'ENTSO-E':
         if easee_helpers.pricing_enabled(plugin):
             rate = easee_helpers.safe_float(plugin, current_price(plugin).get('total'), 0.0)
-            return f' | ENTSO-E spot €{easee_helpers.euro_str(plugin, rate)}/kWh'
-        return ' | Prijsbron: ENTSO-E'
+            return easee_i18n.t(plugin, 'price.entsoe_spot', rate=easee_helpers.euro_str(plugin, rate))
+        return easee_i18n.t(plugin, 'price.entsoe')
     if source == 'EnergyZero':
         rate = easee_helpers.safe_float(plugin, current_price(plugin).get('total'), 0.0)
-        return f' | EnergyZero €{easee_helpers.euro_str(plugin, rate)}/kWh'
+        return easee_i18n.t(plugin, 'price.energyzero', rate=easee_helpers.euro_str(plugin, rate))
     if source == 'Handmatig':
         tariff_type = easee_helpers.manual_tariff_type(plugin)
         if tariff_type == 'Vast':
             rate = easee_helpers.manual_rate(plugin)
-            return f' | Handmatig €{easee_helpers.euro_str(plugin, rate)}/kWh'
+            return easee_i18n.t(plugin, 'price.manual_fixed', rate=easee_helpers.euro_str(plugin, rate))
         rate = easee_helpers.manual_rate_at(plugin)
         period = easee_helpers.manual_tariff_period(plugin)
-        return (
-            f' | Handmatig {tariff_type.lower()} ({period}) '
-            f'€{easee_helpers.euro_str(plugin, rate)}/kWh'
+        return easee_i18n.t(
+            plugin, 'price.manual_typed',
+            tariff=tariff_type.lower(), period=period,
+            rate=easee_helpers.euro_str(plugin, rate),
         )
     return ''
 

@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 
 import easee_helpers
+import easee_i18n
 import easee_logging
 import easee_state
 from pricing.base import PricingProvider
@@ -110,11 +111,11 @@ def charging_hint(plugin, power_w, session_active=False, eq_lb_active=False, lb_
     cache = plugin.state.get('price_cache') or {}
     tier = price_tier(plugin, cur, cache)
     if tier == 'expensive':
-        return 'Laden bij duur tarief'
+        return easee_i18n.t(plugin, 'hint.expensive')
     if tier == 'cheap' and not eq_lb_active:
-        return 'Waarschijnlijk Grid Rewards'
+        return easee_i18n.t(plugin, 'hint.grid_rewards')
     if tier == 'cheap':
-        return 'Laden bij goedkoop tarief'
+        return easee_i18n.t(plugin, 'hint.cheap')
     return ''
 
 

@@ -3,6 +3,7 @@
 
 import domoticz_runtime
 import easee_helpers
+import easee_i18n
 import easee_logging
 from easee_constants import DEVICE_TYPES
 
@@ -21,7 +22,7 @@ def configured_device_names(plugin):
     return {
         'p1': _param_name('Mode21', P1_DEFAULT_NAME),
         'solar': _param_name('Mode22', SOLAR_DEFAULT_NAME),
-        'thuisbatterij': sessy_raw or '(uit)',
+        'thuisbatterij': sessy_raw or easee_i18n.t(plugin, 'disabled'),
     }
 
 
@@ -228,15 +229,15 @@ def _collect_hints(plugin, ctx, charging=False):
         or (ctx.get('p1_ok') and export_w > EXPORT_THRESHOLD_W)
     )
     if solar_surplus:
-        hints.append('☀️ Zonne-overschot')
+        hints.append(easee_i18n.t(plugin, 'hint.solar_surplus'))
     elif ctx.get('p1_ok') and export_w > 0 and not _eq_export_active(plugin):
-        hints.append('↩️ Teruglevering')
+        hints.append(easee_i18n.t(plugin, 'hint.export'))
 
     if ctx.get('sessy_ok') and abs(sessy_w) > SESSY_THRESHOLD_W:
-        hints.append('🔋 Thuisbatterij actief')
+        hints.append(easee_i18n.t(plugin, 'hint.battery'))
 
     if charging and ctx.get('p1_ok') and import_w >= HIGH_IMPORT_THRESHOLD_W:
-        hints.append('📥 Hoog netverbruik')
+        hints.append(easee_i18n.t(plugin, 'hint.high_import'))
 
     return hints
 

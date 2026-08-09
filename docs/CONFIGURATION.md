@@ -29,6 +29,12 @@
 
 **Instellen in Domoticz:** **Setup → Hardware** → klik je Easee hardware-item → **Poll interval (sec)** → wijzig naar `60` → **Save**.
 
+### Taal / Language (Mode30)
+**Type**: Select  
+**Default**: Nederlands (`nl`)  
+**Opties**: **Nederlands** | **English** (`en`)  
+**Omschrijving**: Taal van tegelteksten (status, Equalizer LB, kosten, hints). Hardware-instellingen blijven grotendeels Nederlands/Engels mix; Domoticz-eigen UI (*Laatst gezien*, knoppen) volgt de Domoticz-taal.
+
 ### Device Prefix (hardwarenaam)
 
 De **hardwarenaam** die je in Domoticz invult (bijv. `Easee`) wordt automatisch als prefix op alle tegels gezet. Je hoeft hiervoor geen apart veld in te vullen.

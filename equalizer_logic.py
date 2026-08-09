@@ -6,6 +6,7 @@ import easee_api_keys as ak
 import easee_logging
 import easee_api
 import easee_helpers
+import easee_i18n
 import easee_state
 import charger_logic
 import domoticz_devices
@@ -1586,7 +1587,7 @@ def equalizer_display_name(plugin, equalizer, index):
     return 'Equalizer' if index == 0 else f'Equalizer {index + 1}'
 
 def equalizer_dev_name(plugin, display, label):
-    return easee_helpers.clean_label(plugin, f'{display} - {label}')
+    return easee_helpers.clean_label(plugin, f'{display} - {easee_i18n.tile_name(plugin, label)}')
 
 def _phase_values_from_keys(plugin, values, key_groups):
     phases = []
@@ -1740,12 +1741,12 @@ def _lb_phase_compact(plugin, values, lb_active=False, tibber_controls=False, ch
 
     lines = []
     skip_measured_dup = False
-    vrij_label = 'Vrij≈' if vrij_estimated else 'Vrij'
+    vrij_label = easee_i18n.t(plugin, 'eq.vrij_est' if vrij_estimated else 'eq.vrij')
 
     if has_avail or has_eq:
         vrij = _format_phase_triple(plugin, avail, 'A') if has_avail else '— / — / —'
         laad = _format_phase_triple(plugin, eq, 'A') if has_eq else '— / — / —'
-        lines.append(f'   ⚖️ {vrij_label}: {vrij} | Laad: {laad} A')
+        lines.append(easee_i18n.t(plugin, 'eq.lb_phases', vrij_label=vrij_label, vrij=vrij, laad=laad))
         skip_measured_dup = True
         api_lb_complete = (
             has_avail and not vrij_estimated
@@ -1753,39 +1754,40 @@ def _lb_phase_compact(plugin, values, lb_active=False, tibber_controls=False, ch
         )
         if has_measured and lb_on and not api_lb_complete:
             stroom = _format_phase_triple(plugin, measured, 'A')
-            lines.append(f'   📊 Gemeten L1/L2/L3: {stroom} A')
+            lines.append(easee_i18n.t(plugin, 'eq.measured', amps=stroom))
     elif has_measured:
         stroom = _format_phase_triple(plugin, measured, 'A')
         if lb_on:
-            lines.append(f'   📊 Gemeten L1/L2/L3: {stroom} A')
+            lines.append(easee_i18n.t(plugin, 'eq.measured', amps=stroom))
         else:
-            lines.append(f'   📊 Stroom L1/L2/L3: {stroom} A')
+            lines.append(easee_i18n.t(plugin, 'eq.current_phases', amps=stroom))
         skip_measured_dup = True
     elif lb_on:
-        lines.append('   LB-fase: wacht op API-data')
+        lines.append(easee_i18n.t(plugin, 'eq.lb_wait'))
     else:
-        lines.append('   Fase-data: nog niet beschikbaar')
+        lines.append(easee_i18n.t(plugin, 'eq.phase_wait'))
 
     return '\n'.join(lines), skip_measured_dup
 
 def _limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a):
-    emob = easee_helpers.format_amp(plugin, max_alloc) or 'n/b'
-    hoofd = easee_helpers.format_amp(plugin, main_fuse_a) or 'n/b'
-    limiet = easee_helpers.format_amp(plugin, main_fuse_limit_a) or 'n/b'
-    return f'🛡️ eMobility: {emob} | Hoofd: {hoofd} | Limiet: {limiet}'
+    na = easee_i18n.t(plugin, 'eq.na')
+    emob = easee_helpers.format_amp(plugin, max_alloc) or na
+    hoofd = easee_helpers.format_amp(plugin, main_fuse_a) or na
+    limiet = easee_helpers.format_amp(plugin, main_fuse_limit_a) or na
+    return easee_i18n.t(plugin, 'eq.limits', emob=emob, hoofd=hoofd, limiet=limiet)
 
 def _voltage_status_line(plugin, values):
     phases, has = _phase_values_from_keys(plugin, values, phase_voltage_keys())
     if not has:
-        return '🔌 Spanning L1/L2/L3: nog niet beschikbaar'
-    return f'🔌 Spanning L1/L2/L3: {_format_phase_triple(plugin, phases, "V")} V'
+        return easee_i18n.t(plugin, 'eq.voltage_wait')
+    return easee_i18n.t(plugin, 'eq.voltage', volts=_format_phase_triple(plugin, phases, 'V'))
 
 def _current_status_line(plugin, values, power_w):
+    measured, has_measured = _phase_values_from_key_list(plugin, values, EQUALIZER_KEYS['phase_current'])
+    if has_measured:
+        stroom = _format_phase_triple(plugin, measured, 'A')
+        return easee_i18n.t(plugin, 'eq.current_phases', amps=stroom)
     current_line, _load_a = easee_helpers.actual_current_line(plugin, values, power_w)
-    if not current_line:
-        return None
-    if 'L1/L2/L3' in current_line:
-        return current_line.replace('📊 L1/L2/L3:', '📊 Stroom L1/L2/L3:')
     return current_line
 
 def _build_status_text(plugin, values, online, lb_active, max_alloc, main_fuse_a, main_fuse_limit_a,
@@ -1793,16 +1795,16 @@ def _build_status_text(plugin, values, online, lb_active, max_alloc, main_fuse_a
     status_emoji = '✅' if online else '❌'
     if lb_active:
         lb_emoji = '⚖️'
-        lb_text = 'Aan'
+        lb_text = easee_i18n.t(plugin, 'lb.on')
     elif tibber_controls:
         lb_emoji = '📡'
-        lb_text = 'Tibber'
+        lb_text = easee_i18n.t(plugin, 'lb.tibber')
     else:
         lb_emoji = '⏸️'
-        lb_text = 'Uit'
+        lb_text = easee_i18n.t(plugin, 'lb.off')
     lines = [
-        f'{status_emoji} Equalizer {"online" if online else "offline"}',
-        f'{lb_emoji} Load balancing: {lb_text}',
+        f'{status_emoji} {easee_i18n.t(plugin, "eq.online" if online else "eq.offline")}',
+        easee_i18n.t(plugin, 'eq.lb_line', emoji=lb_emoji, state=lb_text),
     ]
     charger_laad = None
     laad_phases, has_charger_laad = charger_logic.aggregate_charger_laad_phases(plugin)
@@ -1816,7 +1818,7 @@ def _build_status_text(plugin, values, online, lb_active, max_alloc, main_fuse_a
     lines.append(_limits_compact_line(plugin, max_alloc, main_fuse_a, main_fuse_limit_a))
     if max_import_kw > 0:
         kw_text = easee_helpers.format_kw(plugin, max_import_kw) or f'{max_import_kw:.1f} kW'
-        lines.append(f'⚡ Max import: {kw_text}')
+        lines.append(easee_i18n.t(plugin, 'eq.max_import', kw=kw_text))
     current_line = _current_status_line(plugin, values, power_w)
     if current_line and not skip_measured_dup:
         lines.append(current_line[0])
@@ -1848,24 +1850,27 @@ def _daily_netto_kwh(plugin, eid, import_kwh, export_kwh):
 
 def _vermogen_text(plugin, eid, power_w, export_w, net_w, import_kwh, export_kwh):
     lines = [
-        f'📥 Import: {int(power_w)} W | Terug: {int(export_w)} W',
-        f'📊 Netto: {int(net_w)} W',
+        easee_i18n.t(plugin, 'eq.import_export', import_w=int(power_w), export_w=int(export_w)),
+        easee_i18n.t(plugin, 'eq.netto', net_w=int(net_w)),
     ]
     if export_w > 0:
-        lines.append('↩️ Teruglevering actief')
+        lines.append(easee_i18n.t(plugin, 'eq.export_active'))
     day_import = _daily_import_kwh(plugin, eid, import_kwh)
     day_net = _daily_netto_kwh(plugin, eid, import_kwh, export_kwh)
     if day_import is not None and day_net is not None:
         net_sign = '+' if day_net >= 0 else '−'
-        lines.append(f'📈 Vandaag import: {day_import:.3f} kWh | netto: {net_sign}{abs(day_net):.3f} kWh')
+        lines.append(easee_i18n.t(
+            plugin, 'eq.today_import_net',
+            import_kwh=day_import, sign=net_sign, net_kwh=abs(day_net),
+        ))
     elif day_import is not None:
-        lines.append(f'📈 Vandaag import: {day_import:.3f} kWh')
+        lines.append(easee_i18n.t(plugin, 'eq.today_import', import_kwh=day_import))
     elif day_net is not None:
         sign = '+' if day_net >= 0 else '−'
-        lines.append(f'📈 Vandaag netto: {sign}{abs(day_net):.3f} kWh')
+        lines.append(easee_i18n.t(plugin, 'eq.today_net', sign=sign, net_kwh=abs(day_net)))
     elif import_kwh is not None and export_kwh is not None:
         net_kwh = round(import_kwh - export_kwh, 3)
-        lines.append(f'📈 Totaal netto: {net_kwh:.3f} kWh')
+        lines.append(easee_i18n.t(plugin, 'eq.total_net', net_kwh=net_kwh))
     return '\n'.join(lines)
 
 def _equalizer_matches_filter(plugin, name, site_name):

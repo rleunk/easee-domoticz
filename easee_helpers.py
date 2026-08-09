@@ -478,13 +478,14 @@ def format_phase_amp(plugin, val):
     return f'{val:.1f}'
 
 def actual_current_line(plugin, values, power_w):
+    import easee_i18n
     l1, l2, l3, load_a, has_phases = phase_currents_from_values(plugin, values)
     if has_phases:
         parts = [format_phase_amp(plugin, v) for v in (l1, l2, l3)]
-        return f'📊 L1/L2/L3: {" / ".join(parts)} A', load_a
+        return easee_i18n.t(plugin, 'eq.phases_a', amps=' / '.join(parts)), load_a
     calc_a = current_from_power_3phase(plugin, power_w)
     if calc_a > 0:
-        return f'📊 Actuele stroom: {calc_a:.1f} A (3-fase)', calc_a
+        return easee_i18n.t(plugin, 'eq.current_single', amps=calc_a), calc_a
     return None, 0.0
 
 def format_kw(plugin, value):

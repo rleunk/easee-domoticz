@@ -6,6 +6,7 @@ from easee_constants import TIBBER_GQL
 from easee_api_keys import TIBBER_KEYS
 import easee_logging
 import easee_helpers
+import easee_i18n
 import easee_state
 
 _TIBBER_QH_QUERY = (
@@ -237,19 +238,19 @@ def charging_hint(plugin, power_w, session_active=False, eq_lb_active=False, lb_
     cache = plugin.state.get('price_cache') or {}
     tier = price_tier(plugin, cur, cache)
     if tier == 'expensive':
-        return 'Laden bij duur tarief'
+        return easee_i18n.t(plugin, 'hint.expensive')
     if tier == 'cheap' and not eq_lb_active:
-        return 'Waarschijnlijk Grid Rewards'
+        return easee_i18n.t(plugin, 'hint.grid_rewards')
     if tier == 'cheap':
-        return 'Laden bij goedkoop tarief'
+        return easee_i18n.t(plugin, 'hint.cheap')
     return ''
 
 
 def dagrapport_cheapest_line(plugin):
     hour, price = cheapest_hour_today(plugin)
     if hour and price is not None:
-        return f'Goedkoopste: {hour} (€{price:.2f}/kWh)'
-    return 'Goedkoopste: onbekend'
+        return easee_i18n.t(plugin, 'cheapest', time=hour, price=price)
+    return easee_i18n.t(plugin, 'cheapest_unknown')
 
 
 def cheapest_window_text(plugin, hours=None):
@@ -258,12 +259,12 @@ def cheapest_window_text(plugin, hours=None):
     hours = max(1, min(int(hours), 12))
     points = sorted_price_points(plugin)
     if not points:
-        return 'Onvoldoende prijsdata'
+        return easee_i18n.t(plugin, 'insufficient_prices')
     slot_sec = _slot_interval_sec(plugin, points)
     slots_per_hour = max(1, int(round(3600.0 / float(slot_sec))))
     window_slots = hours * slots_per_hour
     if len(points) < window_slots:
-        return 'Onvoldoende prijsdata'
+        return easee_i18n.t(plugin, 'insufficient_prices')
     best_idx = None
     best_avg = None
     for i in range(0, len(points) - window_slots + 1):
@@ -272,10 +273,14 @@ def cheapest_window_text(plugin, hours=None):
             best_avg = avg
             best_idx = i
     if best_idx is None:
-        return 'Onvoldoende prijsdata'
+        return easee_i18n.t(plugin, 'insufficient_prices')
     start = points[best_idx][0]
     end_dt = points[best_idx + window_slots - 1][0] + timedelta(seconds=slot_sec)
-    return f'{start.strftime("%H:%M")} - {end_dt.strftime("%H:%M")} ({hours}u) | €{best_avg:.2f}/kWh'
+    return easee_i18n.t(
+        plugin, 'best_window',
+        start=start.strftime('%H:%M'), end=end_dt.strftime('%H:%M'),
+        hours=hours, avg=best_avg,
+    )
 
 
 def cheapest_hour_today(plugin):

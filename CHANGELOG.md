@@ -8,6 +8,11 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 
 ## [Unreleased]
 
+## [1.1.6] — 2026-08-09
+
+### Added
+- **English UI** — hardware parameter **Taal / Language** (Mode30): tile text, status lines, Equalizer LB labels, pricing hints and device display names in English; default **Nederlands** (unchanged for existing installs)
+
 ## [1.1.5] — 2026-07-16
 
 ### Fixed

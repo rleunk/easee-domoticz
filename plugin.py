@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (1.1.5)" author="Richard Leunk" version="1.1.5"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (1.1.6)" author="Richard Leunk" version="1.1.6"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v1 (1.1.5)</h2><br/>
-        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E/EnergyZero, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints, Equalizer LB fase-detail (Vrij≈/Laad/Gemeten) en adaptief poll bij HTTP 429. v1 productielijn.</p>
+        <h2>Easee Domoticz plugin v1 (1.1.6)</h2><br/>
+        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E/EnergyZero, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints, Equalizer LB fase-detail (Vrij≈/Laad/Gemeten) en adaptief poll bij HTTP 429. v1 productielijn. Taal: Nederlands of English (Mode30).</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
         <param field="Password" label="Easee Password" width="260px" password="true" required="true"/>
         <group label="Weergave en polling">
             <param field="Mode1" label="Poll interval (sec)" width="80px" default="30"/>
+            <param field="Mode30" label="Taal / Language" width="120px">
+                <options>
+                    <option label="Nederlands" value="nl" default="true"/>
+                    <option label="English" value="en"/>
+                </options>
+            </param>
             <param field="Mode5" label="Optionele site filter (tekst)" width="240px" default=""/>
             <param field="Mode6" label="Debug logging" width="100px">
                 <options>
@@ -107,6 +113,7 @@ import domoticz_devices
 import charger_logic
 import equalizer_logic
 import domoticz_energy_hints
+import easee_i18n
 from easee_constants import ULTRA_DEBUG, PLUGIN_VERSION
 
 
@@ -412,17 +419,14 @@ class BasePlugin:
         any_charging = any(v.get('power', 0) > 50 for v in self.latest_chargers.values())
         easee_state.track_global_charge(self, 0, 0, any_charging)
         charge_hours = easee_helpers.safe_float(self, g.get('charge_hours'), 0.0)
-        hours_txt = (
-            f'{int(charge_hours)}u {int((charge_hours % 1) * 60):02d}m'
-            if charge_hours >= 1 else f'{int(charge_hours * 60)} min'
-        )
+        hours_txt = easee_i18n.charge_hours_text(self, charge_hours)
 
         dag_overzicht = None
         if source == 'Geen':
             dag_overzicht = (
-                f'📅 Vandaag\n'
-                f'⚡ {day_kwh:.2f} kWh\n'
-                f'⏱️ Laaduren: {hours_txt}'
+                f'{easee_i18n.t(self, "today_header")}\n'
+                f'{easee_i18n.t(self, "kwh_only_line", kwh=day_kwh)}\n'
+                f'{easee_i18n.t(self, "charge_hours", hours=hours_txt)}'
             )
         elif costs_on:
             total_day_cost = round(sum(v.get('day_cost', 0.0) for v in self.latest_chargers.values()), 2)
@@ -437,22 +441,22 @@ class BasePlugin:
             if source in ('Tibber', 'ENTSO-E'):
                 price_emoji = pricing_ui.price_status_emoji(self)
                 dag_overzicht = (
-                    f'📅 Vandaag\n'
-                    f'⚡ {day_kwh:.2f} kWh | €{easee_helpers.euro_str(self, total_day_cost)}\n'
-                    f'⏱️ Laaduren: {hours_txt}\n'
+                    f'{easee_i18n.t(self, "today_header")}\n'
+                    f'{easee_i18n.t(self, "day_cost_line", kwh=day_kwh, cost=easee_helpers.euro_str(self, total_day_cost))}\n'
+                    f'{easee_i18n.t(self, "charge_hours", hours=hours_txt)}\n'
                     f'💰 {pricing_ui.dagrapport_cheapest_line(self)}\n'
-                    f'{price_emoji} Tarief: €{easee_helpers.euro_str(self, rate)}/kWh\n'
-                    f'Energy: €{easee_helpers.euro_str(self, total_day_energy)} | '
-                    f'Belasting: €{easee_helpers.euro_str(self, total_day_tax)}'
+                    f'{price_emoji} {easee_i18n.t(self, "tariff", rate=easee_helpers.euro_str(self, rate))}\n'
+                    f'{easee_i18n.t(self, "energy_cost", energy=easee_helpers.euro_str(self, total_day_energy))} | '
+                    f'{easee_i18n.t(self, "tax_cost", tax=easee_helpers.euro_str(self, total_day_tax))}'
                 )
             else:
                 price_emoji = pricing_ui.price_status_emoji(self)
                 dag_overzicht = (
-                    f'📅 Vandaag\n'
-                    f'⚡ {day_kwh:.2f} kWh | €{easee_helpers.euro_str(self, total_day_cost)}\n'
-                    f'⏱️ Laaduren: {hours_txt}\n'
+                    f'{easee_i18n.t(self, "today_header")}\n'
+                    f'{easee_i18n.t(self, "day_cost_line", kwh=day_kwh, cost=easee_helpers.euro_str(self, total_day_cost))}\n'
+                    f'{easee_i18n.t(self, "charge_hours", hours=hours_txt)}\n'
                     f'💰 {pricing_ui.dagrapport_cheapest_line(self)}\n'
-                    f'{price_emoji} Tarief: €{easee_helpers.euro_str(self, rate)}/kWh'
+                    f'{price_emoji} {easee_i18n.t(self, "tariff", rate=easee_helpers.euro_str(self, rate))}'
                 )
 
         energy_hint = domoticz_energy_hints.global_hints_text(self, any_charging=any_charging)
@@ -461,17 +465,21 @@ class BasePlugin:
         if dag_overzicht is not None and easee_helpers.dag_overzicht_enabled(self):
             domoticz_devices.update_core_text(self, 'Dag overzicht', dag_overzicht)
 
-        eq_part = f' | EQ: {eq_count}' if eq_count else ' | Geen EQ'
-        lb_part = ' | LB actief' if any_lb else ''
+        eq_part = (
+            f' | {easee_i18n.t(self, "eq_count", n=eq_count)}'
+            if eq_count else f' | {easee_i18n.t(self, "no_eq")}'
+        )
+        lb_part = f' | {easee_i18n.t(self, "lb_active")}' if any_lb else ''
         if source == 'Tibber' and costs_on and not any_lb and any_charging:
-            lb_part = ' | Tibber stuurt'
+            lb_part = f' | {easee_i18n.t(self, "tibber_controls")}'
         prijsbron_part = pricing_ui.status_prijsbron_part(self)
         status_msg = (
-            ('✅ Online' if any_online else '❌ Offline') + eq_part + lb_part + prijsbron_part
+            (f'✅ {easee_i18n.t(self, "online")}' if any_online else f'❌ {easee_i18n.t(self, "offline")}')
+            + eq_part + lb_part + prijsbron_part
         )
 
         if self.icons_upload_required:
-            status_msg = '⚠️ Upload Easee_icons_v2.zip (Instellingen) | ' + status_msg
+            status_msg = easee_i18n.t(self, 'upload_icons') + ' | ' + status_msg
         if energy_hint:
             status_msg = f'{status_msg} | {energy_hint}'
         domoticz_devices.update_core_text(self, 'Status', status_msg)
@@ -642,7 +650,7 @@ class BasePlugin:
                 if not logged_in:
                     self._heartbeat_step(
                         'login status',
-                        lambda: domoticz_devices.update_core_text(self, 'Status', 'Login mislukt'),
+                        lambda: domoticz_devices.update_core_text(self, 'Status', easee_i18n.t(self, 'login_failed')),
                     )
                     easee_logging.info('plugin', 'Poll overgeslagen: login mislukt', 'poll')
                     return
@@ -674,7 +682,7 @@ class BasePlugin:
             self._log_heartbeat_exception('onHeartbeat', e)
             self._heartbeat_step(
                 'status after error',
-                lambda: domoticz_devices.update_core_text(self, 'Status', f'Fout: {e}'),
+                lambda: domoticz_devices.update_core_text(self, 'Status', easee_i18n.t(self, 'error', msg=e)),
             )
 
 
