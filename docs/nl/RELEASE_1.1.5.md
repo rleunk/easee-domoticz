@@ -4,7 +4,7 @@ Branch **`main`**, code version **1.1.5**, tag **`v1.1.5`**. Released **2026-07-
 
 Volgt op **1.0.0** (2026-06-30). Ontwikkeling 1.1.0–1.1.5 op branch **`v1`**, gemerged naar **`main`**.
 
-Zie ook [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELOG.md](../CHANGELOG.md), [RELEASE_1.0.0.md](RELEASE_1.0.0.md).
+Zie ook [STABLE.nl.md](../../STABLE.nl.md), [VERSIONING.nl.md](../../VERSIONING.nl.md), [CHANGELOG.md](../../CHANGELOG.md), [RELEASE_1.0.0.md](RELEASE_1.0.0.md).
 
 ---
 

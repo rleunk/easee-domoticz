@@ -1,7 +1,7 @@
 # Installation
 
-**Language / Taal:** [English](INSTALL.en.md) · **Nederlands** (this page)
+**Language / Taal:** [English](INSTALL.md) · **Nederlands** (this page)
 
-De canonieke installatiehandleiding staat in **[INSTALL.md](INSTALL.md)**.
+De canonieke installatiehandleiding staat in **[INSTALL.nl.md](INSTALL.nl.md)**.
 
-Configuratie: **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)** · English: **[docs/en/CONFIGURATION.md](docs/en/CONFIGURATION.md)**
+Configuratie: **[docs/nl/CONFIGURATION.md](docs/nl/CONFIGURATION.md)** · English: **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**

@@ -1,7 +1,7 @@
 # Probleemoplossing
 
-**Language / Taal:** [English](docs/en/TROUBLESHOOTING.md) · **Nederlands** (this page)
+**Language / Taal:** [English](docs/TROUBLESHOOTING.md) · **Nederlands** (this page)
 
-Zie **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** voor de volledige troubleshooting-gids.
+Zie **[docs/nl/TROUBLESHOOTING.md](docs/nl/TROUBLESHOOTING.md)** voor de volledige troubleshooting-gids.
 
-Installatie: **[INSTALL.md](INSTALL.md)** · English: **[INSTALL.en.md](INSTALL.en.md)**
+Installatie: **[INSTALL.nl.md](INSTALL.nl.md)** · English: **[INSTALL.md](INSTALL.md)**

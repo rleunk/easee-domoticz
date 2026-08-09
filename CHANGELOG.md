@@ -1,6 +1,6 @@
 # Changelog
 
-**Language:** Release notes in English: [docs/en/RELEASE_1.1.6.md](docs/en/RELEASE_1.1.6.md) · Index: [docs/en/README.md](docs/en/README.md)
+**Language:** Release notes in English: [docs/RELEASE_1.1.6.md](docs/RELEASE_1.1.6.md) · Nederlands: [docs/nl/RELEASE_1.1.6.md](docs/nl/RELEASE_1.1.6.md) · Index: [docs/README.md](docs/README.md)
 
 Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 

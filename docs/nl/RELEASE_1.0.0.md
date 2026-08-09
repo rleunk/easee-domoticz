@@ -4,7 +4,7 @@ Branch **`main`**, code version **1.0.0**, tag **`v1.0.0`**. Released **2026-06-
 
 Legacy v10.11.6 is bewaard op branch **`legacy/v10`** (tags `v10.11.6` / `v10.11.6-stable`). Opvolger op `main`: **1.1.6** — zie [RELEASE_1.1.6.md](RELEASE_1.1.6.md). Vorige: [RELEASE_1.1.5.md](RELEASE_1.1.5.md).
 
-Zie ook [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELOG.md](../CHANGELOG.md).
+Zie ook [STABLE.nl.md](../../STABLE.nl.md), [VERSIONING.nl.md](../../VERSIONING.nl.md), [CHANGELOG.md](../../CHANGELOG.md).
 
 ---
 

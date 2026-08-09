@@ -1,564 +1,131 @@
-# Configuratie Gids
-
-**Language / Taal:** [English](en/CONFIGURATION.md) · **Nederlands** (this page)
-
-## Basis Parameters
-
-### Username (Verplicht)
-**Type**: Text  
-**Default**: -  
-**Omschrijving**: Je Easee account username of telefoonnummer  
-**Voorbeeld**: `test@example.com` of `+31612345678`
-
-### Password (Verplicht)
-**Type**: Password  
-**Default**: -  
-**Omschrijving**: Je Easee account wachtwoord  
-**Opmerking**: Wordt veilig opgeslagen in Domoticz
-
-## Geavanceerde Instellingen
-
-### Poll Interval (Mode1)
-**Type**: Integer  
-**Default**: 30  
-**Range**: 10 - 3600 seconden  
-**Omschrijving**: Hoe vaak de plugin Easee API raadpleegt  
-**Aanbeveling**:
-- 30 sec = normaal gebruik (default)
-- **60 sec = aanbevolen bij HTTP 429 rate limit** — minder API-druk; zie [TROUBLESHOOTING.md](TROUBLESHOOTING.md#http-429-rate-limit)
-- 60 sec = lager CPU gebruik
-- 10 sec = realtime updates (meer CPU, meer kans op 429)
-
-**Instellen in Domoticz:** **Setup → Hardware** → klik je Easee hardware-item → **Poll interval (sec)** → wijzig naar `60` → **Save**.
-
-### Taal / Language (Mode30)
-**Type**: Select  
-**Default**: Nederlands (`nl`)  
-**Opties**: **Nederlands** | **English** (`en`)  
-**Omschrijving**: Taal van tegelteksten (status, Equalizer LB, kosten, hints). Hardware-instellingen blijven grotendeels Nederlands/Engels mix; Domoticz-eigen UI (*Laatst gezien*, knoppen) volgt de Domoticz-taal.
-
-### Device Prefix (hardwarenaam)
-
-De **hardwarenaam** die je in Domoticz invult (bijv. `Easee`) wordt automatisch als prefix op alle tegels gezet. Je hoeft hiervoor geen apart veld in te vullen.
-
-### Site Filter (Mode5)
-**Type**: Text  
-**Default**: (empty)  
-**Omschrijving**: Optionele filter op sitenaam/laadpaalnaam  
-**Voorbeeld**:
-- Leeg = alle laadpalen
-- "Thuis" = alleen laadpalen met "Thuis" in de naam
-- "Kantoor" = alleen kantoor laadpalen
-
-### Debug Logging (Mode6)
-**Type**: Select  
-**Options**: Normal / Debug  
-**Default**: Normal  
-**Omschrijving**: Verbositeit van logging  
-
-| Mode6 | Wat je ziet in het log |
-|-------|------------------------|
-| **Normal** | Startup, Tibber actief/uit, `image_ids: 13/13`, migratie, WARNING/ERROR |
-| **Debug** | Alles hierboven + `Poll voltooid`, kosten-tegel updates, siteStructure, per-tegel iconen |
-
-Zet Debug alleen aan bij problemen — het log wordt dan veel langer.
-
-## Aangepaste laadpaalnamen (optioneel)
-
-### Naam laadpaal 1 (Mode2)
-**Type**: Text (Mode-veld)  
-**Default**: (empty)  
-**Omschrijving**: Eigen naam voor de eerste gevonden laadpaal  
-**Voorbeeld**: `Charge Lite Links`
+# Configuration guide
 
-### Naam laadpaal 2 (Mode3)
-**Type**: Text (Mode-veld)  
-**Default**: (empty)  
-**Voorbeeld**: `Charge Lite Rechts`
+**Language:** **English** · [Nederlands](nl/CONFIGURATION.md)
 
-### Extra laadpaalnamen (Mode4)
-**Type**: Text (Mode-veld)  
-**Default**: (empty)  
-**Omschrijving**: Komma-gescheiden namen vanaf de **derde** laadpaal  
-**Voorbeeld**: `Carport, Werf` → lader 3 = Carport, lader 4 = Werf
+Hardware parameters in Domoticz **Setup → Hardware → Easee**.
 
-**Belangrijk:** Gebruik **geen** Address/Port/SerialPort voor namen — Domoticz behandelt Port als getal (standaard `0`) en SerialPort als USB-poort.
+## Basic
 
-Als Mode2/Mode3/Mode4 leeg zijn, gebruikt de plugin de Easee-appnaam of `Laadpaal 1` / `Laadpaal 2` / …
+| Field | Required | Description |
+|-------|----------|-------------|
+| **Username** | Yes | Easee account email or phone |
+| **Password** | Yes | Easee password |
 
-## Equalizer (optioneel, stap 1)
+## Display & polling
 
-### Naam Equalizer (Address)
-**Type**: Text (Address-veld)  
-**Default**: (empty)  
-**Voorbeeld**: `Meterkast`
+| Field | Default | Description |
+|-------|---------|-------------|
+| **Poll interval (Mode1)** | 30 s | API poll rate; use **60 s** on HTTP 429 |
+| **Language (Mode30)** | Nederlands | **English** — tile text and status lines |
+| **Site filter (Mode5)** | empty | Filter chargers/equalizers by name substring |
+| **Debug logging (Mode6)** | Normal | Set **Debug** only when investigating issues |
 
-### Equalizer ID handmatig (IP)
-**Type**: Text (IP-veld)  
-**Default**: (empty)  
-**Gebruik**: Alleen als auto-discovery niets vindt. Vul de Equalizer ID/serienummer in uit de Easee app.
+## Charger names (optional)
 
-De plugin zoekt de Equalizer via:
-1. `/accounts/products` → `equalizers` (primair, zoals Home Assistant/pyeasee)
-2. `/sites/{id}?detailed=true` → `equalizers`
-3. `/sites` → ingebouwde `equalizers`
-4. `/sites/{id}/circuits` → `equalizerId`
-5. `/equalizers` lijst
-6. Handmatige ID (IP-veld)
+| Field | Description |
+|-------|-------------|
+| **Mode2** | Charger 1 display name |
+| **Mode3** | Charger 2 display name |
+| **Mode4** | Extra names comma-separated (from charger 3) |
 
-Als geen Equalizer wordt gevonden, verschijnen geen extra tegels en toont Status `Geen EQ`.
+Leave empty to use Easee app names.
 
-### Equalizer Status-tegel (v10.9.0+)
+## Equalizer (optional)
 
-Gegroepeerde weergave op één teksttegel:
+| Field | Description |
+|-------|-------------|
+| **Address** | Equalizer display name (e.g. Meter cupboard) |
+| **IP** | Manual Equalizer ID if auto-discovery fails |
 
-```
-✅ Equalizer online
-⚖️ Load balancing: Tibber
-   ⚖️ Vrij: 12.0 / 8.0 / 15.0 | Laad: 4.0 / 3.0 / 0.0 A
-   📊 Gemeten L1/L2/L3: 1.0 / 3.0 / 0.0 A
-🛡️ eMobility: 20 A | Hoofd: 25 A | Limiet: 24 A
-⚡ Max import: 17.2 kW
-🔌 Spanning L1/L2/L3: 231 / 230 / 229 V
-```
+### Equalizer Status tile
 
-*Bij Tibber-LB of ontbrekende Vrij/Laad API-data toont de plugin **Gemeten L1/L2/L3** als fallback (sinds v1.1.0). Sinds v1.1.4: **Vrij≈** = geschatte vrije capaciteit per fase (`limiet − gemeten`).*
+Shows per phase when load balancing is active:
 
-| Regel | API-bron | Betekenis |
-|-------|----------|-----------|
-| Verbinding | `online` state | Online/offline |
-| Load balancing | LB state + obs. 230–232 | Aan/uit + vrij/laad per fase |
-| Limieten | site fuse API | eMobility, hoofdzekering, ingestelde limiet |
-| Max import | obs. 44 MaxPowerImport | Max vermogen aansluiting |
-| Stroom L1/L2/L3 | obs. 31–33 | Fase-stromen |
-| Spanning L1/L2/L3 | state / obs. 34–36 | Fase-spanning (V) |
+| Label | Meaning |
+|-------|---------|
+| **Avail** / **Avail≈** | Available capacity L1/L2/L3; **≈** when estimated (Tibber/cloud-LB) |
+| **Charge** | Charging current per phase (charger fallback if API omits data) |
+| **Measured** | Grid current L1/L2/L3 |
 
-**Huisvermogen staat niet op Status** — zie Vermogen-tegel.
+Also: fuse limits, max import, voltage per phase.
 
-### Equalizer tegels (v10.9.1+, huidige release v10.11.6)
+## Expected tiles (reference)
 
-| Tegel | Type | Icoon | Weergave |
-|-------|------|-------|----------|
-| Status | Text | `EaseeEqualizer` | Verbinding, LB-detail, limieten, stroom, spanning |
-| Vermogen | Text | `EaseeEqualizer` | Import W, terug W, netto W, vandaag import/netto kWh |
+**2 chargers + 1 Equalizer + pricing:** **11 active tiles + LoadBal**
 
-Core **LoadBal**-schakelaar (site-wide) blijft ongewijzigd; icoon `EaseeLoadBal`.
+| Global | Per charger | Equalizer |
+|--------|-------------|-----------|
+| Status, Total charging, Total kWh | Charging, Status | Status, Power |
+| Best charging, Daily overview | | |
+| LoadBal switch | | |
 
-Legacy: *Import*, *Terug & netto*, *Netto*, *Teruglevering*, *Spanning*, *Load balancing* (losse EQ-tegel) — **niet meer aangemaakt** sinds v10.9.1. Wees-tegels uit v10.8.0/v10.9.0 handmatig verwijderen als die nog bestaan.
+Deprecated since v10.11 (hidden after upgrade): *Costs & Summary*, *Day report*, *Total & Session*, *Costs (Session/Day)*.
 
-## Verwachte tegels (referentie)
+## Price source (Mode9)
 
-> **README-demo:** de gesanitiseerde screenshot in [README.md](../README.md) toont **11 actieve tegels + LoadBal** met **twee laadpalen** (*Lader 1*, *Lader 2*) plus globale en Equalizer-tegels — compacte v10.11-layout.
+| Value | Token / config |
+|-------|----------------|
+| **None** | kWh and hours only — no € |
+| **Manual** | Mode10–19 (Fixed / Day-night / Off-peak-peak) |
+| **Tibber** | Mode7 token (default price source) |
+| **ENTSO-E** | Mode24 token + Mode25–27 markup |
+| **EnergyZero** | No token — public NL hourly API |
 
-Bij **2 laadpalen + 1 Equalizer + Tibber** hoort de plugin **11 dashboard-tegels** (+ **LoadBal**-schakelaar = 12 devices totaal). Prefix `[PREFIX]` = jouw hardwarenaam, bijv. `Easee`:
+### Manual tariff (Mode11)
 
-| # | Tegel |
-|---|-------|
-| 1 | `[PREFIX] - Status` |
-| 2 | `[PREFIX] - Totaal Laden` |
-| 3 | `[PREFIX] - Totaal kWh` |
-| 4 | `[PREFIX] - Beste laden` |
-| 5 | `[PREFIX] - Dag overzicht` |
-| 6 | `[PREFIX] - [EQ-naam] - Status` |
-| 7 | `[PREFIX] - [EQ-naam] - Vermogen` |
-| 8–9 | Laadpaal 1: `[PREFIX] - [Naam] - Laden`, `Status` |
-| 10–11 | Laadpaal 2: idem |
+| Type | Fields |
+|------|--------|
+| **Fixed** | Mode10 €/kWh |
+| **Day/night** | Mode12 dal, Mode13 normal, Mode14–15 hours |
+| **Off-peak/peak** | Mode12–13, Mode16 peak €, Mode17–18 peak hours, Mode19 weekend |
 
-Daarnaast: **`[PREFIX] - LoadBal`** (schakelaar, niet meegeteld in de 11 tegel-overzichten).
+### Tibber (Mode7)
 
-> **v10.11.0:** *Kosten & Samenvatting* + *Dagrapport* → **Dag overzicht**; per laadpaal *Totaal & Sessie* → **Laden** (Description), *Kosten (Sessie/Dag)* → **Status**. Oude tegels: `Used=0` (verborgen), niet auto-verwijderd.
+- Token from [developer.tibber.com](https://developer.tibber.com/settings/access-token)
+- Backed up in `easee_state.json` if Domoticz clears password field on save
+- Token is **never** logged
 
-**Geen Tibber?** Bij Prijsbron **Geen**: laadpalen + Equalizer OK; *Dag overzicht* toont kWh + laaduren; geen €. Bij Prijsbron **Handmatig**: kosten via Mode10, geen Tibber-token nodig.
+### ENTSO-E (Mode24)
 
-### Tibber slim laden / Grid Rewards
+- Request token via [transparency.entsoe.eu](https://transparency.entsoe.eu/) (email approval)
+- Mode25 supplier markup, Mode26 energy tax, Mode27 VAT %
 
-**Niet via plugin.** Tibber API levert alleen energieprijzen (voor kosten-tegels). Tibber *slim laden*, *Grid Rewards* en vergelijkbare grid-programma's zijn alleen in de Tibber-app — geen publieke API. De plugin plant hier geen tegels of automatisering; gesloten tenzij Tibber API dit opent. Zie [ROADMAP.md](ROADMAP.md).
+### EnergyZero
 
-**Geen Equalizer?** Dan ontbreken tegels 7 en 8.
+- No token — automatic fetch from public API
+- Mode29 info link only
 
-**Legacy-tegels die er níet horen:** *Import*, *Spanning*, *Terug & netto*, *Netto*, *Teruglevering*, losse *Load balancing* (EQ). Die komen uit v10.8.0 of v10.9.0 — verwijder ze handmatig in Domoticz als ze nog bestaan.
+### Best charging window (BesteLadenHours)
 
-### Equalizer tegels (v10.9.0, vervangen door 2 tegels in v10.9.1)
+Hours for **Best charging** tile (default 3). Works with Tibber, Manual, ENTSO-E, EnergyZero.
 
-| Tegel | Type | Bron | Weergave |
-|-------|------|------|----------|
-| Status | Text | state + site fuse API | Verbinding, LB-detail, limieten, stroom, spanning |
-| Import | Energy | obs. 40 / 45 | Vermogen (W) + **Vandaag** kWh import |
-| Terug & netto | Text | obs. 41/46 + berekend | Import W, terug W, netto W, vandaag/totaal netto kWh |
+## Energy hints (Mode20–23)
 
-Legacy: *Vermogen* → *Import*; *Netto* of *Teruglevering* → *Terug & netto*.
+Display-only context on Status and Daily overview while charging:
 
-### Equalizer Status-tegel (v10.3.0 – v10.8.x, vervangen door gegroepeerde Status in v10.9.0)
+| Field | Default | Description |
+|-------|---------|-------------|
+| **Mode20** | On | Enable hints |
+| **Mode21** | Power | P1 meter device name or idx |
+| **Mode22** | Zonnepanelen | Solar device name |
+| **Mode23** | Sessy | Home battery (empty = off) |
 
-| Regel | API-bron | Betekenis |
-|-------|----------|-----------|
-| Hoofdzekering | `site.ratedCurrent` | Zekering in meterkast (bijv. 25 A) |
-| eMobility limiet | `site.state.maxAllocatedCurrent` | Max voor laadpaal (site wint) |
-| Hoofdzekering limiet | fuse/limit API-velden (siteStructure, site.state, circuits, cloud-loadbalancing) | **Ingestelde limiet** in Easee Control (bijv. 22 A) — **nooit** MaxPowerImport |
-| Max import | obs. 44 MaxPowerImport | Informatief: max vermogen aansluiting (bijv. 17,2 kW ≈ 25 A) — **verandert niet** bij limiet 22→24 A |
-| L1/L2/L3 | obs. 31–33 | Fase-stromen; ontbrekend = `—`, nul = `0.0` |
-| Actuele stroom | fallback berekend uit vermogen | Alleen als geen fase-observations |
+Hints: solar surplus, grid export, battery active, high import.
 
-**Huisvermogen staat niet meer op Status** (sinds v10.8.0) — zie Vermogen-tegel.
+## Custom icons
 
-**Drie verschillende begrippen:**
-- **Hoofdzekering (25 A)** = fysieke zekeringgrootte
-- **Hoofdzekering limiet (22 A)** = wat jij instelt (gele lijn in Easee Energy)
-- **Max import (17,2 kW)** = technisch max vermogen — **niet** hetzelfde als limiet
+- **`Easee_icons_v2.zip`** — 13 icon sets, auto-loaded at startup
+- Manual upload if log shows `image_ids: 0/13`
+- **Known limitation:** some Energy tiles keep Domoticz default lightning icon
 
-Als limiet **onbekend** is, zet **Debug logging** (Mode6) aan en zoek op `siteStructure amp-range 15-30` (1× per site, alleen zichtbaar in Debug-modus sinds v10.9.29). Wijzig je limiet in Easee en vergelijk welke waarde verandert.
+## State file
 
-Zet **Debug logging** aan (Mode6) voor uitgebreide fuse-probe details.
+Runtime state: `easee_state.json` in plugin folder (tokens backup, session data, migrations).
 
-### Equalizer tegels Proposal C (v10.8.0, vervangen door 3 tegels in v10.9.0)
+## Best practices
 
-| Tegel | Type | Bron | Weergave |
-|-------|------|------|----------|
-| Status | Text | state + site fuse API | Online, LB, limieten, L1/L2/L3 stroom (A) |
-| Import | Energy | obs. 40 / 45 | Vermogen (W) + **Vandaag** kWh import |
-| Teruglevering | Energy | obs. 41 / 46 | Vermogen (W) + **Vandaag** kWh export |
-| Netto | Text | berekend | Netto W (import − export), totaal netto kWh |
-| Spanning | Text | state / obs. 34–36 | L1/L2/L3 spanning (V) |
-| Load balancing | Text | state / obs. 230–232 | Vrij L1/L2/L3 (A), gelijkstroom L1/L2/L3 (A) |
+- Poll **60 s** if you see HTTP 429
+- Restart hardware item after every upgrade
+- Do not commit tokens or passwords to git
 
-Core **LoadBal**-schakelaar (site-wide) blijft ongewijzigd.
-
-Legacy: bestaande **Vermogen**-tegel wordt automatisch **Import** (zelfde DeviceID via legacy lookup).
-
-### Equalizer Import-tegel (v10.6.5 – v10.7.x, vervangen door Import in v10.8.0)
-
-| Weergave | Bron | Betekenis |
-|----------|------|-----------|
-| Vermogen (W) | observation 40 ActivePowerImport | Actueel importvermogen |
-| **Vandaag** kWh | observation 45 CumulativeActivePowerImport | Cumulatieve teller (Wh); Domoticz berekent dagtotaal sinds middernacht |
-| Fallback | `power_integrated_kwh` in `easee_state.json` | Als observation 45 ontbreekt: geïntegreerd vermogen over tijd |
-
-## Prijsbron & energieprijs (Mode9) — v0.2.0+
-
-Hardware-groep **Energieprijs (optioneel)** (sinds v0.3.0; voorheen *Tibber / Prijsbron*).
-
-Domoticz toont **alle** parameters tegelijk — velden kunnen niet dynamisch verborgen worden per dropdown-keuze. Gebruik onderstaande tabel om te zien welke velden bij welke **Prijsbron** horen.
-
-| Prijsbron | Tibber API | Kosten-tegels | Dag overzicht | Beste laden | Status per lader |
-|-----------|------------|---------------|---------------|-------------|------------------|
-| **Tibber** | Ja (Mode7 token) | Sessie/dag € | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster | Sessie/dag € + laadhints |
-| **ENTSO-E** | Ja (Mode24 token) | Sessie/dag € (spot + toeslagen) | kWh, €, laaduren, tarief, goedkoopste uur | Goedkoopste venster (uur) | Sessie/dag € + laadhints |
-| **EnergyZero** | Nee (publieke API) | Sessie/dag € (indicatief incl. BTW) | kWh, €, laaduren, tarief, goedkoopste uur | Goedkoopste venster (uur) | Sessie/dag € + laadhints |
-| **Handmatig** | Nee | Sessie/dag € (vast / dag/nacht / dal/piek) | kWh, €, laaduren, tarief, goedkoopste slot | Goedkoopste venster | Sessie/dag € + energie-hints |
-| **Geen** | Nee | Uit | kWh + laaduren alleen | Geen tegel | Geen € (alleen laadtoestand) |
-
-### UI-volgorde (v0.6.0)
-
-1. **Prijsbron** (Mode9) — Geen | Handmatig | Tibber (default) | **ENTSO-E** | **EnergyZero**
-2. **Beste laden venster uren** (BesteLadenHours) — Tibber, Handmatig, ENTSO-E en **EnergyZero**
-3. **Handmatig type** (Mode11) — Vast | Dag/nacht | Dal/piek (alleen bij Handmatig)
-4. Handmatig tariefvelden (Mode10, Mode12–19)
-5. Tibber token + link (Mode7, Mode8)
-6. ENTSO-E token + toeslagen (Mode24–27, Mode28 link)
-7. **EnergyZero info** (Mode29) — geen token nodig
-8. **Energie hints** (Mode20–23) — aparte hardware-groep
-
-### Prijsbron (Mode9)
-**Type**: Select  
-**Options**: Geen / Handmatig / Tibber (default **Tibber**) / **ENTSO-E** / **EnergyZero**  
-**Omschrijving**: Bepaalt hoe laadkosten worden berekend en welke tegels worden bijgewerkt.
-
-### Handmatig type (Mode11) — alleen Handmatig
-**Type**: Select  
-**Options**: Vast (default) / Dag/nacht / Dal/piek  
-**Omschrijving**: Subtype voor handmatige tarieven.
-
-| Type | Velden | Voorbeeld |
-|------|--------|-----------|
-| **Vast** | Mode10 | €0,25/kWh de hele dag |
-| **Dag/nacht** | Mode12 dal, Mode13 normal, Mode14 start, Mode15 eind | Dal 23:00–07:00 €0,22; overige uren €0,28 |
-| **Dal/piek** | Mode12–13 dal/normal, Mode14–15 dal uren, Mode16 piek €, Mode17–18 piek uren, Mode19 weekend | Weekdag piek 17–21 €0,35; weekend alles dal (default Ja) |
-
-### Vast tarief €/kWh (Mode10) — Handmatig, type Vast
-**Type**: Text  
-**Default**: `0.25`  
-**Omschrijving**: Vast stroomtarief in euro per kWh. Komma of punt (`0,25` of `0.25`).
-
-### Dal tarief €/kWh (Mode12) — Handmatig, type Dag/nacht / Dal/piek
-**Default**: `0.22`
-
-### Normal tarief €/kWh (Mode13) — Handmatig, type Dag/nacht / Dal/piek
-**Default**: `0.28`
-
-### Dal start / eind uur (Mode14 / Mode15) — Handmatig, type Dag/nacht / Dal/piek
-**Type**: Text (heel getal 0–23)  
-**Default**: `23` / `7`  
-**Omschrijving**: Dalperiode; overnight ondersteund (bijv. 23→7 = 23:00 t/m 06:59).
-
-### Piek tarief €/kWh (Mode16) — Handmatig, type Dal/piek
-**Default**: `0.35`
-
-### Piek start / eind uur (Mode17 / Mode18) — Handmatig, type Dal/piek
-**Default**: `17` / `21` — piek alleen op weekdagen (ma–vr).
-
-### Weekend alles dal (Mode19) — Handmatig, type Dal/piek
-**Options**: Ja (default) / Nee — bij Ja: za/zo gehele dag dal-tarief (geen piek).
-
-**Upgrade van 0.3.x:** bestaande installs met default **Tibber** + Mode7 blijven ongewijzigd. Handmatig blijft **Vast** (Mode10) tot je een ander type kiest. Nieuwe velden Mode16–23 verschijnen onderaan; defaults zijn veilig.
-
-## Energie hints (optioneel, v0.4.0+)
-
-Leest bestaande Domoticz-apparaten — **geen laadsturing**, alleen context op **Status** en **Dag overzicht** (en laadpaal-Status bij laden). **Mode23** accepteert elke thuisbatterij-merknaam of idx (Sessy, Powerwall, Tesla, etc.).
-
-| Parameter | Default | Omschrijving |
-|-----------|---------|--------------|
-| **Mode20** P1/zon/thuisbatterij hints | Aan | Uit = geen energie-hints |
-| **Mode21** P1 meter naam/idx | `Power` | Energy/P1 `sValue`: importW;…;exportW;… — fallback zoekt Energy-tegel met "power" |
-| **Mode22** Zonnepanelen naam/idx | `Zonnepanelen` | Vermogen W = eerste veld in sValue |
-| **Mode23** Thuisbatterij naam/idx | `Sessy` | Leeg = batterij-hint uit; \|W\| > drempel → 🔋 Thuisbatterij actief. Default `Sessy` voor backward compat — wijzig naar jouw Domoticz-apparaatnaam |
-
-**Hints (Nederlands):**
-- ☀️ Zonne-overschot — export > drempel of zon W > import
-- ↩️ Teruglevering — P1 export > 0 (niet tegelijk met Zonne-overschot)
-- 🔋 Thuisbatterij actief — \|batterij W\| > 100 W
-- 📥 Hoog netverbruik — import ≥ 3000 W tijdens laden
-
-Ongeldige namen → hint overgeslagen, DEBUG-log (Mode6 = Debug).
-
-## Tibber Integration (Prijsbron = Tibber)
-
-### Tibber Token (Mode7)
-**Type**: Password  
-**Default**: (empty)  
-**Omschrijving**: Je Tibber Personal Access Token — **alleen wanneer Prijsbron = Tibber**  
-**Zonder token (bij Prijsbron Tibber)**: *Dag overzicht* en sessie/dag-€ op laadpaal-**Status** worden niet bijgewerkt  
-
-**Token-backup (v10.9.30+)**  
-Domoticz wist wachtwoordvelden soms bij *Opslaan* op de hardwarepagina (veld lijkt leeg, token verdwijnt uit Mode7). De plugin bewaart een kopie in `easee_state.json` (`tibber_token_backup`) zodra je het token één keer invult. Bij herstart of plugin-update: als Mode7 leeg is maar de backup bestaat, gebruikt de plugin die automatisch — je hoeft het token niet opnieuw in te vullen. In het log: `Tibber actief — token hersteld uit state-backup`. Het token wordt **nooit** gelogd. Nieuw token invullen in Mode7 overschrijft de backup. Tibber uitzetten: verwijder het hardware-item of wis `tibber_token_backup` uit `easee_state.json` op de server.
-
-**Voordelen** (als ingesteld):
-- ✅ Realtime stroomtarieven
-- ✅ Automatische kostenberekening
-- ✅ Goedkoopste laadwindows
-- ✅ Prijs emoji indicators
-
-## ENTSO-E Integration (Prijsbron = ENTSO-E) — v0.5.0+
-
-ENTSO-E levert **day-ahead spotprijzen** voor Nederland — geen exacte energiefactuur, maar een goede schatting als je zelf opslag, energiebelasting en BTW invult.
-
-### ENTSO-E API Token (Mode24)
-**Type**: Password  
-**Default**: (empty)  
-**Omschrijving**: Gratis security token van ENTSO-E Transparency Platform — **alleen bij Prijsbron ENTSO-E**
-
-**Token aanvragen:**
-
-1. Registreer op [transparency.entsoe.eu](https://transparency.entsoe.eu/)
-2. Stuur een e-mail naar **transparency@entsoe.eu**
-   - **Onderwerp:** `Restful API access`
-   - **Inhoud:** vermeld je ENTSO-E-account e-mailadres en dat je RESTful API-toegang wilt voor day-ahead prijzen
-3. Wacht op goedkeuring (~3 werkdagen) — je ontvangt een bevestigingsmail
-4. Log in op [transparency.entsoe.eu](https://transparency.entsoe.eu/) → **My Account** → **Web API Security Token**
-5. Kopieer het token naar **Mode24** in Domoticz
-
-> **Geen token-menu zichtbaar?** Het menu *Web API Security Token* verschijnt pas **na** goedkeuring van je e-mail. Zonder goedkeuring krijg je bij API-calls *Unauthorized* — zie [TROUBLESHOOTING.md](TROUBLESHOOTING.md#entso-e-unauthorized--geen-token-menu).
-
-**Token-backup**  
-Zelfde patroon als Tibber: kopie in `easee_state.json` (`entsoe_token_backup`). Domoticz wist wachtwoordvelden soms bij opslaan — backup herstelt automatisch. Token wordt **nooit** gelogd.
-
-### ENTSO-E token aanvragen (Mode28)
-**Type**: Info link  
-**URL**: https://transparency.entsoe.eu/
-
-### Opslag leverancier €/kWh (Mode25) — alleen ENTSO-E
-**Default**: `0`  
-**Omschrijving**: Vaste opslag van je leverancier per kWh (bijv. `0,02`).
-
-### Energiebelasting €/kWh (Mode26) — alleen ENTSO-E
-**Default**: `0` (label hint: ca. 0,12 in 2026)  
-**Omschrijving**: Energiebelasting per kWh — check je contract of belastingdienst.
-
-### BTW % (Mode27) — alleen ENTSO-E
-**Default**: `21`  
-**Omschrijving**: BTW-percentage op (spot + opslag + energiebelasting).
-
-### Prijsformule (all-in schatting)
-
-```
-spot €/kWh = ENTSO-E prijs (€/MWh) ÷ 1000
-subtotaal = spot + opslag + energiebelasting
-totaal €/kWh = subtotaal × (1 + BTW% / 100)
-energy (Dag overzicht) = spot
-tax (Dag overzicht) = totaal − energy
-```
-
-**Beperkingen:**
-- Uurprijzen (niet kwartier zoals Tibber QH)
-- Morgen-prijzen meestal na ~13:00 CET beschikbaar
-- Geen vaste dagkosten per maand (Mode25–27 zijn per kWh)
-
-## EnergyZero Integration (Prijsbron = EnergyZero) — v0.6.0+
-
-EnergyZero levert **publieke NL uurprijzen** via [api.energyzero.nl](https://api.energyzero.nl/v1/energyprices) — **geen registratie of token**. Dezelfde bron als [dynamische-energieprijzen.nl](https://www.dynamische-energieprijzen.nl/).
-
-### EnergyZero — geen token nodig (Mode29)
-**Type**: Info link  
-**Default**: https://www.dynamische-energieprijzen.nl/  
-**Omschrijving**: Alleen bij Prijsbron **EnergyZero** — geen API-token invullen
-
-### API & prijsformule
-
-```
-GET https://api.energyzero.nl/v1/energyprices
-  ?fromDate=YYYY-MM-DDT00:00:00.000Z
-  &tillDate=YYYY-MM-DD+2T00:00:00.000Z
-  &interval=4          (uur)
-  &usageType=1         (elektriciteit)
-  &inclBtw=true        (default)
-
-totaal €/kWh = Prices[].price
-energy (Dag overzicht) = totaal
-tax (Dag overzicht) = 0  (geen split in API)
-```
-
-**JSON-velden:**
-| Veld | Gebruik |
-|------|---------|
-| `Prices[].readingDate` | Start uur (lokale klok, Z-suffix) |
-| `Prices[].price` | All-in €/kWh (incl. BTW) |
-| `average` | Niet gebruikt door plugin |
-| `intervalType` | 4 = uur |
-
-**Vergelijking:**
-
-| | EnergyZero | ENTSO-E | Tibber |
-|---|------------|---------|--------|
-| Token | Nee | Mode24 | Mode7 |
-| Toeslagen | In API-prijs | Mode25–27 | Via Tibber-contract |
-| Resolutie | Uur | Uur | Kwartier (indien beschikbaar) |
-| Exacte factuur | Nee (indicatief) | Nee (schatting) | Contractprijs |
-
-**Beperkingen:**
-- Indicatieve markt-/referentieprijzen — kan afwijken van jouw leverancier
-- Uurprijzen (niet kwartier)
-- Morgen-prijzen meestal rond ~14:00–15:00 CET
-- Geen energie/belasting-split in Dag overzicht (energy = total)
-
-### Tibber Token Ophalen (Mode8)
-**Type**: Info link  
-**URL**: https://developer.tibber.com/settings/access-token  
-
-### Beste laden venster (BesteLadenHours)
-**Type**: Number (1–12)  
-**Default**: `3`  
-**Omschrijving**: Aantal uren voor het sliding-window van de *Beste laden*-tegel. Alleen bij **Prijsbron Tibber** (met token), **Handmatig**, **ENTSO-E** of **EnergyZero**. Bij Tibber kwartierprijzen indien beschikbaar; bij Handmatig/ENTSO-E/EnergyZero over uurcurve.
-
-## Device Naming
-
-Devices krijgen automatisch deze namen:
-
-### Core Devices
-```
-[PREFIX] - Status
-[PREFIX] - Totaal Laden
-[PREFIX] - Totaal kWh
-[PREFIX] - LoadBal
-[PREFIX] - Beste laden (actieve prijsbron)
-[PREFIX] - Dag overzicht (actieve prijsbron)
-```
-
-Legacy (v10.10.x, niet meer bijgewerkt sinds v10.11): *Kosten & Samenvatting*, *Dagrapport*.
-
-### Per Equalizer (indien gevonden)
-```
-[PREFIX] - [NAAM] - Status
-[PREFIX] - [NAAM] - Vermogen        ← import/terug/netto (v10.9.1+; legacy: Import, Terug & netto, Netto, Teruglevering)
-```
-
-### Per Laadpaal
-```
-[PREFIX] - [NAAM] - Laden          ← sessie/vandaag/totaal kWh in Description (v10.11+)
-[PREFIX] - [NAAM] - Status         ← incl. sessie/dag € bij Tibber (v10.11+)
-```
-
-Legacy (v10.10.x): *Totaal & Sessie*, *Kosten (Sessie/Dag)* — verborgen (`Used=0`) na upgrade.
-
-## Custom iconen (v10.11.1)
-
-13 sets in `Easee_icons_v2.zip`. Belangrijkste mapping:
-
-| Tegel | Iconenset |
-|-------|-----------|
-| **[PREFIX] - Status** (globaal) | `EaseeStatusGlobal` — combo laadpaal + EQ-puck + **i** |
-| **[PREFIX] - [Naam] - Status** (laadpaal) | `EaseeStatus` — laadpaal-only + **i** |
-| **[PREFIX] - [Naam] - Laden** | `EaseeCharger` |
-| **[PREFIX] - [Naam] - Status** | `EaseeStatus` |
-| **[PREFIX] - Dag overzicht** | `EaseeOverview` |
-| **[PREFIX] - [EQ] - Status / Vermogen** | `EaseeEqualizer` |
-| **LoadBal** | `EaseeLoadBal` |
-| **Totaal Laden / kWh** | `EaseePower` *(Energy-tegel kan standaard bliksem tonen — Domoticz-beperking)* |
-
-Auto-load bij start; anders handmatige upload — zie [INSTALL.md](../INSTALL.md#custom-iconen-handmatig-uploaden).
-
-### Energy-tegels en custom iconen (Domoticz-beperking)
-
-Sommige **Energy**-subtype tegels (Subtype 29) negeren het `Image`-veld in Domoticz en tonen altijd het **standaard bliksem-icoon** (of globe), ook als de plugin `EaseeCharger` / `EaseePower` correct toepast.
-
-| Tegel | Type | Custom icoon werkt? |
-|-------|------|---------------------|
-| **[Naam] - Laden** | Energy (Subtype 29) | **Soms niet** — bekende Domoticz-beperking |
-| **Totaal Laden** | Energy (Subtype 29) | **Soms niet** |
-| **Totaal kWh** | Custom Sensor | ✅ Ja |
-| **Status / Vermogen / Dag overzicht** | Text | ✅ Ja |
-| **Equalizer Status / Vermogen** | Text | ✅ Ja |
-
-**Wat je wél kunt doen:**
-- Controleer log: `image_ids: 13/13 sets` — de plugin past iconen correct toe waar Domoticz dat ondersteunt
-- Functionele data (W, kWh, €) is **niet** afhankelijk van het icoon
-- Geen bug in de plugin — Domoticz rendert Energy-tegels intern anders dan Text-tegels
-
-**Workaround:** geen structurele fix mogelijk zonder Domoticz-core wijziging. Accepteer het bliksem-icoon op *Laden* / *Totaal Laden*, of gebruik een Text-tegel (niet aanbevolen — verliest grafiek).
-
-## State Persistence
-
-De plugin bewaart automatisch in **`easee_state.json`** (pluginmap):
-- Laadsessies, kosten, prijscache
-- Equalizer import/export energie-integratie (fallback als observation 45/46 ontbreekt)
-
-Bij upgrade van oudere versies wordt `easee_v9_0_state.json` automatisch hernoemd. Opslaan is atomisch (`.tmp` + `os.replace`, sinds v10.6.1).
-
-## Best Practices
-
-### Performance
-- **Poll interval**: 30–60 sec aanbevolen; bij HTTP 429 verhoogt de plugin **automatisch** tijdelijk (max. 120s) — zie [TROUBLESHOOTING.md](TROUBLESHOOTING.md#http-429-rate-limit-easee-api)
-- **Meer chargers** = eventueel hogere interval
-- **CPU load**: Check met `top` command
-
-### Beveiliging
-- 🔒 Wachtwoorden worden encrypted in Domoticz
-- 🔒 Geen credentials in logs (Debug modus)
-- 🔄 Tokens worden automatisch vernieuwd
-
-### Monitoring
-- Controleer logs regelmatig
-- Set `Debug` mode aan als problemen
-- Check Domoticz hardware status
-
-## Tips & Tricks
-
-### Meerdere Locaties
-```bash
-# Instance 1: Thuis
-Prefix: "Thuis", Filter: "Thuis"
-
-# Instance 2: Kantoor  
-Prefix: "Kantoor", Filter: "Kantoor"
-```
-
-### Laagste CPU
-```
-Poll Interval: 120 sec
-Debug: Normal
-```
-
-### Meeste Details
-```
-Poll Interval: 10 sec
-Debug: Debug
-Tibber: Enabled
-```
+Full Dutch reference (legacy sections): [../CONFIGURATION.md](../CONFIGURATION.md).

@@ -1,6 +1,6 @@
 # Roadmap
 
-Kort overzicht — **v1** productie op branch `main` (**1.1.6**); ontwikkeling op branch `v1`; legacy **v10.11.6** op `legacy/v10`. Zie [STABLE.md](../STABLE.md) en [VERSIONING.md](../VERSIONING.md).
+Kort overzicht — **v1** productie op branch `main` (**1.1.6**); ontwikkeling op branch `v1`; legacy **v10.11.6** op `legacy/v10`. Zie [STABLE.nl.md](../../STABLE.nl.md) en [VERSIONING.nl.md](../../VERSIONING.nl.md).
 
 ## v1 (branch `main` / `v1`) — indicatief
 
