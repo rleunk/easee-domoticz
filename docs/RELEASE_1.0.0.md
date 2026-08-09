@@ -2,7 +2,7 @@
 
 Branch **`main`**, code version **1.0.0**, tag **`v1.0.0`**. Released **2026-06-30**.
 
-Legacy v10.11.6 is bewaard op branch **`legacy/v10`** (tags `v10.11.6` / `v10.11.6-stable`). Opvolger op `main`: **1.1.5** — zie [RELEASE_1.1.5.md](RELEASE_1.1.5.md).
+Legacy v10.11.6 is bewaard op branch **`legacy/v10`** (tags `v10.11.6` / `v10.11.6-stable`). Opvolger op `main`: **1.1.6** — zie [RELEASE_1.1.6.md](RELEASE_1.1.6.md). Vorige: [RELEASE_1.1.5.md](RELEASE_1.1.5.md).
 
 Zie ook [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELOG.md](../CHANGELOG.md).
 
@@ -22,7 +22,7 @@ Zie ook [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELOG
 | Legacy v10 preserved on `legacy/v10` | ✅ | v10.11.6 content + tags intact |
 | Public docs synced to 1.0.0 | ✅ | README, INSTALL, STABLE, VERSIONING, … |
 | Soak test on production Domoticz | ✅ | Completed 2026-06-30 |
-| Tag **`v1.0.0`** + GitHub release | ✅ | Superseded by **`v1.1.5`** (latest) |
+| Tag **`v1.0.0`** + GitHub release | ✅ | Superseded by **`v1.1.6`** (latest) |
 | Domoticz forum announcement | ✅ | Geplaatst met v1.1.5 (aug 2026) |
 
 ---
@@ -56,4 +56,4 @@ gh release create v1.0.0 --title "v1.0.0" --latest
 - Domoticz forum announcement — geplaatst aug 2026 bij v1.1.5 (zie [RELEASE_1.1.5.md](RELEASE_1.1.5.md))
 - Tibber smart charging / Grid Rewards (no public API — display hints only)
 
-See [ROADMAP.md](ROADMAP.md) for v1.1.x items (released as **1.1.5** on `main`). Successor: [RELEASE_1.1.5.md](RELEASE_1.1.5.md).
+See [ROADMAP.md](ROADMAP.md) for v1.1.x items. Current production: [RELEASE_1.1.6.md](RELEASE_1.1.6.md).

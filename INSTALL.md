@@ -4,16 +4,16 @@ Stap-voor-stap instructies voor installatie op een **Domoticz-server** (Debian L
 
 > **Paden:** Vervang `USER` door je Linux-gebruikersnaam (bijv. `root`, `pi`, `domoticz`). De pluginmap is `/home/USER/domoticz/plugins/Easee-Domoticz-plugin/`.
 
-> **Versielijnen:** branch **`main`** = productie **1.1.5**; branch **`v1`** = toekomstige ontwikkeling (1.2.x); legacy v10 op **`legacy/v10`** / tag **v10.11.6**. Zie [STABLE.md](STABLE.md) en [VERSIONING.md](VERSIONING.md).
+> **Versielijnen:** branch **`main`** = productie **1.1.6**; branch **`v1`** = toekomstige ontwikkeling (1.2.x); legacy v10 op **`legacy/v10`** / tag **v10.11.6**. Zie [STABLE.md](STABLE.md) en [VERSIONING.md](VERSIONING.md).
 
 ---
 
-## v1 productie (branch `main`) — 1.1.5
+## v1 productie (branch `main`) — 1.1.6
 
 | Item | Waarde |
 |------|--------|
-| Plugin | **Easee Domoticz plugin v1 (1.1.5)** |
-| Branch | `main` (of tag `v1.1.5`) |
+| Plugin | **Easee Domoticz plugin v1 (1.1.6)** |
+| Branch | `main` (of tag `v1.1.6`) |
 | Prijsbronnen | Geen, Handmatig, Tibber, ENTSO-E, EnergyZero |
 | Status | **Stable productie** |
 
@@ -27,7 +27,7 @@ git checkout main
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.1.5)** → Easee-gebruikersnaam + wachtwoord → **Add**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.1.6)** → Easee-gebruikersnaam + wachtwoord → **Add**.
 
 Kies **Prijsbron (Mode9)** in hardware-instellingen. Zie [docs/CONFIGURATION.md](docs/CONFIGURATION.md) voor Tibber (Mode7), ENTSO-E (Mode24 + e-mail goedkeuring), EnergyZero (geen token) en Handmatig.
 
@@ -75,7 +75,7 @@ In Domoticz: **Easee Domoticz plugin v10.11.6**. Onderstaande secties beschrijve
 | Hoofdbestand | `plugin.py` (+ modules + `pricing/` op v1) |
 | Custom iconen | `Easee_icons_v2.zip` (automatisch geladen bij pluginstart; zie [handmatige upload](#custom-iconen-handmatig-uploaden) als dat mislukt) |
 | GitHub-repo | https://github.com/rleunk/easee-domoticz |
-| v1 pluginnaam | **Easee Domoticz plugin v1 (1.1.5)** — branch `main` |
+| v1 pluginnaam | **Easee Domoticz plugin v1 (1.1.6)** — branch `main` |
 | Legacy pluginnaam | **Easee Domoticz plugin v10.11.6** — `legacy/v10` / `v10.11.6-stable` |
 
 ---
@@ -134,7 +134,7 @@ Deze methode maakt toekomstige updates eenvoudig via `git pull`.
 cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
-git checkout main              # productie 1.1.5
+git checkout main              # productie 1.1.6
 # of: git checkout legacy/v10  # legacy v10.11.6
 ```
 
@@ -170,7 +170,7 @@ sudo systemctl restart domoticz
 1. Open Domoticz in je browser
 2. Ga naar **Setup → Hardware**
 3. Voeg een nieuw hardware-item toe: **Python plugins**
-4. Selecteer **Easee Domoticz plugin v1 (1.1.5)** (branch `main`) of **Easee Domoticz plugin v10.11.6** (legacy `legacy/v10`)
+4. Selecteer **Easee Domoticz plugin v1 (1.1.6)** (branch `main`) of **Easee Domoticz plugin v10.11.6** (legacy `legacy/v10`)
 5. Vul je Easee-gebruikersnaam en -wachtwoord in
 6. Optioneel: kies **Prijsbron (Mode9)** en vul token/tarief in (v1); legacy v10 alleen Tibber (Mode7)
 7. Optioneel: laadpaalnamen en Equalizer-naam
@@ -367,13 +367,14 @@ sudo systemctl restart domoticz
 
 Sinds v10.6.0 haalt `git pull` alle `.py`-modules op — niet alleen `plugin.py`. Op v1 komt ook de map `pricing/` mee. State migreert automatisch naar `easee_state.json`.
 
-### Specifiek: v1 (1.1.5 productie)
+### Specifiek: v1 (1.1.6 productie)
 
-- Checkout branch **`main`** — pluginnaam **Easee Domoticz plugin v1 (1.1.5)**
+- Checkout branch **`main`** — pluginnaam **Easee Domoticz plugin v1 (1.1.6)**
 - **Prijsbron (Mode9):** Geen, Handmatig, Tibber, ENTSO-E, EnergyZero
 - **ENTSO-E:** e-mail naar **transparency@entsoe.eu** (onderwerp *Restful API access*), wacht ~3 werkdagen, daarna Mode24 token
 - **EnergyZero:** geen token — kies Prijsbron EnergyZero
-- **1.1.5:** Huidige stable v1 op `main` — LB fase-detail, Tibber fallbacks, adaptief poll
+- **1.1.6:** Huidige stable v1 op `main` — English UI (Mode30) + LB fase-detail
+- **1.1.5:** Rollback — LB fase-detail, Tibber fallbacks, adaptief poll
 - **1.0.0:** Eerste stable v1 — vijf prijsbronnen, hints, 11 tegels (rollback: tag `v1.0.0`)
 - Zie [CHANGELOG.md](CHANGELOG.md) en [docs/CONFIGURATION.md](docs/CONFIGURATION.md)
 

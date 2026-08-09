@@ -1,12 +1,13 @@
 # Roadmap
 
-Kort overzicht — **v1** productie op branch `main` (**1.1.5**); ontwikkeling op branch `v1`; legacy **v10.11.6** op `legacy/v10`. Zie [STABLE.md](../STABLE.md) en [VERSIONING.md](../VERSIONING.md).
+Kort overzicht — **v1** productie op branch `main` (**1.1.6**); ontwikkeling op branch `v1`; legacy **v10.11.6** op `legacy/v10`. Zie [STABLE.md](../STABLE.md) en [VERSIONING.md](../VERSIONING.md).
 
 ## v1 (branch `main` / `v1`) — indicatief
 
 | Versie | Status | Inhoud |
 |--------|--------|--------|
-| **1.1.5** | **Released (main, soak OK)** | Vrij≈/Laad/Gemeten fallbacks bij Tibber; fixes 1.1.1–1.1.4 |
+| **1.1.6** | **Released (main)** | English UI (Mode30 Taal/Language) |
+| **1.1.5** | Released | Vrij≈/Laad/Gemeten fallbacks bij Tibber; fixes 1.1.1–1.1.4 |
 | **1.1.0** | Afgerond | LB fase-detail, adaptief poll bij 429, Energy-icoon docs |
 | **1.0.0** | Released | Eerste stable v1 — vijf prijsbronnen, hints, 11 tegels + LoadBal |
 | **0.6.1** | Pre-release | Status-tegel toont actieve prijsbron (Geen/Handmatig/Tibber/ENTSO-E/EnergyZero) |
@@ -36,7 +37,8 @@ Kort overzicht — **v1** productie op branch `main` (**1.1.5**); ontwikkeling o
 - **1.1.2** — Laad-fallback via laadpaal-fasedata; poll-volgorde laders vóór equalizer
 - **1.1.3** — Laad-fallback: werkelijke stroom i.p.v. LB-limiet-keys
 - **1.1.4** — **Vrij≈** schatting (`limiet − gemeten` per fase)
-- **1.1.5** — Gemeten-regel hersteld naast Vrij≈; **released op `main`** — soak bevestigd **2026-08-09** — [RELEASE_1.1.5.md](RELEASE_1.1.5.md)
+- **1.1.6** — English UI (Mode30); **released op `main`** — [RELEASE_1.1.6.md](RELEASE_1.1.6.md)
+- **1.1.5** — Gemeten-regel hersteld naast Vrij≈; soak bevestigd **2026-08-09** — [RELEASE_1.1.5.md](RELEASE_1.1.5.md)
 
 ## Afgerond — v10.11.x (legacy, 2026-06)
 
@@ -87,6 +89,7 @@ Kort overzicht — **v1** productie op branch `main` (**1.1.5**); ontwikkeling o
 | 16-07-2026 | v1 **1.1.0–1.1.5** LB-fase, Tibber fallbacks, adaptief poll |
 | 16-07-2026 | v1 **1.1.5** released op `main` |
 | 09-08-2026 | v1 **1.1.5** soak bevestigd — ~3 weken zonder fouten (laden, idle, teruglevering, Tibber LB) |
+| 09-08-2026 | v1 **1.1.6** released op `main` — English UI (Mode30) |
 
 ## Oudere milestones (samenvatting)
 

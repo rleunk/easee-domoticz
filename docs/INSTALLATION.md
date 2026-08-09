@@ -10,6 +10,7 @@ De canonieke installatiehandleiding staat in **[INSTALL.md](../INSTALL.md)** (Ne
 | Git-authenticatie (HTTPS/PAT, SSH optioneel) | [GIT_SETUP.md](GIT_SETUP.md) |
 | Configuratie | [CONFIGURATION.md](CONFIGURATION.md) |
 | Probleemoplossing | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
+| 1.1.6 release | [RELEASE_1.1.6.md](RELEASE_1.1.6.md) |
 | 1.1.5 release | [RELEASE_1.1.5.md](RELEASE_1.1.5.md) |
 | 1.0.0 release | [RELEASE_1.0.0.md](RELEASE_1.0.0.md) |
 
@@ -19,7 +20,7 @@ Selecteer bij **Setup → Hardware → Python plugins**:
 
 | Lijn | Pluginnaam in Domoticz | Branch / tag |
 |------|------------------------|--------------|
-| **v1 productie** | **Easee Domoticz plugin v1 (1.1.5)** | `main` / `v1.1.5` |
+| **v1 productie** | **Easee Domoticz plugin v1 (1.1.6)** | `main` / `v1.1.6` |
 | **Legacy v10** | **Easee Domoticz plugin v10.11.6** | `legacy/v10` / `v10.11.6-stable` |
 
 ### Updates v1 (productie)

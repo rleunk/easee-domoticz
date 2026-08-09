@@ -524,4 +524,4 @@ Import-grafiek: `constants → helpers → api, state, tibber → icons → devi
 
 **Totaal v1:** 14 root `.py` + `pricing/` (9 bestanden) = **23** Python-bestanden naast `plugin.py` entrypoint. Legacy v10.6 split = 13 modules zonder `pricing/` of energy hints.
 
-Release-readiness: [RELEASE_1.1.5.md](RELEASE_1.1.5.md), [RELEASE_1.0.0.md](RELEASE_1.0.0.md).
+Release-readiness: [RELEASE_1.1.6.md](RELEASE_1.1.6.md), [RELEASE_1.1.5.md](RELEASE_1.1.5.md), [RELEASE_1.0.0.md](RELEASE_1.0.0.md).
