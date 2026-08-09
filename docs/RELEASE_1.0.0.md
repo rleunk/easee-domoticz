@@ -2,9 +2,9 @@
 
 Branch **`main`**, code version **1.0.0**, tag **`v1.0.0`**. Released **2026-06-30**.
 
-Legacy v10.11.6 is bewaard op branch **`legacy/v10`** (tags `v10.11.6` / `v10.11.6-stable`). Toekomstige v1-ontwikkeling (1.1.x) op branch **`v1`**.
+Legacy v10.11.6 is bewaard op branch **`legacy/v10`** (tags `v10.11.6` / `v10.11.6-stable`). Opvolger op `main`: **1.1.5** — zie [RELEASE_1.1.5.md](RELEASE_1.1.5.md).
 
-See also [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELOG.md](../CHANGELOG.md).
+Zie ook [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELOG.md](../CHANGELOG.md).
 
 ---
 
@@ -22,8 +22,8 @@ See also [STABLE.md](../STABLE.md), [VERSIONING.md](../VERSIONING.md), [CHANGELO
 | Legacy v10 preserved on `legacy/v10` | ✅ | v10.11.6 content + tags intact |
 | Public docs synced to 1.0.0 | ✅ | README, INSTALL, STABLE, VERSIONING, … |
 | Soak test on production Domoticz | ✅ | Completed 2026-06-30 |
-| Tag **`v1.0.0`** + GitHub release | ✅ | Latest release on GitHub |
-| Domoticz forum announcement | ⏳ | Draft: [FORUM_POST.md](FORUM_POST.md) |
+| Tag **`v1.0.0`** + GitHub release | ✅ | Superseded by **`v1.1.5`** (latest) |
+| Domoticz forum announcement | ⏳ | Draft verplaatst naar [FORUM_POST.md](FORUM_POST.md) — zie [RELEASE_1.1.5.md](RELEASE_1.1.5.md) |
 
 ---
 
@@ -51,9 +51,9 @@ gh release create v1.0.0 --title "v1.0.0" --latest
 
 ---
 
-## Intentionally open after 1.0.0
+## Intentionally open (historisch)
 
-- Domoticz forum announcement — draft: [FORUM_POST.md](FORUM_POST.md)
+- Domoticz forum announcement — draft: [FORUM_POST.md](FORUM_POST.md) (nog open; zie [RELEASE_1.1.5.md](RELEASE_1.1.5.md))
 - Tibber smart charging / Grid Rewards (no public API — display hints only)
 
 See [ROADMAP.md](ROADMAP.md) for v1.1.x items (released as **1.1.5** on `main`). Successor: [RELEASE_1.1.5.md](RELEASE_1.1.5.md).

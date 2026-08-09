@@ -5,7 +5,7 @@
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
         <h2>Easee Domoticz plugin v1 (1.1.5)</h2><br/>
-        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E/EnergyZero, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints en Equalizer. v1 ontwikkelingslijn.</p>
+        <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E/EnergyZero, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints, Equalizer LB fase-detail (Vrij≈/Laad/Gemeten) en adaptief poll bij HTTP 429. v1 productielijn.</p>
     </description>
     <params>
         <param field="Username" label="Easee Username / telefoonnummer" width="260px" required="true"/>
