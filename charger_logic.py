@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import domoticz_runtime
-from easee_api_keys import CHARGER_KEYS
+from easee_api_keys import CHARGER_KEYS, CHARGER_OBSERVATION_ID_TO_FIELD, CHARGER_OBSERVATION_QUERY_IDS, parse_observations
 import easee_logging
 import domoticz_devices
 import easee_api
@@ -82,7 +82,7 @@ def _laad_from_output_current(plugin, output_current, output_phase):
 
 
 def charger_laad_phases_from_state(plugin, values, power_w):
-    """Per-fase laadstroom uit charger /state (werkelijke circuit-stromen of schatting)."""
+    """Per-fase laadstroom uit charger state/observations (werkelijke circuit-stromen of schatting)."""
     out_phase = easee_helpers.first_dict_value(plugin, values, CHARGER_KEYS['output_phase'])
 
     phases, has = _phase_values_from_charger_keys(plugin, values, CHARGER_KEYS['circuit_phase_current'])
@@ -606,17 +606,59 @@ def discover_chargers(plugin):
             return list(plugin.chargers)
     return sorted({c['id']: c for c in chargers}.values(), key=lambda x: x['id'])
 
+def _charger_state_has_core(values):
+    if not isinstance(values, dict) or not values:
+        return False
+    for key in (
+        CHARGER_KEYS['power'][0],
+        CHARGER_KEYS['op_mode'][0],
+        CHARGER_KEYS['lifetime_energy'][0],
+        CHARGER_KEYS['session_energy'][0],
+        CHARGER_KEYS['online'][0],
+        'connectedToCloud',
+    ):
+        if values.get(key) is not None:
+            return True
+    return False
+
+def fetch_charger_state_values(plugin, cid):
+    """Charger state via observations API; legacy /chargers/{id}/state as fallback."""
+    values = {}
+    source = None
+    obs_path = f'/state/{cid}/observations?ids={CHARGER_OBSERVATION_QUERY_IDS}'
+    obs = easee_api.api_get_optional(plugin, obs_path, skip_if_rate_limited=False)
+    if obs:
+        parsed = parse_observations(obs, CHARGER_OBSERVATION_ID_TO_FIELD)
+        if parsed:
+            values.update(parsed)
+            if values.get('connectedToCloud') is not None and values.get(CHARGER_KEYS['online'][0]) is None:
+                values[CHARGER_KEYS['online'][0]] = values['connectedToCloud']
+            source = 'observations'
+    if not _charger_state_has_core(values):
+        legacy = easee_api.api_get_optional(plugin, f'/chargers/{cid}/state') or {}
+        if isinstance(legacy, dict) and legacy:
+            values.update(legacy)
+            source = source or 'legacy_state'
+    if not _charger_state_has_core(values):
+        easee_logging.error(
+            'charger_logic',
+            f'State ophalen mislukt voor lader {cid}: geen observations of legacy state',
+            'poll',
+        )
+    elif source == 'observations':
+        easee_logging.debug(
+            'charger_logic',
+            f'Lader {cid}: state via observations ({len(values)} velden)',
+            'poll',
+        )
+    return values
+
 def poll_charger(plugin, charger):
     cid = charger['id']
     values = {}
     session = {}
     ongoing_fetched = False
-    try:
-        state = easee_api.api_get(plugin, f'/chargers/{cid}/state') or {}
-        if isinstance(state, dict):
-            values.update(state)
-    except Exception as e:
-        easee_logging.error('charger_logic', f'State ophalen mislukt voor lader {cid}: {e}', 'poll')
+    values.update(fetch_charger_state_values(plugin, cid))
     if not easee_api.is_charger_rate_limited(plugin):
         cfg = easee_api.api_get_optional(plugin, f'/chargers/{cid}/config') or {}
         if isinstance(cfg, dict):

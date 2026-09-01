@@ -1,6 +1,6 @@
 # Changelog
 
-**Language:** Release notes in English: [docs/RELEASE_1.1.6.md](docs/RELEASE_1.1.6.md) · Nederlands: [docs/nl/RELEASE_1.1.6.md](docs/nl/RELEASE_1.1.6.md) · Index: [docs/README.md](docs/README.md)
+**Language:** Release notes in English: [docs/RELEASE_1.1.7.md](docs/RELEASE_1.1.7.md) · Nederlands: [docs/nl/RELEASE_1.1.7.md](docs/nl/RELEASE_1.1.7.md) · Index: [docs/README.md](docs/README.md)
 
 Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
@@ -9,6 +9,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 > **v1 changelog** start bij **0.1.0** op branch `v1`. Legacy v10-geschiedenis staat onder de separator **Legacy v10** hieronder.
 
 ## [Unreleased]
+
+## [1.1.7] — 2026-09-01
+
+### Fixed
+- **Charger state HTTP 404 (Easee API deprecation)** — Easee removed `GET /api/chargers/{id}/state` on **2026-09-01**. Plugin now reads charger telemetry via **`/state/{id}/observations?ids=…`** (same pattern as Equalizer), with fallback to the legacy state endpoint when still available. Legacy 404 is logged at DEBUG only.
+
+### Released
+- **Production hotfix** — **1.1.7**, tag **`v1.1.7`** (2026-09-01). Zie [docs/RELEASE_1.1.7.md](docs/RELEASE_1.1.7.md).
 
 ## [1.1.6] — 2026-08-09
 

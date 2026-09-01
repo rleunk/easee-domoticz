@@ -146,6 +146,83 @@ CHARGER_KEYS = {
     'output_current': ('outputCurrent',),
 }
 
+# Charger observations (/state/{id}/observations) — replaces deprecated GET /chargers/{id}/state (removed 2026-09-01)
+CHARGER_OBSERVATION_QUERY_IDS = (
+    '70,71,72,73,74,75,109,110,111,112,113,114,120,121,124,250'
+)
+
+CHARGER_OBSERVATION_ID_TO_FIELD = {
+    70: 'circuitTotalAllocatedPhaseConductorCurrentL1',
+    71: 'circuitTotalAllocatedPhaseConductorCurrentL2',
+    72: 'circuitTotalAllocatedPhaseConductorCurrentL3',
+    73: 'circuitTotalPhaseConductorCurrentL1',
+    74: 'circuitTotalPhaseConductorCurrentL2',
+    75: 'circuitTotalPhaseConductorCurrentL3',
+    109: 'chargerOpMode',
+    110: 'outputPhase',
+    111: 'dynamicCircuitCurrentP1',
+    112: 'dynamicCircuitCurrentP2',
+    113: 'dynamicCircuitCurrentP3',
+    114: 'outputCurrent',
+    120: 'totalPower',
+    121: 'sessionEnergy',
+    124: 'lifetimeEnergy',
+    250: 'connectedToCloud',
+}
+
+
+def _observation_item_id(item):
+    if not isinstance(item, dict):
+        return None
+    for key in ('id', 'Id', 'observationId', 'observationID'):
+        raw = item.get(key)
+        if raw is None or raw == '':
+            continue
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def observation_items(obs):
+    if isinstance(obs, list):
+        return obs
+    if not isinstance(obs, dict):
+        return []
+    for key in OBSERVATION_KEYS['container']:
+        observations = obs.get(key)
+        if isinstance(observations, list):
+            return observations
+    nested = obs.get('data')
+    if isinstance(nested, dict):
+        for key in OBSERVATION_KEYS['container']:
+            observations = nested.get(key)
+            if isinstance(observations, list):
+                return observations
+    return []
+
+
+def parse_observations(obs, id_to_field):
+    """Map Easee observation id list response to a flat state-style dict."""
+    values = {}
+    if not id_to_field:
+        return values
+    for item in observation_items(obs):
+        if not isinstance(item, dict):
+            continue
+        obs_id = _observation_item_id(item)
+        if obs_id is None:
+            continue
+        field = id_to_field.get(obs_id)
+        if field is None:
+            continue
+        obs_val = item.get('value')
+        if obs_val is None and 'Value' in item:
+            obs_val = item.get('Value')
+        values[field] = obs_val
+    return values
+
 
 def phase_charger_circuit_current_keys():
     return CHARGER_KEYS['circuit_phase_current']

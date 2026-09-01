@@ -1,14 +1,14 @@
-# Easee Domoticz Plugin **v1** (1.1.6)
+# Easee Domoticz Plugin **v1** (1.1.7)
 
 **Language:** **English** (this page) · [Nederlands](README.nl.md)
 
 **Easee EV chargers, Equalizer (meter cupboard) and optional energy pricing (None/Manual/Tibber/ENTSO-E/EnergyZero) in Domoticz — modular plugin, custom tile icons, compact status display.**
 
-![Version](https://img.shields.io/badge/version-1.1.6-brightgreen)
+![Version](https://img.shields.io/badge/version-1.1.7-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status (production):** **`main`** = **1.1.6** — NL/EN UI (Mode30), LB phase detail, Tibber fallbacks, adaptive poll; **11 tiles + LoadBal**. See [STABLE.md](STABLE.md), [VERSIONING.md](VERSIONING.md), [docs/RELEASE_1.1.6.md](docs/RELEASE_1.1.6.md).
+> **Status (production):** **`main`** = **1.1.7** — charger observations API (Easee Sep 2026), NL/EN UI, LB phase detail; **11 tiles + LoadBal**. See [STABLE.md](STABLE.md), [VERSIONING.md](VERSIONING.md), [docs/RELEASE_1.1.7.md](docs/RELEASE_1.1.7.md).
 >
 > **Legacy v10:** branch **`legacy/v10`** / tag [**v10.11.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6) — for existing v10 installs or rollback. v10 is frozen.
 >
@@ -20,11 +20,11 @@
 cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
-git checkout main   # production 1.1.6; legacy v10: git checkout legacy/v10
+git checkout main   # production 1.1.7; legacy v10: git checkout legacy/v10
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.1.6)** → Easee username + password → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.1.7)** → Easee username + password → **Create**.
 
 **Cost tiles:** set **Price source** (Mode9): **Tibber** (default, Mode7 token) · **ENTSO-E** (Mode24 token + markup) · **EnergyZero** (no token) · **Manual** (Fixed Mode10, Day/night or Off-peak/peak Mode11–19) · **None** (kWh and hours only, no €). Optional **Energy hints** (P1 / Solar / Home battery, Mode20–23). Optional charger names (Mode2/3/4), Equalizer name (Address).
 
@@ -61,17 +61,18 @@ In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plug
 | **Language** | **Dutch** (default) or **English** (Mode30) — tile text and status |
 | **Upgrade** | `git pull` + restart hardware item |
 
-Logging: `[Easee v1.1.6][LEVEL]…` in Domoticz log.
+Logging: `[Easee v1.1.7][LEVEL]…` in Domoticz log.
 
 ## v1 releases
 
 | Version | Status |
 |---------|--------|
-| **1.1.6** | **Stable production** (`main`) — English UI (Mode30) + 1.1.5 LB/pricing |
+| **1.1.7** | **Stable production** (`main`) — Easee charger observations API hotfix (Sep 2026) |
+| **1.1.6** | Rollback — English UI (Mode30); charger state broken after Easee API cutoff |
 | **1.1.5** | Rollback — LB phase detail, soak confirmed Aug 2026 |
 | **1.0.0** | Previous stable — five price sources, hints, 11 tiles |
 
-See [CHANGELOG.md](CHANGELOG.md) for full history · Release notes: [docs/RELEASE_1.1.6.md](docs/RELEASE_1.1.6.md) · [docs/nl/RELEASE_1.1.6.md](docs/nl/RELEASE_1.1.6.md)
+See [CHANGELOG.md](CHANGELOG.md) for full history · Release notes: [docs/RELEASE_1.1.7.md](docs/RELEASE_1.1.7.md) · [docs/nl/RELEASE_1.1.7.md](docs/nl/RELEASE_1.1.7.md)
 
 ## Screenshots
 
@@ -92,7 +93,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full history · Release notes: [docs/RELEAS
 | **Manual tariff** | Costs without API | **Manual** + Mode10–19 |
 | **ENTSO-E / EnergyZero** | Dynamic pricing | Mode9 + tokens as needed |
 
-## Devices (v1.1.6)
+## Devices (v1.1.7)
 
 ### Core
 - **Easee - Status** — online, EQ count, LB, active price source
@@ -145,12 +146,13 @@ Restart the Easee hardware item in Domoticz. See [INSTALL.md](INSTALL.md) and [S
 
 ## Releases
 
-- [**v1.1.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.6) — current production
+- [**v1.1.7**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.7) — current production
+- [**v1.1.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.6) — rollback (charger API broken after Sep 2026)
 - [**v1.1.5**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.5) — rollback
 
 ## Report issues
 
-[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) — mention plugin version **v1.1.6**, Domoticz version, and `[Easee v…]` log lines (no passwords).
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) — mention plugin version **v1.1.7**, Domoticz version, and `[Easee v…]` log lines (no passwords).
 
 ## Links
 
@@ -162,4 +164,4 @@ MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Version 1.1.6** (main) — Richard Leunk
+**Version 1.1.7** (main) — Richard Leunk

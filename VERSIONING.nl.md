@@ -8,15 +8,16 @@ Dit project heeft twee versielijnen naast elkaar.
 
 | Item | Waarde |
 |------|--------|
-| **Huidige versie** | **1.1.6** (released 2026-08-09) |
+| **Huidige versie** | **1.1.7** (released 2026-09-01) |
 | **Branch productie** | `main` |
 | **Branch ontwikkeling** | `v1` (1.2.x en verder) |
-| **Tag** | `v1.1.6` (semver, geen `-stable` suffix) |
+| **Tag** | `v1.1.7` (semver, geen `-stable` suffix) |
 
 ### Semver v1
 
 - **0.x.y** — pre-release ontwikkeling op branch `v1` (`v0.1.0` t/m `v0.6.1`)
-- **1.1.6** — huidige productie op `main` (English UI + 1.1.5 basis)
+- **1.1.7** — huidige productie op `main` (Easee charger observations API hotfix)
+- **1.1.6** — rollback (English UI + 1.1.5 basis; laadpaal `/state` kapot na Sep 2026)
 - **1.1.5** — rollback-baseline (LB fase-detail, Tibber fallbacks)
 - **1.0.0** — eerste publieke stable v1 op `main`
 - **1.x.y** — toekomstige releases; ontwikkeling start op branch `v1`, merge naar `main` bij release
@@ -30,14 +31,14 @@ Dit project heeft twee versielijnen naast elkaar.
 | **Tags** | `v10.11.6`, `v10.11.6-stable` (en oudere `v10.x.y` / `-stable`) |
 | **Status** | Bevroren — geen hernummering naar 0.10.x |
 
-Legacy v10 blijft beschikbaar voor bestaande installaties en rollback. Nieuwe installaties: gebruik **`main`** / **`v1.1.6`**.
+Legacy v10 blijft beschikbaar voor bestaande installaties en rollback. Nieuwe installaties: gebruik **`main`** / **`v1.1.7`**.
 
 ## Installeren
 
 ```bash
 git fetch --tags origin
 git checkout main
-# of: git checkout v1.1.6
+# of: git checkout v1.1.7
 ```
 
 ## Ontwikkeling
@@ -47,4 +48,4 @@ git checkout main
 git checkout v1
 ```
 
-Zie [STABLE.nl.md](STABLE.nl.md) voor aanbevolen tags en rollback, [CHANGELOG.md](CHANGELOG.md) voor release-notes, [docs/nl/RELEASE_1.1.6.md](docs/nl/RELEASE_1.1.6.md) voor de huidige productie-release.
+Zie [STABLE.nl.md](STABLE.nl.md) voor aanbevolen tags en rollback, [CHANGELOG.md](CHANGELOG.md) voor release-notes, [docs/nl/RELEASE_1.1.7.md](docs/nl/RELEASE_1.1.7.md) voor de huidige productie-release.

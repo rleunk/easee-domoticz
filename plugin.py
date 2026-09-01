@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (1.1.6)" author="Richard Leunk" version="1.1.6"
+<plugin key="EaseeCloudAutoDiscoveryV1000" name="Easee Domoticz plugin v1 (1.1.7)" author="Richard Leunk" version="1.1.7"
         wikilink="https://wiki.domoticz.com/Developing_a_Python_plugin"
         externallink="https://github.com/rleunk/easee-domoticz">
     <description>
-        <h2>Easee Domoticz plugin v1 (1.1.6)</h2><br/>
+        <h2>Easee Domoticz plugin v1 (1.1.7)</h2><br/>
         <p>Easee laadpaal integratie met compacte UI (11 tegels), Prijsbron Geen/Handmatig/Tibber/ENTSO-E/EnergyZero, handmatig vast/dag-nacht/dal-piek-tarief, P1/zon/thuisbatterij-hints, Equalizer LB fase-detail (Vrij≈/Laad/Gemeten) en adaptief poll bij HTTP 429. v1 productielijn. Taal: Nederlands of English (Mode30).</p>
     </description>
     <params>

@@ -2,7 +2,7 @@
 
 **Language:** **English** · [Nederlands / Dutch](../README.nl.md)
 
-Documentation for the Easee Domoticz plugin **v1.1.6**.
+Documentation for the Easee Domoticz plugin **v1.1.7**.
 
 | Document | Description |
 |----------|-------------|
@@ -13,7 +13,7 @@ Documentation for the Easee Domoticz plugin **v1.1.6**.
 | [CONFIGURATION.md](CONFIGURATION.md) | Hardware parameters |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common problems |
 | [GIT_SETUP.md](GIT_SETUP.md) | Git clone & PAT |
-| [RELEASE_1.1.6.md](RELEASE_1.1.6.md) | Current release notes |
+| [RELEASE_1.1.7.md](RELEASE_1.1.7.md) | Current release notes |
 
 Shared: [CHANGELOG.md](../CHANGELOG.md) · [LICENSE](../LICENSE)
 

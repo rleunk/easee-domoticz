@@ -143,6 +143,8 @@ def _is_expected_optional_failure(path, status):
         return False
     if code == 404 and '/chargers/' in path and '/sessions/ongoing' in path:
         return True
+    if code == 404 and '/chargers/' in path and path.rstrip('/').endswith('/state'):
+        return True
     if code == 429 and _is_charger_optional_path(path):
         return True
     if code == 403:

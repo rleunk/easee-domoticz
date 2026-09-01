@@ -6,16 +6,16 @@ Step-by-step installation on a **Domoticz server** (Debian Linux).
 
 > **Paths:** Replace `USER` with your Linux username (e.g. `root`, `pi`). Plugin folder: `/home/USER/domoticz/plugins/Easee-Domoticz-plugin/`.
 
-> **Branches:** **`main`** = production **1.1.6** · **`v1`** = development · **`legacy/v10`** = v10.11.6. See [STABLE.md](STABLE.md).
+> **Branches:** **`main`** = production **1.1.7** · **`v1`** = development · **`legacy/v10`** = v10.11.6. See [STABLE.md](STABLE.md).
 
 ---
 
-## v1 production (`main`) — 1.1.6
+## v1 production (`main`) — 1.1.7
 
 | Item | Value |
 |------|--------|
-| Plugin | **Easee Domoticz plugin v1 (1.1.6)** |
-| Branch | `main` or tag `v1.1.6` |
+| Plugin | **Easee Domoticz plugin v1 (1.1.7)** |
+| Branch | `main` or tag `v1.1.7` |
 | Price sources | None, Manual, Tibber, ENTSO-E, EnergyZero |
 | UI language | Dutch (default) or English (Mode30) |
 
@@ -29,7 +29,7 @@ git checkout main
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.1.6)** → Easee credentials → **Add**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.1.7)** → Easee credentials → **Add**.
 
 Set **Price source (Mode9)**. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 

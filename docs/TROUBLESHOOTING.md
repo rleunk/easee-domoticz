@@ -2,7 +2,7 @@
 
 **Language:** **English** · [Nederlands](nl/TROUBLESHOOTING.md)
 
-> **Versions:** **main** = **1.1.6** (production) · Legacy **v10.11.6** on `legacy/v10`  
+> **Versions:** **main** = **1.1.7** (production) · Legacy **v10.11.6** on `legacy/v10`  
 > Install: [INSTALL.md](../INSTALL.md) · Config: [CONFIGURATION.md](CONFIGURATION.md)
 
 ## Plugin does not load
@@ -48,6 +48,22 @@ Log: `image_ids: 0/13`
 2. `git pull` on `main`, restart hardware item
 3. Upload `Easee_icons_v2.zip` manually if needed
 4. Expect `image_ids: 13/13 sets`
+
+## Charger state HTTP 404 (from 2026-09-01)
+
+**Symptom:** `State ophalen mislukt voor lader … 404 … /api/chargers/…/state` every poll; Equalizer still works.
+
+**Cause:** Easee removed `GET /api/chargers/{id}/state` on **2026-09-01**. Plugin **1.1.6 and older** no longer receive charger telemetry.
+
+**Fix:** Upgrade to **1.1.7+**:
+
+```bash
+cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
+git fetch --tags origin && git checkout main && git pull origin main
+sudo systemctl restart domoticz
+```
+
+Restart the Easee hardware item. Log should show `Plugin v1.1.7 gestart` and charger polls via observations (no repeated 404 errors).
 
 ## HTTP 429 rate limit {#http-429-rate-limit-easee-api}
 
