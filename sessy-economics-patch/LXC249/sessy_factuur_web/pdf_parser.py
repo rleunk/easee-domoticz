@@ -68,14 +68,21 @@ def _parse_kwh(s: str) -> float | None:
 
 def _detect_month(text: str) -> tuple[str, str]:
     low = text.lower()
+    month_names = "|".join(re.escape(n) for n in DUTCH_MONTHS)
+    # Billing period (not factuurdatum): "Stroomverbruik oktober 2026" / "Variabele kosten oktober 2026"
+    m = re.search(
+        rf"(?:stroomverbruik|variabele\s+kosten)\s+({month_names})\s+(20\d{{2}})\b",
+        low,
+    )
+    if m:
+        name = m.group(1)
+        year = int(m.group(2))
+        return f"{year:04d}-{DUTCH_MONTHS[name]:02d}", f"{name.capitalize()} {year}"
     for name, num in DUTCH_MONTHS.items():
         m = re.search(rf"\b{re.escape(name)}\s+(20\d{{2}})\b", low)
         if m:
             year = int(m.group(1))
             return f"{year:04d}-{num:02d}", f"{name.capitalize()} {year}"
-    m = re.search(r"(20\d{2})[-/](0[1-9]|1[0-2])", text)
-    if m:
-        return f"{m.group(1)}-{m.group(2)}", m.group(0)
     return "", ""
 
 
@@ -113,13 +120,17 @@ def _first_kwh_in_section(chunk: str) -> float | None:
 
 
 def _find_amount_near(text: str, label: str) -> float | None:
+    """Tibber layout: 'Label <maand> <jaar> € <bedrag>' — never capture the year as €."""
     m = re.search(
-        rf"{re.escape(label)}[^\d\-−]*([\-\d.,]+)\s*€",
+        rf"{re.escape(label)}[^€]*€\s*([\-\d.,]+)",
         text,
         re.IGNORECASE,
     )
     if m:
-        return _parse_eur(m.group(1))
+        val = _parse_eur(m.group(1))
+        if val is not None and abs(val) >= 1900:
+            return None
+        return val
     return None
 
 
@@ -178,8 +189,15 @@ def parse_tibber_pdf(pdf_bytes: bytes) -> ParseResult:
     out.levering = _find_amount_near(text, "Vaste leveringskosten")
     out.vermindering_eb = _find_amount_near(text, "Vermindering energiebelasting")
 
-    vast_chunk = _section_after(text, r"Vaste\s+kosten")
-    vast_sub = _subtotal_excl_eur(vast_chunk)
+    vast_sub = _subtotal_excl_eur(_section_after(text, r"Vaste\s+leveringskosten"))
+    if vast_sub is None:
+        m = re.search(
+            r"Vaste\s+kosten[^€]*€\s*([\-\d.,]+)",
+            text,
+            re.IGNORECASE,
+        )
+        if m:
+            vast_sub = _parse_eur(m.group(1))
     if vast_sub is not None:
         out.ref_vast_excl = vast_sub
 
