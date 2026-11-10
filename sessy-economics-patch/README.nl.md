@@ -19,7 +19,13 @@ Vanaf **easee-domoticz** (branch `cursor/sessy-p1-tibber-match-368d`):
 cd C:\Users\Richard\Projects\easee-domoticz
 git fetch
 git checkout cursor/sessy-p1-tibber-match-368d
-.\sessy-economics-patch\apply-to-local-LXC249.ps1
+git pull
+
+# Optie A — ExecutionPolicy omzeilen (aanbevolen):
+powershell -NoProfile -ExecutionPolicy Bypass -File .\sessy-economics-patch\apply-to-local-LXC249.ps1
+
+# Optie B — dubbelklik:
+#   sessy-economics-patch\apply-to-local-LXC249.cmd
 ```
 
 Dat overschrijft de gewijzigde bestanden in je **bestaande** `ha-sessy-economics\LXC249` (config/docker blijven staan).
