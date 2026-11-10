@@ -11,40 +11,35 @@
 - **€**: ongewijzigd Tibber-split per interval, maar over **register-kWh** i.p.v. vermogensintegratie.
 - **PDF**: correcte extractie voor factuur 1475464 en vergelijkbare layout.
 
+## Lokaal op je PC (`C:\Users\Richard\Projects\ha-sessy-economics\LXC249`)
+
+Vanaf **easee-domoticz** (branch `cursor/sessy-p1-tibber-match-368d`):
+
+```powershell
+cd C:\Users\Richard\Projects\easee-domoticz
+git fetch
+git checkout cursor/sessy-p1-tibber-match-368d
+.\sessy-economics-patch\apply-to-local-LXC249.ps1
+```
+
+Dat overschrijft de gewijzigde bestanden in je **bestaande** `ha-sessy-economics\LXC249` (config/docker blijven staan).
+
+**Cursor lokaal:** daarna map `C:\Users\Richard\Projects\ha-sessy-economics` openen — daar staat de code weer zoals eerder.
+
 ## Deploy op LXC `.249` (engine + factuur-web)
 
-Kopieer vanuit deze map naar jouw live `ha-sessy-economics/LXC249/` (WinSCP):
+Kopieer vanuit `ha-sessy-economics\LXC249` naar de LXC (WinSCP), of git pull op de server als je dat daar ook gebruikt:
 
 | Patch-bestand | Naar |
 |---------------|------|
 | `LXC249/vendor/sessy_economics/p1_registers.py` | **nieuw** |
 | `LXC249/vendor/sessy_economics/api.py` | overschrijven |
 | `LXC249/vendor/sessy_economics/p1_accounting.py` | overschrijven |
+| `LXC249/vendor/sessy_economics/pricing.py` | overschrijven |
+| `LXC249/vendor/sessy_economics/economics.py` | overschrijven |
 | `LXC249/sessy_economics_engine/runner.py` | overschrijven |
 | `LXC249/sessy_factuur_web/pdf_parser.py` | overschrijven |
 | `LXC249/sessy_factuur_web/p1_month.py` | overschrijven |
-
-### Handmatige 2 regels in bestaande bestanden
-
-**`vendor/sessy_economics/pricing.py`** — in `@dataclass class PriceContext`:
-
-```python
-    p1_import_register_wh: int | None = None
-    p1_export_register_wh: int | None = None
-```
-
-**`vendor/sessy_economics/economics.py`**:
-
-1. In `async def process(...)` voeg parameters toe:  
-   `p1_import_register_wh: int | None = None`, `p1_export_register_wh: int | None = None`
-2. Bij `update_p1_accounting(...)`:
-
-```python
-        p1_import_register_wh=p1_import_register_wh,
-        p1_export_register_wh=p1_export_register_wh,
-```
-
-(Zelfde wijziging in HA `custom_components/sessy_economics/` als je daar nog een kopie draait.)
 
 ### Engine herstarten
 
