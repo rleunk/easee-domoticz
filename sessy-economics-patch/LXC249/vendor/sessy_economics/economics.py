@@ -38,6 +38,9 @@ class EconomicsSnapshot:
     charged_solar_kwh: float
     charged_grid_kwh: float
     discharged_total_kwh: float
+    discharged_kwh_today: float
+    charged_kwh_today: float
+    charge_cost_today: float
     roundtrip_efficiency: float | None
     solar_ratio: float
     grid_ratio: float
@@ -248,6 +251,27 @@ class EconomicsEngine:
     def pricing(self) -> PriceResolver:
         return self._pricing
 
+    async def _snapshot_discharged_kwh_today(self, export_wh: float) -> float:
+        fn = getattr(self._db, "discharged_kwh_today_from_export", None)
+        if fn is not None:
+            return await fn(export_wh)
+        fn = getattr(self._db, "discharged_kwh_today", None)
+        if fn is not None:
+            return await fn()
+        return 0.0
+
+    async def _snapshot_charged_kwh_today(self, import_wh: float) -> float:
+        fn = getattr(self._db, "charged_kwh_today_from_import", None)
+        if fn is not None:
+            return await fn(import_wh)
+        return 0.0
+
+    async def _snapshot_charge_cost_today(self) -> float:
+        fn = getattr(self._db, "charge_cost_today", None)
+        if fn is not None:
+            return await fn()
+        return 0.0
+
     async def _add_charge_batch(
         self,
         energy_kwh: float,
@@ -287,6 +311,12 @@ class EconomicsEngine:
         assert self._inventory is not None
         now = datetime.now(timezone.utc)
         self._roll_stats_day(now)
+        ensure_export_day = getattr(self._db, "ensure_sessy_export_day", None)
+        if ensure_export_day is not None:
+            await ensure_export_day(now, export_wh, commit=False)
+        ensure_import_day = getattr(self._db, "ensure_sessy_import_day", None)
+        if ensure_import_day is not None:
+            await ensure_import_day(now, import_wh, commit=False)
         import_price = self._pricing.import_price()
         export_price = self._pricing.export_price()
         solar_cost = self._pricing.solar_cost_price()
@@ -333,6 +363,12 @@ class EconomicsEngine:
                         await self._add_charge_batch(
                             charge_grid_kwh, import_price, SOURCE_GRID, now
                         )
+                    charge_cost = charge_solar_kwh * solar_cost + charge_grid_kwh * (
+                        import_price or 0.0
+                    )
+                    add_charge_cost = getattr(self._db, "add_charge_cost_today", None)
+                    if add_charge_cost is not None and charge_cost > 0:
+                        await add_charge_cost(charge_cost, commit=False)
 
         if last_export is not None:
             discharge_kwh = _delta_kwh(export_wh, last_export)
@@ -457,6 +493,9 @@ class EconomicsEngine:
         efficiency = _roundtrip_efficiency(
             stats.charged_total_kwh, stats.discharged_total_kwh
         )
+        discharged_kwh_today = await self._snapshot_discharged_kwh_today(export_wh)
+        charged_kwh_today = await self._snapshot_charged_kwh_today(import_wh)
+        charge_cost_today = await self._snapshot_charge_cost_today()
 
         return EconomicsSnapshot(
             stored_kwh=stored,
@@ -472,6 +511,9 @@ class EconomicsEngine:
             charged_solar_kwh=stats.charged_solar_kwh,
             charged_grid_kwh=stats.charged_grid_kwh,
             discharged_total_kwh=stats.discharged_total_kwh,
+            discharged_kwh_today=discharged_kwh_today,
+            charged_kwh_today=charged_kwh_today,
+            charge_cost_today=charge_cost_today,
             roundtrip_efficiency=efficiency,
             solar_ratio=self._inventory.solar_ratio,
             grid_ratio=self._inventory.grid_ratio,
