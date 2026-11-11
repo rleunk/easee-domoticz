@@ -10,13 +10,28 @@ if (-not (Test-Path $TargetRoot)) {
     Write-Error "Doelmap ontbreekt: $TargetRoot"
 }
 
-$dirs = @("vendor", "sessy_economics_engine", "sessy_factuur_web")
-foreach ($d in $dirs) {
-    $src = Join-Path $PatchRoot $d
-    if (-not (Test-Path $src)) { continue }
-    $dst = Join-Path $TargetRoot $d
-    Write-Host "Copy $src -> $dst"
-    Copy-Item -Path (Join-Path $src "*") -Destination $dst -Recurse -Force
+# Alleen gewijzigde patch-bestanden (vendor is geen volledige kopie in git).
+$files = @(
+    "vendor\sessy_economics\economics.py",
+    "vendor\sessy_economics\pricing.py",
+    "vendor\sessy_economics\p1_accounting.py",
+    "vendor\sessy_economics\p1_registers.py",
+    "vendor\sessy_economics\api.py",
+    "sessy_economics_engine\runner.py",
+    "sessy_factuur_web\pdf_parser.py",
+    "sessy_factuur_web\p1_month.py"
+)
+foreach ($rel in $files) {
+    $src = Join-Path $PatchRoot $rel
+    if (-not (Test-Path $src)) {
+        Write-Warning "Ontbreekt in patch: $rel"
+        continue
+    }
+    $dst = Join-Path $TargetRoot $rel
+    $parent = Split-Path $dst -Parent
+    if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
+    Copy-Item -Path $src -Destination $dst -Force
+    Write-Host "OK $rel"
 }
 
 Write-Host "Klaar. Upload daarna $TargetRoot naar LXC /opt/sessy-economics-engine (vendor + engine + factuur_web)."

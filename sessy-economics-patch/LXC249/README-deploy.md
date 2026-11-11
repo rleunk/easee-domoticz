@@ -7,11 +7,36 @@ Daarom ligt hier een **spiegel** van de LXC-map: dezelfde mappen (`vendor/`, `se
 **Jouw canonieke map:** `C:\Users\Richard\Projects\ha-sessy-economics\LXC249`  
 **Upload op de server:** `/opt/sessy-economics-engine`
 
-## Windows: patch → ha-sessy-economics
+## Eerst: nieuwste patch ophalen (anders ontbreekt het .ps1-script)
+
+```powershell
+cd C:\Users\Richard\Projects\easee-domoticz
+git fetch origin cursor/sessy-p1-tibber-match-368d
+git checkout cursor/sessy-p1-tibber-match-368d
+git pull
+```
+
+De patch bevat **alleen gewijzigde** bestanden, geen volledige `vendor/`. Kopieer die **over** je bestaande `ha-sessy-economics\LXC249` (database, fifo, enz. blijven staan).
 
 ```powershell
 cd C:\Users\Richard\Projects\easee-domoticz\sessy-economics-patch\LXC249
-powershell -ExecutionPolicy Bypass -File .\sync-naar-ha-sessy-economics.ps1
+.\sync-naar-ha-sessy-economics.cmd
+```
+
+Of handmatig één bestand:
+
+```powershell
+Copy-Item -Force `
+  C:\Users\Richard\Projects\easee-domoticz\sessy-economics-patch\LXC249\vendor\sessy_economics\economics.py `
+  C:\Users\Richard\Projects\ha-sessy-economics\LXC249\vendor\sessy_economics\economics.py
+```
+
+**Rechtstreeks op LXC** (als GitHub bereikbaar is):
+
+```bash
+curl -fsSL -o /opt/sessy-economics-engine/vendor/sessy_economics/economics.py \
+  'https://raw.githubusercontent.com/rleunk/easee-domoticz/cursor/sessy-p1-tibber-match-368d/sessy-economics-patch/LXC249/vendor/sessy_economics/economics.py'
+head -3 /opt/sessy-economics-engine/vendor/sessy_economics/economics.py
 ```
 
 ## LXC: engine herstellen (kapotte `economics.py`)
@@ -25,7 +50,16 @@ Op de server moet regel 1 van `economics.py` een **docstring** zijn, niet `p1_im
    head -3 /opt/sessy-economics-engine/vendor/sessy_economics/economics.py
    ```
 
-3. **Rebuild zonder cache** (anders blijft Docker de oude laag gebruiken):
+3. **Controleer dat `vendor/` niet leeg is** (build-context ~1 kB = bijna zeker kapot):
+
+   ```bash
+   find /opt/sessy-economics-engine/vendor -name '*.py' | wc -l
+   ```
+
+   Verwacht **meer dan ~15** `.py`-bestanden. Zo niet: upload de **hele** map  
+   `ha-sessy-economics\LXC249\vendor` via WinSCP, en daarna opnieuw stap 1 (economics.py).
+
+4. **Rebuild zonder cache**:
 
    ```bash
    cd /opt/sessy-economics-engine
