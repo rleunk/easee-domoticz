@@ -1,3 +1,81 @@
+"""Process Sessy energy counter deltas into FIFO accounting."""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+
+from .attribution import attribute_charge, discharge_sale_price
+from .const import SOURCE_GRID, SOURCE_SOLAR
+from .database import SessyEconomicsDatabase
+from .fifo import FIFOInventory
+from .p1_accounting import update_p1_accounting
+from .pricing import EconomicsConfig, PriceCache, PriceResolver
+
+_LOGGER = logging.getLogger(__name__)
+
+STATE_LAST_IMPORT_WH = "last_import_wh"
+STATE_LAST_EXPORT_WH = "last_export_wh"
+STATE_LAST_POLL_TS = "last_poll_ts"
+STATE_INVENTORY_SEEDED = "inventory_seeded"
+
+
+@dataclass
+class EconomicsSnapshot:
+    """Current financial snapshot exposed to sensors."""
+
+    stored_kwh: float
+    average_cost: float
+    energy_value: float
+    unrealized_profit: float
+    profit_today: float
+    profit_week: float
+    profit_month: float
+    profit_year: float
+    profit_total: float
+    charged_total_kwh: float
+    charged_solar_kwh: float
+    charged_grid_kwh: float
+    discharged_total_kwh: float
+    roundtrip_efficiency: float | None
+    solar_ratio: float
+    grid_ratio: float
+    power_w: int
+    pv_power_w: int
+    state_of_charge: float
+    last_charge_kwh: float
+    last_charge_solar_kwh: float
+    last_charge_grid_kwh: float
+    last_discharge_kwh: float
+    last_profit: float
+    last_discharge_revenue: float
+    live_discharge_eur_h: float
+    export_revenue_today: float
+    import_price: float
+    export_price: float
+    if_sold_now: float
+    p1_import_w: int | None = None
+    p1_export_w: int | None = None
+    p1_import_kwh_today: float = 0.0
+    p1_export_kwh_today: float = 0.0
+    p1_import_spot_eur_today: float = 0.0
+    p1_import_fee_eur_today: float = 0.0
+    p1_import_tax_eur_today: float = 0.0
+    p1_import_cost_today: float = 0.0
+    p1_export_spot_eur_today: float = 0.0
+    p1_export_fee_eur_today: float = 0.0
+    p1_export_sales_fee_eur_today: float = 0.0
+    p1_export_tax_eur_today: float = 0.0
+    p1_export_revenue_today: float = 0.0
+    p1_net_today: float = 0.0
+    p1_import_cost_live_eur_h: float = 0.0
+    p1_export_revenue_live_eur_h: float = 0.0
+    p1_import_kwh_month: float = 0.0
+    p1_export_kwh_month: float = 0.0
+    p1_import_spot_eur_month: float = 0.0
+    p1_import_fee_eur_month: float = 0.0
+    p1_import_tax_eur_month: float = 0.0
     p1_import_cost_month: float = 0.0
     p1_export_spot_eur_month: float = 0.0
     p1_export_fee_eur_month: float = 0.0
@@ -88,14 +166,13 @@ class EconomicsEngine:
 
     def __init__(
         self,
-        hass: HomeAssistant,
         db: SessyEconomicsDatabase,
         config: EconomicsConfig,
+        price_cache: PriceCache,
     ) -> None:
-        self._hass = hass
         self._db = db
         self._config = config
-        self._pricing = PriceResolver(hass, config)
+        self._pricing = PriceResolver(price_cache, config)
         self._inventory: FIFOInventory | None = None
         self._stats_cache: _CachedStats | None = None
         self._stats_day: str | None = None
@@ -441,4 +518,3 @@ class EconomicsEngine:
             p1_export_revenue_month=p1_totals.export_revenue_month,
             p1_net_month=p1_totals.net_month,
         )
-
