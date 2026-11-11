@@ -69,3 +69,27 @@ Op de server moet regel 1 van `economics.py` een **docstring** zijn, niet `p1_im
    ```
 
 Gefixte file ook op GitHub: branch `cursor/sessy-p1-tibber-match-368d`, pad `sessy-economics-patch/LXC249/vendor/sessy_economics/economics.py`.
+
+## Factuur-web: `400 Bad Request` bij Bevestigen
+
+Meestal twee oorzaken:
+
+1. **Stap 3 toont `2026,0` bij €-velden** — oude PDF-parser pakte het **jaar** i.p.v. het bedrag. HA weigert `input_number` buiten min/max (bv. 2026 > 100).
+2. **Helpers ontbreken** in HA — package `helpers_factuur.yaml` op .48/.49 moet geladen zijn.
+
+**Parser + HA-client op LXC:**
+
+```bash
+BR=cursor/sessy-p1-tibber-match-368d
+BASE=https://raw.githubusercontent.com/rleunk/easee-domoticz/$BR/sessy-economics-patch/LXC249
+curl -fsSL -o /opt/sessy-economics-engine/sessy_factuur_web/pdf_parser.py \
+  "$BASE/sessy_factuur_web/pdf_parser.py"
+curl -fsSL -o /opt/sessy-economics-engine/sessy_factuur_web/ha_client.py \
+  "$BASE/sessy_factuur_web/ha_client.py"
+docker compose build --no-cache sessy-factuur-web
+docker compose up -d sessy-factuur-web
+```
+
+Daarna **PDF opnieuw uploaden** (of Stap 3 handmatig: Grid Rewards **−0,74**, systeem **33,4**, levering **4,95**, vermindering **−44,15**, ref vast **−5,8**).
+
+Oktober 2026 ref-waarden staan in `tests/test_pdf_1475464.py`.
