@@ -303,14 +303,16 @@ Domoticz toont **alle** parameters tegelijk — velden kunnen niet dynamisch ver
 
 ## Energie hints (optioneel, v0.4.0+)
 
-Leest bestaande Domoticz-apparaten — **geen laadsturing**, alleen context op **Status** en **Dag overzicht** (en laadpaal-Status bij laden). **Mode23** accepteert elke thuisbatterij-merknaam of idx (Sessy, Powerwall, Tesla, etc.).
+Leest bestaande Domoticz-apparaten van elk hardware-item — **geen laadsturing**, alleen context op **Status** en **Dag overzicht** (en laadpaal-Status bij laden). De plugin vraagt de lokale Domoticz-API (`http://127.0.0.1:<www-poort>/json.htm?type=devices`). `127.0.0.1` hoort in **Lokale netwerken** te staan (dat is de standaard).
+
+Het nummer in het veld is de **Idx** uit **Instellingen → Apparaten**, niet het unitnummer van deze plugin. De naam is de apparaatnaam. Eén exacte naam wint; passen er meerdere deels, dan wordt de hint overgeslagen.
 
 | Parameter | Default | Omschrijving |
 |-----------|---------|--------------|
 | **Mode20** P1/zon/thuisbatterij hints | Aan | Uit = geen energie-hints |
-| **Mode21** P1 meter naam/idx | `Power` | Energy/P1 `sValue`: importW;…;exportW;… — fallback zoekt Energy-tegel met "power" |
-| **Mode22** Zonnepanelen naam/idx | `Zonnepanelen` | Vermogen W = eerste veld in sValue |
-| **Mode23** Thuisbatterij naam/idx | `Sessy` | Leeg = batterij-hint uit; \|W\| > drempel → 🔋 Thuisbatterij actief. Default `Sessy` voor backward compat — wijzig naar jouw Domoticz-apparaatnaam |
+| **Mode21** P1 meter naam/idx | `Power` | Elektriciteitsmeter (P1 Energy). Vermogen komt uit `Usage` / `UsageDeliv` (watt). Een gasmeter (`m³`) telt niet. Het vermogen is het totaal van de meter |
+| **Mode22** Zonnepanelen naam/idx | `Zonnepanelen` | Eén apparaat waarvan `Usage` of `Data` het actuele vermogen in watt is |
+| **Mode23** Thuisbatterij naam/idx | `Sessy` | Leeg = batterij-hint uit. Zelfde watt-veld, ook negatief. `Sessy` is alleen de standaardnaam — vul de naam of Idx van jouw batterij-apparaat in |
 
 **Hints (Nederlands):**
 - ☀️ Zonne-overschot — export > drempel of zon W > import

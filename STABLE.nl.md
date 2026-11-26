@@ -6,13 +6,14 @@ Dit project heeft **twee versielijnen**: **v1** (productie op `main`) en legacy 
 
 ## v1 — productie (main)
 
-v1 gebruikt **semver-tags** zonder `-stable` suffix (bijv. **`v1.1.8`**).
+v1 gebruikt **semver-tags** zonder `-stable` suffix (bijv. **`v1.1.9`**).
 
 ### Huidige stable v1
 
 | Tag | Branch | Status |
 |-----|--------|--------|
-| **`v1.1.8`** | `main` | **Aanbevolen productie** — Tibber-woning met prijsdata |
+| **`v1.1.9`** | `main` | **Aanbevolen productie** — energie-hints lezen elk Domoticz-apparaat |
+| **`v1.1.8`** | `main` | Rollback — Tibber-woning met prijsdata |
 | **`v1.1.7`** | `main` | Rollback — Easee charger observations API (Sep 2026 hotfix) |
 | **`v1.1.6`** | `main` | Rollback — English UI; laadpaal `/state` kapot na Easee cutoff |
 | **`v1.1.5`** | `main` | Rollback-baseline (2026-07-16, soak aug 2026) |
@@ -24,11 +25,11 @@ v1 gebruikt **semver-tags** zonder `-stable` suffix (bijv. **`v1.1.8`**).
 cd /home/USER/domoticz/plugins/Easee-Domoticz-plugin
 git fetch --tags origin
 git checkout main
-# of: git checkout v1.1.8
+# of: git checkout v1.1.9
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.1.8)**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.1.9)**.
 
 **Na elke upgrade:** herstart het Easee hardware-item in Domoticz (**Setup → Hardware**).
 
@@ -44,11 +45,12 @@ sudo systemctl restart domoticz
 
 ## v1 — ontwikkeling (branch `v1`)
 
-Branch **`v1`** blijft beschikbaar voor toekomstige v1-ontwikkeling (1.2.x). Productie staat op `main` bij **1.1.8**.
+Branch **`v1`** blijft beschikbaar voor toekomstige v1-ontwikkeling (1.2.x). Productie staat op `main` bij **1.1.9**.
 
 | Versie | Status | Inhoud (kort) |
 |--------|--------|---------------|
-| **1.1.8** | **Released** | Tibber-woning met prijsdata |
+| **1.1.9** | **Released** | Energie-hints lezen elk Domoticz-apparaat |
+| **1.1.8** | Released | Tibber-woning met prijsdata |
 | **1.1.7** | Released | Easee charger observations API hotfix |
 | **1.1.6** | Released | English UI (Mode30) |
 | **1.1.5** | Released | LB fase-detail, Vrij≈/Laad fallbacks, adaptief poll |
@@ -110,7 +112,8 @@ sudo systemctl restart domoticz
 
 ### v1 (productie)
 
-- [**v1.1.8**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.8) — Huidige productie (main)
+- [**v1.1.9**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.9) — Huidige productie (main)
+- [**v1.1.8**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.8) — rollback
 - [**v1.1.7**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.7) — rollback
 - [**v1.1.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.6) — Rollback
 - [**v1.1.5**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.5) — Rollback

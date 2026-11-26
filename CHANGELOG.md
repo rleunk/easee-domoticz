@@ -1,6 +1,6 @@
 # Changelog
 
-**Language:** Release notes in English: [docs/RELEASE_1.1.8.md](docs/RELEASE_1.1.8.md) · Nederlands: [docs/nl/RELEASE_1.1.8.md](docs/nl/RELEASE_1.1.8.md) · Index: [docs/README.md](docs/README.md)
+**Language:** Release notes in English: [docs/RELEASE_1.1.9.md](docs/RELEASE_1.1.9.md) · Nederlands: [docs/nl/RELEASE_1.1.9.md](docs/nl/RELEASE_1.1.9.md) · Index: [docs/README.md](docs/README.md)
 
 Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
@@ -9,6 +9,14 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 > **v1 changelog** start bij **0.1.0** op branch `v1`. Legacy v10-geschiedenis staat onder de separator **Legacy v10** hieronder.
 
 ## [Unreleased]
+
+## [1.1.9] — 2026-11-26
+
+### Fixed
+- **Energie-hints** — P1, zonnepanelen en thuisbatterij worden gelezen uit de Domoticz-apparaatlijst (lokaal `json.htm?type=devices`), op apparaatnaam of Idx. Voorheen keek de plugin alleen naar de tegels van dit hardware-item, waardoor een normale P1 niet gevonden werd.
+
+### Released
+- **Production fix** — **1.1.9**, tag **`v1.1.9`** (2026-11-26). Zie [docs/RELEASE_1.1.9.md](docs/RELEASE_1.1.9.md).
 
 ## [1.1.8] — 2026-11-26
 

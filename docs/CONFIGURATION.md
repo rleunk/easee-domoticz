@@ -101,14 +101,16 @@ Hours for **Best charging** tile (default 3). Works with Tibber, Manual, ENTSO-E
 
 ## Energy hints (Mode20–23)
 
-Display-only context on Status and Daily overview while charging:
+Display-only context on Status and Daily overview. The plugin reads any Domoticz device through the local API (`http://127.0.0.1:<www port>/json.htm?type=devices`). `127.0.0.1` must be allowed under Local Networks (the default).
+
+The number in a field is the **Idx** from **Setup → Devices**. A name is the device name. One exact name wins; several partial matches skip that hint.
 
 | Field | Default | Description |
 |-------|---------|-------------|
 | **Mode20** | On | Enable hints |
-| **Mode21** | Power | P1 meter device name or idx |
-| **Mode22** | Zonnepanelen | Solar device name |
-| **Mode23** | Sessy | Home battery (empty = off) |
+| **Mode21** | Power | Electricity P1 meter. Power comes from `Usage` / `UsageDeliv` in watts. A gas meter does not count |
+| **Mode22** | Zonnepanelen | One device whose `Usage` or `Data` is current watts |
+| **Mode23** | Sessy | Home battery (empty = off). `Sessy` is only the default name |
 
 Hints: solar surplus, grid export, battery active, high import.
 
