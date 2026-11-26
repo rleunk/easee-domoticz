@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import Domoticz
-from easee_constants import TIBBER_GQL
+from easee_constants import PLUGIN_VERSION, TIBBER_GQL
 from easee_api_keys import TIBBER_KEYS
 import easee_logging
 import easee_helpers
@@ -33,7 +33,11 @@ def tibber_query(plugin, query):
     try:
         r = plugin.session.post(
             TIBBER_GQL,
-            headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
+            headers={
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json',
+                'User-Agent': f'Domoticz-Easee/{PLUGIN_VERSION}',
+            },
             json={'query': query},
             timeout=20,
         )
@@ -72,6 +76,49 @@ def _parse_price_cache(plugin, info):
     return cache
 
 
+def _price_info(home):
+    if not isinstance(home, dict):
+        return {}
+    subscription = home.get('currentSubscription') or {}
+    if not isinstance(subscription, dict):
+        return {}
+    info = subscription.get('priceInfo') or {}
+    return info if isinstance(info, dict) else {}
+
+
+def _info_has_prices(info):
+    """True when Tibber returned at least one priced slot for this home."""
+    if not info:
+        return False
+    total_k = TIBBER_KEYS['price'][0]
+    current = info.get(TIBBER_KEYS['bucket_current']) or {}
+    if isinstance(current, dict) and current.get(total_k) is not None:
+        return True
+    for bucket_name in TIBBER_KEYS['buckets']:
+        nodes = info.get(bucket_name) or []
+        if not isinstance(nodes, list):
+            continue
+        for node in nodes:
+            if isinstance(node, dict) and node.get(total_k) is not None:
+                return True
+    return False
+
+
+def select_tibber_home(homes):
+    """First home with price data. Tibber lists old addresses before the current one."""
+    chosen = None
+    priced = 0
+    for home in homes or []:
+        if not isinstance(home, dict):
+            continue
+        if not _info_has_prices(_price_info(home)):
+            continue
+        priced += 1
+        if chosen is None:
+            chosen = home
+    return chosen, priced
+
+
 def refresh_tibber_prices(plugin):
     if not easee_helpers.tibber_enabled(plugin):
         plugin.state['price_cache'] = {}
@@ -88,8 +135,32 @@ def refresh_tibber_prices(plugin):
     try:
         homes = (((result or {}).get('data') or {}).get('viewer') or {}).get('homes') or []
         if not homes:
+            easee_logging.debug('tibber_pricing', 'Tibber: geen woningen in het account')
             return
-        info = ((((homes[0] or {}).get('currentSubscription') or {}).get('priceInfo')) or {})
+        easee_logging.debug('tibber_pricing', f'Tibber-woningen gevonden: {len(homes)}')
+        home, priced = select_tibber_home(homes)
+        if home is None:
+            easee_logging.debug('tibber_pricing', 'Tibber: geen woning met prijsdata')
+            return
+        home_id = str(home.get('id') or '?')
+        for skipped in homes:
+            if not isinstance(skipped, dict) or skipped is home:
+                continue
+            if _info_has_prices(_price_info(skipped)):
+                continue
+            skipped_id = str(skipped.get('id') or '?')
+            easee_logging.debug(
+                'tibber_pricing',
+                f'Tibber-woning overgeslagen (geen prijsdata): {skipped_id}',
+            )
+        if priced > 1:
+            easee_logging.debug(
+                'tibber_pricing',
+                f'Tibber: {priced} woningen met prijzen; eerste gebruikt: {home_id}',
+            )
+        else:
+            easee_logging.debug('tibber_pricing', f'Tibber-woning in gebruik: {home_id}')
+        info = _price_info(home)
         cache = _parse_price_cache(plugin, info)
         if not cache:
             return

@@ -154,7 +154,7 @@ def _is_expected_optional_failure(path, status):
             return True
         if '/cloud-loadbalancing/' in path or 'loadbalancing' in path:
             return True
-    if code == 405 and '/sites/' in path and '/circuits' in path:
+    if code in (403, 405) and '/sites/' in path and '/circuits' in path:
         return True
     return False
 
