@@ -1,14 +1,14 @@
-# Easee Domoticz Plugin **v1** (1.1.7)
+# Easee Domoticz Plugin **v1** (1.1.8)
 
 **Language / Taal:** [English](README.md) · **Nederlands** (this page)
 
 **Easee-laadpalen, Equalizer (meterkast) en optionele energieprijs (Geen/Handmatig/Tibber/ENTSO-E/EnergyZero) in Domoticz — modulaire plugin, custom tegeliconen, compacte statusweergave.**
 
-![Version](https://img.shields.io/badge/version-1.1.7-brightgreen)
+![Version](https://img.shields.io/badge/version-1.1.8-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Domoticz-orange)
 
-> **Status (productie):** **`main`** = **1.1.7** — Easee charger observations API (Sep 2026), NL/EN UI, LB fase-detail; **11 tegels + LoadBal**. Zie [STABLE.nl.md](STABLE.nl.md), [VERSIONING.nl.md](VERSIONING.nl.md), [docs/nl/RELEASE_1.1.7.md](docs/nl/RELEASE_1.1.7.md).
+> **Status (productie):** **`main`** = **1.1.8** — Tibber-woning met prijsdata, Easee charger observations API, NL/EN UI, LB fase-detail; **11 tegels + LoadBal**. Zie [STABLE.nl.md](STABLE.nl.md), [VERSIONING.nl.md](VERSIONING.nl.md), [docs/nl/RELEASE_1.1.8.md](docs/nl/RELEASE_1.1.8.md).
 >
 > **Legacy v10:** branch **`legacy/v10`** / tag [**v10.11.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6) — voor bestaande v10-installaties of rollback. v10 blijft bevroren.
 >
@@ -20,11 +20,11 @@
 cd /home/USER/domoticz/plugins
 git clone https://github.com/rleunk/easee-domoticz.git Easee-Domoticz-plugin
 cd Easee-Domoticz-plugin
-git checkout main   # productie 1.1.7; legacy v10: git checkout legacy/v10
+git checkout main   # productie 1.1.8; legacy v10: git checkout legacy/v10
 sudo systemctl restart domoticz
 ```
 
-In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.1.7)** → Easee-gebruikersnaam + wachtwoord → **Create**.
+In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plugin v1 (1.1.8)** → Easee-gebruikersnaam + wachtwoord → **Create**.
 
 **Kosten-tegels:** kies **Prijsbron** (Mode9): **Tibber** (default, Mode7 token) · **ENTSO-E** (Mode24 token + toeslagen) · **EnergyZero** (geen token) · **Handmatig** (Vast Mode10, Dag/nacht of Dal/piek Mode11–19) · **Geen** (alleen kWh/laaduren, geen €). Hardware-groep **Energieprijs (optioneel)**. Optioneel **Energie hints** (P1 / Zonnepanelen / Thuisbatterij, Mode20–23 — elke merknaam in Domoticz werkt, bijv. Sessy, Powerwall). Verder optioneel: laadpaalnamen (Mode2/3/4), Equalizer-naam (Address).
 
@@ -62,13 +62,14 @@ In Domoticz: **Setup → Hardware → Python plugins** → **Easee Domoticz plug
 | **Taal** | **Nederlands** (default) of **English** (Mode30) — tegelteksten en status |
 | **Upgrade** | `git pull` + hardware herstarten; bij icon-wijzigingen zip opnieuw uploaden |
 
-Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v1.1.6][LEVEL]…`.
+Verder: eigen namen per laadpaal (Mode2/3/4), state in `easee_state.json`, gestructureerde logging `[Easee v1.1.8][LEVEL]…`.
 
 ## v1 releases
 
 | Versie | Status |
 |--------|--------|
-| **1.1.7** | **Stable productie** (`main`) — Easee charger observations API hotfix (Sep 2026) |
+| **1.1.8** | **Stable productie** (`main`) — Tibber gebruikt de woning die nog prijzen heeft |
+| **1.1.7** | Rollback — Easee charger observations API hotfix (Sep 2026) |
 | **1.1.6** | Rollback — English UI; laadpaal `/state` kapot na Easee API cutoff |
 | **1.1.5** | Rollback — LB fase-detail, soak bevestigd aug 2026 |
 | **1.0.0** | Vorige stable — vijf prijsbronnen, hints, 11 tegels |
@@ -224,7 +225,7 @@ Stap-voor-stap: [INSTALL.nl.md](INSTALL.nl.md).
 ## Changelog & release
 
 - Volledige geschiedenis: [CHANGELOG.md](CHANGELOG.md) — v1 start bij 0.1.0; legacy v10 hieronder in changelog
-- **v1 productie:** [**v1.1.7**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.7) op `main` · [**v1.1.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.6) rollback
+- **v1 productie:** [**v1.1.8**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.8) op `main` · [**v1.1.7**](https://github.com/rleunk/easee-domoticz/releases/tag/v1.1.7) rollback
 - **v1 pre-release:** [v0.6.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.6.1) · [v0.6.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.6.0) · [v0.5.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.5.0) · [v0.4.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.1) · [v0.4.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.4.0) · [v0.3.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.3.0) · [v0.2.1](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.1) · [v0.2.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.2.0) · [v0.1.0](https://github.com/rleunk/easee-domoticz/releases/tag/v0.1.0)
 - **Legacy v10:** [**v10.11.6**](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.6) op branch `legacy/v10`
 - Vorige stable: [v10.11.4-stable](https://github.com/rleunk/easee-domoticz/releases/tag/v10.11.4) (rollback)
@@ -269,7 +270,7 @@ Sinds v10.6.0 modulair; v1 (0.2.0+) voegt **`pricing/`** (prijsbronnen) en **`do
 
 ## Problemen melden
 
-[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v1.1.6** (main) of **v10.11.6** (legacy), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
+[GitHub Issues](https://github.com/rleunk/easee-domoticz/issues) → **Bug melden** (Nederlands formulier). Vermeld pluginversie **v1.1.8** (main) of **v10.11.6** (legacy), Domoticz-versie en logregels `[Easee v…]` (geen wachtwoorden).
 
 ## Support & credits
 
@@ -281,4 +282,4 @@ MIT License — [LICENSE](LICENSE)
 
 ---
 
-**Versie 1.1.7** (main) — Richard Leunk · Legacy v10: **v10.11.6** op branch `legacy/v10`
+**Versie 1.1.8** (main) — Richard Leunk · Legacy v10: **v10.11.6** op branch `legacy/v10`

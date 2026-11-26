@@ -8,15 +8,16 @@ Dit project heeft twee versielijnen naast elkaar.
 
 | Item | Waarde |
 |------|--------|
-| **Huidige versie** | **1.1.7** (released 2026-09-01) |
+| **Huidige versie** | **1.1.8** (released 2026-11-26) |
 | **Branch productie** | `main` |
 | **Branch ontwikkeling** | `v1` (1.2.x en verder) |
-| **Tag** | `v1.1.7` (semver, geen `-stable` suffix) |
+| **Tag** | `v1.1.8` (semver, geen `-stable` suffix) |
 
 ### Semver v1
 
 - **0.x.y** — pre-release ontwikkeling op branch `v1` (`v0.1.0` t/m `v0.6.1`)
-- **1.1.7** — huidige productie op `main` (Easee charger observations API hotfix)
+- **1.1.8** — huidige productie op `main` (Tibber-woning met prijsdata)
+- **1.1.7** — rollback (Easee charger observations API hotfix)
 - **1.1.6** — rollback (English UI + 1.1.5 basis; laadpaal `/state` kapot na Sep 2026)
 - **1.1.5** — rollback-baseline (LB fase-detail, Tibber fallbacks)
 - **1.0.0** — eerste publieke stable v1 op `main`
@@ -31,14 +32,14 @@ Dit project heeft twee versielijnen naast elkaar.
 | **Tags** | `v10.11.6`, `v10.11.6-stable` (en oudere `v10.x.y` / `-stable`) |
 | **Status** | Bevroren — geen hernummering naar 0.10.x |
 
-Legacy v10 blijft beschikbaar voor bestaande installaties en rollback. Nieuwe installaties: gebruik **`main`** / **`v1.1.7`**.
+Legacy v10 blijft beschikbaar voor bestaande installaties en rollback. Nieuwe installaties: gebruik **`main`** / **`v1.1.8`**.
 
 ## Installeren
 
 ```bash
 git fetch --tags origin
 git checkout main
-# of: git checkout v1.1.7
+# of: git checkout v1.1.8
 ```
 
 ## Ontwikkeling
@@ -48,4 +49,4 @@ git checkout main
 git checkout v1
 ```
 
-Zie [STABLE.nl.md](STABLE.nl.md) voor aanbevolen tags en rollback, [CHANGELOG.md](CHANGELOG.md) voor release-notes, [docs/nl/RELEASE_1.1.7.md](docs/nl/RELEASE_1.1.7.md) voor de huidige productie-release.
+Zie [STABLE.nl.md](STABLE.nl.md) voor aanbevolen tags en rollback, [CHANGELOG.md](CHANGELOG.md) voor release-notes, [docs/nl/RELEASE_1.1.8.md](docs/nl/RELEASE_1.1.8.md) voor de huidige productie-release.
