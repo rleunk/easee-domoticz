@@ -1,6 +1,6 @@
 # Changelog
 
-**Language:** Release notes in English: [docs/RELEASE_1.1.7.md](docs/RELEASE_1.1.7.md) · Nederlands: [docs/nl/RELEASE_1.1.7.md](docs/nl/RELEASE_1.1.7.md) · Index: [docs/README.md](docs/README.md)
+**Language:** Release notes in English: [docs/RELEASE_1.1.8.md](docs/RELEASE_1.1.8.md) · Nederlands: [docs/nl/RELEASE_1.1.8.md](docs/nl/RELEASE_1.1.8.md) · Index: [docs/README.md](docs/README.md)
 
 Alle belangrijke wijzigingen aan dit project worden hier gedocumenteerd.
 
@@ -9,6 +9,16 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 > **v1 changelog** start bij **0.1.0** op branch `v1`. Legacy v10-geschiedenis staat onder de separator **Legacy v10** hieronder.
 
 ## [Unreleased]
+
+## [1.1.8] — 2026-11-26
+
+### Fixed
+- **Tibber met meerdere woningen** — `refresh_tibber_prices` gebruikte altijd `homes[0]`. Een oud adres zonder contract leverde daardoor geen prijzen op. De plugin kiest nu de eerste woning met prijsdata en logt het home-id. Bij twee woningen met prijzen wint de eerste in de Tibber-lijst.
+- **Tibber User-Agent** — de GraphQL-call stuurt `Domoticz-Easee/{PLUGIN_VERSION}` mee.
+- **Optionele site-circuit 403** — `GET /sites/…/circuits` bij een account zonder die rechten logt als debug, net als de cloud-loadbalancing fallbacks. De probes blijven staan.
+
+### Released
+- **Production fix** — **1.1.8**, tag **`v1.1.8`** (2026-11-26). Zie [docs/RELEASE_1.1.8.md](docs/RELEASE_1.1.8.md).
 
 ## [1.1.7] — 2026-09-01
 

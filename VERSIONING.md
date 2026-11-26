@@ -6,12 +6,13 @@
 
 | Item | Value |
 |------|--------|
-| **Current version** | **1.1.7** (2026-09-01) |
+| **Current version** | **1.1.8** (2026-11-26) |
 | **Production branch** | `main` |
 | **Development branch** | `v1` |
-| **Tag** | `v1.1.7` |
+| **Tag** | `v1.1.8` |
 
-- **1.1.7** — current production (Easee charger observations API hotfix)
+- **1.1.8** — current production (Tibber home with price data)
+- **1.1.7** — rollback (Easee charger observations API hotfix)
 - **1.1.6** — rollback (English UI + 1.1.5 base; charger state broken after Sep 2026)
 - **1.1.5** — rollback baseline
 - **1.0.0** — first public stable v1
@@ -23,7 +24,7 @@
 | **Version** | v10.11.6 |
 | **Branch** | `legacy/v10` |
 
-New installs: use **`main`** / **`v1.1.7`**.
+New installs: use **`main`** / **`v1.1.8`**.
 
 ## Install
 
@@ -32,4 +33,4 @@ git fetch --tags origin
 git checkout main
 ```
 
-See [STABLE.md](STABLE.md) · [docs/RELEASE_1.1.7.md](docs/RELEASE_1.1.7.md)
+See [STABLE.md](STABLE.md) · [docs/RELEASE_1.1.8.md](docs/RELEASE_1.1.8.md)
