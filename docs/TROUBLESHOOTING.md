@@ -2,7 +2,7 @@
 
 **Language:** **English** · [Nederlands](nl/TROUBLESHOOTING.md)
 
-> **Versions:** **main** = **1.1.8** (production) · Legacy **v10.11.6** on `legacy/v10`  
+> **Versions:** **main** = **1.1.9** (production) · Legacy **v10.11.6** on `legacy/v10`  
 > Install: [INSTALL.md](../INSTALL.md) · Config: [CONFIGURATION.md](CONFIGURATION.md)
 
 ## Plugin does not load
